@@ -4,7 +4,7 @@ missing renderer, and an end-to-end non-blocking render."""
 import numpy as np
 import pytest
 from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
-from PySide6.QtGui import QMouseEvent, QWheelEvent
+from PySide6.QtGui import QKeySequence, QMouseEvent, QWheelEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
@@ -340,3 +340,16 @@ def test_boundary_toggle_is_undoable_and_keeps_hidden_ids(perovskite_window):
     win.undo_action.trigger()
     assert win.boundary_action.isChecked()
     assert len(win.geometry) == 14 and (0, (1, 1, 1)) not in win.geometry
+
+
+def test_view_keys_work_without_an_active_window(perovskite_window):
+    """Keys pressed in the 3D view reach window actions even when Qt's shortcut map
+    does not fire (e.g. Xvfb without a window manager)."""
+    win = perovskite_window
+    win.select({(0, (0, 0, 0))})
+    assert win.trigger_shortcut(QKeySequence(Qt.Key.Key_Delete))
+    assert len(win.geometry) == 14
+    assert win.trigger_shortcut(QKeySequence("Ctrl+Z"))
+    assert len(win.geometry) == 15
+    assert not win.trigger_shortcut(QKeySequence(Qt.Key.Key_Q))  # VTK's quit key: ignored
+    assert win.isVisible()

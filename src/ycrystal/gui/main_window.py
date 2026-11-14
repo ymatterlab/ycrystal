@@ -108,6 +108,7 @@ class MainWindow(QMainWindow):
         self.set_display_geometry(self.geometry)
         self.viewport.camera_changed.connect(self._update_output_label)
         self.viewport.atom_clicked.connect(self._on_atom_clicked)
+        self.viewport.key_pressed.connect(self.trigger_shortcut)
 
     # ----- construction -------------------------------------------------------------
     def _build_actions(self) -> None:
@@ -236,6 +237,17 @@ class MainWindow(QMainWindow):
         self.scene_settings = settings
         self.boundary_action.setChecked(settings.boundary_images)
         self.set_display_geometry(build_geometry(self.structure, settings))
+
+    def trigger_shortcut(self, keys: QKeySequence) -> bool:
+        """Trigger the enabled window action bound to ``keys``; True if one matched."""
+        for action in self.findChildren(QAction):
+            if action.isEnabled() and any(
+                shortcut.matches(keys) == QKeySequence.SequenceMatch.ExactMatch
+                for shortcut in action.shortcuts()
+            ):
+                action.trigger()
+                return True
+        return False
 
     # ----- selection and hiding ----------------------------------------------------
     def _on_atom_clicked(self, index: int, toggle: bool) -> None:

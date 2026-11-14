@@ -19,7 +19,7 @@ import numpy as np  # noqa: E402
 import pyvista as pv  # noqa: E402
 import qtpy  # noqa: E402
 from PySide6.QtCore import QEvent, QObject, QPointF, Qt, Signal  # noqa: E402
-from PySide6.QtGui import QMouseEvent  # noqa: E402
+from PySide6.QtGui import QKeyEvent, QKeySequence, QMouseEvent  # noqa: E402
 from PySide6.QtWidgets import QVBoxLayout, QWidget  # noqa: E402
 from pyvistaqt import QtInteractor  # noqa: E402
 from vtkmodules.vtkFiltersSources import vtkSphereSource  # noqa: E402
@@ -54,6 +54,11 @@ class _InputFilter(QObject):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802
         kind = event.type()
         if kind in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease):
+            # Window shortcuts normally consume their keys before this point. If the
+            # window is not active (e.g. no window manager), offer the key to the
+            # application instead of to VTK.
+            if kind == QEvent.Type.KeyPress and isinstance(event, QKeyEvent):
+                self._viewport.key_pressed.emit(QKeySequence(event.keyCombination()))
             event.ignore()
             return True
         if isinstance(event, QMouseEvent) and event.button() == Qt.MouseButton.LeftButton:
@@ -74,6 +79,8 @@ class StructureViewport(QWidget):
     camera_changed = Signal()
     #: A click without dragging: (index into the displayed atoms or -1, Ctrl held)
     atom_clicked = Signal(int, bool)
+    #: A key pressed in the 3D view that no window shortcut consumed
+    key_pressed = Signal(QKeySequence)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
