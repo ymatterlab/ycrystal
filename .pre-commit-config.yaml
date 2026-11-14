@@ -1,0 +1,50 @@
+# Pre-commit hooks for Ycrystal.
+#
+# Lightweight by design: no hook installs Qt/VTK, starts the GUI, or runs POV-Ray.
+#   Local:           pre-commit install          (then hooks run on every commit)
+#                    pre-commit run --all-files  (check the whole repository)
+#   GitHub Actions:  the "pre-commit" job in .github/workflows/ci.yml runs the same hooks.
+#   pre-commit.ci:   runs the same hooks on pull requests once enabled for the repository,
+#                    and proposes monthly hook updates (see the `ci:` section).
+#
+# Ruff version: the ruff-pre-commit `rev` must equal the `ruff==` pin in constraints.txt.
+# The `ruff-version-sync` hook enforces this; update both together (CONTRIBUTING.md).
+# Ruff settings (line length, rule selection) come from pyproject.toml.
+
+ci:
+  autoupdate_schedule: monthly
+  autoupdate_commit_msg: "chore: pre-commit autoupdate (sync ruff== in constraints.txt)"
+  autofix_commit_msg: "style: pre-commit auto-fixes"
+  autofix_prs: true # only the safe fixes configured below; no --unsafe-fixes
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.5
+    hooks:
+      - id: ruff-check
+        args: [--fix] # safe fixes only
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        exclude: ^tests/fixtures/ # structure files are kept byte-for-byte as written
+      - id: end-of-file-fixer
+        exclude: ^tests/fixtures/
+      - id: check-yaml # safe-load parsing; accepts GitHub workflow syntax (e.g. `on:`)
+      - id: check-added-large-files
+        # Catch accidental renders, caches, or data dumps. Small intentional assets
+        # (fixtures, future preset thumbnails) stay well below this limit; anything
+        # larger must be excluded here explicitly, with a reason.
+        args: [--maxkb=250, --enforce-all]
+
+  - repo: local
+    hooks:
+      - id: ruff-version-sync
+        name: ruff hook rev matches constraints.txt
+        entry: python scripts/check_ruff_version_sync.py
+        language: python
+        files: ^(\.pre-commit-config\.yaml|constraints\.txt)$
+        pass_filenames: false
