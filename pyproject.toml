@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ycrystal"
+dynamic = ["version"]
+description = "Prepare reproducible crystal-structure figures and render them with POV-Ray"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Y-Matter Lab" }]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: X11 Applications :: Qt",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+# Lower bounds only; the integration-tested set is pinned in constraints.txt.
+dependencies = [
+    "PySide6-Essentials>=6.7",
+    "vtk>=9.3",
+    "pyvista>=0.44",
+    "pyvistaqt>=0.11",
+    "ase>=3.23",
+    "numpy>=1.26",
+    "pillow>=10",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.6"]
+
+[project.urls]
+Repository = "https://github.com/ymatterlab/ycrystal"
+
+[project.scripts]
+ycrystal = "ycrystal.app:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "ycrystal.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+qt_api = "pyside6"
+markers = [
+    "povray: needs a working POV-Ray executable (skipped otherwise)",
+    "gui: needs an X11 display (skipped otherwise)",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]

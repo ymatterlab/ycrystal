@@ -1,0 +1,107 @@
+from __future__ import annotations
+
+import os
+import shutil
+
+import numpy as np
+import pytest
+
+os.environ["QT_API"] = "pyside6"
+
+from ycrystal.core.camera import Camera  # noqa: E402
+from ycrystal.core.scene import DisplayGeometry  # noqa: E402
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
+        return
+    skip = pytest.mark.skip(reason="no display available for GUI tests")
+    for item in items:
+        if "gui" in item.keywords:
+            item.add_marker(skip)
+
+
+@pytest.fixture(scope="session")
+def povray_executable() -> str:
+    """A POV-Ray executable that passes the renderer self-test, or skip."""
+    from ycrystal.render.selftest import run_self_test
+
+    candidates = []
+    for candidate in (os.environ.get("YCRYSTAL_POVRAY"), shutil.which("povray")):
+        if candidate and candidate not in candidates:
+            candidates.append(candidate)
+    reasons = []
+    for candidate in candidates:
+        result = run_self_test(candidate)
+        if result.ok:
+            return str(result.executable)
+        reasons.append(f"{candidate}: {result.message}")
+    pytest.skip("no working POV-Ray executable. " + " | ".join(reasons or ["none found"]))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def isolated_qsettings(tmp_path_factory: pytest.TempPathFactory) -> None:
+    """Keep GUI tests away from the user's real Ycrystal settings."""
+    from PySide6.QtCore import QCoreApplication, QSettings
+
+    QSettings.setDefaultFormat(QSettings.Format.IniFormat)
+    QSettings.setPath(
+        QSettings.Format.IniFormat, QSettings.Scope.UserScope,
+        str(tmp_path_factory.mktemp("qsettings")),
+    )
+    QCoreApplication.setOrganizationName("Ycrystal-tests")
+    QCoreApplication.setApplicationName("Ycrystal-tests")
+
+
+def spread_geometry() -> DisplayGeometry:
+    """Well-separated spheres with distinct dominant colour channels.
+
+    The arrangement is chiral (no mirror symmetry), so a mirrored image cannot match.
+    """
+    positions = np.array(
+        [
+            [0.0, 0.0, 0.0],
+            [3.2, 0.4, 0.9],
+            [-0.6, 2.9, -1.1],
+            [0.8, -1.3, 3.1],
+            [-2.7, -2.0, 0.6],
+            [2.8, -2.4, 2.3],
+        ]
+    )
+    colors = np.array(
+        [
+            [0.9, 0.1, 0.1],
+            [0.1, 0.8, 0.1],
+            [0.1, 0.2, 0.9],
+            [0.9, 0.2, 0.1],
+            [0.1, 0.9, 0.2],
+            [0.2, 0.1, 0.9],
+        ]
+    )
+    return DisplayGeometry(
+        atom_ids=tuple((i, (0, 0, 0)) for i in range(len(positions))),
+        elements=("O", "Cl", "N", "Fe", "B", "Ar"),
+        positions=positions,
+        radii=np.array([0.42, 0.36, 0.40, 0.33, 0.38, 0.35]),
+        colors=colors,
+        cell_edges=np.zeros((0, 2, 3)),
+        cell_edge_radius=0.03,
+        cell_edge_color=(0.2, 0.2, 0.2),
+    )
+
+
+@pytest.fixture
+def spread() -> DisplayGeometry:
+    return spread_geometry()
+
+
+def off_axis_camera(geometry: DisplayGeometry, aspect: float) -> Camera:
+    """Rotated (azimuth, elevation, roll) and panned view that keeps every sphere in frame."""
+    points, radii = geometry.points_and_radii()
+    camera = (
+        Camera.looking_along((0.3, -1.0, -0.25), (0, 0, 1))
+        .orbit(azimuth=-48, elevation=31)
+        .roll(23)
+        .fitted(points, radii, aspect, margin=0.3)
+    )
+    return camera.pan(0.12 * camera.parallel_scale, -0.08 * camera.parallel_scale)
