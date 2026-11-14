@@ -1,0 +1,22 @@
+&SYSTEM
+  ibrav = 0
+  A = 3.905
+  nat = 5
+  ntyp = 4
+  ecutwfc = 45
+/
+ATOMIC_SPECIES
+  Sr  87.62  Sr.upf
+  Ti  47.867 Ti.upf
+  O1  15.999 O.upf
+  O_2 15.999 O.upf
+CELL_PARAMETERS alat
+  1.0 0.0 0.0
+  0.0 1.0 0.0
+  0.0 0.0 1.0
+ATOMIC_POSITIONS alat
+  Sr  0.0 0.0 0.0  0 0 0
+  Ti  0.5 0.5 0.5
+  O1  0.5 0.5 0.0  1 1 0
+  O1  0.5 0.0 0.5
+  O_2 0.0 0.5 0.5

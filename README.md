@@ -3,10 +3,12 @@
 Ycrystal is a Linux desktop application (PySide6 + VTK) for preparing reproducible
 crystal-structure figures and rendering them with [POV-Ray](https://www.povray.org/).
 
-**Status: early development (feasibility milestone).** The current build shows synthetic
-sample structures, supports orbit/pan/zoom, and exports or renders the current
-orthographic view with POV-Ray. Structure-file import, supercells, bonds, materials, and
-projects are not implemented yet. See [docs/PROGRESS.md](docs/PROGRESS.md).
+**Status: early development.** Ycrystal opens POSCAR/CONTCAR, CIF, and Quantum
+ESPRESSO (`ibrav = 0`) files, saves and reopens `.ycrystal` projects, supports
+orbit/pan/zoom, selection and hiding of individual atoms, and exports or renders the
+current orthographic view with POV-Ray. Supercells, bonds, materials, and lighting
+controls are not implemented yet. See [docs/PROGRESS.md](docs/PROGRESS.md) and the
+format details in [docs/FORMATS.md](docs/FORMATS.md).
 
 ## Requirements (Linux Mint 22 / Ubuntu 24.04)
 
@@ -36,10 +38,19 @@ cd ycrystal
 ## Run
 
 ```bash
-.venv/bin/ycrystal                     # perovskite sample
-.venv/bin/ycrystal --sample triclinic  # low-symmetry sample
-.venv/bin/ycrystal --check-renderer    # verify that POV-Ray reproduces the camera
+.venv/bin/ycrystal                             # perovskite sample
+.venv/bin/ycrystal path/to/POSCAR              # open a structure file or .ycrystal project
+.venv/bin/ycrystal structure.txt --format cif  # set the format explicitly
+.venv/bin/ycrystal --check-renderer            # verify that POV-Ray reproduces the camera
 ```
+
+*File ▸ Open…* (Ctrl+O) reads POSCAR/CONTCAR, CIF, Quantum ESPRESSO pw.x input
+(`ibrav = 0` with `CELL_PARAMETERS` only), and `.ycrystal` projects; *File ▸ Save
+Project* (Ctrl+S) stores the structure, view, and display settings in one file that
+does not need the original structure file. Unsupported cases (CIF partial occupancy,
+QE `ibrav ≠ 0` or `crystal_sg`) are rejected with an explanation;
+[docs/FORMATS.md](docs/FORMATS.md) lists the details. Small example inputs are in
+`tests/fixtures/`.
 
 Mouse: left drag orbits, middle drag or Shift + left drag pans, wheel or right drag
 zooms, **F** fits the structure. Click a ball to select it (Ctrl + click adds or

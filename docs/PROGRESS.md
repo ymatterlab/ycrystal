@@ -1,13 +1,13 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0 complete; M2 increment (boundary atoms, selection, hiding) included. Branch `develop`, pull request into `main`.
+Last updated: 15 November 2026. M0 and M1 complete; part of M2 done. Branch `feature/m1-imports-projects` (M0 merged into `main`).
 
 ## Milestones
 
 | Milestone | Goal | Status |
 | --- | --- | --- |
 | M0 | Desktop/render feasibility: Qt window, embedded VTK view, camera model, first POV-Ray render matching the view | **Complete** (see evidence and caveats) |
-| M1 | File import (POSCAR/CIF/QE `ibrav=0`) and save/reopen projects | Not started |
+| M1 | File import (POSCAR/CIF/QE `ibrav=0`) and save/reopen projects | **Complete** (see evidence) |
 | M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **In progress**: boundary images, click selection, hiding, undo/redo done; supercells, bonds, view-direction buttons pending |
 | M3 | Complete figure workflow: preview, output frame, cancellation, final PNG | Not started |
 | M4 | Material and environment galleries | Not started |
@@ -56,6 +56,43 @@ per-atom errors). Regenerate with the command below.
 - Not covered by M0 (later milestones): file import, projects, bonds, supercells,
   selection, view-direction buttons, render cancellation UI, preview, output-aspect
   frame, material presets.
+
+## M1 acceptance evidence
+
+Gate: equivalent reference inputs give the same scientific geometry; a project opens
+after its source file is moved; unsupported QE/CIF cases are explained in the
+interface and the guide.
+
+| Check | Result | How |
+| --- | --- | --- |
+| Format detection and manual choice | Pass | Name + content (`test_readers.py`); misleading extensions resolved by content; undetectable files ask for a format; *File ▸ Open As…* / `--format` override |
+| Si: POSCAR (primitive) = QE (`celldm(1)`, alat cell, crystal positions) | Pass | Cells equal the analytic fcc matrix (QE within 1e-8 Å); atoms matched modulo lattice translations |
+| Si: conventional CIF (F d -3 m) = primitive POSCAR × P | Pass | P = [[-1,1,1],[1,-1,1],[1,1,-1]] recorded; 8 CIF atoms equal the analytic diamond positions |
+| MgB2: Cartesian POSCAR = CIF (24 explicit symmetry operations) = QE (angstrom cell) | Pass | Cells equal the analytic hexagonal matrix; space group 191 recorded |
+| SrTiO3: POSCAR (selective dynamics) = CIF (symbol, uncertainties) = QE (`A`, alat, labels `O1`/`O_2`, `if_pos`) | Pass | Equal geometry; identical movable flags from VASP and QE; labels kept separately from elements |
+| Triclinic: POSCAR (negative scale = volume, Cartesian) = CIF (P1) = QE (bohr cell and positions) | Pass | Cell and positions equal the analytic triclinic formula within 1e-8 Å |
+| VASP 4 without element line | Pass | Element mapping is requested; the misleading comment "In plane strained GaN" yields no guess; the mapping is recorded in provenance |
+| Rejections with explanations | Pass | CIF partial occupancy (lists sites), overlapping sites, unknown block; QE `ibrav = 2`, `crystal_sg`, missing `CELL_PARAMETERS`; ambiguous QE label (`Cb`) asks for the element; truncated POSCAR ("…3 atoms, but only 1 coordinate line…"); not-a-structure file |
+| Failed open keeps the current scene | Pass | Structure, geometry, and camera unchanged after each rejected file and after a damaged project (`test_gui_files.py`) |
+| Project round trip | Pass | Exact equality of cell, positions, numbers, occupancy, labels, movable flags, metadata, display settings, hidden atoms, environment, camera, output |
+| Reopen after the source file is moved | Pass | Source directory deleted; the project reopens in a new window with identical coordinates, hidden atoms, camera, and output settings (`test_project.py`, `test_gui_files.py`) |
+| Versioning and damage | Pass | Newer schema refused with an update message; invalid JSON (with line), wrong format, missing schema, missing sections, inconsistent symbols, wrong array lengths reported clearly; atomic save leaves no temporary files |
+| Unsaved changes | Pass | Title shows `*` for camera, display-setting, or output changes (undo back to the saved state clears it); close and open ask Save / Discard / Cancel; Cancel (or a cancelled Save dialog) keeps the window and scene |
+| Documented limitations | Pass | *Help ▸ Supported File Formats* and `docs/FORMATS.md` |
+| Automated suite | 127 passed, 0 skipped | `pytest -q -rs` with `/usr/bin/povray`; `ruff check` clean |
+
+Hands-on check on the Mint display: `ycrystal tests/fixtures/MgB2.cif` starts with the
+file open; opening `SrTiO3.pw.in` shows QE labels in the selection information;
+opening `partial_occupancy.cif` shows the explanation while the scene stays.
+
+### M1 caveats
+
+- The rendered image takes its aspect ratio from the window, so a project reopened in a
+  differently shaped window keeps the camera but frames a different width. An explicit
+  output frame belongs to M3.
+- The view counts as part of the project: rotating marks it modified.
+- POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
+  raw token is not kept as a label.
 
 ## M2 increment: boundary atoms, selection, hiding (requested ahead of M1)
 
@@ -141,8 +178,22 @@ VIRTUAL_ENV=$PWD/.venv uv pip install -e ".[dev]" -c constraints.txt
   (`core/picking.py`), not VTK pickers; a click is a left press/release that moves at
   most 3 px. The selection highlight is a translucent shell drawn only in the live view.
 - **Undo/redo:** `QUndoStack` with one command type that swaps `SceneSettings`.
+- **Import (M1):** ASE parses; `io/readers.py` adds detection, provenance (path, name,
+  format, SHA-256, size, time, reader version, block, element mapping), and checks.
+  Questions (format, data block, element mapping) are exceptions that the GUI answers
+  and retries, so the readers stay GUI-free. Ycrystal's QE reader is assembled from
+  ASE's card parsers because ASE's `read_espresso_in` ignores `A` (it looks up an
+  upper-case key in a lower-cased namelist) and resolves labels permissively.
+- **Comparison:** `core/compare.py` compares lattice matrices directly and matches atoms
+  by element and fractional position modulo lattice translations.
+- **Projects:** `io/project.py`, JSON schema 1, written atomically; numbers are
+  canonical, symbols are stored for readability and checked on load. Machine-specific
+  settings (POV-Ray path, last directory) stay in QSettings, not in projects.
+- **Camera notifications:** the viewport now listens to the VTK camera's
+  `ModifiedEvent`; the M0 observer on the interactor never fired because VTK raises
+  `EndInteractionEvent` on the interactor style.
 
 ## Next bounded action
 
-Start M1: format detection and readers for POSCAR/CONTCAR, CIF and QE `ibrav=0`, the
-versioned project schema with embedded structure and camera, and save/reopen.
+Review and merge the M1 branch. Then complete M2: numeric supercell repetitions,
+periodic bonds, view-direction buttons, and a warning before large expansions.

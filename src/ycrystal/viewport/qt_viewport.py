@@ -96,7 +96,9 @@ class StructureViewport(QWidget):
         self._atoms_actor: vtkActor | None = None
         self._highlight_actor: vtkActor | None = None
         self._geometry: DisplayGeometry | None = None
-        self._plotter.iren.add_observer("EndInteractionEvent", self._on_interaction_end)
+        # Any camera change (mouse navigation, wheel, Fit, programmatic) notifies listeners.
+        self._plotter.renderer.GetActiveCamera().AddObserver(
+            "ModifiedEvent", self._on_camera_modified)
 
     # ----- scene ------------------------------------------------------------------
     def set_scene(self, geometry: DisplayGeometry, environment: Environment) -> None:
@@ -246,7 +248,7 @@ class StructureViewport(QWidget):
         self._plotter.close()
 
     # ----- internals --------------------------------------------------------------
-    def _on_interaction_end(self, *_args: object) -> None:
+    def _on_camera_modified(self, *_args: object) -> None:
         self.camera_changed.emit()
 
 

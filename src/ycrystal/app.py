@@ -16,8 +16,16 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=f"ycrystal {__version__}")
     parser.add_argument(
+        "file", nargs="?",
+        help="structure file (POSCAR/CONTCAR, CIF, QE pw.x input) or .ycrystal project",
+    )
+    parser.add_argument(
+        "--format", choices=["poscar", "cif", "qe", "project"],
+        help="read FILE in this format instead of detecting it",
+    )
+    parser.add_argument(
         "--sample", choices=sorted(SAMPLES), default="perovskite",
-        help="synthetic structure to show (file import arrives in M1)",
+        help="synthetic structure shown when no FILE is given",
     )
     parser.add_argument(
         "--check-renderer", action="store_true",
@@ -41,6 +49,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if result.ok else 1
 
     os.environ["QT_API"] = "pyside6"
+    from PySide6.QtCore import QTimer
     from PySide6.QtWidgets import QApplication
 
     from ycrystal.gui.main_window import MainWindow
@@ -52,6 +61,10 @@ def main(argv: list[str] | None = None) -> int:
     window = MainWindow(SAMPLES[args.sample]())
     window.resize(1100, 720)
     window.show()
+    if args.file:
+        # After the window has its size and initial camera; failures show a message
+        # and keep the sample open.
+        QTimer.singleShot(0, lambda: window.open_file(args.file, args.format))
     return app.exec()
 
 

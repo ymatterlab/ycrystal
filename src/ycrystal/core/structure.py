@@ -29,7 +29,10 @@ class Structure:
 
     ``cell`` rows are the lattice vectors a, b, c. ``labels`` are species labels as
     given by the source (e.g. ``Fe1``), stored separately from element identities
-    (``numbers``).
+    (``numbers``). ``occupancy`` is the site occupancy per atom (1 for ordered
+    structures). ``movable`` holds per-axis "may move" flags from the source
+    (VASP selective dynamics, QE ``if_pos``), or None if the file had none.
+    ``metadata`` carries import provenance (source path, format, checksum, …).
     """
 
     cell: np.ndarray
@@ -38,6 +41,8 @@ class Structure:
     labels: tuple[str, ...]
     pbc: tuple[bool, bool, bool] = (True, True, True)
     metadata: dict[str, Any] = field(default_factory=dict)
+    occupancy: np.ndarray | None = None
+    movable: np.ndarray | None = None
 
     def __post_init__(self) -> None:
         positions = _frozen(self.positions, None, float)
@@ -55,6 +60,13 @@ class Structure:
         object.__setattr__(self, "numbers", numbers)
         object.__setattr__(self, "labels", labels)
         object.__setattr__(self, "pbc", tuple(bool(flag) for flag in self.pbc))
+        occupancy = np.ones(n_atoms) if self.occupancy is None else self.occupancy
+        occupancy = _frozen(occupancy, (n_atoms,), float)
+        if np.any(occupancy <= 0) or np.any(occupancy > 1 + 1e-6):
+            raise ValueError("occupancies must be in (0, 1]")
+        object.__setattr__(self, "occupancy", occupancy)
+        if self.movable is not None:
+            object.__setattr__(self, "movable", _frozen(self.movable, (n_atoms, 3), bool))
 
     @classmethod
     def from_ase(cls, atoms: Atoms, labels: list[str] | None = None, **metadata: Any) -> Structure:
@@ -67,6 +79,15 @@ class Structure:
             pbc=tuple(atoms.pbc),
             metadata=dict(metadata),
         )
+
+    def replace(self, **changes: Any) -> Structure:
+        values = {
+            "cell": self.cell, "positions": self.positions, "numbers": self.numbers,
+            "labels": self.labels, "pbc": self.pbc, "metadata": dict(self.metadata),
+            "occupancy": self.occupancy, "movable": self.movable,
+        }
+        values.update(changes)
+        return Structure(**values)
 
     def to_ase(self) -> Atoms:
         return Atoms(

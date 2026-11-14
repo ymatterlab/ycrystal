@@ -239,6 +239,7 @@ def main() -> int:
         r = report[key]
         print(f"{key}: {r['blobs_found']}/{r['spheres_expected']} spheres, max error "
               f"{r['max_error_px']:.3f} px, colours match: {r['colours_match']}")
+    window.ask_save_changes = lambda: "discard"  # evidence run: nothing to save
     window.close()
     return 0
 
