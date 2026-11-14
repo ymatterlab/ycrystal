@@ -1,0 +1,11 @@
+&SYSTEM
+  ibrav = 0, A = 3.905, nat = 1, ntyp = 1, space_group = 221
+/
+ATOMIC_SPECIES
+  Sr 87.62 Sr.upf
+CELL_PARAMETERS alat
+  1 0 0
+  0 1 0
+  0 0 1
+ATOMIC_POSITIONS crystal_sg
+  Sr 0.0 0.0 0.0

@@ -1,0 +1,146 @@
+import json
+import shutil
+from dataclasses import replace
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from ycrystal.core.camera import Camera
+from ycrystal.core.scene import Environment, SceneSettings, build_geometry
+from ycrystal.io.project import (
+    SCHEMA_VERSION,
+    Project,
+    ProjectError,
+    load_project,
+    project_to_dict,
+    save_project,
+)
+from ycrystal.io.readers import read_structure
+from ycrystal.render.pov_writer import RenderSettings
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def full_project(structure) -> Project:
+    camera = Camera.looking_along((0.3, -1.0, -0.2), (0, 0, 1), focal_point=(1.1, 0.7, 2.3),
+                                  parallel_scale=3.21).orbit(azimuth=17.3, elevation=-8.9)
+    return Project(
+        structure=structure,
+        scene=SceneSettings(radius_scale=0.42, boundary_images=True,
+                            hidden=frozenset({(0, (1, 1, 1)), (2, (0, 0, 1))})),
+        environment=Environment(background=(0.1, 0.2, 0.3), key_light=0.9, fill_light=0.2),
+        camera=camera,
+        output=RenderSettings(width=900, height=600, transparent_background=True),
+    )
+
+
+def assert_same_structure(a, b):
+    for name in ("cell", "positions", "numbers", "occupancy"):
+        np.testing.assert_array_equal(getattr(a, name), getattr(b, name))  # exact
+    assert a.labels == b.labels and a.pbc == b.pbc
+    if a.movable is None:
+        assert b.movable is None
+    else:
+        np.testing.assert_array_equal(a.movable, b.movable)
+
+
+def test_round_trip_is_exact(tmp_path):
+    structure = read_structure(FIXTURES / "SrTiO3.vasp")  # labels + selective dynamics
+    project = full_project(structure)
+    path = save_project(tmp_path / "figure.ycrystal", project)
+    again = load_project(path)
+    assert_same_structure(structure, again.structure)
+    assert again.structure.metadata == json.loads(json.dumps(structure.metadata))
+    assert again.scene == project.scene
+    assert again.environment == project.environment
+    assert again.camera == project.camera
+    assert again.output == project.output
+    # Same displayed geometry, including the hidden boundary atoms.
+    g1, g2 = (build_geometry(p.structure, p.scene) for p in (project, again))
+    assert g1.atom_ids == g2.atom_ids and g1.hidden_count == 2
+    assert [p.name for p in tmp_path.iterdir()] == ["figure.ycrystal"]  # no temp files
+
+
+def test_file_is_readable_versioned_json(tmp_path):
+    path = save_project(tmp_path / "p.ycrystal", full_project(
+        read_structure(FIXTURES / "MgB2.cif")))
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data["format"] == "ycrystal-project"
+    assert data["schema_version"] == SCHEMA_VERSION
+    assert data["structure"]["symbols"] == ["Mg", "B", "B"]
+    assert data["structure"]["metadata"]["source"]["format"] == "cif"
+    assert data["scene"]["hidden"] == [{"atom": 0, "image": [1, 1, 1]},
+                                       {"atom": 2, "image": [0, 0, 1]}]
+
+
+def test_project_reopens_after_source_file_is_moved(tmp_path):
+    source = tmp_path / "data" / "triclinic.cif"
+    source.parent.mkdir()
+    shutil.copy(FIXTURES / "triclinic.cif", source)
+    structure = read_structure(source)
+    path = save_project(tmp_path / "work.ycrystal", Project(structure))
+    shutil.move(source, tmp_path / "elsewhere.cif")
+    shutil.rmtree(tmp_path / "data")
+    again = load_project(path)
+    assert_same_structure(structure, again.structure)
+    assert again.structure.metadata["source"]["path"] == str(source.resolve())
+
+
+def test_newer_schema_is_refused(tmp_path):
+    data = project_to_dict(Project(read_structure(FIXTURES / "Si.pw.in")))
+    data["schema_version"] = SCHEMA_VERSION + 1
+    path = tmp_path / "future.ycrystal"
+    path.write_text(json.dumps(data))
+    with pytest.raises(ProjectError, match="newer Ycrystal"):
+        load_project(path)
+
+
+@pytest.mark.parametrize("content, message", [
+    ("{not json", "not valid project JSON"),
+    ('{"format": "something-else"}', "not a Ycrystal project"),
+    ('{"format": "ycrystal-project"}', "no valid schema version"),
+    ('{"format": "ycrystal-project", "schema_version": 1}', "damaged or incomplete"),
+])
+def test_damaged_files(tmp_path, content, message):
+    path = tmp_path / "bad.ycrystal"
+    path.write_text(content)
+    with pytest.raises(ProjectError, match=message):
+        load_project(path)
+
+
+def test_inconsistent_content_is_reported(tmp_path):
+    data = project_to_dict(Project(read_structure(FIXTURES / "MgB2.vasp")))
+    data["structure"]["symbols"] = ["Mg", "C", "B"]
+    path = tmp_path / "edited.ycrystal"
+    path.write_text(json.dumps(data))
+    with pytest.raises(ProjectError, match="do not match"):
+        load_project(path)
+    data = project_to_dict(Project(read_structure(FIXTURES / "MgB2.vasp")))
+    data["structure"]["positions"] = data["structure"]["positions"][:2]
+    path.write_text(json.dumps(data))
+    with pytest.raises(ProjectError, match="damaged"):
+        load_project(path)
+
+
+def test_missing_optional_sections_use_defaults(tmp_path):
+    data = project_to_dict(Project(read_structure(FIXTURES / "MgB2.vasp")))
+    for key in ("scene", "environment", "camera", "output"):
+        del data[key]
+    path = tmp_path / "minimal.ycrystal"
+    path.write_text(json.dumps(data))
+    project = load_project(path)
+    assert project.camera is None and project.scene == SceneSettings()
+    assert project.output == RenderSettings()
+
+
+def test_unreadable_path(tmp_path):
+    with pytest.raises(ProjectError, match="Cannot read"):
+        load_project(tmp_path / "nope.ycrystal")
+
+
+def test_structure_replace_keeps_validation():
+    structure = read_structure(FIXTURES / "MgB2.vasp")
+    with pytest.raises(ValueError):
+        structure.replace(occupancy=[0.5, 2.0, 1.0])
+    assert replace(SceneSettings(), boundary_images=False).boundary_images is False

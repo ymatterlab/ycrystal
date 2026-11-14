@@ -28,6 +28,7 @@ def window(qtbot):
     qtbot.waitUntil(lambda: win._camera_initialised, timeout=5000)
     qtbot.wait(200)
     yield win
+    win.ask_save_changes = lambda: "discard"
     win.close()
 
 
@@ -220,6 +221,7 @@ def perovskite_window(qtbot):
     qtbot.waitUntil(lambda: win._camera_initialised, timeout=5000)
     qtbot.wait(200)
     yield win
+    win.ask_save_changes = lambda: "discard"
     win.close()
 
 

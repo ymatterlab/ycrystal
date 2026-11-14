@@ -24,7 +24,7 @@ def perovskite_srtio3() -> Structure:
         cell=[3.905, 3.905, 3.905],
         pbc=True,
     )
-    return Structure.from_ase(atoms, source="synthetic sample: SrTiO3 perovskite")
+    return Structure.from_ase(atoms, source={"format": "sample", "name": "SrTiO3 cubic perovskite"})
 
 
 def triclinic_marker() -> Structure:
@@ -46,7 +46,9 @@ def triclinic_marker() -> Structure:
         cell=cell,
         pbc=True,
     )
-    return Structure.from_ase(atoms, source="synthetic sample: triclinic marker cell")
+    return Structure.from_ase(
+        atoms, source={"format": "sample", "name": "low-symmetry triclinic marker cell"}
+    )
 
 
 SAMPLES: dict[str, Callable[[], Structure]] = {

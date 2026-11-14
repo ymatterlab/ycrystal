@@ -1,0 +1,7 @@
+&SYSTEM
+  ibrav = 0, A = 3.905, nat = 1, ntyp = 1
+/
+ATOMIC_SPECIES
+  Sr 87.62 Sr.upf
+ATOMIC_POSITIONS crystal
+  Sr 0.0 0.0 0.0

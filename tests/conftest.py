@@ -105,3 +105,20 @@ def off_axis_camera(geometry: DisplayGeometry, aspect: float) -> Camera:
         .fitted(points, radii, aspect, margin=0.3)
     )
     return camera.pan(0.12 * camera.parallel_scale, -0.08 * camera.parallel_scale)
+
+
+@pytest.fixture(autouse=True)
+def no_blocking_dialogs(monkeypatch):
+    """Windows in tests never block on a dialog.
+
+    Closing a window with unsaved changes discards them; any other dialog that a test
+    did not answer explicitly fails the test instead of waiting for a user.
+    """
+    from ycrystal.gui.main_window import MainWindow
+
+    def unexpected(self, *args, **kwargs):
+        raise AssertionError(f"unexpected dialog: {args!r}")
+
+    monkeypatch.setattr(MainWindow, "ask_save_changes", lambda self: "discard")
+    for name in ("ask_open_path", "ask_save_path", "ask_choice", "ask_text"):
+        monkeypatch.setattr(MainWindow, name, unexpected)

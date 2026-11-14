@@ -1,0 +1,13 @@
+&SYSTEM
+  ibrav = 0, nat = 2, ntyp = 2
+/
+ATOMIC_SPECIES
+  Cb  12.011 C.upf
+  Fe1 55.845 Fe.upf
+CELL_PARAMETERS angstrom
+  3.0 0.0 0.0
+  0.0 3.0 0.0
+  0.0 0.0 3.0
+ATOMIC_POSITIONS crystal
+  Cb  0.0 0.0 0.0
+  Fe1 0.5 0.5 0.5
