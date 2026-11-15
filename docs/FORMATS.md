@@ -39,7 +39,8 @@ Supported:
 
 Not supported (the file is rejected with an explanation):
 
-- Partially occupied or mixed sites (`_atom_site_occupancy` below 1).
+- Partially occupied or mixed sites (numeric `_atom_site_occupancy` below
+  `1 - 1e-3`; near-unit values within this tolerance are retained).
 - Distinct sites at the same position.
 
 Ycrystal draws ordered structures only and never shows a disordered structure as if it

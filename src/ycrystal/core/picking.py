@@ -19,7 +19,50 @@ def pick_sphere(
     centers: np.ndarray,
     radii: np.ndarray,
 ) -> int | None:
-    """Index of the front-most sphere covering ``pixel`` (top-left origin), or None."""
+    """Return the front-most sphere under a pixel.
+
+    The viewing ray through `pixel` is parallel to the viewing direction (orthographic
+    projection) and is intersected analytically with every sphere.
+
+    Parameters
+    ----------
+    camera
+        Camera of the view.
+    width
+        Image width in pixels (device pixels in the GUI).
+    height
+        Image height in pixels.
+    pixel
+        Continuous pixel coordinates ``(x, y)`` with the origin at the top-left corner,
+        x to the right, and y downward, as returned by
+        [`Camera.project`][ycrystal.core.camera.Camera.project].
+    centers
+        Sphere centres in Å, shape ``(K, 3)``.
+    radii
+        Sphere radii in Å, shape ``(K,)``.
+
+    Returns
+    -------
+    int or None
+        Index into `centers` of the sphere whose surface the ray meets first, coming
+        from the viewer's side, or ``None`` if the ray misses every sphere.
+
+    Examples
+    --------
+    Two unit spheres on the viewing axis; the one nearer the eye (at +z) is picked:
+
+    >>> import numpy as np
+    >>> from ycrystal.core.camera import Camera
+    >>> from ycrystal.core.picking import pick_sphere
+    >>> camera = Camera(
+    ...     position=(0, 0, 10), focal_point=(0, 0, 0), view_up=(0, 1, 0), parallel_scale=5.0
+    ... )
+    >>> centers = np.array([[0.0, 0.0, -3.0], [0.0, 0.0, 0.0]])
+    >>> pick_sphere(camera, 400, 200, (200.0, 100.0), centers, np.array([1.0, 1.0]))
+    1
+    >>> pick_sphere(camera, 400, 200, (5.0, 5.0), centers, np.array([1.0, 1.0])) is None
+    True
+    """
     centers = np.asarray(centers, dtype=float).reshape(-1, 3)
     radii = np.asarray(radii, dtype=float).reshape(-1)
     if len(centers) == 0:

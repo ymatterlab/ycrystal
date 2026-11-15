@@ -13,7 +13,22 @@ if TYPE_CHECKING:
 
 
 class SceneSettingsCommand(QUndoCommand):
-    """Replace the display settings (hidden atoms, boundary policy, …) as one step."""
+    """Replace the display settings (hidden atoms, boundary policy, …) as one step.
+
+    The window's current settings are captured when the command is created.
+    ``QUndoStack.push`` applies the new settings immediately; undo restores the
+    captured ones. Each step rebuilds the displayed geometry from the unchanged
+    structure.
+
+    Parameters
+    ----------
+    window
+        Window whose settings are replaced.
+    new
+        Settings to apply.
+    text
+        Name shown in the Edit menu, for example ``"Hide 2 Atoms"``.
+    """
 
     def __init__(self, window: MainWindow, new: SceneSettings, text: str) -> None:
         super().__init__(text)

@@ -60,10 +60,19 @@ run the same pinned hooks, so they agree.
 
 ## Generated files
 
+For NumPy-style docstring conventions, the generated API reference, local preview,
+and strict documentation checks, see
+[Documentation workflow](docs/development/documentation.md). Update the relevant
+docstrings, user instructions, and executable examples in the same change as behavior.
+
 Renders, render caches, screenshots, and evidence output belong in `artifacts/`
 (ignored by Git) or outside the repository. Do not commit them. The large-file hook
 rejects files above 250 KB; a genuinely needed larger asset must be excluded explicitly
 in `.pre-commit-config.yaml` with a reason.
+
+The small `docs/assets/perovskite.png` is an intentional documentation exception:
+regenerate it with `python scripts/docs_render_example.py` and inspect it before
+committing. Generated HTML (`site/`) and documentation caches stay ignored.
 
 ## Progress record
 

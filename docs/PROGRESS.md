@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0 and M1 complete (merged into `main`); part of M2 done. Repository-tooling maintenance on branch `chore/repo-tooling` (no product milestone change).
+Last updated: 15 November 2026. M0 and M1 complete (merged into `main`); the owner reports M2 completed on a separate branch. This documentation checkout contains the earlier partial M2 implementation. Documentation increment on branch `docs/docstrings`, building on repository-tooling maintenance (no product milestone change).
 
 ## Milestones
 
@@ -8,7 +8,7 @@ Last updated: 15 November 2026. M0 and M1 complete (merged into `main`); part of
 | --- | --- | --- |
 | M0 | Desktop/render feasibility: Qt window, embedded VTK view, camera model, first POV-Ray render matching the view | **Complete** (see evidence and caveats) |
 | M1 | File import (POSCAR/CIF/QE `ibrav=0`) and save/reopen projects | **Complete** (see evidence) |
-| M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **In progress**: boundary images, click selection, hiding, undo/redo done; supercells, bonds, view-direction buttons pending |
+| M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **Completed on a separate branch**, as reported by the owner; not integrated or independently verified in this documentation checkout, which contains boundary images, click selection, hiding, and undo/redo |
 | M3 | Complete figure workflow: preview, output frame, cancellation, final PNG | Not started |
 | M4 | Material and environment galleries | Not started |
 | M5 | Supercell drag handles, reusable styles, undo coverage | Not started |
@@ -67,7 +67,7 @@ interface and the guide.
 | --- | --- | --- |
 | Format detection and manual choice | Pass | Name + content (`test_readers.py`); misleading extensions resolved by content; undetectable files ask for a format; *File ▸ Open As…* / `--format` override |
 | Si: POSCAR (primitive) = QE (`celldm(1)`, alat cell, crystal positions) | Pass | Cells equal the analytic fcc matrix (QE within 1e-8 Å); atoms matched modulo lattice translations |
-| Si: conventional CIF (F d -3 m) = primitive POSCAR × P | Pass | P = [[-1,1,1],[1,-1,1],[1,1,-1]] recorded; 8 CIF atoms equal the analytic diamond positions |
+| Si: conventional CIF (F d -3 m) = primitive POSCAR × P | Pass | `P = [[-1,1,1],[1,-1,1],[1,1,-1]]` recorded; 8 CIF atoms equal the analytic diamond positions |
 | MgB2: Cartesian POSCAR = CIF (24 explicit symmetry operations) = QE (angstrom cell) | Pass | Cells equal the analytic hexagonal matrix; space group 191 recorded |
 | SrTiO3: POSCAR (selective dynamics) = CIF (symbol, uncertainties) = QE (`A`, alat, labels `O1`/`O_2`, `if_pos`) | Pass | Equal geometry; identical movable flags from VASP and QE; labels kept separately from elements |
 | Triclinic: POSCAR (negative scale = volume, Cartesian) = CIF (P1) = QE (bohr cell and positions) | Pass | Cell and positions equal the analytic triclinic formula within 1e-8 Å |
@@ -76,7 +76,7 @@ interface and the guide.
 | Failed open keeps the current scene | Pass | Structure, geometry, and camera unchanged after each rejected file and after a damaged project (`test_gui_files.py`) |
 | Project round trip | Pass | Exact equality of cell, positions, numbers, occupancy, labels, movable flags, metadata, display settings, hidden atoms, environment, camera, output |
 | Reopen after the source file is moved | Pass | Source directory deleted; the project reopens in a new window with identical coordinates, hidden atoms, camera, and output settings (`test_project.py`, `test_gui_files.py`) |
-| Versioning and damage | Pass | Newer schema refused with an update message; invalid JSON (with line), wrong format, missing schema, missing sections, inconsistent symbols, wrong array lengths reported clearly; atomic save leaves no temporary files |
+| Versioning and damage | Pass | Newer schema refused with an update message; invalid JSON (with line), wrong format, missing schema, missing required structure entries, inconsistent symbols, wrong array lengths reported clearly; atomic save leaves no temporary files |
 | Unsaved changes | Pass | Title shows `*` for camera, display-setting, or output changes (undo back to the saved state clears it); close and open ask Save / Discard / Cancel; Cancel (or a cancelled Save dialog) keeps the window and scene |
 | Documented limitations | Pass | *Help ▸ Supported File Formats* and `docs/FORMATS.md` |
 | Automated suite | 127 passed, 0 skipped | `pytest -q -rs` with `/usr/bin/povray`; `ruff check` clean |
@@ -131,6 +131,110 @@ enable pre-commit.ci for the repository, check Dependabot settings (version upda
 alerts, security updates), and optionally require the `pre-commit` and `tests` checks
 on `main`. The new workflow, Dependabot, and pre-commit.ci have not run yet; local
 success does not prove them.
+
+## Documentation increment (15 November 2026)
+
+No runtime behavior, public signatures, or product milestone status changed. The
+user guide supports the existing M0/M1 and partial M2 features; this does not complete M6.
+
+The owner subsequently confirmed that M2 was completed in separate work on another
+branch. The guides describe the implementation inspected in this checkout; their
+limitations are not a claim that the separate M2 work remains undone. Reconcile the
+guides with that implementation when integrating the branches.
+
+### Audit of the interrupted work
+
+- The working tree already contained substantial NumPy-style docstrings in 19 Python
+  source files, a `docs` dependency extra and NumPy Ruff rules in `pyproject.toml`,
+  and an untracked draft `zensical.toml`. Runtime syntax trees matched HEAD when
+  documentation strings were removed. That work was preserved and refined.
+- The draft site referred to pages that did not exist. There was no first-figure
+  tutorial, architecture/writing guide, generated reference pages, visual asset,
+  documentation CI job, or completed build evidence.
+- No `AGENTS.md` was present in this checkout or its ancestor directories.
+  `docs/IMPLEMENTATION_PLAN.md` was absent (and is ignored as a private planning
+  file), so it could not be consulted. Actual source, tests, `FORMATS.md`, and this
+  progress record supplied the implementation evidence.
+- Existing pre-commit, Dependabot, badge, and application-test configuration was
+  retained. CI was extended only with a docs job and display-independent examples.
+
+### Delivered files
+
+- Source docstrings: `app.py`, `__main__.py`; core structure, scene, camera, picking,
+  samples, and comparison; I/O readers/projects; GUI window/commands; viewport;
+  POV writer, discovery, jobs, process, self-test, and image checking.
+- Site: `zensical.toml`, `docs/index.md`, five pages in `docs/guide/`, three in
+  `docs/development/`, seven curated `docs/reference/` pages, and
+  `docs/assets/perovskite.png` (actual 640 × 400 POV-Ray output, about 63 KB).
+- Verification/reproduction: `docs/requirements.txt` (separate 25-package docs-only
+  lock), `scripts/docs_examples.py`, `scripts/docs_render_example.py`.
+- Integration: docs extra and scoped NumPy Ruff checks in `pyproject.toml`, a docs CI
+  job and example check in `.github/workflows/ci.yml`, generated-output ignores,
+  shorter `README.md`, contributor links, and the precise CIF occupancy tolerance in
+  `FORMATS.md`. Main application constraints and existing hooks were not replaced.
+
+### Verification actually performed
+
+| Check | Result and evidence |
+| --- | --- |
+| Runtime unchanged | All 19 modified `src/` Python files have identical ASTs to HEAD after removing documentation strings; no public names/signatures changed |
+| Application suite | `YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs`: **127 passed, 0 skipped**, 306.09 s; real X11 Qt/VTK and `/usr/bin/povray`. The initial sandboxed run aborted because it could not access the display; the successful run had display access |
+| NumPy examples | `python -m doctest` on structure, scene, camera, picking, readers, and project: **37 examples passed**; `python scripts/docs_examples.py`: passed, with temporary files cleaned up, no display or renderer |
+| Genuine visual asset | `python scripts/docs_render_example.py`: rendered the tracked 640 × 400 SrTiO3 image with POV-Ray 3.7; inspected the image. Script owns job cleanup and supports an alternate output path |
+| Tutorial rehearsal | Scripted real Qt events exercised orbit, pan, zoom, Fit, corner selection, Delete, undo, project save/reopen, POV export, and asynchronous GUI render. 5 scientific atoms / 15 displayed; hiding one gave 14; PNG **640 × 376** as the viewport required; coordinates unchanged; render job removed. Evidence under ignored `artifacts/docs/tutorial/`: project, POV/INI, PNG, window screenshot, `report.json` |
+| Renderer diagnostic | `/usr/bin/povray` 3.7.0.10.unofficial passed; sphere centres within **0.14 px** |
+| Static docs-only build | Fresh `/tmp/ycrystal-docs-env` with Zensical 0.1.1, mkdocstrings-python 2.0.11, and 23 transitive dependencies. Confirmed Qt, VTK, ASE, NumPy, and Ycrystal were not installed. `zensical build --clean --strict`: **no issues** |
+| Broken-link controls | Temporarily added a missing page, missing anchor, unresolved API cross-reference, and nonexistent API directive, separately. Every strict build failed; restored the source afterward |
+| Rendered reference | Inspected home and camera-reference HTML in headless Chrome; checked all 19 generated HTML pages: no broken local links/anchors or duplicate IDs. Confirmed constructor/method signatures and curated members, without inherited Qt/VTK methods |
+| Preview | `zensical serve --dev-addr 127.0.0.1:8765`: home, tutorial, camera reference, and PNG returned HTTP 200; temporary server stopped afterward |
+| Maintenance checks | Ruff lint, Ruff format, and `git diff --check` passed. Existing pre-commit hooks passed on tracked **and new** files, including image size, YAML, and Ruff pin sync. CI YAML parsed locally; GitHub execution remains unverified |
+
+Preview and build from the checkout root:
+
+```bash
+.venv/bin/python -m pip install -e ".[docs]" -c constraints.txt -c docs/requirements.txt
+.venv/bin/zensical serve
+.venv/bin/zensical build --clean --strict
+```
+
+For the docs-only installation, exact commands and the dependency-update procedure,
+see [Documentation workflow](development/documentation.md). The first-figure workflow
+is in [the user guide](guide/first-figure.md).
+
+### Discrepancies documented without changing behavior
+
+- The previous progress wording and draft GUI docstring said rendering returned
+  immediately. In fact `render_png` queries the renderer version synchronously (up
+  to 15 s) and prepares files before starting `QProcess`. The render itself is
+  asynchronous. The GUI's renderer check is synchronous.
+- Frozen structure arrays do not make metadata immutable: the constructor retains
+  the metadata dictionary, and `replace` shallow-copies it. `Project` is mutable.
+- Direct `Structure` construction permits occupancy up to `1 + 1e-6`, does not reject
+  non-finite coordinates/occupancies, and does not validate `pbc` length. The CIF
+  reader rejects occupancy below `1 - 1e-3`, rather than every value below 1. These
+  existing tolerances/validation limits are now explicit.
+- The renderer self-test converts discovery/render failures to a result, but file
+  preparation, image decoding, and measurement errors may propagate. A preparation
+  failure after creating a job directory can leave partial files. GUI PNG-copy
+  failures can leave a `.part` file; the GUI still removes the render job.
+- Project metadata sanitization does not recursively sanitize values converted from
+  NumPy; non-finite values can make saving fail. Optional scene/environment/output
+  sections default on load; missing required structure entries fail. The old M1
+  evidence wording “missing sections” was too broad and is clarified above.
+- `core.compare.supercell` is a comparison helper and accepts non-singular integer
+  transforms, including orientation reversal; it is not a GUI supercell feature.
+  Structure comparison wraps fractional differences component by component, rather
+  than performing a general minimum-image search in skewed cells.
+
+### Still unverified / separate publication work
+
+- No human hands-on usability session, fresh system-package installation, Wayland,
+  other platforms, or POV-Ray 3.8 validation was performed in this increment. The
+  GUI rehearsal used synthetic events through the actual widgets; rendering,
+  structure/project output, and dimensions were checked.
+- The new docs CI job has not run on GitHub. The site is not deployed. Hosting,
+  canonical URL/base path, and deployed navigation/asset checks remain separate;
+  [publication notes](development/documentation.md#publication) describe the steps.
 
 ## Commands
 
@@ -220,5 +324,7 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 
 ## Next bounded action
 
-Review and merge the M1 branch. Then complete M2: numeric supercell repetitions,
-periodic bonds, view-direction buttons, and a warning before large expansions.
+M1 is already merged, and the owner reports M2 completed on another branch. Integrate
+that work and update the guides and reference against its actual implementation and
+acceptance evidence. Documentation publication and the outstanding owner-service
+setup are separate maintenance actions.

@@ -1,4 +1,14 @@
-"""Main application window: projects, structure import, navigation, selection, output."""
+"""Main application window: projects, structure import, navigation, selection, output.
+
+The window owns the current structure, display settings, selection, and undo stack.
+It delegates drawing to
+[`StructureViewport`][ycrystal.viewport.qt_viewport.StructureViewport], reading and
+saving to [`ycrystal.io.readers`][ycrystal.io.readers] and
+[`ycrystal.io.project`][ycrystal.io.project], and export and rendering to
+[`ycrystal.render.pov_writer`][ycrystal.render.pov_writer] and
+[`ycrystal.render.jobs`][ycrystal.render.jobs]. Dialogs are opened by separate
+``ask_*`` methods so that tests can answer them.
+"""
 
 from __future__ import annotations
 
@@ -58,7 +68,10 @@ from ycrystal.render.process import RenderProcess
 from ycrystal.viewport.qt_viewport import StructureViewport
 
 SETTINGS_POVRAY = "render/povray_executable"
+"""``QSettings`` key of the POV-Ray executable chosen with *Render ▸ Set POV-Ray Executable…*."""
+
 SETTINGS_LAST_DIR = "files/last_directory"
+"""``QSettings`` key of the directory last used for opening or saving."""
 
 OPEN_FILTERS = ";;".join(
     [
@@ -91,6 +104,8 @@ framing. The output image has the viewport's aspect ratio.</p>"""
 
 
 class RenderResultDialog(QDialog):
+    """Non-modal dialog that shows a rendered image and its path."""
+
     def __init__(self, image: Path, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle(f"Rendered image — {image.name}")
@@ -113,6 +128,61 @@ class RenderResultDialog(QDialog):
 
 
 class MainWindow(QMainWindow):
+    """The Ycrystal main window.
+
+    Creating it needs a ``QApplication`` and a display; the 3D view needs OpenGL.
+
+    Parameters
+    ----------
+    structure
+        Structure to show when no project is given.
+    parent
+        Qt parent widget.
+    project
+        Project to show, including its view and settings; takes precedence over
+        `structure`.
+    project_path
+        File the project was loaded from; used as the default save location.
+
+    Attributes
+    ----------
+    structure
+        The scientific structure shown. Navigation, selection, and hiding never change
+        it; opening a file replaces it.
+    scene_settings
+        Current display settings; changed only through undoable commands.
+    environment
+        Background and lights used for export and rendering.
+    geometry
+        The [`DisplayGeometry`][ycrystal.core.scene.DisplayGeometry] currently drawn
+        and exported.
+    selection
+        Selected displayed atoms, as a set of [`AtomId`][ycrystal.core.scene.AtomId].
+    undo_stack
+        ``QUndoStack`` of display-setting changes. Camera, output, and file actions are
+        not undoable.
+    project_path
+        Project file of the current scene, or ``None`` if it has not been saved.
+    settings
+        ``QSettings`` with machine-specific choices (POV-Ray path, last directory).
+    last_error
+        Title and text of the last error message, for tests and scripts.
+    last_render_path
+        Destination of the last successful render.
+    render_finished_result
+        [`RenderResult`][ycrystal.render.jobs.RenderResult] of the last finished render.
+
+    Raises
+    ------
+    ValueError
+        If neither `structure` nor `project` is given.
+
+    Notes
+    -----
+    The saved or default camera is applied after the window is first shown, once the
+    layout has given the 3D view its final size.
+    """
+
     def __init__(
         self,
         structure: Structure | None = None,
@@ -346,6 +416,7 @@ class MainWindow(QMainWindow):
 
     # ----- project state ----------------------------------------------------------------
     def current_project(self) -> Project:
+        """Return the current state as a [`Project`][ycrystal.io.project.Project]."""
         return Project(
             structure=self.structure,
             scene=self.scene_settings,
@@ -377,6 +448,11 @@ class MainWindow(QMainWindow):
             self._refresh_title()
 
     def is_modified(self) -> bool:
+        """Return whether the scene differs from the last saved or opened state.
+
+        Display-setting changes, a different output width or transparency setting, and
+        any change of the view count as modifications.
+        """
         if not self.undo_stack.isClean():
             return True
         if (self.width_spin.value(), self.transparent_check.isChecked()) != self._saved_output:
@@ -410,7 +486,24 @@ class MainWindow(QMainWindow):
 
     # ----- open -------------------------------------------------------------------------
     def open_file(self, path: str | Path | None = None, fmt: str | None = None) -> bool:
-        """Open a structure file or project. Returns True if something was loaded."""
+        """Open a structure file or a project, replacing the current scene.
+
+        Parameters
+        ----------
+        path
+            File to open; ``None`` shows a file dialog.
+        fmt
+            Format key (``"poscar"``, ``"cif"``, ``"qe"``, or ``"project"``); ``None``
+            detects it and asks if detection is ambiguous.
+
+        Returns
+        -------
+        bool
+            Whether something was loaded. ``False`` if the user cancelled (including
+            the question about unsaved changes) or the file could not be read. Read
+            failures show an error; cancellation does not. The current scene stays
+            unchanged in either case.
+        """
         if not self.maybe_save():
             return False
         if path is None:
@@ -420,6 +513,7 @@ class MainWindow(QMainWindow):
         return self._load_path(Path(path), fmt)
 
     def open_file_as(self) -> bool:
+        """Ask for a format, then open a file in that format (*File ▸ Open As…*)."""
         names = [FORMAT_NAMES[key] for key in ("cif", "poscar", "qe", "project")]
         choice = self.ask_choice("Open As", "Read the file as:", names)
         if choice is None:
@@ -507,11 +601,25 @@ class MainWindow(QMainWindow):
 
     # ----- save -------------------------------------------------------------------------
     def save(self) -> bool:
+        """Save to the current project file, or ask for one. Return whether it was saved."""
         if self.project_path is None:
             return self.save_as()
         return self._write_project(self.project_path)
 
     def save_as(self, path: str | Path | None = None) -> bool:
+        """Save the project to a new file.
+
+        Parameters
+        ----------
+        path
+            Destination; ``None`` shows a file dialog. ``.ycrystal`` is appended if the
+            name has another suffix.
+
+        Returns
+        -------
+        bool
+            Whether the project was saved; failures are shown in a message.
+        """
         if path is None:
             path = self.ask_save_path()
             if path is None:
@@ -591,7 +699,10 @@ class MainWindow(QMainWindow):
 
     # ----- view -------------------------------------------------------------------
     def set_display_geometry(self, geometry: DisplayGeometry) -> None:
-        """Show ``geometry``; the viewport and the POV-Ray export always share it."""
+        """Show a geometry; the viewport and the POV-Ray export always share it.
+
+        Selected atoms that are not part of `geometry` are deselected.
+        """
         self.geometry = geometry
         self.viewport.set_scene(geometry, self.environment)
         hidden = f" · {geometry.hidden_count} hidden" if geometry.hidden_count else ""
@@ -631,13 +742,20 @@ class MainWindow(QMainWindow):
         self._update_selection()
 
     def select(self, atom_ids: set[AtomId]) -> None:
+        """Replace the selection; IDs that are not displayed are ignored."""
         self.selection = {atom_id for atom_id in atom_ids if atom_id in self.geometry}
         self._update_selection()
 
     def clear_selection(self) -> None:
+        """Deselect all atoms (*Edit ▸ Select None*, Esc)."""
         self.select(set())
 
     def hide_selected(self) -> None:
+        """Hide the selected displayed atoms as one undoable step (Delete).
+
+        Only the selected balls disappear, from the view and from exports; other images
+        of the same atom stay, and the structure is unchanged.
+        """
         if not self.selection:
             return
         count = len(self.selection)
@@ -650,6 +768,7 @@ class MainWindow(QMainWindow):
         )
 
     def show_all_atoms(self) -> None:
+        """Bring back every hidden atom as one undoable step (*View ▸ Show All Atoms*)."""
         if self.scene_settings.hidden:
             self.undo_stack.push(
                 SceneSettingsCommand(
@@ -658,6 +777,11 @@ class MainWindow(QMainWindow):
             )
 
     def set_boundary_images(self, enabled: bool) -> None:
+        """Switch boundary images on or off as one undoable step.
+
+        Hidden IDs are kept while boundary images are off and apply again when they
+        are switched back on.
+        """
         if enabled != self.scene_settings.boundary_images:
             text = "Show Boundary Atoms" if enabled else "Hide Boundary Atoms"
             self.undo_stack.push(
@@ -673,6 +797,12 @@ class MainWindow(QMainWindow):
         self.selection_label.setText(self.selection_text())
 
     def selection_text(self) -> str:
+        """Return the status-bar description of the selection.
+
+        For one atom: element and label, 1-based atom number, image offset, fractional
+        and Cartesian (Å) coordinates, and movable flags if the file had any. For
+        several atoms: the number per element.
+        """
         if not self.selection:
             return ""
         if len(self.selection) == 1:
@@ -704,15 +834,23 @@ class MainWindow(QMainWindow):
         return f"Selected: {len(self.selection)} atoms ({parts})"
 
     def reset_view(self) -> None:
+        """Show the default orientation, framed to fit (*View ▸ Reset View*)."""
         width, height = self.viewport.render_size()
         points, radii = self.geometry.points_and_radii()
         self.viewport.set_camera(default_camera(points, radii, width / height))
         self._update_output_label()
 
     def current_camera(self) -> Camera:
+        """Return the camera of the 3D view."""
         return self.viewport.camera()
 
     def current_render_settings(self) -> RenderSettings:
+        """Return the output settings for export and rendering.
+
+        The width comes from the toolbar; the height is the width times the 3D view's
+        height-to-width ratio, rounded, so the image shows exactly what the view
+        shows. Antialiasing is always on.
+        """
         view_w, view_h = self.viewport.render_size()
         width = self.width_spin.value()
         height = max(1, round(width * view_h / view_w))
@@ -726,6 +864,7 @@ class MainWindow(QMainWindow):
 
     # ----- export / render ----------------------------------------------------------
     def configured_povray(self) -> str | None:
+        """Return the POV-Ray executable stored in the settings, or ``None``."""
         value = self.settings.value(SETTINGS_POVRAY, "", type=str)
         return value or None
 
@@ -735,6 +874,32 @@ class MainWindow(QMainWindow):
         return self.structure.composition()
 
     def export_pov(self, path: str | Path | None = None) -> Path | None:
+        """Write the current view as an editable POV-Ray scene (*File ▸ Export POV-Ray…*).
+
+        Writes ``NAME.pov`` and ``NAME.ini`` next to each other; the ``.ini`` file
+        names ``NAME.png`` as output. POV-Ray is not needed and not started.
+
+        Parameters
+        ----------
+        path
+            Scene file; ``None`` shows a file dialog. The suffix is replaced by
+            ``.pov``.
+
+        Returns
+        -------
+        pathlib.Path or None
+            Path of the ``.pov`` file, or ``None`` if the dialog was cancelled.
+
+        Raises
+        ------
+        OSError
+            If the files cannot be written.
+
+        Notes
+        -----
+        Existing files are replaced. The file dialog asks before replacing the
+        ``.pov`` file; the ``.ini`` file is replaced without asking.
+        """
         if path is None:
             path, _ = QFileDialog.getSaveFileName(
                 self,
@@ -761,7 +926,34 @@ class MainWindow(QMainWindow):
         return pov
 
     def render_png(self, path: str | Path | None = None, show_result: bool = True) -> bool:
-        """Start a POV-Ray render of the current view. Returns True if it started."""
+        """Start a POV-Ray render of the current view (*Render PNG…*, Ctrl+R).
+
+        After a synchronous version query (up to 15 seconds) and job preparation,
+        POV-Ray runs in the background in a temporary job directory. The method
+        returns once that process has been requested. When it finishes, the PNG is
+        copied to the destination (replacing an existing file), the job directory
+        is deleted, and the image is shown or an error message explains the failure.
+
+        Parameters
+        ----------
+        path
+            Destination PNG; ``None`` shows a file dialog. The suffix is replaced by
+            ``.png``.
+        show_result
+            Whether to show the finished image in a dialog.
+
+        Returns
+        -------
+        bool
+            Whether a render started. ``False`` if one is already running, POV-Ray is
+            not found (a message explains how to set it up), or the dialog was
+            cancelled.
+
+        Raises
+        ------
+        OSError
+            If the temporary job directory or scene files cannot be created.
+        """
         if self._render is not None and self._render.is_running():
             self.statusBar().showMessage("A render is already running.", 5000)
             return False
@@ -828,6 +1020,7 @@ class MainWindow(QMainWindow):
             self.render_finished_result = result
 
     def choose_povray(self) -> None:
+        """Ask for a POV-Ray executable, store it, and check it."""
         path, _ = QFileDialog.getOpenFileName(
             self, "Select POV-Ray Executable", self.configured_povray() or "/usr/bin"
         )
@@ -836,6 +1029,11 @@ class MainWindow(QMainWindow):
             self.check_renderer()
 
     def check_renderer(self) -> None:
+        """Run the renderer self-test and show the verdict (*Render ▸ Check Renderer*).
+
+        Runs synchronously: the window does not respond until the test finishes,
+        normally within a few seconds.
+        """
         from ycrystal.render.selftest import run_self_test
 
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
@@ -850,7 +1048,10 @@ class MainWindow(QMainWindow):
 
     # ----- messages -----------------------------------------------------------------
     def show_error(self, title: str, text: str) -> None:
-        """Report a problem without blocking the event loop."""
+        """Show a warning message without blocking the event loop.
+
+        The title and text are also stored in `last_error`.
+        """
         self.last_error = (title, text)
         box = QMessageBox(
             QMessageBox.Icon.Warning, title, text, QMessageBox.StandardButton.Ok, self
@@ -860,9 +1061,11 @@ class MainWindow(QMainWindow):
         self._message_box = box
 
     def show_mouse_help(self) -> None:
+        """Show the mouse and keyboard summary (*Help ▸ Mouse Controls*, F1)."""
         QMessageBox.information(self, "Mouse Controls", MOUSE_HELP)
 
     def show_format_help(self) -> None:
+        """Show the supported file formats (*Help ▸ Supported File Formats*)."""
         QMessageBox.information(self, "Supported File Formats", SUPPORT_SUMMARY)
 
     def closeEvent(self, event) -> None:  # noqa: N802, ANN001
