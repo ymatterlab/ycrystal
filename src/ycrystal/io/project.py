@@ -6,7 +6,11 @@ its import provenance, the display settings (including hidden atoms), environmen
 camera, and output settings. Floats are written with Python's shortest round-trip
 representation, so reopening reproduces every coordinate exactly.
 
-Schema history: 1 — first version (M1).
+Schema history:
+1 — first version (M1).
+2 — scene repetitions, cell-edge mode, and bond settings (M2). Schema-1 files are read
+    with bonds off, because schema-1 Ycrystal did not draw bonds; the reopened figure
+    therefore looks as it did when it was saved.
 """
 
 from __future__ import annotations
@@ -24,13 +28,14 @@ import numpy as np
 from ase.data import chemical_symbols
 
 from ycrystal import __version__
+from ycrystal.core.bonds import BondSettings
 from ycrystal.core.camera import Camera
 from ycrystal.core.scene import AtomId, Environment, SceneSettings
 from ycrystal.core.structure import Structure
 from ycrystal.render.pov_writer import RenderSettings
 
 PROJECT_FORMAT = "ycrystal-project"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 PROJECT_SUFFIX = ".ycrystal"
 
 
@@ -77,6 +82,17 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             "hidden": [
                 {"atom": source, "image": list(image)} for source, image in sorted(scene.hidden)
             ],
+            "repetitions": list(scene.repetitions),
+            "cell_mode": scene.cell_mode,
+            "bonds": {
+                "enabled": scene.bonds.enabled,
+                "tolerance": scene.bonds.tolerance,
+                "radius": scene.bonds.radius,
+                "pairs": [
+                    {"elements": [a, b], "enabled": on}
+                    for a, b, on in sorted(scene.bonds.overrides)
+                ],
+            },
         },
         "environment": {
             "background": list(project.environment.background),
@@ -107,7 +123,7 @@ def project_from_dict(data: Any) -> Project:
         )
     try:
         structure = _structure_from(data["structure"])
-        scene = _scene_from(data.get("scene") or {})
+        scene = _scene_from(data.get("scene") or {}, version)
         environment = _environment_from(data.get("environment") or {})
         camera_data = data.get("camera")
         camera = None if camera_data is None else Camera.from_dict(camera_data)
@@ -138,7 +154,7 @@ def _structure_from(d: dict[str, Any]) -> Structure:
     )
 
 
-def _scene_from(d: dict[str, Any]) -> SceneSettings:
+def _scene_from(d: dict[str, Any], version: int = SCHEMA_VERSION) -> SceneSettings:
     defaults = SceneSettings()
     hidden: set[AtomId] = set()
     for entry in d.get("hidden", []):
@@ -154,6 +170,28 @@ def _scene_from(d: dict[str, Any]) -> SceneSettings:
         boundary_images=bool(d.get("boundary_images", defaults.boundary_images)),
         boundary_tolerance=float(d.get("boundary_tolerance", defaults.boundary_tolerance)),
         hidden=frozenset(hidden),
+        repetitions=tuple(int(v) for v in d.get("repetitions", defaults.repetitions)),
+        cell_mode=str(d.get("cell_mode", defaults.cell_mode)),
+        bonds=_bonds_from(d.get("bonds"), version),
+    )
+
+
+def _bonds_from(d: Any, version: int) -> BondSettings:
+    if d is None:
+        # Schema 1 had no bonds: keep old figures unchanged.
+        return BondSettings(enabled=False) if version < 2 else BondSettings()
+    defaults = BondSettings()
+    overrides = set()
+    for entry in d.get("pairs", []):
+        a, b = (str(e) for e in entry["elements"])
+        if a > b:
+            a, b = b, a
+        overrides.add((a, b, bool(entry["enabled"])))
+    return BondSettings(
+        enabled=bool(d.get("enabled", defaults.enabled)),
+        tolerance=float(d.get("tolerance", defaults.tolerance)),
+        radius=float(d.get("radius", defaults.radius)),
+        overrides=frozenset(overrides),
     )
 
 

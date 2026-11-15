@@ -68,7 +68,7 @@ def _send_wheel(widget, pos, clicks):
 
 def test_window_launches_with_sample_and_fitted_view(window):
     assert "OFeSClN" in window.windowTitle()
-    assert "5 atoms shown" in window.structure_label.text()
+    assert "5 atoms, 1 bond shown" in window.structure_label.text()
     width, height = window.viewport.render_size()
     assert width != height
     pixels = window.current_camera().project(window.geometry.positions, width, height)
@@ -285,7 +285,7 @@ def test_perovskite_shows_boundary_atoms(perovskite_window):
     win = perovskite_window
     assert len(win.geometry) == 15
     assert win.geometry.element_counts() == {"Sr": 8, "Ti": 1, "O": 6}
-    assert "15 atoms shown" in win.structure_label.text()
+    assert "15 atoms, 30 bonds shown" in win.structure_label.text()
     assert win.boundary_action.isChecked()
 
 

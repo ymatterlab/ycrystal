@@ -9,9 +9,10 @@ crystal-structure figures and rendering them with [POV-Ray](https://www.povray.o
 
 **Status: early development.** Ycrystal opens POSCAR/CONTCAR, CIF, and Quantum
 ESPRESSO (`ibrav = 0`) files, saves and reopens `.ycrystal` projects, supports
-orbit/pan/zoom, selection and hiding of individual atoms, and exports or renders the
-current orthographic view with POV-Ray. Supercells, bonds, materials, and lighting
-controls are not implemented yet. See [docs/PROGRESS.md](docs/PROGRESS.md) and the
+orbit/pan/zoom, display supercells (a × b × c repetitions), periodic bonds, boundary
+atoms, view directions, selection and hiding of individual atoms, and exports or renders
+the current orthographic view with POV-Ray. Material and background galleries, lighting
+controls, and the preview workflow are not implemented yet. See [docs/PROGRESS.md](docs/PROGRESS.md) and the
 format details in [docs/FORMATS.md](docs/FORMATS.md).
 
 ## Requirements (Linux Mint 22 / Ubuntu 24.04)
@@ -61,7 +62,11 @@ zooms, **F** fits the structure. Click a ball to select it (Ctrl + click adds or
 removes, Esc clears); **Delete** hides the selected balls from the view and from exports
 without changing the structure (**Ctrl+Z** undoes, *View ▸ Show All Atoms* restores).
 Atoms on cell faces, edges, and corners are drawn at every equivalent position, as in
-VESTA (*View ▸ Show Boundary Atoms*). *Render PNG…* renders the current view at the
+VESTA (*View ▸ Show Boundary Atoms*). The *Scene* panel sets repetitions (cells along
+a × b × c, rebuilt from the original structure), cell edges, and bonds (length
+tolerance, radius, and which element pairs are bonded); the *a b c / x y z* buttons
+look down an axis (Shift: from the other side). Display changes are undoable and never
+modify atomic coordinates. *Render PNG…* renders the current view at the
 chosen width; the height follows the viewport's aspect ratio.
 
 POV-Ray is found via *Render ▸ Set POV-Ray Executable…*, then `$YCRYSTAL_POVRAY`, then

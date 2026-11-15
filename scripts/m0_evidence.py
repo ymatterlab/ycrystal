@@ -28,6 +28,7 @@ from PySide6.QtCore import QEvent, QEventLoop, QPoint, QPointF, Qt, QTimer  # no
 from PySide6.QtGui import QMouseEvent, QWheelEvent  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
+from ycrystal.core.bonds import BondSettings  # noqa: E402
 from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.samples import triclinic_marker  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry, SceneSettings, build_geometry  # noqa: E402
@@ -229,7 +230,11 @@ def main() -> int:
     # --- numerical evidence: atoms only, transparent background ----------------------
     # Same mouse-navigated camera; no cell edges and half-size spheres so that every atom
     # is a separate disc (atom centres, and hence the expected pixels, are unchanged).
-    atoms_only = build_geometry(window.structure, SceneSettings(radius_scale=0.25, show_cell=False))
+    # Bonds are switched off too: a bond would join two discs into one blob.
+    atoms_only = build_geometry(
+        window.structure,
+        SceneSettings(radius_scale=0.25, show_cell=False, bonds=BondSettings(enabled=False)),
+    )
     window.set_display_geometry(atoms_only)
     window.viewport.set_axes_visible(False)
     assert window.viewport.camera() == camera
