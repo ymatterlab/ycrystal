@@ -77,17 +77,26 @@ does not need pseudopotential files.
 - the complete structure (cell, positions, elements, labels, occupancies, movable flags),
 - where it came from (original path and name, format, SHA-256 checksum, data block,
   element mapping, import time, reader version),
-- display settings (repetitions, cell edges, boundary atoms, hidden atoms, bond rules),
-  background and lights,
-- the camera and the output width / transparency.
+- display settings (repetitions, cell edges, boundary atoms, hidden atoms, bond rules,
+  atom size and element radii), materials (default, element, and atom overrides),
+  element colours, and the environment (background, floor, lighting),
+- the camera of the output image and the output size.
 
 A project reopens without the original structure file and reproduces the coordinates
 exactly. Closing or opening another file with unsaved changes (including a changed view)
 asks whether to save, discard, or cancel.
 
-Known limitation: the rendered image takes its aspect ratio from the current window, so
-a project reopened in a differently shaped window keeps the camera but frames a
-different width. An explicit output frame is planned with the preview workflow.
+The camera is stored for the explicit output size, so a project reopens with the same
+framing in a window of any shape.
 
-Current project schema is 2. Schema-1 projects remain readable and load with bonds
-switched off to preserve figures created before M2. Newer schemas are rejected.
+Current project schema is 5. Older projects remain readable with their original
+appearance (schema-1 projects load with bonds switched off, as they were drawn). Newer
+schemas are rejected with a message to update Ycrystal.
+
+## Ycrystal styles (`.ycstyle`)
+
+**File ▸ Export Style…** writes the presentation without structure and camera:
+materials, colours, radii, display settings, the environment, the output size, and the
+element sequence of the source structure (used to decide whether per-atom settings can
+transfer). See [reusing the look](guide/appearance.md#reusing-the-look-styles) for the
+transfer rules. Style files are versioned JSON; newer versions are rejected.

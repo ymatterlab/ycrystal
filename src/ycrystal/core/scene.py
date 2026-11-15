@@ -94,6 +94,9 @@ class SceneSettings:
     element_colors
         Colour overrides per element, as sorted ``(element, rgb)`` pairs; other elements
         use ASE's Jmol colours. Materials with their own pigment ignore the colour.
+    element_radii
+        Sphere-radius overrides per element in Å, as sorted ``(element, radius)`` pairs;
+        other elements use `radius_scale` times the covalent radius.
     hidden
         Displayed-atom IDs omitted from the view and from exported scenes. IDs that are
         not displayed under the current settings (for example boundary images while
@@ -122,6 +125,7 @@ class SceneSettings:
     element_materials: tuple[tuple[str, str], ...] = ()
     atom_materials: tuple[tuple[AtomId, str], ...] = ()
     element_colors: tuple[tuple[str, RGB], ...] = ()
+    element_radii: tuple[tuple[str, float], ...] = ()
 
     def __post_init__(self) -> None:
         reps = tuple(int(r) for r in self.repetitions)
@@ -142,6 +146,12 @@ class SceneSettings:
         if any(not 0.0 <= c <= 1.0 for rgb in colors.values() for c in rgb):
             raise ValueError("colour components must be between 0 and 1")
         object.__setattr__(self, "element_colors", tuple(sorted(colors.items())))
+        radii = {element: float(r) for element, r in self.element_radii}
+        if any(not r > 0 for r in radii.values()):
+            raise ValueError("element radii must be positive")
+        object.__setattr__(self, "element_radii", tuple(sorted(radii.items())))
+        if not self.radius_scale > 0:
+            raise ValueError("radius_scale must be positive")
 
     def material_for(self, atom_id: AtomId, element: str) -> str:
         """Return the material id of one displayed atom (atom > element > default).
@@ -191,6 +201,20 @@ class SceneSettings:
         else:
             table[element] = color
         return replace(self, element_colors=tuple(table.items()))
+
+    def with_element_radius(self, element: str, radius: float | None) -> SceneSettings:
+        """Return settings with the radius override (Å) of ``element`` set or removed."""
+        table = dict(self.element_radii)
+        if radius is None:
+            table.pop(element, None)
+        else:
+            table[element] = radius
+        return replace(self, element_radii=tuple(table.items()))
+
+    def radius_for(self, element: str, number: int) -> float:
+        """Return the sphere radius in Å of an element (override or scaled covalent)."""
+        override = dict(self.element_radii).get(element)
+        return override if override is not None else self.radius_scale * covalent_radii[number]
 
     def material_ids(self) -> set[str]:
         """Every material id the settings refer to (default and overrides)."""
@@ -645,7 +669,8 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
 
     Notes
     -----
-    Radii are ``settings.radius_scale`` times ASE's covalent radius. Each atom's material
+    Radii are ``settings.radius_scale`` times ASE's covalent radius, or the element's
+    radius in ``settings.element_radii``. Each atom's material
     is resolved with ``settings.material_for``; colours are the element colours (ASE's
     Jmol colours or ``settings.element_colors``), except for atoms whose material has its
     own pigment, which get the material's representative colour. Cell edges are drawn
@@ -681,8 +706,11 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
     sources = np.array([atom_id[0] for atom_id in atom_ids], dtype=int)
     numbers = structure.numbers[sources] if len(sources) else np.zeros(0, dtype=int)
     positions = np.array([pos for _, pos in shown], dtype=float).reshape(-1, 3)
-    radii = settings.radius_scale * covalent_radii[numbers]
     elements = tuple(chemical_symbols[z] for z in numbers)
+    radii = settings.radius_scale * covalent_radii[numbers]
+    if settings.element_radii and len(numbers):
+        overrides = dict(settings.element_radii)
+        radii = np.array([overrides.get(e, r) for e, r in zip(elements, radii, strict=True)])
     atom_table, element_table = dict(settings.atom_materials), dict(settings.element_materials)
     materials = tuple(
         atom_table.get(atom_id) or element_table.get(element, settings.material)

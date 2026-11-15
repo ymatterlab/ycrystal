@@ -231,7 +231,7 @@ def test_unknown_presets_are_refused(tmp_path, section, key):
         load_project(path)
 
 
-def test_schema4_overrides_colours_and_environment_round_trip(tmp_path):
+def test_overrides_colours_radii_and_environment_round_trip(tmp_path):
     from ycrystal.presets import apply_lighting, environment_from_preset
 
     structure = read_structure(FIXTURES / "MgB2.cif")
@@ -240,6 +240,7 @@ def test_schema4_overrides_colours_and_environment_round_trip(tmp_path):
         .with_element_material("B", "gold")
         .with_atom_materials([(0, (1, 0, 0)), (1, (0, 0, 0))], "glass_frosted")
         .with_element_color("Mg", (0.1, 0.8, 0.3))
+        .with_element_radius("B", 0.37)
     )
     environment = replace(
         apply_lighting(environment_from_preset("sky_cloudy"), "dramatic"),
@@ -257,7 +258,8 @@ def test_schema4_overrides_colours_and_environment_round_trip(tmp_path):
     assert again.scene == project.scene  # overrides and colours, exactly
     assert again.environment == project.environment  # background, floor, lighting
     data = json.loads(path.read_text())
-    assert data["schema_version"] == 4
+    assert data["schema_version"] == SCHEMA_VERSION == 5
+    assert data["scene"]["element_radii"] == [{"element": "B", "radius": 0.37}]
     assert data["scene"]["element_materials"] == [{"element": "B", "material": "gold"}]
     assert data["environment"]["floor"]["reflection"] == 0.2
     assert data["environment"]["lighting"]["preset"] == "dramatic"

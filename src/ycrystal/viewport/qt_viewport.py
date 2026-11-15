@@ -6,7 +6,12 @@ renderer-independent [`Camera`][ycrystal.core.camera.Camera] and
 
 Mouse mapping (VTK trackball-camera style, orthographic projection):
 left drag orbits, middle drag or Shift + left drag pans, wheel or right drag zooms.
-A left click without dragging picks the atom under the cursor (Ctrl toggles).
+A left click without dragging picks the atom under the cursor (Ctrl toggles). With a
+rotation axis set
+([`set_rotation_axis`][ycrystal.viewport.qt_viewport.StructureViewport.set_rotation_axis]),
+left drag turns the view about that axis only. Dragging a supercell handle (the a, b, c
+markers at the faces of the repeated block) changes the repetitions in whole cells;
+orbiting is disabled during that drag, Esc or the right button cancels it.
 
 An output frame shows which part of the view the rendered image contains: the largest
 rectangle with the output aspect ratio that fits inside the view with a small margin;
@@ -44,6 +49,7 @@ from vtkmodules.vtkRenderingCore import (  # noqa: E402
     vtkActor2D,
     vtkGlyph3DMapper,
     vtkPolyDataMapper2D,
+    vtkTextActor,
 )
 
 from ycrystal.core.camera import Camera  # noqa: E402
@@ -84,39 +90,91 @@ HIGHLIGHT_SCALE = 1.25
 HIGHLIGHT_COLOR = (1.0, 0.72, 0.0)
 """Colour of the selection shell (orange, drawn 45 % opaque)."""
 
+HANDLE_COLORS = ((0.85, 0.2, 0.2), (0.15, 0.62, 0.25), (0.2, 0.38, 0.92))
+"""Colours of the a, b, and c supercell handles."""
+
+HANDLE_RADIUS_PX = 10.0
+"""Radius of a supercell handle in device pixels (also its pick radius)."""
+
+HANDLE_OFFSET_PX = 18.0
+"""Gap between a handle and the projected outline of the repeated block (including the
+largest atom radius), in device pixels. Handles sit on the line through the face centre
+along their lattice direction."""
+
+HANDLE_MIN_STEP_PX = 12.0
+"""Handles of lattice directions that span fewer device pixels per cell are hidden
+(the direction points almost along the line of sight)."""
+
+PREVIEW_COLOR = (1.0, 0.55, 0.0)
+"""Colour of the block outline shown while a handle is dragged."""
+
+ROTATION_DEG_PER_PX = 0.4
+"""Rotation per device pixel of mouse movement in axis-constrained rotation."""
+
 
 class _InputFilter(QObject):
-    """Separate clicks from drags and block VTK/PyVista default key bindings.
+    """Separate clicks from drags, route handle and axis drags, block VTK key bindings.
 
     Keys such as 'q' (close) or 'w' (wireframe) are swallowed; application shortcuts
-    (F, Delete, Esc, Ctrl+Z, …) are handled by the main window. Mouse events always
-    continue to VTK, so dragging still navigates.
+    (F, Delete, Esc, Ctrl+Z, …) are handled by the main window. Left drags on a supercell
+    handle, and left drags while a rotation axis is set, are handled by the viewport and
+    kept from VTK; all other mouse events continue to VTK, so dragging still navigates.
     """
 
     def __init__(self, viewport: StructureViewport) -> None:
         super().__init__(viewport)
         self._viewport = viewport
         self._press: QPointF | None = None
+        self._consuming = False
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802
         kind = event.type()
+        viewport = self._viewport
         if kind in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease):
+            if (
+                kind == QEvent.Type.KeyPress
+                and isinstance(event, QKeyEvent)
+                and event.key() == Qt.Key.Key_Escape
+                and viewport.cancel_interaction()
+            ):
+                self._consuming = False
+                return True
             # Window shortcuts normally consume their keys before this point. If the
             # window is not active (e.g. no window manager), offer the key to the
             # application instead of to VTK.
             if kind == QEvent.Type.KeyPress and isinstance(event, QKeyEvent):
-                self._viewport.key_pressed.emit(QKeySequence(event.keyCombination()))
+                viewport.key_pressed.emit(QKeySequence(event.keyCombination()))
             event.ignore()
             return True
-        if isinstance(event, QMouseEvent) and event.button() == Qt.MouseButton.LeftButton:
-            if kind == QEvent.Type.MouseButtonPress:
-                self._press = event.position()
-            elif kind == QEvent.Type.MouseButtonRelease and self._press is not None:
-                moved = (event.position() - self._press).manhattanLength()
-                self._press = None
-                if moved <= CLICK_TOLERANCE_PX:
-                    toggle = bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
-                    self._viewport.handle_click(event.position(), toggle)
+        if not isinstance(event, QMouseEvent):
+            return False
+        button = event.button()
+        if kind == QEvent.Type.MouseButtonPress and button == Qt.MouseButton.LeftButton:
+            self._press = event.position()
+            if viewport._begin_interaction(event.position(), event.modifiers()):
+                self._consuming = True
+                return True
+        elif kind == QEvent.Type.MouseButtonPress and self._consuming:
+            viewport.cancel_interaction()  # another button cancels a handle or axis drag
+            self._consuming = False
+            return True
+        elif kind == QEvent.Type.MouseMove:
+            if self._consuming:
+                viewport._update_interaction(event.position())
+                return True
+            viewport._update_hover(event.position())
+        elif kind == QEvent.Type.MouseButtonRelease and button == Qt.MouseButton.LeftButton:
+            press, self._press = self._press, None
+            moved = (event.position() - press).manhattanLength() if press is not None else 1e9
+            toggle = bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
+            if self._consuming:
+                self._consuming = False
+                was_handle = viewport._end_interaction(event.position())
+                if moved <= CLICK_TOLERANCE_PX and not was_handle:
+                    viewport.handle_click(event.position(), toggle)
+                return True
+            if moved <= CLICK_TOLERANCE_PX:
+                viewport.handle_click(event.position(), toggle)
         return False
 
 
@@ -151,6 +209,13 @@ class StructureViewport(QWidget):
     key_pressed = Signal(QKeySequence)
     """A key pressed in the 3D view that no window shortcut consumed."""
 
+    supercell_drag_changed = Signal(tuple)
+    """While a supercell handle is dragged: the repetitions ``(na, nb, nc)`` it would
+    give (emitted when they change, including at the start)."""
+
+    supercell_drag_finished = Signal(tuple)
+    """A handle drag ended on repetitions different from the starting ones."""
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         layout = QVBoxLayout(self)
@@ -177,6 +242,32 @@ class StructureViewport(QWidget):
         self._dim_actor, self._frame_actor = _frame_actors()
         self._plotter.renderer.AddViewProp(self._dim_actor)
         self._plotter.renderer.AddViewProp(self._frame_actor)
+        # Supercell handles (2D markers with a letter) and the drag preview.
+        self._supercell: tuple[np.ndarray, tuple[int, int, int], tuple[bool, ...]] | None = None
+        self._handles_enabled = True
+        self._handle_screen: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+        self._handle_actors: list[vtkActor2D] = []
+        self._handle_labels: list[vtkTextActor] = []
+        for axis, color in enumerate(HANDLE_COLORS):
+            actor = _overlay_actor(color)
+            label = _text_actor("abc"[axis], (1.0, 1.0, 1.0), 13, centred=True)
+            self._plotter.renderer.AddViewProp(actor)
+            self._plotter.renderer.AddViewProp(label)
+            self._handle_actors.append(actor)
+            self._handle_labels.append(label)
+        self._preview_actor = vtkActor()
+        self._preview_actor.SetMapper(_line_mapper())
+        self._preview_actor.GetProperty().SetColor(*PREVIEW_COLOR)
+        self._preview_actor.GetProperty().SetLineWidth(3.0)
+        self._preview_actor.SetPickable(False)
+        self._preview_actor.SetVisibility(False)
+        self._plotter.renderer.AddActor(self._preview_actor)
+        self._drag_text = _text_actor("", PREVIEW_COLOR, 15, centred=False)
+        self._drag_text.SetVisibility(False)
+        self._plotter.renderer.AddViewProp(self._drag_text)
+        self._drag: dict | None = None
+        self._rotation_axis: np.ndarray | None = None
+        self._rotating: QPointF | None = None
         # Before each render: keep the output framing across resizes; redraw the frame.
         self._plotter.renderer.AddObserver("StartEvent", self._before_render)
 
@@ -480,10 +571,313 @@ class StructureViewport(QWidget):
         self.set_camera(view, render=render)
 
     def set_frame_visible(self, visible: bool) -> None:
-        """Show or hide the output frame and the dimming outside it."""
+        """Show or hide the overlays: output frame, dimming, and supercell handles.
+
+        Hiding them is useful for screenshots that are compared with renders.
+        """
         self._frame_visible = bool(visible)
         self._dim_actor.SetVisibility(self._frame_visible)
         self._frame_actor.SetVisibility(self._frame_visible)
+        self._plotter.render()
+
+    # ----- supercell handles ----------------------------------------------------------
+    def set_supercell(
+        self,
+        cell: np.ndarray | None,
+        repetitions: tuple[int, int, int],
+        periodic: tuple[bool, bool, bool] = (True, True, True),
+    ) -> None:
+        """Place the supercell handles on the repeated block.
+
+        Parameters
+        ----------
+        cell
+            Lattice vectors as rows (Å), or ``None`` for a structure without a cell (no
+            handles).
+        repetitions
+            Current cell counts along a, b, c.
+        periodic
+            Periodic axes; only they get a handle.
+        """
+        if cell is None:
+            self._supercell = None
+        else:
+            reps = (int(repetitions[0]), int(repetitions[1]), int(repetitions[2]))
+            self._supercell = (
+                np.asarray(cell, dtype=float),
+                reps,
+                tuple(bool(p) for p in periodic),
+            )
+        self._update_handles()
+        self._plotter.render()
+
+    def set_handles_visible(self, visible: bool) -> None:
+        """Show or hide the supercell handles (*View ▸ Supercell Handles*)."""
+        self._handles_enabled = bool(visible)
+        self._update_handles()
+        self._plotter.render()
+
+    def handle_positions(self) -> dict[int, tuple[float, float]]:
+        """Return the visible handles: axis index (0 = a) → centre in device pixels.
+
+        Coordinates have the top-left origin of the view, like
+        [`pick`][ycrystal.viewport.qt_viewport.StructureViewport.pick].
+        """
+        self._update_handles()
+        return {
+            axis: (float(centre[0]), float(centre[1]))
+            for axis, (centre, _) in self._handle_screen.items()
+        }
+
+    def handle_at(self, pixel: tuple[float, float]) -> int | None:
+        """Return the axis of the handle under a device pixel, or ``None``."""
+        point = np.asarray(pixel, dtype=float)
+        best, best_distance = None, HANDLE_RADIUS_PX + 3.0
+        for axis, (centre, _) in self._handle_screen.items():
+            distance = float(np.linalg.norm(point - centre))
+            if distance <= best_distance:
+                best, best_distance = axis, distance
+        return best
+
+    def set_drag_label(self, text: str) -> None:
+        """Show ``text`` next to the dragged handle (for example the atom count)."""
+        self._drag_text.SetInput(text)
+        self._plotter.render()
+
+    def is_dragging_handle(self) -> bool:
+        """Return whether a supercell handle is being dragged."""
+        return self._drag is not None
+
+    # ----- axis-constrained rotation -----------------------------------------------------
+    def set_rotation_axis(self, axis: np.ndarray | tuple[float, float, float] | None) -> None:
+        """Constrain left-drag rotation to a world axis, or ``None`` for free rotation.
+
+        With an axis, left drag turns the view about the axis through the view centre:
+        the structure follows the mouse across the axis as it appears on screen, or turns
+        with a circular mouse motion when the axis points at the viewer. Shift + left
+        drag still pans; the other buttons are unchanged.
+        """
+        if axis is None:
+            self._rotation_axis = None
+            return
+        vector = np.asarray(axis, dtype=float)
+        norm = float(np.linalg.norm(vector))
+        if not norm > 0:
+            raise ValueError("rotation axis must have non-zero length")
+        self._rotation_axis = vector / norm
+
+    def rotation_axis(self) -> np.ndarray | None:
+        """Return the unit rotation axis, or ``None`` for free rotation."""
+        return None if self._rotation_axis is None else self._rotation_axis.copy()
+
+    def rotate_view(self, angle: float, axis: np.ndarray | None = None) -> None:
+        """Turn the view so that the scene rotates by ``angle`` degrees about an axis.
+
+        Parameters
+        ----------
+        angle
+            Right-handed rotation in degrees.
+        axis
+            World axis; defaults to the rotation axis, or to the line of sight
+            (pointing at the viewer, so positive angles turn the image
+            counter-clockwise) in free rotation.
+        """
+        camera = self.camera()
+        if axis is None:
+            axis = self._rotation_axis
+        if axis is None:
+            axis = -camera.basis()[2]
+        self.set_camera(camera.rotate_about(axis, angle))
+
+    def _axis_angle(self, start: np.ndarray, end: np.ndarray) -> float:
+        """Rotation in degrees for a mouse move from ``start`` to ``end`` (device px)."""
+        axis = self._rotation_axis
+        right, up, direction = self.camera().basis()
+        screen = np.array([axis @ right, axis @ up])  # y up
+        length = float(np.linalg.norm(screen))
+        if length > 0.3:
+            normal = np.array([screen[1], -screen[0]]) / length
+            delta = np.array([end[0] - start[0], -(end[1] - start[1])])
+            return ROTATION_DEG_PER_PX * float(delta @ normal)
+        width, height = self.render_size()
+        centre = np.array([width / 2.0, height / 2.0])
+        a0 = np.arctan2(-(start[1] - centre[1]), start[0] - centre[0])
+        a1 = np.arctan2(-(end[1] - centre[1]), end[0] - centre[0])
+        swept = (a1 - a0 + np.pi) % (2 * np.pi) - np.pi
+        return float(np.degrees(swept)) * (1.0 if axis @ -direction >= 0 else -1.0)
+
+    # ----- interaction (called by the input filter) ---------------------------------------
+    def _device(self, position: QPointF) -> np.ndarray:
+        ratio = self._plotter.devicePixelRatioF()
+        return np.array([position.x() * ratio, position.y() * ratio])
+
+    def _begin_interaction(self, position: QPointF, modifiers: Qt.KeyboardModifier) -> bool:
+        pixel = self._device(position)
+        shift = bool(modifiers & Qt.KeyboardModifier.ShiftModifier)
+        axis = None if shift else self.handle_at(tuple(pixel))
+        if axis is not None and self._supercell is not None:
+            _, reps, _ = self._supercell
+            self._drag = {"axis": axis, "start": pixel, "reps0": reps, "reps": reps}
+            self._preview_actor.SetVisibility(True)
+            self._drag_text.SetVisibility(True)
+            self._update_preview()
+            self.supercell_drag_changed.emit(reps)
+            return True
+        if self._rotation_axis is not None and not shift:
+            self._rotating = position
+            return True
+        return False
+
+    def _update_interaction(self, position: QPointF) -> None:
+        if self._drag is not None:
+            drag = self._drag
+            axis = drag["axis"]
+            _, step = self._handle_steps(drag["reps0"]).get(axis, (None, None))
+            if step is None:
+                return
+            delta = self._device(position) - drag["start"]
+            cells = int(round(float(delta @ step) / float(step @ step)))
+            reps = list(drag["reps0"])
+            reps[axis] = max(1, min(MAX_HANDLE_REPETITIONS, reps[axis] + cells))
+            reps = tuple(reps)
+            if reps != drag["reps"]:
+                drag["reps"] = reps
+                self._update_preview()
+                self.supercell_drag_changed.emit(reps)
+            return
+        if self._rotating is not None:
+            angle = self._axis_angle(self._device(self._rotating), self._device(position))
+            self._rotating = position
+            if angle:
+                self.set_camera(self.camera().rotate_about(self._rotation_axis, angle))
+
+    def _end_interaction(self, position: QPointF) -> bool:
+        """Finish a handle or axis drag; return whether it was a handle drag."""
+        if self._drag is not None:
+            self._update_interaction(position)
+            drag, self._drag = self._drag, None
+            self._preview_actor.SetVisibility(False)
+            self._drag_text.SetVisibility(False)
+            self._update_handles()
+            self._plotter.render()
+            if drag["reps"] != drag["reps0"]:
+                self.supercell_drag_finished.emit(drag["reps"])
+            return True
+        self._rotating = None
+        return False
+
+    def cancel_interaction(self) -> bool:
+        """Cancel a handle or axis drag in progress; return whether one was cancelled.
+
+        A cancelled handle drag leaves the repetitions unchanged.
+        """
+        if self._drag is not None:
+            self._drag = None
+            self._preview_actor.SetVisibility(False)
+            self._drag_text.SetVisibility(False)
+            self._update_handles()
+            self._plotter.render()
+            return True
+        if self._rotating is not None:
+            self._rotating = None
+            return True
+        return False
+
+    def _update_hover(self, position: QPointF) -> None:
+        over = self.handle_at(tuple(self._device(position))) is not None
+        if over:
+            self._plotter.setCursor(Qt.CursorShape.OpenHandCursor)
+        else:
+            self._plotter.unsetCursor()
+
+    def _handle_steps(self, reps: tuple[int, int, int]) -> dict[int, tuple[np.ndarray, np.ndarray]]:
+        """Per periodic axis: projected face centre and pixels per cell (device px)."""
+        if self._supercell is None:
+            return {}
+        cell, _, periodic = self._supercell
+        width, height = self.render_size()
+        camera = self.camera()
+        result = {}
+        for axis in range(3):
+            if not periodic[axis]:
+                continue
+            frac = np.array(reps, dtype=float) / 2.0
+            frac[axis] = reps[axis]
+            face = frac @ cell
+            ends = camera.project(np.array([face, face + cell[axis]]), width, height)
+            step = ends[1] - ends[0]
+            if float(np.linalg.norm(step)) >= HANDLE_MIN_STEP_PX:
+                result[axis] = (ends[0], step)
+        return result
+
+    def _block_extent(
+        self, reps: tuple[int, int, int], face: np.ndarray, direction: np.ndarray
+    ) -> float:
+        """Pixels from a projected face centre to the far edge of the block along ``direction``.
+
+        Includes the largest atom radius, so that a handle placed beyond it does not
+        cover atoms.
+        """
+        cell = self._supercell[0]
+        width, height = self.render_size()
+        camera = self.camera()
+        corners = np.array(
+            [[i, j, k] for i in (0, 1) for j in (0, 1) for k in (0, 1)], dtype=float
+        ) * np.array(reps, dtype=float)
+        pixels = camera.project(corners @ cell, width, height)
+        extent = float(np.max((pixels - face) @ direction))
+        if self._geometry is not None and len(self._geometry.radii):
+            extent += float(np.max(self._geometry.radii)) * camera.pixels_per_angstrom(height)
+        return max(extent, 0.0)
+
+    def _update_handles(self) -> None:
+        reps = self._drag["reps"] if self._drag is not None else None
+        if self._supercell is not None and reps is None:
+            reps = self._supercell[1]
+        show = self._handles_enabled and self._frame_visible and self._supercell is not None
+        steps = self._handle_steps(reps) if show else {}
+        self._handle_screen = {}
+        width, height = self.render_size()
+        for axis in range(3):
+            actor, label = self._handle_actors[axis], self._handle_labels[axis]
+            if axis not in steps:
+                actor.SetVisibility(False)
+                label.SetVisibility(False)
+                continue
+            face, step = steps[axis]
+            direction = step / np.linalg.norm(step)
+            outside = self._block_extent(reps, face, direction)
+            centre = face + direction * (outside + HANDLE_OFFSET_PX)
+            edge = HANDLE_RADIUS_PX + 12.0  # keep the handle (and its arrow) in the view
+            centre = np.clip(centre, [edge, edge], [width - edge, height - edge])
+            self._handle_screen[axis] = (centre, step)
+            _set_handle_shape(actor, centre, direction, height)
+            label.SetDisplayPosition(int(round(centre[0])), int(round(height - centre[1])))
+            actor.SetVisibility(True)
+            label.SetVisibility(True)
+        if self._drag is not None and self._drag["axis"] in self._handle_screen:
+            centre, _ = self._handle_screen[self._drag["axis"]]
+            self._drag_text.SetDisplayPosition(
+                int(round(min(centre[0] + 16, width - 220))),
+                int(round(min(height - centre[1] + 14, height - 24))),
+            )
+
+    def _update_preview(self) -> None:
+        if self._drag is None or self._supercell is None:
+            return
+        cell = self._supercell[0]
+        reps = np.array(self._drag["reps"], dtype=float)
+        corners = np.array([[i, j, k] for i in (0, 1) for j in (0, 1) for k in (0, 1)], dtype=float)
+        points = (corners * reps) @ cell
+        edges = [
+            (a, b)
+            for a in range(8)
+            for b in range(a + 1, 8)
+            if np.sum(np.abs(corners[a] - corners[b])) == 1
+        ]
+        lines = np.array([[2, a, b] for a, b in edges]).ravel()
+        self._preview_actor.GetMapper().SetInputData(pv.PolyData(points, lines=lines))
+        self._update_handles()
         self._plotter.render()
 
     def frame_to_output(self, pixels: np.ndarray, width: int, height: int) -> np.ndarray:
@@ -600,6 +994,7 @@ class StructureViewport(QWidget):
             cam.SetParallelScale(cam.GetParallelScale() * self._last_factor / factor)
         self._last_factor = factor
         self._update_frame_overlay()
+        self._update_handles()
 
     def _update_frame_overlay(self) -> None:
         width, height = self.render_size()
@@ -702,6 +1097,66 @@ def _apply_look(actor: vtkActor, look: object) -> None:
     prop.SetSpecular(look.specular)
     prop.SetSpecularPower(look.specular_power)
     prop.SetOpacity(look.opacity)
+
+
+MAX_HANDLE_REPETITIONS = 20
+"""Largest cell count a handle drag can reach (the numeric controls use the same)."""
+
+
+def _line_mapper() -> object:
+    from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
+
+    mapper = vtkPolyDataMapper()
+    mapper.SetInputData(pv.PolyData())
+    return mapper
+
+
+def _overlay_actor(color: tuple[float, float, float]) -> vtkActor2D:
+    actor = vtkActor2D()
+    mapper = vtkPolyDataMapper2D()
+    mapper.SetInputData(pv.PolyData())
+    actor.SetMapper(mapper)
+    actor.GetProperty().SetColor(*color)
+    actor.SetPickable(False)
+    actor.SetVisibility(False)
+    return actor
+
+
+def _text_actor(
+    text: str, color: tuple[float, float, float], size: int, centred: bool
+) -> vtkTextActor:
+    actor = vtkTextActor()
+    actor.SetInput(text)
+    prop = actor.GetTextProperty()
+    prop.SetColor(*color)
+    prop.SetFontSize(size)
+    prop.BoldOn()
+    if centred:
+        prop.SetJustificationToCentered()
+        prop.SetVerticalJustificationToCentered()
+    else:
+        prop.SetBackgroundColor(1.0, 1.0, 1.0)
+        prop.SetBackgroundOpacity(0.85)
+    actor.SetPickable(False)
+    actor.SetVisibility(False)
+    return actor
+
+
+def _set_handle_shape(
+    actor: vtkActor2D, centre: np.ndarray, direction: np.ndarray, height: int
+) -> None:
+    """Draw a filled disc with an arrowhead pointing along ``direction`` (top-left px)."""
+    n = 20
+    angles = np.linspace(0.0, 2.0 * np.pi, n, endpoint=False)
+    disc = centre + HANDLE_RADIUS_PX * np.column_stack([np.cos(angles), np.sin(angles)])
+    normal = np.array([-direction[1], direction[0]])
+    tip = centre + direction * (HANDLE_RADIUS_PX + 9.0)
+    base = centre + direction * (HANDLE_RADIUS_PX - 1.0)
+    arrow = np.array([base + normal * 6.0, tip, base - normal * 6.0])
+    points2d = np.vstack([disc, arrow])
+    points = np.column_stack([points2d[:, 0], height - points2d[:, 1], np.zeros(len(points2d))])
+    faces = [n, *range(n), 3, n, n + 1, n + 2]
+    actor.GetMapper().SetInputData(pv.PolyData(points, faces=faces))
 
 
 def _frame_actors() -> tuple[vtkActor2D, vtkActor2D]:

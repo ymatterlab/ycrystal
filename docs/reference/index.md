@@ -7,7 +7,7 @@ API guarantee yet. Source analysis is static and does not initialize the applica
 - [Structure and samples](structure.md): scientific coordinates, arrays, and ASE conversion.
 - [Scene and geometry](scene.md): presentation, periodic identities, boundary images, hiding.
 - [Camera and picking](camera.md): orthographic basis, projection, navigation, analytic picking.
-- [Readers and projects](io.md): supported imports, caller questions, versioned project files.
+- [Readers, projects, and styles](io.md): imports, versioned project files, reusable styles.
 - [POV export and render jobs](rendering.md): text output, discovery, result objects, lifecycle.
 - [Material, environment, and lighting presets](presets.md): catalogs, manifests, thumbnails.
 - [GUI adapters](gui.md): selected window/viewport interfaces and asynchronous rendering.

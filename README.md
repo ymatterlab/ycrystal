@@ -12,7 +12,9 @@ displayed atoms, and export or render the current orthographic view. Supercell
 repetitions, periodic bonds, cell-edge modes, and lattice/Cartesian view directions
 are available, as are an output frame, a POV-Ray preview, cancellable renders, and
 galleries of 30 materials and 12 environments with POV-Ray thumbnails, per-element and
-per-atom materials, floors, skies, and lighting controls.
+per-atom materials, floors, skies, and lighting controls. Drag the a/b/c handles to add
+cells, rotate freely or about a lattice/Cartesian axis, and reuse a figure's style with
+another structure; every figure change is undoable.
 Python interfaces are evolving developer functionality, without a stable API guarantee.
 
 ## Install and run

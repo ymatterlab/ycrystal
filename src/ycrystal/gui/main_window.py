@@ -20,6 +20,8 @@ from PySide6.QtCore import QSettings, Qt, QTimer
 from PySide6.QtGui import QAction, QKeySequence, QPixmap, QUndoStack
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QDockWidget,
@@ -68,6 +70,15 @@ from ycrystal.io.readers import (
     detect_format,
     read_structure,
 )
+from ycrystal.io.style import (
+    STYLE_PARTS,
+    STYLE_SUFFIX,
+    Style,
+    StyleError,
+    apply_style,
+    load_style,
+    save_style,
+)
 from ycrystal.presets import (
     apply_lighting,
     environment_from_preset,
@@ -93,6 +104,22 @@ SETTINGS_LAST_DIR = "files/last_directory"
 """``QSettings`` key of the directory last used for opening or saving."""
 
 SETTINGS_AUTO_PREVIEW = "render/auto_preview"
+SETTINGS_HANDLES = "view/supercell_handles"
+"""QSettings key: whether the supercell handles are shown (default on)."""
+
+ROTATION_AXES = ("free", "a", "b", "c", "x", "y", "z")
+"""Rotation modes: free trackball rotation, or rotation about a lattice or Cartesian axis."""
+
+ROTATION_STEPS = (5, 15, 30, 45, 90)
+"""Angles in degrees offered for the rotate buttons."""
+
+STYLE_PART_LABELS = {
+    "appearance": "Materials, colours, and radii",
+    "display": "Display: atom size, repetitions, boundary atoms, cell edges, bonds",
+    "environment": "Environment: background, floor, lighting, cell-edge colour",
+    "output": "Output image size",
+}
+"""Labels of the style parts in the import dialog."""
 """``QSettings`` key of the *Update automatically* choice of the preview panel."""
 
 AUTO_PREVIEW_DEFAULT = True
@@ -139,6 +166,11 @@ MOUSE_HELP = """<table cellspacing="4">
 <tr><td><b>Delete</b></td><td>Hide the selected atoms (view and exports only)</td></tr>
 <tr><td><b>Esc</b></td><td>Clear the selection</td></tr>
 <tr><td><b>Ctrl + M</b></td><td>Choose a material for the selected atoms</td></tr>
+<tr><td><b>Drag an a/b/c handle</b></td><td>Add or remove whole cells along that axis
+(Esc or right button cancels)</td></tr>
+<tr><td><b>Rotate: about a…z</b></td><td>Left drag turns only about that axis</td></tr>
+<tr><td><b>Ctrl + Left / Right</b></td><td>Turn by the step angle about the rotation axis
+</td></tr>
 <tr><td><b>Ctrl + Z</b> / <b>Ctrl + Shift + Z</b></td><td>Undo / redo</td></tr>
 <tr><td><b>a b c / x y z</b> buttons</td><td>Look down an axis (Shift: opposite side)</td></tr>
 </table>
@@ -280,6 +312,8 @@ class MainWindow(QMainWindow):
         self.last_render_path: Path | None = None
         self.render_finished_result: RenderResult | None = None
         self.last_export_missing_includes: list[str] = []
+        self.last_style_notes: list[str] = []
+        self.last_info: tuple[str, str] | None = None
         self.selection: set[AtomId] = set()
         self.undo_stack = QUndoStack(self)
 
@@ -301,6 +335,7 @@ class MainWindow(QMainWindow):
         self.scene_panel.bond_tolerance_requested.connect(self.set_bond_tolerance)
         self.scene_panel.bond_radius_requested.connect(self.set_bond_radius)
         self.scene_panel.bond_pair_requested.connect(self.set_bond_pair)
+        self.scene_panel.radius_scale_requested.connect(self.set_radius_scale)
         self.appearance_panel = AppearancePanel(self)
         self.render_panel = RenderPanel(self)
         self.scene_panel.addTab(self.appearance_panel, "Appearance")
@@ -313,6 +348,8 @@ class MainWindow(QMainWindow):
             lambda element, material_id: self.set_element_material(element, material_id or None)
         )
         panel.element_color_requested.connect(self.set_element_color)
+        panel.element_radius_requested.connect(self.set_element_radius)
+        panel.element_reset_requested.connect(self.reset_element_appearance)
         panel.selection_material_cleared.connect(lambda: self.set_selection_material(None))
         panel.atom_materials_cleared.connect(self.clear_atom_materials)
         panel.gallery_requested.connect(self._open_gallery_from_panel)
@@ -352,6 +389,10 @@ class MainWindow(QMainWindow):
         )
         self.viewport.camera_changed.connect(self._on_view_changed)
         self.viewport.atom_clicked.connect(self._on_atom_clicked)
+        self.viewport.supercell_drag_changed.connect(self._on_supercell_drag_changed)
+        self.viewport.supercell_drag_finished.connect(self._on_supercell_drag_finished)
+        self.viewport.set_handles_visible(self.handles_action.isChecked())
+        self.set_rotation_mode("free")
         self.viewport.key_pressed.connect(self.trigger_shortcut)
         self.undo_stack.cleanChanged.connect(self._refresh_title)
         self._update_output_label()
@@ -479,6 +520,41 @@ class MainWindow(QMainWindow):
         )
         self.boundary_action.triggered.connect(self.set_boundary_images)
 
+        self.export_style_action = QAction(
+            "Export Style…",
+            self,
+            statusTip="Save materials, colours, display settings, environment, and output size",
+        )
+        self.export_style_action.triggered.connect(lambda: self.export_style())
+        self.import_style_action = QAction(
+            "Import Style…",
+            self,
+            statusTip="Apply a saved style to this structure (one undoable step)",
+        )
+        self.import_style_action.triggered.connect(lambda: self.import_style())
+        self.handles_action = QAction(
+            "Supercell Handles",
+            self,
+            checkable=True,
+            checked=self.settings.value(SETTINGS_HANDLES, True, type=bool),
+            toolTip="Show the a, b, c handles: drag them to add or remove cells",
+        )
+        self.handles_action.toggled.connect(self._on_handles_toggled)
+        self.rotate_ccw_action = QAction(
+            "Rotate Counter-clockwise",
+            self,
+            shortcut=QKeySequence("Ctrl+Left"),
+            toolTip="Turn the structure about the rotation axis (Ctrl+Left)",
+        )
+        self.rotate_ccw_action.triggered.connect(lambda: self.rotate_step(+1))
+        self.rotate_cw_action = QAction(
+            "Rotate Clockwise",
+            self,
+            shortcut=QKeySequence("Ctrl+Right"),
+            toolTip="Turn the structure about the rotation axis (Ctrl+Right)",
+        )
+        self.rotate_cw_action.triggered.connect(lambda: self.rotate_step(-1))
+
         file_menu = self.menuBar().addMenu("&File")
         for action in (
             self.open_action,
@@ -486,6 +562,9 @@ class MainWindow(QMainWindow):
             None,
             self.save_action,
             self.save_as_action,
+            None,
+            self.import_style_action,
+            self.export_style_action,
             None,
             self.export_action,
             self.render_action,
@@ -523,8 +602,12 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self.scene_dock.toggleViewAction())
         view_menu.addAction(self.preview_dock.toggleViewAction())
         view_menu.addSeparator()
+        view_menu.addAction(self.rotate_ccw_action)
+        view_menu.addAction(self.rotate_cw_action)
+        view_menu.addSeparator()
         view_menu.addAction(self.boundary_action)
         view_menu.addAction(self.show_all_action)
+        view_menu.addAction(self.handles_action)
         render_menu = self.menuBar().addMenu("&Render")
         render_menu.addAction(self.preview_action)
         render_menu.addAction(self.render_action)
@@ -581,6 +664,28 @@ class MainWindow(QMainWindow):
         view_bar.addSeparator()
         for axis in "xyz":
             view_bar.addAction(self.view_actions[axis])
+        view_bar.addSeparator()
+        view_bar.addWidget(QLabel(" Rotate "))
+        self.rotation_combo = QComboBox()
+        self.rotation_combo.setToolTip(
+            "Left drag rotates freely, or only about the chosen lattice or Cartesian axis"
+        )
+        for mode in ROTATION_AXES:
+            self.rotation_combo.addItem("freely" if mode == "free" else f"about {mode}", mode)
+        self.rotation_combo.currentIndexChanged.connect(
+            lambda _i: self.set_rotation_mode(self.rotation_combo.currentData())
+        )
+        view_bar.addWidget(self.rotation_combo)
+        view_bar.addAction(self.rotate_ccw_action)
+        view_bar.addAction(self.rotate_cw_action)
+        self.rotate_ccw_action.setIconText("⟲")
+        self.rotate_cw_action.setIconText("⟳")
+        self.step_combo = QComboBox()
+        self.step_combo.setToolTip("Angle of the rotate buttons")
+        for step in ROTATION_STEPS:
+            self.step_combo.addItem(f"{step}°", step)
+        self.step_combo.setCurrentIndex(ROTATION_STEPS.index(15))
+        view_bar.addWidget(self.step_combo)
         self.render_panel.add_actions(
             [self.preview_action, self.render_action], [self.export_action, self.cancel_action]
         )
@@ -631,6 +736,7 @@ class MainWindow(QMainWindow):
         self.undo_stack.clear()
         self.selection = set()
         self.boundary_action.setChecked(project.scene.boundary_images)
+        self.set_rotation_mode(self.rotation_mode())
         self._output_size = (project.output.width, project.output.height)
         self.render_panel.sync(*self._output_size)
         self.viewport.set_output_aspect(self._output_size[0] / self._output_size[1])
@@ -915,6 +1021,11 @@ class MainWindow(QMainWindow):
         """
         self.geometry = geometry
         self.viewport.set_scene(geometry, self.environment)
+        self.viewport.set_supercell(
+            self.structure.cell if self.structure.has_cell else None,
+            self.scene_settings.repetitions,
+            tuple(self.structure.pbc),
+        )
         hidden = f" · {geometry.hidden_count} hidden" if geometry.hidden_count else ""
         a, b, c = self.scene_settings.repetitions
         self.structure_label.setText(
@@ -931,11 +1042,14 @@ class MainWindow(QMainWindow):
     def _sync_appearance(self) -> None:
         settings = self.scene_settings
         overrides = dict(settings.element_colors)
-        rows = []
-        for element in dict.fromkeys(self.structure.symbols):
-            z = int(self.structure.numbers[list(self.structure.symbols).index(element)])
+        radius_overrides = dict(settings.element_radii)
+        rows, radii = [], {}
+        symbols = list(self.structure.symbols)
+        for element in dict.fromkeys(symbols):
+            z = int(self.structure.numbers[symbols.index(element)])
             rows.append((element, overrides.get(element) or element_color(z), element in overrides))
-        self.appearance_panel.sync(settings, self.environment, rows, len(self.selection))
+            radii[element] = (settings.radius_for(element, z), element in radius_overrides)
+        self.appearance_panel.sync(settings, self.environment, rows, len(self.selection), radii)
         if self.material_gallery is not None:
             self.material_gallery.set_targets(
                 list(dict.fromkeys(self.structure.symbols)), len(self.selection)
@@ -953,9 +1067,12 @@ class MainWindow(QMainWindow):
         )
 
     def apply_scene_settings(
-        self, settings: SceneSettings, environment: Environment | None = None
+        self,
+        settings: SceneSettings,
+        environment: Environment | None = None,
+        output_size: tuple[int, int] | None = None,
     ) -> None:
-        """Rebuild the displayed geometry from the structure (used by undo commands).
+        """Apply settings, environment, and output size (used by undo commands).
 
         Parameters
         ----------
@@ -963,15 +1080,28 @@ class MainWindow(QMainWindow):
             New display settings. A change of repetitions also frames the new block.
         environment
             New environment, or ``None`` to keep the current one.
+        output_size
+            New output size, or ``None`` to keep the current one.
+
+        Notes
+        -----
+        The geometry is rebuilt from the structure only when settings or environment
+        change.
         """
         refit = settings.repetitions != self.scene_settings.repetitions
+        changed = settings != self.scene_settings or (
+            environment is not None and environment != self.environment
+        )
         if environment is not None:
             self.environment = environment
         self.scene_settings = settings
-        self.boundary_action.setChecked(settings.boundary_images)
-        self.set_display_geometry(build_geometry(self.structure, settings))
-        if refit and self._camera_initialised:
-            self.viewport.fit()
+        if output_size is not None:
+            self._apply_output_size(*output_size)
+        if changed:
+            self.boundary_action.setChecked(settings.boundary_images)
+            self.set_display_geometry(build_geometry(self.structure, settings))
+            if refit and self._camera_initialised:
+                self.viewport.fit()
 
     def trigger_shortcut(self, keys: QKeySequence) -> bool:
         """Trigger the enabled window action bound to ``keys``; True if one matched."""
@@ -1000,7 +1130,13 @@ class MainWindow(QMainWindow):
         self._update_selection()
 
     def clear_selection(self) -> None:
-        """Deselect all atoms (*Edit ▸ Select None*, Esc)."""
+        """Deselect all atoms (*Edit ▸ Select None*, Esc).
+
+        During a supercell-handle or axis drag, Esc cancels the drag instead.
+        """
+        if self.viewport.cancel_interaction():
+            self.statusBar().showMessage("Drag cancelled", 4000)
+            return
         self.select(set())
 
     def hide_selected(self) -> None:
@@ -1114,6 +1250,285 @@ class MainWindow(QMainWindow):
         bonds = self.scene_settings.bonds.with_pair((a, b), enabled)
         verb = "Show" if enabled else "Hide"
         self._push_settings(replace(self.scene_settings, bonds=bonds), f"{verb} {a}–{b} Bonds")
+
+    # ----- rotation modes -----------------------------------------------------------------
+    def rotation_mode(self) -> str:
+        """Return the rotation mode: ``"free"`` or an axis name (a, b, c, x, y, z)."""
+        return self.rotation_combo.currentData()
+
+    def rotation_axis_vector(self, mode: str) -> np.ndarray | None:
+        """Return the world vector of a rotation mode, or ``None`` for free rotation.
+
+        Lattice axes (a, b, c) need a cell; for a structure without one, ``None``.
+        """
+        if mode == "free":
+            return None
+        if mode in "abc":
+            if not self.structure.has_cell:
+                return None
+            return np.asarray(self.structure.cell[" abc".index(mode) - 1], dtype=float)
+        return np.eye(3)["xyz".index(mode)]
+
+    def set_rotation_mode(self, mode: str) -> None:
+        """Rotate freely with left drag, or only about a lattice or Cartesian axis.
+
+        Parameters
+        ----------
+        mode
+            ``"free"``, ``"a"``, ``"b"``, ``"c"``, ``"x"``, ``"y"``, or ``"z"``. Lattice
+            axes fall back to free rotation for a structure without a cell.
+
+        Notes
+        -----
+        The mode is a navigation setting: it is not saved in projects and not undoable.
+        Rotations turn the view (camera); the structure's coordinates never change.
+        """
+        if mode not in ROTATION_AXES:
+            raise ValueError(f"rotation mode must be one of {ROTATION_AXES}")
+        for index, name in enumerate(ROTATION_AXES):
+            item = self.rotation_combo.model().item(index)
+            item.setEnabled(name not in "abc" or name == "free" or self.structure.has_cell)
+        vector = self.rotation_axis_vector(mode)
+        if vector is None:
+            mode = "free"
+        self.rotation_combo.blockSignals(True)
+        self.rotation_combo.setCurrentIndex(ROTATION_AXES.index(mode))
+        self.rotation_combo.blockSignals(False)
+        self.viewport.set_rotation_axis(vector)
+        about = "the line of sight" if vector is None else f"the {mode} axis"
+        for action, sense in (
+            (self.rotate_ccw_action, "counter-clockwise"),
+            (self.rotate_cw_action, "clockwise"),
+        ):
+            action.setToolTip(f"Turn the structure {sense} about {about}")
+
+    def rotate_step(self, sign: int) -> None:
+        """Turn the structure by the step angle about the rotation axis.
+
+        In free rotation the axis is the line of sight. ``sign`` +1 is counter-clockwise
+        (right-handed about the axis), -1 clockwise. A view change, not undoable.
+        """
+        angle = float(self.step_combo.currentData()) * (1 if sign >= 0 else -1)
+        self.viewport.rotate_view(angle, self.rotation_axis_vector(self.rotation_mode()))
+
+    # ----- supercell handles -------------------------------------------------------------
+    def _on_handles_toggled(self, visible: bool) -> None:
+        self.settings.setValue(SETTINGS_HANDLES, visible)
+        self.viewport.set_handles_visible(visible)
+
+    def _on_supercell_drag_changed(self, repetitions: tuple[int, int, int]) -> None:
+        a, b, c = repetitions
+        trial = replace(self.scene_settings, repetitions=(a, b, c))
+        count = count_displayed_atoms(self.structure, trial)
+        warning = " (large)" if count > SOFT_LIMIT_ATOMS else ""
+        self.viewport.set_drag_label(f" {a} × {b} × {c} cells · {count:,} atoms{warning} ")
+        self.statusBar().showMessage(
+            f"Release to show {a} × {b} × {c} cells ({count:,} atoms); Esc cancels", 4000
+        )
+
+    def _on_supercell_drag_finished(self, repetitions: tuple[int, int, int]) -> None:
+        """Apply a handle drag as one undoable repetition change."""
+        self.set_repetitions(repetitions)
+
+    # ----- styles -----------------------------------------------------------------------
+    def current_style(self) -> Style:
+        """Return the style of the current presentation.
+
+        See [`ycrystal.io.style`][ycrystal.io.style].
+        """
+        return Style.from_state(
+            self.structure, self.scene_settings, self.environment, self._output_size
+        )
+
+    def export_style(self, path: str | Path | None = None) -> Path | None:
+        """Save the current style to a ``.ycstyle`` file (*File ▸ Export Style…*).
+
+        Parameters
+        ----------
+        path
+            Destination; ``None`` asks with a file dialog. The suffix is set to
+            ``.ycstyle``.
+
+        Returns
+        -------
+        pathlib.Path or None
+            The written file, or ``None`` if cancelled or writing failed (an error
+            message is shown).
+        """
+        if path is None:
+            chosen, _ = QFileDialog.getSaveFileName(
+                self,
+                "Export Style",
+                str(Path(self._last_directory()) / f"{self._output_stem()}{STYLE_SUFFIX}"),
+                f"Ycrystal style (*{STYLE_SUFFIX})",
+            )
+            if not chosen:
+                return None
+            path = chosen
+        path = Path(path)
+        if path.suffix.lower() != STYLE_SUFFIX:
+            path = path.with_suffix(STYLE_SUFFIX)
+        try:
+            save_style(path, self.current_style())
+        except (OSError, ValueError) as exc:
+            self.show_error("Export Style Failed", f"Cannot write {path}: {exc}")
+            return None
+        self._remember_directory(path)
+        self.statusBar().showMessage(f"Style saved to {path}", 8000)
+        return path
+
+    def ask_style_parts(self, style: Style) -> list[str] | None:
+        """Ask which parts of ``style`` to apply; ``None`` if cancelled."""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Import Style")
+        layout = QVBoxLayout(dialog)
+        compatible = style.is_compatible(self.structure)
+        info = QLabel(
+            f"Style from {style.source_name} ({len(style.source_symbols)} atoms). "
+            + (
+                "Same atoms as this structure: per-atom settings are applied too."
+                if compatible
+                else "Per-atom materials and hidden atoms refer to that structure and are "
+                "not applied here."
+            )
+        )
+        info.setWordWrap(True)
+        layout.addWidget(info)
+        boxes = {}
+        for part in STYLE_PARTS:
+            box = QCheckBox(STYLE_PART_LABELS[part])
+            box.setChecked(True)
+            boxes[part] = box
+            layout.addWidget(box)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Apply")
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return None
+        return [part for part, box in boxes.items() if box.isChecked()]
+
+    def import_style(
+        self, path: str | Path | None = None, parts: list[str] | tuple[str, ...] | None = None
+    ) -> bool:
+        """Apply a style file to this structure as one undoable step (*File ▸ Import Style…*).
+
+        Parameters
+        ----------
+        path
+            Style file; ``None`` asks with a file dialog.
+        parts
+            Parts to apply (see [`STYLE_PARTS`][ycrystal.io.style.STYLE_PARTS]);
+            ``None`` asks with a dialog that offers all of them.
+
+        Returns
+        -------
+        bool
+            Whether anything changed. Parts that could not be applied (overrides of
+            absent elements, per-atom settings of another structure) are explained in a
+            message. The structure's coordinates are never changed; the camera is kept,
+            except that new repetitions refit the view.
+        """
+        if path is None:
+            chosen, _ = QFileDialog.getOpenFileName(
+                self,
+                "Import Style",
+                self._last_directory(),
+                f"Ycrystal style (*{STYLE_SUFFIX});;All files (*)",
+            )
+            if not chosen:
+                return False
+            path = chosen
+        path = Path(path)
+        try:
+            style = load_style(path)
+        except StyleError as exc:
+            self.show_error("Import Style Failed", str(exc))
+            return False
+        if parts is None:
+            parts = self.ask_style_parts(style)
+            if parts is None:
+                return False
+        result = apply_style(
+            style,
+            self.structure,
+            self.scene_settings,
+            self.environment,
+            self._output_size,
+            tuple(parts),
+        )
+        new = result.scene
+        count = count_displayed_atoms(self.structure, new)
+        if (
+            new.repetitions != self.scene_settings.repetitions
+            and count > SOFT_LIMIT_ATOMS
+            and not self.ask_confirm(
+                "Large Expansion",
+                f"The style's {' × '.join(map(str, new.repetitions))} cells would display "
+                f"{count:,} atoms. Apply them anyway? (No keeps the current repetitions.)",
+            )
+        ):
+            new = replace(new, repetitions=self.scene_settings.repetitions)
+        self._remember_directory(path)
+        self.last_style_notes = list(result.notes)
+        changed = (
+            new != self.scene_settings
+            or result.environment != self.environment
+            or result.output_size != self._output_size
+        )
+        if changed:
+            self.undo_stack.push(
+                SceneSettingsCommand(
+                    self,
+                    new,
+                    f"Import Style {path.stem}",
+                    environment=result.environment,
+                    output_size=result.output_size,
+                )
+            )
+        if result.notes:
+            self.show_info("Style Applied with Exceptions", "\n\n".join(result.notes))
+        self.statusBar().showMessage(
+            f"Style {path.name} applied" if changed else f"Style {path.name}: no changes", 8000
+        )
+        return changed
+
+    # ----- radii --------------------------------------------------------------------------
+    def set_radius_scale(self, scale: float) -> None:
+        """Set the atom size (radius ÷ covalent radius) as an undoable step.
+
+        Elements with their own radius keep it. Consecutive changes merge into one step.
+        """
+        scale = max(0.05, min(3.0, float(scale)))
+        self._push_settings(
+            replace(self.scene_settings, radius_scale=scale),
+            f"Atom Size {scale:.2f}",
+            "radius-scale",
+        )
+
+    def set_element_radius(self, element: str, radius: float | None) -> None:
+        """Set or remove (``None``) the sphere radius of ``element`` in Å (undoable).
+
+        Consecutive changes of the same element merge into one step.
+        """
+        if radius is not None:
+            radius = max(0.02, min(6.0, float(radius)))
+            text = f"Radius of {element}: {radius:.2f} Å"
+        else:
+            text = f"Default Radius for {element}"
+        self._push_settings(
+            self.scene_settings.with_element_radius(element, radius), text, f"radius:{element}"
+        )
+
+    def reset_element_appearance(self, element: str) -> None:
+        """Remove the colour and radius overrides of ``element`` as one undoable step."""
+        new = self.scene_settings.with_element_color(element, None).with_element_radius(
+            element, None
+        )
+        self._push_settings(new, f"Default Colour and Radius for {element}")
 
     def view_along(self, axis: str, reverse: bool = False) -> None:
         """Look down a lattice (a, b, c) or Cartesian (x, y, z) axis.
@@ -1235,13 +1650,32 @@ class MainWindow(QMainWindow):
             transparent_background=self.environment.transparent,
         )
 
+    def output_size(self) -> tuple[int, int]:
+        """Return the output image ``(width, height)`` in pixels."""
+        return self._output_size
+
     def set_output_size(self, width: int, height: int) -> None:
-        """Set the output image size in pixels; the output camera is kept.
+        """Set the output image size in pixels as an undoable step; the camera is kept.
 
         The frame in the 3D view takes the new aspect ratio; the image keeps its centre
-        and visible height in Å. Not undoable; counts as a project modification.
+        and visible height in Å. Values are clamped to 16–8000 pixels. Consecutive size
+        changes merge into one undo step.
         """
         width, height = (max(16, min(8000, int(v))) for v in (width, height))
+        self.render_panel.sync(width, height)
+        if (width, height) == self._output_size:
+            return
+        self.undo_stack.push(
+            SceneSettingsCommand(
+                self,
+                self.scene_settings,
+                f"Output Size {width} × {height}",
+                "output-size",
+                output_size=(width, height),
+            )
+        )
+
+    def _apply_output_size(self, width: int, height: int) -> None:
         self.render_panel.sync(width, height)
         if (width, height) == self._output_size:
             return
@@ -1727,6 +2161,19 @@ class MainWindow(QMainWindow):
         self.last_error = (title, text)
         box = QMessageBox(
             QMessageBox.Icon.Warning, title, text, QMessageBox.StandardButton.Ok, self
+        )
+        box.setWindowModality(Qt.WindowModality.WindowModal)
+        box.open()
+        self._message_box = box
+
+    def show_info(self, title: str, text: str) -> None:
+        """Show an information message without blocking the event loop.
+
+        The title and text are also stored in `last_info`.
+        """
+        self.last_info = (title, text)
+        box = QMessageBox(
+            QMessageBox.Icon.Information, title, text, QMessageBox.StandardButton.Ok, self
         )
         box.setWindowModality(Qt.WindowModality.WindowModal)
         box.open()

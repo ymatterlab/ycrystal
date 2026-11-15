@@ -273,6 +273,48 @@ class Camera:
         _, u, d = self.basis()
         return self._replace(view_up=_rotate(u, d, angle))
 
+    def rotate_about(self, axis: Any, angle: float) -> Camera:
+        """Turn the view so that the scene appears rotated about a fixed world axis.
+
+        Parameters
+        ----------
+        axis
+            Rotation axis in world coordinates (any length), through the focal point;
+            for example a lattice vector or a Cartesian axis.
+        angle
+            Apparent rotation of the scene in degrees, right-handed about `axis`. The
+            eye and the view-up vector turn by ``-angle``; the structure itself is not
+            changed.
+
+        Returns
+        -------
+        Camera
+            A camera with the same focal point, distance, and `parallel_scale`.
+
+        Raises
+        ------
+        ValueError
+            If `axis` has zero length.
+
+        Examples
+        --------
+        Looking down -z with y up, a 90° turn about y brings the scene's -x side to the
+        front (where +z was), so the eye ends up on the -x side:
+
+        >>> from ycrystal.core.camera import Camera
+        >>> cam = Camera.looking_along((0, 0, -1), (0, 1, 0), parallel_scale=5.0)
+        >>> turned = cam.rotate_about((0, 1, 0), 90)
+        >>> [round(v, 6) + 0.0 for v in turned.position], turned.view_up
+        ([-50.0, 0.0, 0.0], (0.0, 1.0, 0.0))
+        """
+        k = np.asarray(axis, dtype=float)
+        if not np.linalg.norm(k) > 0:
+            raise ValueError("rotation axis must have non-zero length")
+        focal = np.asarray(self.focal_point)
+        offset = _rotate(np.asarray(self.position) - focal, k, -angle)
+        up = _rotate(np.asarray(self.view_up), k, -angle)
+        return self._replace(position=focal + offset, view_up=up)
+
     def pan(self, dx: float, dy: float) -> Camera:
         """Move the eye and the focal point within the screen plane.
 

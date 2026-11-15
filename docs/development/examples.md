@@ -61,7 +61,7 @@ The [script](https://github.com/ymatterlab/ycrystal/blob/main/scripts/docs_examp
 also projects the focal point, imports `tests/fixtures/MgB2.cif`, saves/reopens a
 project, and exports `.pov`/`.ini` text in a temporary directory, including a glass
 scene on a transparent background and a white-studio scene with element and atom
-material overrides. It checks the
+material overrides, and applies that scene's style to MgB2. It checks the
 expected outcomes and cleans its files. It does not import the viewport or run
 POV-Ray. Source docstrings contain further runnable examples; see
 [the doctest command](documentation.md#check-examples).
