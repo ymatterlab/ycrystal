@@ -32,16 +32,15 @@ YAML syntax, a 250 KB limit per file, and a check that the Ruff hook version equ
 the `ruff==` pin in `constraints.txt`. Test fixtures in `tests/fixtures/` are exempt from
 the whitespace fixers so that structure files stay byte-for-byte as written.
 
-The same configuration runs in three places on purpose:
+The same configuration runs in two places on purpose:
 
 | Where | Role |
 | --- | --- |
 | Your machine (`pre-commit install`) | Fast feedback before committing |
 | GitHub Actions, job `pre-commit` | Authoritative check on every pull request, independent of external services |
-| pre-commit.ci (once enabled) | Optional automatic fixes on pull requests and monthly hook updates |
 
-The overlap between the Actions job and pre-commit.ci is intentional and harmless: both
-run the same pinned hooks, so they agree.
+The repository is private, so pre-commit.ci (free only for public repositories) is not
+used; the Actions job runs the same pinned hooks.
 
 ## Tests
 
@@ -95,7 +94,8 @@ you could not run (the pull-request template asks for this).
   It updates the exact pins in `constraints.txt` and leaves the lower bounds in
   `pyproject.toml` alone while they still allow the new release.
 - **GitHub Actions:** Dependabot checks monthly with the same grouping.
-- **Hooks:** pre-commit.ci proposes hook updates monthly. Dependabot does not touch hooks.
+- **Hooks:** a maintainer runs `pre-commit autoupdate` monthly on a branch and opens a
+  pull request (see below for Ruff). Dependabot does not touch hooks.
 - No update is merged automatically; CI must pass and a maintainer merges.
 
 ### Keeping Ruff in sync
@@ -103,7 +103,7 @@ you could not run (the pull-request template asks for this).
 Ruff is pinned twice: `rev` of `astral-sh/ruff-pre-commit` in `.pre-commit-config.yaml`
 and `ruff==` in `constraints.txt`. Dependabot ignores Ruff; the pre-commit side leads:
 
-1. pre-commit.ci opens its monthly autoupdate pull request (or run
+1. On a new branch, run `pre-commit autoupdate` (or only Ruff:
    `pre-commit autoupdate --repo https://github.com/astral-sh/ruff-pre-commit`).
 2. The `ruff-version-sync` hook fails in that pull request until
    `ruff==` in `constraints.txt` is set to the same version. Edit it on the same branch.
@@ -131,10 +131,12 @@ Keep the two header comment lines of `constraints.txt`, replace the pins with th
 
 Committed configuration does not by itself activate these services:
 
-- **pre-commit.ci:** install the pre-commit.ci GitHub app for `ymatterlab/ycrystal` at
-  <https://pre-commit.ci>. After its first run, a status badge can be added to the
-  README (`https://results.pre-commit.ci/badge/github/ymatterlab/ycrystal/main.svg`).
+- **pre-commit.ci:** not used while the repository is private. If it becomes public
+  again, the app can be re-enabled at <https://pre-commit.ci>; add a `ci:` section to
+  `.pre-commit-config.yaml` for its settings.
 - **Dependabot:** version updates start from `.github/dependabot.yml` once Dependabot is
   allowed for the repository; check *Settings ▸ Code security* (also for Dependabot
   alerts and security updates, which this file does not configure).
 - **Branch protection (optional):** require the `pre-commit` and `tests` checks on `main`.
+  On GitHub Free, rulesets are enforced only on public repositories; the "Protect main"
+  ruleset is kept but inactive while the repository is private.

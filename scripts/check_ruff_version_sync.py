@@ -1,9 +1,9 @@
 """Check that the Ruff pre-commit hook and the Ruff pin in constraints.txt match.
 
 Ruff runs in two places: the pre-commit hook (``rev`` of astral-sh/ruff-pre-commit in
-.pre-commit-config.yaml, updated monthly by pre-commit.ci) and the development
+.pre-commit-config.yaml, updated with ``pre-commit autoupdate``) and the development
 environment (``ruff==`` in constraints.txt, installed by CI and contributors). Both must
-be the same release so that local, CI, and pre-commit.ci results agree. When one is
+be the same release so that local and CI results agree. When one is
 updated, update the other in the same pull request (see CONTRIBUTING.md).
 
 Standard library only, so it runs as a lightweight local pre-commit hook.
@@ -47,7 +47,7 @@ def main() -> int:
         print(
             f"Ruff versions differ: pre-commit hook rev v{hook}, constraints.txt ruff=={pin}.\n"
             f"Set both to the same release (e.g. ruff=={hook} in constraints.txt after a "
-            "pre-commit.ci autoupdate) and rerun 'pre-commit run --all-files'."
+            "pre-commit autoupdate) and rerun 'pre-commit run --all-files'."
         )
         return 1
     return 0

@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   pre-commit:
-    # Same hooks as local `pre-commit run --all-files` and pre-commit.ci. Lightweight:
+    # Same hooks as local `pre-commit run --all-files`. Lightweight:
     # installs only pre-commit (pinned in constraints.txt), not Qt/VTK or POV-Ray.
     name: pre-commit (lint, format, file checks)
     runs-on: ubuntu-24.04

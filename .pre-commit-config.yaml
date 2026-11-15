@@ -4,18 +4,11 @@
 #   Local:           pre-commit install          (then hooks run on every commit)
 #                    pre-commit run --all-files  (check the whole repository)
 #   GitHub Actions:  the "pre-commit" job in .github/workflows/ci.yml runs the same hooks.
-#   pre-commit.ci:   runs the same hooks on pull requests once enabled for the repository,
-#                    and proposes monthly hook updates (see the `ci:` section).
+#   Hook updates:    manual, monthly: `pre-commit autoupdate` (CONTRIBUTING.md).
 #
 # Ruff version: the ruff-pre-commit `rev` must equal the `ruff==` pin in constraints.txt.
 # The `ruff-version-sync` hook enforces this; update both together (CONTRIBUTING.md).
 # Ruff settings (line length, rule selection) come from pyproject.toml.
-
-ci:
-  autoupdate_schedule: monthly
-  autoupdate_commit_msg: "chore: pre-commit autoupdate (sync ruff== in constraints.txt)"
-  autofix_commit_msg: "style: pre-commit auto-fixes"
-  autofix_prs: true # only the safe fixes configured below; no --unsafe-fixes
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
