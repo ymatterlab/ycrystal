@@ -22,6 +22,11 @@ schema the saved camera describes the output image of ``output.width`` ×
 rendered at), so reopening reproduces the framing exactly, whatever the window size.
 Schema-1/2 files get the ``"satin"`` material they were drawn with, and the
 ``"transparent"`` background preset if their output had a transparent background.
+
+The optional ``output.aspect_locked`` and ``output.aspect_ratio`` keys store the Render
+panel's aspect-ratio lock (FR-RENDER-01). They do not change the stored contract, so the
+schema version stays 5: files without them open locked to their own ``width / height``,
+and Ycrystal 0.1.0 ignores them.
 """
 
 from __future__ import annotations
@@ -178,6 +183,8 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             "height": project.output.height,
             "antialias": project.output.antialias,
             "transparent_background": project.environment.transparent,
+            "aspect_locked": project.output.aspect_locked,
+            "aspect_ratio": project.output.aspect_ratio,  # null: width / height
         },
     }
 
@@ -412,6 +419,9 @@ def _output_from(d: dict[str, Any]) -> RenderSettings:
         transparent_background=bool(
             d.get("transparent_background", defaults.transparent_background)
         ),
+        # Lock of the Render panel (FR-RENDER-01); optional keys, absent before it.
+        aspect_locked=bool(d.get("aspect_locked", defaults.aspect_locked)),
+        aspect_ratio=None if d.get("aspect_ratio") is None else float(d["aspect_ratio"]),
     )
 
 

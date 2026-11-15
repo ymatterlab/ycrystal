@@ -53,7 +53,8 @@ style import is one step; consecutive spin-box adjustments of the same value mer
 one step. Camera navigation (orbit, pan, zoom, rotation, view directions) is not on the
 undo stack; **View ▸ Reset View** returns to the default orientation. File opens and
 saves are not undoable; opening a new file clears the undo history. A changed camera
-still marks the project modified.
+still marks the project modified. The aspect-ratio lock in the Render tab is saved in
+projects but is not an undo step; see [lock aspect ratio](rendering.md#lock-aspect-ratio).
 
 ## Output framing
 

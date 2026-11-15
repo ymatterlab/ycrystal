@@ -42,6 +42,9 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - import_style
         - set_output_size
         - output_size
+        - aspect_locked
+        - aspect_ratio
+        - set_aspect_locked
         - current_camera
         - current_render_settings
         - preview_settings

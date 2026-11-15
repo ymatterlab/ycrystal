@@ -66,6 +66,37 @@ Set the image size in the **Scene ▸ Render** tab: **Width** and **Height** in 
 2:3) that sets the height from the width, and **Swap** for portrait/landscape. The
 toolbar shows the current size.
 
+### Lock aspect ratio
+
+The padlock button beside Width and Height keeps the shape of the image while you change
+its resolution, as in Inkscape. It is locked by default (closed padlock, pressed button);
+click it or press Space when it has the keyboard focus to unlock (open padlock). The
+tooltip states the current state and the locked ratio.
+
+- **Locked**: Ycrystal keeps a target ratio *r* = Width ÷ Height. Changing Width sets
+  Height = round(Width ÷ *r*); changing Height sets Width = round(Height × *r*). The value
+  you typed is kept and the other is rounded to whole pixels; *r* itself is never
+  recomputed from the rounded numbers, so repeated edits do not drift. From 2400 × 1600:
+  Height 1920 gives 2880 × 1920, Width 3000 gives 3000 × 2000.
+- **Unlocked**: Width and Height change independently (from 2400 × 1600, Height 1920
+  gives 2400 × 1920). Locking again captures the ratio of the current size without
+  changing it.
+- **Aspect presets** keep the width and compute the height; when locked, the preset
+  becomes the locked ratio, when unlocked it is applied once. The menu shows **Custom**
+  when the size matches no preset.
+- **Swap** exchanges Width and Height in one step; the lock stays as it was, and a locked
+  ratio is inverted.
+- If the computed dimension would fall outside 16–8000 px, the whole edit is refused:
+  both values stay as they were and a message below the controls (and in the status bar)
+  explains the limit. The lock is never broken silently.
+
+Each edit, preset, or Swap is one undo step (consecutive size changes merge) and triggers
+one automatic preview. Changing only the resolution keeps the composition: the camera,
+rotation, pan, and zoom stay, and nothing is refitted. The lock state and the locked
+ratio are saved in projects; projects from version 0.1.0 open locked to their own
+ratio. Toggling the lock is not an undo step (it does not change the image), but it
+marks the project as modified.
+
 A blue frame in the 3D view shows exactly the area of the image; the region outside
 it is dimmed. The frame is the largest rectangle with the output aspect ratio that
 fits inside the view with a small margin. Fit (F), Reset View, and the view-along

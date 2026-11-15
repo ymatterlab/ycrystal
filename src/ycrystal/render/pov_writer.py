@@ -53,21 +53,35 @@ class RenderSettings:
     transparent_background
         Whether the PNG gets an alpha channel with a fully transparent background
         instead of the environment's background colour.
+    aspect_locked
+        Whether the Render panel keeps `aspect_ratio` when width or height is edited
+        (interface state saved in projects; it does not affect the image).
+    aspect_ratio
+        Target ratio ``width / height`` of the lock, or ``None`` for
+        ``width / height`` (see [`ycrystal.core.aspect`][ycrystal.core.aspect]).
 
     Raises
     ------
     ValueError
-        If `width` or `height` is less than 1.
+        If `width` or `height` is less than 1, or `aspect_ratio` is not positive.
     """
 
     width: int = 1200
     height: int = 800
     antialias: bool = True
     transparent_background: bool = False
+    aspect_locked: bool = True
+    aspect_ratio: float | None = None
 
     def __post_init__(self) -> None:
         if self.width < 1 or self.height < 1:
             raise ValueError("render dimensions must be positive")
+        if self.aspect_ratio is not None and not self.aspect_ratio > 0:
+            raise ValueError("aspect_ratio must be positive")
+
+    def target_ratio(self) -> float:
+        """Return `aspect_ratio`, or ``width / height`` when it is not set."""
+        return self.aspect_ratio if self.aspect_ratio is not None else self.width / self.height
 
 
 def _f(value: float) -> str:
