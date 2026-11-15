@@ -76,10 +76,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: System packages (POV-Ray 3.7, Qt xcb, virtual display)
+      - name: System packages (POV-Ray 3.7 with its standard include files, Qt xcb, virtual display)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends povray xvfb \
+          sudo apt-get install -y --no-install-recommends povray povray-includes xvfb \
             libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xfixes0 \
             libegl1 libgl1 libdbus-1-3
