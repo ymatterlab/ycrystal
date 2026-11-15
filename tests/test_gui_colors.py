@@ -200,8 +200,7 @@ def test_invalid_text_blocks_ok(dialog):
 
 def test_keyboard_only_selection_and_names(dialog, qtbot):
     grid = dialog.swatches
-    grid.setFocus()
-    qtbot.waitUntil(grid.hasFocus, timeout=2000)
+    grid.setFocus()  # without a window manager (CI) focus may not arrive; keys go directly
     start = grid.current
     qtbot.keyClick(grid, Qt.Key.Key_Right)
     assert grid.current == start + 1
