@@ -18,7 +18,8 @@ subset of them (see [`STYLE_PARTS`][ycrystal.io.style.STYLE_PARTS]):
 ``appearance``
     Default material. Material, colour, and radius overrides of elements are applied to
     the elements the target structure contains; overrides of other elements are left
-    out and listed in the notes.
+    out and listed in the notes. The vector arrow appearance (placement, length mode,
+    sizes, colour, material) is applied too.
 ``display``
     Atom size, repetitions, boundary atoms, cell edges, bond settings. Bond-pair rules
     apply when the target contains both elements.
@@ -26,6 +27,10 @@ subset of them (see [`STYLE_PARTS`][ycrystal.io.style.STYLE_PARTS]):
     Background, floor, lighting, transparency, and the cell-edge colour.
 ``output``
     Output image size in pixels.
+
+Vectors themselves (components and atom attachments, FR-VECTOR-01) are a property of
+one structure, not of a look: styles never store or transfer them, and importing a
+style keeps the target's vectors unchanged.
 
 Per-atom material overrides and hidden atoms refer to individual atoms of the source
 structure. They transfer only if the target is *compatible*: the same number of atoms
@@ -215,6 +220,7 @@ def apply_style(
         new = replace(
             new,
             material=source.material,
+            vector_style=source.vector_style,  # arrow appearance only, never vector data
             element_materials=keep(source.element_materials),
             element_colors=keep(source.element_colors),
             element_radii=keep(source.element_radii),
@@ -316,7 +322,7 @@ def style_to_dict(style: Style) -> dict[str, Any]:
         "generator": f"Ycrystal {__version__}",
         "saved_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
         "source": {"composition": style.source_name, "symbols": list(style.source_symbols)},
-        "scene": project["scene"],
+        "scene": {key: value for key, value in project["scene"].items() if key != "vectors"},
         "environment": project["environment"],
         "materials": project["materials"],
         "output": {"width": style.output_size[0], "height": style.output_size[1]},

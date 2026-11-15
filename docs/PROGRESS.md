@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures), and FR-MATERIAL-01 (custom material variants); the last two on branch `feature/appearance-extensions`. Repository private.
+Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), and FR-VECTOR-01 (atom-attached vectors; branch `feature/vectors`). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -93,9 +93,50 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## FR-VECTOR-01: manual atom-attached vectors (post-0.2.0, 15 November 2026)
+
+Development after version 0.2.0; branch `feature/vectors`. **Edit ▸ Vectors…** (and
+**Vectors…** in the Appearance tab) attaches Cartesian direction or magnetic-moment (μB)
+arrows to atoms, as source defaults for all periodic images or as image overrides
+(including suppression), with centred or tail-at-centre arrows, uniform or proportional
+length, and independent colour and material. One resolver produces arrow geometry for
+both renderers. FR-VECTOR-02 (table import/export) is deferred and not started.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| 1. Endpoints for a known direction (3, 0, 4): centred `r ∓ L u/2`, tail `r` → `r + L u`, head inside the length; proportional `L = scale × |v|`; reversal swaps tail and tip; arrows along ±x/±y/±z; short-arrow policy (head ≤ 60 % of L, cross-section scaled); zero vector and modulus ≤ 1e-9 draw nothing; non-zero vectors shorter than 1e-4 Å when proportional draw nothing; hidden records; non-finite/wrong-length/unknown-meaning values and invalid sizes rejected; arrows identical for any camera and atom radius | Pass | `test_endpoints_placements_and_length_modes`, `test_short_arrows_zero_and_invalid_values`, `test_geometry_does_not_depend_on_camera_or_radii`; doctest in `ycrystal.core.vectors` |
+| 2. Source defaults with the same components on every image (opposite moments on two Fe sites, 2 × 1 × 1, no inferred alternation); image override and one-image suppression; boundary images (8 Sr corners); hexagonal (non-orthogonal) cell: midpoints at exact instance positions, components Cartesian; repetition shrink keeps but hides an override, restore shows it; hidden host hides its arrow | Pass | `test_source_defaults_overrides_suppression_and_no_inferred_signs`, `test_boundary_images_non_orthogonal_cell_hiding_and_repetitions` |
+| 3. POV cylinders and cones equal the shared geometry (parsed, 1e-6 Å); comments name atom, image, components, unit; live-view mesh bounds equal the arrow extents; real POV-Ray 3.7 renders of synthetic ferromagnetic, antiferromagnetic, and canted examples show the arrows with the body-centre tip at its projected pixel; no arrows without vectors | Pass | `test_writer_arrows_match_the_shared_geometry`, `test_live_view_matches_shared_geometry_and_leaves_picking_measuring_lighting`, `test_rendered_ferro_antiferro_and_canted_examples` |
+| 4. Framing bounds include arrow tips (12 Å arrow below its atom); Fit grows with long arrows only when requested; the orthographic eye lies in front of tips toward the camera and the gradient backdrop behind tips away from it; the floor lies below an arrow pointing down; lighting rig (atom/cell bounds) unchanged by vector changes; picking at every atom unchanged; distance unchanged | Pass | `test_bounds_fit_lighting_and_floor_include_arrows_correctly`, `test_eye_and_backdrop_stay_clear_of_long_arrows`, `test_live_view_matches_shared_geometry_and_leaves_picking_measuring_lighting` |
+| 5. Editor: live preview without undo step or modified flag, frozen targets, Cancel restores, Apply one step (batch), undo/redo; table actions Reverse, Show/Hide, Suppress, Remove (override removal restores the default), row Edit keeps visibility, row selection highlights hosts; appearance edits merge (two length changes → one step), proportional mode; independent arrow colour; custom material only on arrows; a vector change during a running preview discards the stale result; status bar shows the selected atom's vector | Pass | `test_editor_preview_cancel_and_apply_as_one_step`, `test_table_actions_overrides_suppression_and_opposing_moments`, `test_appearance_edits_merge_and_custom_arrow_material_persists`, `test_vector_change_discards_a_running_preview`, `test_eye_and_backdrop_stay_clear_of_long_arrows` |
+| 6. Projects (schema 7) round-trip components at full precision, suppressions, hidden records, appearance, and an arrow-only custom material on a clean profile; existing examples load without vectors; an out-of-range attachment is refused; styles carry the appearance only, and importing a style keeps the target's vectors; another structure starts without vectors | Pass | `test_projects_round_trip_and_styles_never_carry_vectors`, `test_appearance_edits_merge_and_custom_arrow_material_persists`, `test_style_import_keeps_vectors_and_new_structure_clears_them` |
+| 7. Example `examples/vectors-synthetic-afm.ycrystal` (synthetic two-site cell, ±2.2 μB) generated by `scripts/make_examples.py` and rendered with `ycrystal … --render`; user guide (Controls ▸ Vectors), reference, architecture | Pass | command-line render (1.0 s) |
+| GUI on the Mint display (scripted, real POV-Ray): Vectors window with source defaults and a canted image override, editor, live view with arrows and the selected host, POV-Ray preview | Pass (scripted) | `artifacts/vectors/vectors-window.png`, `vector-editor.png`, `window-vectors.png` (gitignored) |
+| Hands-on use by a person; very many arrows (live-view mesh speed) | Unverified | |
+
+Decisions: vectors live in `SceneSettings` (`vectors`: source defaults and image
+overrides; `vector_style`: appearance), so undo, projects, and geometry building reuse the
+existing paths; one vector per displayed atom; the record identity is its attachment
+(source index or atom id). `DisplayGeometry.arrows` holds the resolved geometry;
+`points_and_radii()` includes arrows (Fit, eye, backdrop, floor), `bounding_sphere()`
+does not (lights). Zero tolerance 1e-9 (modulus), minimum drawn length 1e-4 Å, head at
+most 60 % of the length. Default appearance: centred, uniform 2.6 Å, satin, dark red.
+Arrows are drawn as cylinder + cone in POV-Ray and as one non-pickable mesh in VTK. Live
+view and POV-Ray materials are not claimed to match pixel for pixel.
+
+Regression runs: `pytest -m "not povray"` 420 passed (strict mode; 14 new non-POV-Ray
+tests at that point, plus `test_eye_and_backdrop_stay_clear_of_long_arrows` added and
+passing afterwards; three existing schema assertions now read 7); `pytest -m povray` on
+`test_vectors.py`, `test_background_image.py`, `test_custom_materials.py`,
+`test_gui_material_editor.py`, `test_gui_render.py`, `test_gui.py`,
+`test_preview_resolution.py`, `test_povray_jobs.py`, and the command-line render 12
+passed; `test_presets.py` environment, combination, and floor renders 20 passed (the 30
+per-material renders were not rerun: scenes without arrows and the thumbnail digests are
+unchanged); doctests; `zensical build --clean --strict`; ruff.
+
 ## FR-BGIMAGE-01: background pictures with portable assets (post-0.2.0, 15 November 2026)
 
-Development after version 0.2.0; branch `feature/appearance-extensions`. Background type **Image**
+Development after version 0.2.0; merged in PR #18. Background type **Image**
 shows a user's PNG or JPEG picture behind the structure in the POV-Ray preview and the
 PNG, framed in the output frame (Fill/Fit, zoom, frame-relative offsets, brightness,
 Reset Framing). Projects and styles that use a picture become ZIP packages that carry it.
@@ -143,7 +184,7 @@ variant (path with a space and ü) rendered with both; doctests; `zensical build
 
 ## FR-MATERIAL-01: custom material variants (post-0.2.0, 15 November 2026)
 
-Development after version 0.2.0; branch `feature/appearance-extensions`. **Customize Material…**
+Development after version 0.2.0; merged in PR #18. **Customize Material…**
 (Appearance tab, Edit menu) starts from a Ycrystal recipe, edits typed parameters, and
 applies the variant to the default material, an element, or the selected atoms, or saves
 it as a personal material.

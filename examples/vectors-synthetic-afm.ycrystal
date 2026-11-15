@@ -1,0 +1,200 @@
+{
+ "format": "ycrystal-project",
+ "schema_version": 7,
+ "generator": "Ycrystal (scripts/make_examples.py)",
+ "saved_at": "2026-11-15T00:00:00+00:00",
+ "structure": {
+  "cell": [
+   [
+    2.87,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    2.87,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    2.87
+   ]
+  ],
+  "positions": [
+   [
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    1.435,
+    1.435,
+    1.435
+   ]
+  ],
+  "numbers": [
+   26,
+   26
+  ],
+  "symbols": [
+   "Fe",
+   "Fe"
+  ],
+  "labels": [
+   "Fe1",
+   "Fe2"
+  ],
+  "pbc": [
+   true,
+   true,
+   true
+  ],
+  "occupancy": [
+   1.0,
+   1.0
+  ],
+  "movable": null,
+  "metadata": {
+   "note": "Synthetic two-site cubic cell for the vector example (not a real material)."
+  }
+ },
+ "scene": {
+  "radius_scale": 0.35,
+  "show_cell": true,
+  "cell_edge_radius": 0.035,
+  "cell_edge_color": [
+   0.15,
+   0.15,
+   0.15
+  ],
+  "boundary_images": true,
+  "boundary_tolerance": 0.001,
+  "hidden": [],
+  "repetitions": [
+   2,
+   2,
+   1
+  ],
+  "cell_mode": "all",
+  "material": "satin",
+  "element_materials": [],
+  "atom_materials": [],
+  "element_radii": [],
+  "element_colors": [],
+  "vectors": {
+   "sources": [
+    {
+     "atom": 0,
+     "components": [
+      0.0,
+      0.0,
+      2.2
+     ],
+     "meaning": "moment",
+     "visible": true
+    },
+    {
+     "atom": 1,
+     "components": [
+      0.0,
+      0.0,
+      -2.2
+     ],
+     "meaning": "moment",
+     "visible": true
+    }
+   ],
+   "images": []
+  },
+  "vector_style": {
+   "visible": true,
+   "placement": "centred",
+   "length_mode": "uniform",
+   "length": 2.2,
+   "scale": 0.6,
+   "shaft_radius": 0.08,
+   "head_length": 0.5,
+   "head_radius": 0.2,
+   "color": [
+    0.75,
+    0.1,
+    0.1
+   ],
+   "material": "satin"
+  },
+  "bonds": {
+   "enabled": false,
+   "tolerance": 1.1,
+   "radius": 0.12,
+   "pairs": []
+  }
+ },
+ "environment": {
+  "preset": "white",
+  "transparent": false,
+  "background": {
+   "mode": "solid",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "bottom": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "clouds": 0.0,
+   "image": null
+  },
+  "floor": {
+   "enabled": false,
+   "color": [
+    0.9,
+    0.9,
+    0.9
+   ],
+   "reflection": 0.0,
+   "offset": 0.0
+  },
+  "lighting": {
+   "preset": "soft",
+   "key_light": 1.0,
+   "fill_light": 0.35,
+   "key_azimuth": -29.0,
+   "key_elevation": 33.0,
+   "light_size": 0.0,
+   "shadows": true,
+   "reflector": false
+  }
+ },
+ "materials": [],
+ "camera": {
+  "projection": "orthographic",
+  "position": [
+   28.102748988079988,
+   38.916784268685696,
+   14.009762673313654
+  ],
+  "focal_point": [
+   0.5402759045444666,
+   -0.4581772792221894,
+   0.2285261315458936
+  ],
+  "view_up": [
+   -0.15806040430935414,
+   -0.2258005775847916,
+   0.9612653160038273
+  ],
+  "parallel_scale": 3.864767681634373
+ },
+ "output": {
+  "width": 800,
+  "height": 600,
+  "antialias": true,
+  "transparent_background": false,
+  "aspect_locked": true,
+  "aspect_ratio": null
+ }
+}

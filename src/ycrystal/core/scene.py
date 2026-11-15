@@ -28,6 +28,7 @@ from ase.data.colors import jmol_colors
 from ycrystal.core.background import BackgroundImage
 from ycrystal.core.bonds import BondSettings, periodic_bonds
 from ycrystal.core.structure import Structure
+from ycrystal.core.vectors import Arrow, VectorSet, VectorStyle, arrow_spheres, resolve_arrows
 
 # A displayed atom: (source atom index, periodic image offset in units of a, b, c).
 AtomId = tuple[int, tuple[int, int, int]]
@@ -103,6 +104,12 @@ class SceneSettings:
         not displayed under the current settings (for example boundary images while
         `boundary_images` is false) have no effect but are kept, so they apply again
         when the images reappear.
+    vectors
+        Atom-attached vectors ([`VectorSet`][ycrystal.core.vectors.VectorSet]): source
+        defaults and image overrides. Structure-specific: styles never transfer them.
+        Records of atoms that are hidden or not displayed are kept and draw nothing.
+    vector_style
+        Arrow appearance ([`VectorStyle`][ycrystal.core.vectors.VectorStyle]).
     """
 
     radius_scale: float = 0.5  # sphere radius = radius_scale * covalent radius
@@ -127,6 +134,8 @@ class SceneSettings:
     atom_materials: tuple[tuple[AtomId, str], ...] = ()
     element_colors: tuple[tuple[str, RGB], ...] = ()
     element_radii: tuple[tuple[str, float], ...] = ()
+    vectors: VectorSet = field(default_factory=VectorSet)
+    vector_style: VectorStyle = field(default_factory=VectorStyle)
 
     def __post_init__(self) -> None:
         reps = tuple(int(r) for r in self.repetitions)
@@ -218,9 +227,9 @@ class SceneSettings:
         return override if override is not None else self.radius_scale * covalent_radii[number]
 
     def material_ids(self) -> set[str]:
-        """Every material id the settings refer to (default and overrides)."""
+        """Every material id the settings refer to (default, overrides, and arrows)."""
         return (
-            {self.material}
+            {self.material, self.vector_style.material}
             | {m for _, m in self.element_materials}
             | {m for _, m in self.atom_materials}
         )
@@ -403,6 +412,11 @@ class DisplayGeometry:
         `material` for every atom.
     hidden_count
         Number of atoms that the settings would display but that are hidden.
+    arrows
+        Resolved vector arrows ([`Arrow`][ycrystal.core.vectors.Arrow]) of displayed
+        atoms, drawn by both renderers.
+    arrow_color, arrow_material
+        Colour (sRGB) and material id of the arrows.
 
     Raises
     ------
@@ -430,6 +444,9 @@ class DisplayGeometry:
     bond_radius: float = 0.12  # Å
     material: str = "satin"
     materials: tuple[str, ...] = ()
+    arrows: tuple[Arrow, ...] = ()
+    arrow_color: RGB = (0.80, 0.10, 0.10)
+    arrow_material: str = "satin"
 
     def __post_init__(self) -> None:
         index = {atom_id: i for i, atom_id in enumerate(self.atom_ids)}
@@ -473,12 +490,14 @@ class DisplayGeometry:
         """
         return Counter(self.elements)
 
-    def points_and_radii(self) -> tuple[np.ndarray, np.ndarray]:
+    def points_and_radii(self, include_arrows: bool = True) -> tuple[np.ndarray, np.ndarray]:
         """Return every drawn point with its radius.
 
-        The points are the atom centres followed by both endpoints of every cell edge,
-        so cell corners appear several times. Camera fitting and the POV-Ray eye
-        placement use them to keep everything that is drawn in view.
+        The points are the atom centres, both endpoints of every cell edge (so cell
+        corners appear several times), and, with `include_arrows`, spheres enclosing
+        every arrow ([`arrow_spheres`][ycrystal.core.vectors.arrow_spheres]). Camera
+        fitting and the POV-Ray eye, backdrop, and floor placement use them to keep
+        everything that is drawn in view, including arrow tips.
 
         Returns
         -------
@@ -494,13 +513,20 @@ class DisplayGeometry:
             ends = self.cell_edges.reshape(-1, 3)
             points.append(ends)
             radii.append(np.full(len(ends), self.cell_edge_radius))
+        if include_arrows and self.arrows:
+            arrow_points, arrow_radii = arrow_spheres(self.arrows)
+            points.append(arrow_points)
+            radii.append(arrow_radii)
         return np.concatenate(points), np.concatenate(radii)
 
     def bounding_sphere(self) -> tuple[np.ndarray, float]:
         """Return a sphere that encloses every drawn sphere and cell edge.
 
         The centre is the middle of the axis-aligned bounding box, so the sphere is
-        enclosing but not necessarily minimal.
+        enclosing but not necessarily minimal. Vector arrows are not included: this
+        sphere places the lights ([`resolve_lighting`][ycrystal.core.lighting.resolve_lighting]),
+        which must not move when an arrow changes; framing uses
+        [`points_and_radii`][ycrystal.core.scene.DisplayGeometry.points_and_radii].
 
         Returns
         -------
@@ -509,7 +535,7 @@ class DisplayGeometry:
         radius : float
             Radius in Å, at least 0.001; 1.0 for an empty geometry.
         """
-        points, radii = self.points_and_radii()
+        points, radii = self.points_and_radii(include_arrows=False)
         if len(points) == 0:
             return np.zeros(3), 1.0
         lo = (points - radii[:, None]).min(axis=0)
@@ -696,7 +722,9 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
     own pigment, which get the material's representative colour. Cell edges are drawn
     when ``settings.show_cell`` is true and the structure has a cell. Repetitions are
     display state: scientific arrays stay unchanged. A bond is drawn only when both
-    endpoint IDs are displayed and its pair is enabled.
+    endpoint IDs are displayed and its pair is enabled. Arrows are resolved for the
+    displayed atoms only ([`resolve_arrows`][ycrystal.core.vectors.resolve_arrows]), at
+    the exact positions of their instances, independent of radii and camera.
 
     Examples
     --------
@@ -741,6 +769,7 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
     ).reshape(-1, 3)
     edges = cell_edge_segments(structure, settings)
     bonds = _displayed_bonds(structure, settings, atom_ids)
+    arrows = resolve_arrows(atom_ids, positions, settings.vectors, settings.vector_style)
     for array in (positions, radii, colors, edges, bonds):
         array.setflags(write=False)
     return DisplayGeometry(
@@ -757,6 +786,9 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
         bond_radius=settings.bonds.radius,
         material=settings.material,
         materials=materials,
+        arrows=arrows,
+        arrow_color=settings.vector_style.color,
+        arrow_material=settings.vector_style.material,
     )
 
 

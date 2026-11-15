@@ -22,8 +22,9 @@ material overrides, element colours, and the full environment: background type, 
 lighting, and reflection panel (M4); 5 — element radii (M5); 6 — background pictures
 (``environment.background.image``, ZIP packages with assets; FR-BGIMAGE-01) and
 custom material variants (top-level ``materials`` list with the full definition of every
-variant the scene uses; FR-MATERIAL-01). Projects without a picture are still single
-JSON files. Older files open with the
+variant the scene uses; FR-MATERIAL-01); 7 — atom-attached vectors (``scene.vectors``
+with source defaults and image overrides at full precision, ``scene.vector_style``;
+FR-VECTOR-01). Projects without a picture are still single JSON files. Older files open with the
 M3 appearance: no overrides, plain background, no floor, and the "soft" lighting.
 Schema-1 files load with bonds disabled to preserve their original appearance. In every
 schema the saved camera describes the output image of ``output.width`` ×
@@ -58,12 +59,13 @@ from ycrystal.core.bonds import BondSettings
 from ycrystal.core.camera import Camera
 from ycrystal.core.scene import AtomId, Environment, SceneSettings
 from ycrystal.core.structure import Structure
+from ycrystal.core.vectors import VectorRecord, VectorSet, VectorStyle
 from ycrystal.render.pov_writer import RenderSettings
 
 PROJECT_FORMAT = "ycrystal-project"
 """Value of the ``format`` key that identifies a project file."""
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 """Schema version written by this Ycrystal; newer versions are refused on load."""
 
 PACKAGE_DOCUMENT = "project.json"
@@ -179,6 +181,8 @@ def project_to_dict(project: Project) -> dict[str, Any]:
                 {"element": element, "color": list(color)}
                 for element, color in scene.element_colors
             ],
+            "vectors": _vectors_to_dict(scene.vectors),
+            "vector_style": _vector_style_to_dict(scene.vector_style),
             "bonds": {
                 "enabled": scene.bonds.enabled,
                 "tolerance": scene.bonds.tolerance,
@@ -231,6 +235,80 @@ def _environment_to_dict(e: Environment) -> dict[str, Any]:
             "reflector": e.reflector,
         },
     }
+
+
+def _record_to_dict(record: VectorRecord) -> dict[str, Any]:
+    return {
+        "components": list(record.components),
+        "meaning": record.meaning,
+        "visible": record.visible,
+    }
+
+
+def _vectors_to_dict(vectors: VectorSet) -> dict[str, Any]:
+    return {
+        "sources": [
+            {"atom": index, **_record_to_dict(record)} for index, record in vectors.sources
+        ],
+        "images": [
+            {"atom": source, "image": list(image), "suppressed": True}
+            if record is None
+            else {"atom": source, "image": list(image), **_record_to_dict(record)}
+            for (source, image), record in vectors.images
+        ],
+    }
+
+
+def _vector_style_to_dict(style: VectorStyle) -> dict[str, Any]:
+    return {
+        "visible": style.visible,
+        "placement": style.placement,
+        "length_mode": style.length_mode,
+        "length": style.length,
+        "scale": style.scale,
+        "shaft_radius": style.shaft_radius,
+        "head_length": style.head_length,
+        "head_radius": style.head_radius,
+        "color": list(style.color),
+        "material": style.material,
+    }
+
+
+def _record_from(d: dict[str, Any]) -> VectorRecord:
+    return VectorRecord(
+        components=tuple(float(v) for v in d["components"]),
+        meaning=str(d.get("meaning", "moment")),
+        visible=bool(d.get("visible", True)),
+    )
+
+
+def _vectors_from(d: Any) -> VectorSet:
+    if not d:
+        return VectorSet()
+    sources = tuple((int(e["atom"]), _record_from(e)) for e in d.get("sources", []))
+    images = tuple(
+        ((int(e["atom"]), _image(e["image"])), None if e.get("suppressed") else _record_from(e))
+        for e in d.get("images", [])
+    )
+    return VectorSet(sources, images)
+
+
+def _vector_style_from(d: Any) -> VectorStyle:
+    defaults = VectorStyle()
+    if not d:
+        return defaults
+    return VectorStyle(
+        visible=bool(d.get("visible", defaults.visible)),
+        placement=str(d.get("placement", defaults.placement)),
+        length_mode=str(d.get("length_mode", defaults.length_mode)),
+        length=float(d.get("length", defaults.length)),
+        scale=float(d.get("scale", defaults.scale)),
+        shaft_radius=float(d.get("shaft_radius", defaults.shaft_radius)),
+        head_length=float(d.get("head_length", defaults.head_length)),
+        head_radius=float(d.get("head_radius", defaults.head_radius)),
+        color=_rgb(d.get("color", defaults.color)),
+        material=_known_material(str(d.get("material", defaults.material))),
+    )
 
 
 def _image_to_dict(image: BackgroundImage) -> dict[str, Any]:
@@ -381,6 +459,12 @@ def project_from_dict(data: Any) -> Project:
     except (KeyError, TypeError, ValueError, IndexError) as exc:
         detail = f"missing entry {exc}" if isinstance(exc, KeyError) else str(exc)
         raise ProjectError(f"The project file is damaged or incomplete: {detail}.") from exc
+    attached = {i for i, _ in scene.vectors.sources} | {a[0] for a, _ in scene.vectors.images}
+    if attached and max(attached) >= len(structure):
+        raise ProjectError(
+            f"The project file is damaged: a vector is attached to atom #{max(attached) + 1}, "
+            f"but the structure has {len(structure)} atoms."
+        )
     return Project(structure, scene, environment, camera, output)
 
 
@@ -436,6 +520,8 @@ def _scene_from(d: dict[str, Any], version: int = SCHEMA_VERSION) -> SceneSettin
         element_radii=tuple(
             (str(entry["element"]), float(entry["radius"])) for entry in d.get("element_radii", [])
         ),
+        vectors=_vectors_from(d.get("vectors")),
+        vector_style=_vector_style_from(d.get("vector_style")),
     )
 
 

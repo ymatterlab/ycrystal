@@ -111,10 +111,15 @@ _FLOOR_FINISH = "ambient 0.3 diffuse 0.65 specular 0.05 roughness 0.05"
 
 
 def _materials_used(geometry: DisplayGeometry) -> list:
-    """Material presets of the geometry in catalog order (the default if no atoms)."""
+    """Material presets of the geometry in catalog order (the default if no atoms).
+
+    Includes the arrow material when the geometry has vector arrows.
+    """
     from ycrystal.presets import get_material
 
     ids = set(geometry.materials) or {geometry.material}
+    if geometry.arrows:
+        ids.add(geometry.arrow_material)
     return sorted((get_material(i) for i in ids), key=lambda m: (m.order, m.id))
 
 
@@ -463,6 +468,14 @@ def scene_to_pov(
         idents[key] = ident
         rgb = (float(color[0]), float(color[1]), float(color[2]))
         lines.extend(_declaration(material, ident, rgb))
+    arrow_material = by_id.get(geometry.arrow_material) if geometry.arrows else None
+    arrow_ident = ""
+    if arrow_material is not None:  # arrows have their own colour, not an element's
+        key = (arrow_material.id, "Arrow" if arrow_material.keeps_element_color else "")
+        if key not in idents:
+            idents[key] = _identifier(arrow_material, "Arrow", geometry.material)
+            lines.extend(_declaration(arrow_material, idents[key], geometry.arrow_color))
+        arrow_ident = idents[key]
     add(
         f"#declare Ycr_Texture_Cell = texture {{ pigment {{ color "
         f"{_srgb(geometry.cell_edge_color)} }} finish {{ {_CELL_FINISH} }} }}"
@@ -507,6 +520,8 @@ def scene_to_pov(
                 mid = 0.5 * (start + end)
                 add(f"cylinder {{ {_v(start)}, {_v(mid)}, {r_bond} {tex_a} }}")
                 add(f"cylinder {{ {_v(mid)}, {_v(end)}, {r_bond} {tex_b} }}")
+    if arrow_material is not None:
+        lines.extend(_arrow_lines(geometry, arrow_material, arrow_ident))
     if len(geometry.cell_edges):
         add("")
         add("// Cell edges (no_shadow: edges do not darken atoms).")
@@ -570,6 +585,38 @@ def _backdrop(
             "  }",
         ]
     lines += ["  no_shadow", "}", "global_lights off", "}"]
+    return lines
+
+
+def _arrow_lines(geometry: DisplayGeometry, material: object, ident: str) -> list[str]:
+    """Cylinder-and-cone objects of the vector arrows (lit and shadowed like atoms)."""
+    from ycrystal.core.vectors import MEANINGS
+
+    lines = [
+        "",
+        f"// Vectors ({len(geometry.arrows)}): Cartesian components in the structure frame; "
+        "each arrow is a",
+        "// shaft (cylinder) and head (cone) from tail to tip; the head is part of the "
+        "total length.",
+    ]
+    for arrow in geometry.arrows:
+        source, image = arrow.host
+        row = geometry.index_of(arrow.host)
+        element = geometry.elements[row] if row is not None else "?"
+        unit = MEANINGS[arrow.meaning][1]
+        comps = ", ".join(_f(c) for c in arrow.components)
+        tail, base, tip = (np.asarray(p, dtype=float) for p in (arrow.tail, arrow.base, arrow.tip))
+        if material.texture_space == "unit":
+            middle = 0.5 * (tail + tip)
+            surface = _surface(material, ident, 0.5 * arrow.length, middle)
+        else:
+            surface = f"{material.declaration} {{ {ident} }}"
+        lines.append(
+            f"// {MEANINGS[arrow.meaning][0]} on atom #{source + 1} {element} image {image}: "
+            f"({comps}){' ' + unit.replace('μ', 'mu_') if unit else ''}"
+        )
+        lines.append(f"cylinder {{ {_v(tail)}, {_v(base)}, {_f(arrow.shaft_radius)} {surface} }}")
+        lines.append(f"cone {{ {_v(base)}, {_f(arrow.head_radius)}, {_v(tip)}, 0 {surface} }}")
     return lines
 
 

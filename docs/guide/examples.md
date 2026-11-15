@@ -8,6 +8,7 @@ ordinary `.ycrystal` files with the structure embedded, so they open anywhere:
 | `examples/SrTiO3-studio.ycrystal` | SrTiO3 2 × 2 × 1, chrome Ti and ceramic O, grey studio with floor shadows, 800 × 600 |
 | `examples/MgB2-gradient.ycrystal` | MgB2 3 × 3 × 1 (from `tests/fixtures/MgB2.cif`), glossy B, blue gradient, 700 × 700 |
 | `examples/triclinic-transparent.ycrystal` | Low-symmetry triclinic cell, matte, transparent PNG background, 900 × 600 |
+| `examples/vectors-synthetic-afm.ycrystal` | Synthetic two-site cubic cell (not a real material) with opposite magnetic-moment arrows (±2.2 μB along z) assigned by hand, 800 × 600 |
 | `examples/grey-studio.ycstyle` | The style of the SrTiO3 example, to apply to other structures |
 
 Open one with **File ▸ Open…**, or `.venv/bin/ycrystal examples/MgB2-gradient.ycrystal`.

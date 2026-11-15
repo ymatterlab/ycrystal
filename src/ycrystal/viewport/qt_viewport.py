@@ -261,6 +261,8 @@ class StructureViewport(QWidget):
         self.atom_actors: dict[str, vtkActor] = {}
         self.bond_actors: dict[str, vtkActor] = {}
         self._highlight_actor: vtkActor | None = None
+        self.arrow_mesh: pv.PolyData | None = None
+        """Mesh of the vector arrows drawn in the live view (``None`` without arrows)."""
         self.measurement_actors: list[vtkActor | vtkTextActor] = []
         """Live-view-only measurement helpers (cages, labels, guides); never exported."""
         self.detail: tuple[int, int, int] = detail_for(0)
@@ -317,7 +319,7 @@ class StructureViewport(QWidget):
 
     # ----- scene ------------------------------------------------------------------
     def set_scene(self, geometry: DisplayGeometry, environment: Environment) -> None:
-        """Replace drawn atoms, bonds, and cell edges; keep the camera.
+        """Replace drawn atoms, bonds, cell edges, and vector arrows; keep the camera.
 
         Parameters
         ----------
@@ -358,6 +360,8 @@ class StructureViewport(QWidget):
             plotter.remove_actor(self._highlight_actor, render=False)
         self._highlight_actor = None
         plotter.remove_actor("cell_edges", render=False)
+        plotter.remove_actor("vector_arrows", render=False)
+        self.arrow_mesh = None
         bottom, top = environment.live_background()
         if top is None:
             plotter.set_background(bottom)
@@ -417,6 +421,23 @@ class StructureViewport(QWidget):
                 reset_camera=False,
                 render=False,
             )
+        if geometry.arrows:
+            self.arrow_mesh = arrow_mesh(geometry.arrows, max(sides, 12))
+            material = get_material(geometry.arrow_material)
+            color = (
+                geometry.arrow_color
+                if material.keeps_element_color or material.live.color is None
+                else material.live.color
+            )
+            actor = plotter.add_mesh(
+                self.arrow_mesh,
+                color=color,
+                name="vector_arrows",
+                reset_camera=False,
+                render=False,
+            )
+            _apply_look(actor, material.live)
+            actor.SetPickable(False)
         self._geometry = geometry
         self._environment = environment
         self._bounds = geometry.bounding_sphere()
@@ -1241,6 +1262,41 @@ def _bond_actor(
     actor = vtkActor()
     actor.SetMapper(mapper)
     return actor
+
+
+def arrow_mesh(arrows: tuple, resolution: int = 16) -> pv.PolyData:
+    """Return one mesh of shaft cylinders and head cones for resolved arrows.
+
+    The arrows come from [`DisplayGeometry.arrows`][ycrystal.core.scene.DisplayGeometry],
+    the same geometry the POV-Ray writer uses (cylinder from tail to head base, cone from
+    head base to tip).
+    """
+    parts = []
+    for arrow in arrows:
+        tail, base, tip = (np.asarray(p, dtype=float) for p in (arrow.tail, arrow.base, arrow.tip))
+        shaft, head = base - tail, tip - base
+        if np.linalg.norm(shaft) > 0:
+            parts.append(
+                pv.Cylinder(
+                    center=0.5 * (tail + base),
+                    direction=shaft,
+                    radius=arrow.shaft_radius,
+                    height=float(np.linalg.norm(shaft)),
+                    resolution=resolution,
+                    capping=True,
+                )
+            )
+        parts.append(
+            pv.Cone(
+                center=0.5 * (base + tip),
+                direction=head,
+                height=float(np.linalg.norm(head)),
+                radius=arrow.head_radius,
+                resolution=resolution,
+                capping=True,
+            )
+        )
+    return pv.merge(parts) if len(parts) > 1 else parts[0]
 
 
 def _apply_look(actor: vtkActor, look: object) -> None:

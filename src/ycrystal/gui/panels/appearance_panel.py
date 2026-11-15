@@ -175,6 +175,9 @@ class AppearancePanel(QScrollArea):
     customize_requested = Signal()
     """Open *Customize Material…* (edit the parameters of a material recipe)."""
 
+    vectors_requested = Signal()
+    """Open the *Vectors* window (atom-attached arrows)."""
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWidgetResizable(True)
@@ -209,7 +212,15 @@ class AppearancePanel(QScrollArea):
             "glass, relief, pattern scale); the variant can be saved as one of your materials"
         )
         self.customize_button.clicked.connect(self.customize_requested.emit)
-        form.addWidget(self.customize_button)
+        material_buttons = QHBoxLayout()
+        material_buttons.addWidget(self.customize_button)
+        self.vectors_button = QPushButton("Vectors…")
+        self.vectors_button.setToolTip(
+            "Attach direction or magnetic-moment arrows to atoms (Edit ▸ Vectors…)"
+        )
+        self.vectors_button.clicked.connect(self.vectors_requested.emit)
+        material_buttons.addWidget(self.vectors_button)
+        form.addLayout(material_buttons)
         self.element_table = QTableWidget(0, 5)
         self.element_table.setHorizontalHeaderLabels(
             ["Element", "Colour", "Radius", "", "Material"]

@@ -63,6 +63,15 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - cancel_render
         - export_pov
         - choose_background_image
+        - open_vector_panel
+        - open_vector_editor
+        - vector_hosts
+        - set_vector
+        - reverse_vectors
+        - remove_vectors
+        - set_vectors_visible
+        - suppress_vectors
+        - set_vector_style
         - open_material_editor
         - save_personal_material
         - render_png
@@ -181,3 +190,9 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - load_personal_materials
         - save_personal_material
         - MaterialEditorDialog
+
+::: ycrystal.gui.vector_dialog
+    options:
+      members:
+        - VectorPanel
+        - VectorEditDialog

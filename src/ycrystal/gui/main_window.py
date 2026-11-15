@@ -52,6 +52,7 @@ from ycrystal.core.scene import (
     element_color,
 )
 from ycrystal.core.structure import Structure
+from ycrystal.core.vectors import Key, VectorRecord, VectorSet, VectorStyle
 from ycrystal.gui.commands import SceneSettingsCommand
 from ycrystal.gui.gallery import TARGET_DEFAULT, TARGET_SELECTION, PresetGallery
 from ycrystal.gui.lighting_setup import LightingSetupWindow
@@ -64,6 +65,7 @@ from ycrystal.gui.panels.appearance_panel import AppearancePanel
 from ycrystal.gui.panels.measurement_panel import MeasurementPanel, MeasurementRow
 from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
 from ycrystal.gui.panels.scene_panel import MAX_REPETITIONS, ScenePanel
+from ycrystal.gui.vector_dialog import VectorEditDialog, VectorPanel
 from ycrystal.io.project import (
     PROJECT_SUFFIX,
     Project,
@@ -345,6 +347,11 @@ class MainWindow(QMainWindow):
         self._material_preview = False
         self._material_edit_atoms: frozenset[AtomId] = frozenset()
         self._thumbnail_renders: list[RenderProcess] = []
+        # Vectors (FR-VECTOR-01): the window, the editor, and the editor's frozen targets.
+        self.vector_panel: VectorPanel | None = None
+        self.vector_editor: VectorEditDialog | None = None
+        self._vector_preview = False
+        self._vector_targets: tuple[str, tuple] = ("images", ())
         self._render: RenderProcess | None = None
         self._render_destination: Path | None = None
         self._result_dialog: RenderResultDialog | None = None
@@ -424,6 +431,7 @@ class MainWindow(QMainWindow):
         panel.lighting_setup_requested.connect(self.open_lighting_setup)
         panel.image_requested.connect(lambda: self.choose_background_image())
         panel.customize_requested.connect(lambda: self.open_material_editor())
+        panel.vectors_requested.connect(lambda: self.open_vector_panel())
         self.material_gallery: PresetGallery | None = None
         self.environment_gallery: PresetGallery | None = None
         self.render_panel.output_requested.connect(self.set_output_size)
@@ -609,6 +617,12 @@ class MainWindow(QMainWindow):
             action.triggered.connect(
                 lambda checked, m=mode: self.set_measurement_mode(m if checked else None)
             )
+        self.vectors_action = QAction(
+            "Vectors…",
+            self,
+            statusTip="Attach direction or magnetic-moment arrows to atoms",
+        )
+        self.vectors_action.triggered.connect(lambda: self.open_vector_panel())
         self.customize_material_action = QAction(
             "Customize Material…",
             self,
@@ -706,6 +720,7 @@ class MainWindow(QMainWindow):
         edit_menu.addSeparator()
         edit_menu.addAction(self.measure_distance_action)
         edit_menu.addAction(self.measure_angle_action)
+        edit_menu.addAction(self.vectors_action)
         edit_menu.addSeparator()
         edit_menu.addAction(self.selection_material_action)
         edit_menu.addAction(self.material_gallery_action)
@@ -1179,6 +1194,7 @@ class MainWindow(QMainWindow):
         self.selection = {atom_id for atom_id in self.selection if atom_id in geometry}
         self._update_selection()
         self._check_measurements()
+        self._sync_vector_panel()
         self._sync_panel()
         self._sync_appearance()
         self._update_lighting_setup()
@@ -1842,6 +1858,8 @@ class MainWindow(QMainWindow):
         self.viewport.set_output_camera(camera.fitted(points, radii, self.viewport.output_aspect()))
 
     def _update_selection(self) -> None:
+        if self.vector_panel is not None:
+            self._sync_vector_panel()
         indices = [self.geometry.index_of(atom_id) for atom_id in self.selection]
         self.viewport.set_highlight([i for i in indices if i is not None])
         self.hide_action.setEnabled(bool(self.selection))
@@ -1871,6 +1889,9 @@ class MainWindow(QMainWindow):
                 frac = position @ np.linalg.inv(self.structure.cell)
                 text += " · frac " + " ".join(f"{v:.4f}" for v in frac)
             text += " · xyz " + " ".join(f"{v:.4f}" for v in position) + " Å"
+            record = self.scene_settings.vectors.effective(atom_id)
+            if record is not None:
+                text += f" · vector {record.text()}" + ("" if record.visible else " (hidden)")
             if self.structure.movable is not None:
                 fixed = [
                     axis
@@ -2389,6 +2410,195 @@ class MainWindow(QMainWindow):
         gallery.show()
         gallery.raise_()
         return gallery
+
+    # ----- vectors (FR-VECTOR-01) ---------------------------------------------------------
+    def open_vector_panel(self) -> VectorPanel:
+        """Show the *Vectors* window (non-modal), creating it once, and return it."""
+        if self.vector_panel is None:
+            panel = VectorPanel(self)
+            panel.add_requested.connect(lambda: self.open_vector_editor())
+            panel.edit_requested.connect(lambda keys: self.open_vector_editor(keys))
+            panel.reverse_requested.connect(self.reverse_vectors)
+            panel.remove_requested.connect(self.remove_vectors)
+            panel.visibility_requested.connect(self.set_vectors_visible)
+            panel.suppress_requested.connect(lambda: self.suppress_vectors())
+            panel.rows_selected.connect(self._select_vector_hosts)
+            panel.style_requested.connect(self.set_vector_style)
+            self.vector_panel = panel
+        self._sync_vector_panel()
+        self.vector_panel.show()
+        self.vector_panel.raise_()
+        return self.vector_panel
+
+    def vector_hosts(self) -> dict[Key, list[AtomId]]:
+        """Return the displayed atoms each vector row applies to (overrides first)."""
+        vectors = self.scene_settings.vectors
+        images, sources = dict(vectors.images), dict(vectors.sources)
+        hosts: dict[Key, list[AtomId]] = {key: [] for key in vectors.keys()}
+        for atom_id in self.geometry.atom_ids:
+            if atom_id in images:
+                hosts[("image", atom_id)].append(atom_id)
+            elif atom_id[0] in sources:
+                hosts[("source", atom_id[0])].append(atom_id)
+        return hosts
+
+    def _sync_vector_panel(self) -> None:
+        if self.vector_panel is None:
+            return
+        shown = {key: len(atoms) for key, atoms in self.vector_hosts().items()}
+        settings = self.scene_settings
+        self.vector_panel.sync(
+            self.structure, settings.vectors, settings.vector_style, shown, len(self.selection)
+        )
+
+    def _select_vector_hosts(self, keys: list) -> None:
+        hosts = self.vector_hosts()
+        self.select({atom for key in keys for atom in hosts.get(key, [])})
+
+    def _push_vectors(self, vectors: VectorSet, text: str) -> bool:
+        return self._push_settings(replace(self.scene_settings, vectors=vectors), text)
+
+    def set_vector(
+        self,
+        record: VectorRecord,
+        atom_ids: set[AtomId] | None = None,
+        sources: set[int] | None = None,
+        clear_overrides: bool = False,
+    ) -> bool:
+        """Attach one vector as an undoable step.
+
+        Parameters
+        ----------
+        record
+            The vector (Cartesian components, meaning).
+        atom_ids
+            Displayed instances that get an image override.
+        sources
+            Source atoms that get a default for all their periodic images.
+        clear_overrides
+            Also remove the image overrides of `sources`.
+
+        Returns
+        -------
+        bool
+            Whether anything changed.
+        """
+        new = self._vector_edit(
+            self.scene_settings.vectors, record, atom_ids, sources, clear_overrides
+        )
+        n = len(atom_ids or ()) + len(sources or ())
+        return self._push_vectors(new, f"Set Vector ({n} {'atom' if n == 1 else 'atoms'})")
+
+    @staticmethod
+    def _vector_edit(
+        vectors: VectorSet,
+        record: VectorRecord,
+        atom_ids: set[AtomId] | None,
+        sources: set[int] | None,
+        clear_overrides: bool,
+    ) -> VectorSet:
+        if sources:
+            if clear_overrides:
+                vectors = vectors.with_images(vectors.overrides_of(sources), None)
+            vectors = vectors.with_sources(sources, record)
+        if atom_ids:
+            vectors = vectors.with_images(atom_ids, record)
+        return vectors
+
+    def reverse_vectors(self, keys: list) -> bool:
+        """Negate the components of vector rows (one undoable step)."""
+        new = self.scene_settings.vectors.mapped(keys, VectorRecord.reversed)
+        return self._push_vectors(new, "Reverse Vectors")
+
+    def remove_vectors(self, keys: list) -> bool:
+        """Delete vector rows (one undoable step)."""
+        return self._push_vectors(self.scene_settings.vectors.without(keys), "Remove Vectors")
+
+    def set_vectors_visible(self, keys: list, visible: bool) -> bool:
+        """Show or hide the arrows of vector rows (one undoable step; data kept)."""
+        new = self.scene_settings.vectors.mapped(keys, lambda r: replace(r, visible=visible))
+        return self._push_vectors(new, "Show Vectors" if visible else "Hide Vectors")
+
+    def suppress_vectors(self, atom_ids: set[AtomId] | None = None) -> bool:
+        """Draw no arrow on displayed instances (default: the selection), as one step."""
+        targets = set(self.selection if atom_ids is None else atom_ids)
+        if not targets:
+            return False
+        new = self.scene_settings.vectors.with_images(targets, None, suppress=True)
+        return self._push_vectors(new, "Suppress Vectors")
+
+    def set_vector_style(self, style: VectorStyle, text: str, merge_key: str = "") -> bool:
+        """Change the arrow appearance (undoable; same merge keys merge into one step)."""
+        return self._push_settings(
+            replace(self.scene_settings, vector_style=style), text, merge_key
+        )
+
+    def open_vector_editor(self, keys: list | None = None) -> VectorEditDialog | None:
+        """Show the vector editor (window-modal) for the selection or for table rows.
+
+        The targets are frozen when the editor opens: selecting other atoms while it is
+        open changes nothing. While editing, the view and the POV-Ray preview show the
+        vector without an undo step; *Apply* is one step, *Cancel* restores.
+        """
+        vectors = self.scene_settings.vectors
+        if keys:
+            keys = [k for k in keys if vectors.record(k) is not None]
+            if not keys:
+                return None
+            self._vector_targets = ("keys", tuple(keys))
+            record = vectors.record(keys[0])
+            scopes = [(f"The chosen rows ({len(keys)})", "keys")]
+            overrides = 0
+        else:
+            atoms = tuple(sorted(self.selection))
+            if not atoms:
+                self.statusBar().showMessage("Select atoms in the 3D view first.", 5000)
+                return None
+            sources = sorted({a[0] for a in atoms})
+            self._vector_targets = ("selection", atoms)
+            record = vectors.effective(atoms[0]) or VectorRecord((0.0, 0.0, 1.0))
+            n, m = len(atoms), len(sources)
+            scopes = [
+                (f"Selected displayed atom{'s' if n != 1 else ''} only ({n})", "images"),
+                (f"All periodic images of {'their' if n != 1 else 'its'} source atom"
+                 f"{'s' if m != 1 else ''} ({m})", "sources"),
+            ]  # fmt: skip
+            overrides = len(vectors.overrides_of(sources))
+        dialog = VectorEditDialog("Vector", record, scopes, overrides, self)
+        dialog.preview_requested.connect(self._preview_vector_edit)
+        dialog.applied.connect(self._apply_vector_edit)
+        dialog.cancelled.connect(self._end_vector_preview)
+        dialog.finished.connect(lambda _r: setattr(self, "vector_editor", None))
+        self.vector_editor = dialog
+        dialog.open()
+        return dialog
+
+    def _edited_vectors(self, edit: tuple) -> VectorSet:
+        record, scope, clear = edit
+        vectors = self.scene_settings.vectors
+        kind, targets = self._vector_targets
+        if kind == "keys":  # new components and meaning; each row keeps its visibility
+            return vectors.mapped(list(targets), lambda old: replace(record, visible=old.visible))
+        if scope == "sources":
+            return self._vector_edit(vectors, record, None, {a[0] for a in targets}, clear)
+        return self._vector_edit(vectors, record, set(targets), None, False)
+
+    def _preview_vector_edit(self, edit: tuple) -> None:
+        preview = replace(self.scene_settings, vectors=self._edited_vectors(edit))
+        self._vector_preview = preview != self.scene_settings
+        self.set_display_geometry(build_geometry(self.structure, preview))
+
+    def _end_vector_preview(self) -> None:
+        if self._vector_preview:
+            self._vector_preview = False
+            self.set_display_geometry(build_geometry(self.structure, self.scene_settings))
+
+    def _apply_vector_edit(self, edit: tuple) -> None:
+        self._end_vector_preview()
+        new = self._edited_vectors(edit)
+        kind, targets = self._vector_targets
+        text = "Edit Vectors" if kind == "keys" else f"Set Vector ({len(targets)} selected)"
+        self._push_vectors(new, text)
 
     # ----- custom materials (FR-MATERIAL-01) ----------------------------------------------
     def open_material_editor(self, target: str | None = None) -> MaterialEditorDialog:
