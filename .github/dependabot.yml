@@ -8,8 +8,8 @@
 # Dependabot does not re-resolve the whole environment; if a pin update conflicts or
 # fails CI, regenerate constraints.txt manually (CONTRIBUTING.md).
 #
-# Ruff is excluded here: its version is owned by the pre-commit hook (updated monthly
-# by pre-commit.ci) and must match ruff== in constraints.txt (checked by a hook).
+# Ruff is excluded here: its version is owned by the pre-commit hook (updated with
+# `pre-commit autoupdate`) and must match ruff== in constraints.txt (checked by a hook).
 # Security updates are separate from this file (repository settings).
 
 version: 2

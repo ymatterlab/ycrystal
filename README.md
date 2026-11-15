@@ -1,6 +1,5 @@
 # ycrystal
 
-[![CI](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml?query=branch%3Amain)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Status: early development](https://img.shields.io/badge/status-early%20development-orange.svg)](docs/PROGRESS.md)
 

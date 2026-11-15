@@ -110,6 +110,17 @@ def test_process_reports_cancellation_progress_and_failure(qtbot, tmp_path, make
 
 
 @pytest.mark.povray
+def test_successful_render_ends_at_100_percent(qtbot, make_job, tmp_path):
+    progress, done = [], []
+    process = RenderProcess(make_job(), fake_povray(tmp_path, 0.1))  # reports only 50 %
+    process.progress.connect(progress.append)
+    process.finished.connect(done.append)
+    process.start()
+    qtbot.waitUntil(lambda: bool(done), timeout=10_000)
+    assert done[0].ok and progress == [50, 100]
+    process.job.cleanup()
+
+
 def test_real_render_reports_progress(qtbot, make_job, povray_executable):
     results, progress = [], []
     process = RenderProcess(make_job(600, 400), povray_executable)

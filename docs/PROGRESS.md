@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0, M1, M2, and M3 complete (M3 on branch `feature/m3-render-workflow`); documentation and repository tooling merged into `main`.
+Last updated: 15 November 2026. M0, M1, M2, and M3 complete and merged into `main` (M3 in PR #8). Repository made private; pre-commit.ci and the CI badge removed.
 
 ## Milestones
 
@@ -126,7 +126,8 @@ render in 11.2 s showing refraction through the glass.
 - Previews use full quality without antialiasing; glass, metallic reflection, and large
   supercells make them slower (seconds). Automatic previews are on by default and can be
   switched off in the preview dock (the choice is remembered).
-- POV-Ray reports progress about once per second; short renders show only 100 %.
+- POV-Ray reports progress about once per second; short renders show only 100 %. A
+  successful render always ends at 100 % (added after a CI run whose last report was 99 %).
 - Cancel kills the POV-Ray process; nothing partial is kept.
 - The frame margin (4 %) is fixed. Output size is not undoable.
 - One material for all atoms and bonds; per-element/per-atom assignment, galleries with
@@ -226,6 +227,18 @@ enable pre-commit.ci for the repository, check Dependabot settings (version upda
 alerts, security updates), and optionally require the `pre-commit` and `tests` checks
 on `main`. The new workflow, Dependabot, and pre-commit.ci have not run yet; local
 success does not prove them.
+
+### Update: private repository (15 November 2026)
+
+The repository was made private. pre-commit.ci is free only for public repositories, so
+its `ci:` section was removed from `.pre-commit-config.yaml`; hooks are now updated
+manually with `pre-commit autoupdate` (CONTRIBUTING.md). The README's CI badge was
+removed (it does not render for viewers without access); the static license and status
+badges remain. GitHub Actions and Dependabot continue unchanged (private repositories
+on GitHub Free have 2,000 Actions minutes per month; one CI run uses about 4). On
+GitHub Free, the "Protect main" ruleset is not enforced while the repository is
+private; it is kept for a return to public visibility. The entries above describe the
+setup at the time.
 
 ## Documentation increment (15 November 2026)
 
@@ -474,6 +487,6 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 
 ## Next bounded action
 
-Review and merge the M3 branch. Then M4: material/environment manifests at gallery scale
+M3 is merged. Next product work is M4: material/environment manifests at gallery scale
 (at least 20 materials and 12 environments) with genuine POV-Ray thumbnails, search and
 favourites, global/element/selected-atom assignment, and lighting controls.
