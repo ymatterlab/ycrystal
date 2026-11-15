@@ -23,6 +23,34 @@ See the [user-facing format restrictions](../FORMATS.md) before importing data.
         - project_from_dict
         - save_project
         - load_project
+        - SCHEMA_VERSION
+
+## Pictures and packages
+
+::: ycrystal.io.images
+    options:
+      members:
+        - ImageAsset
+        - ImageError
+        - import_image
+        - image_from_bytes
+        - register_image
+        - get_image
+        - asset_filename
+        - MAX_IMAGE_BYTES
+        - MAX_IMAGE_SIDE
+        - MAX_IMAGE_PIXELS
+
+::: ycrystal.io.package
+    options:
+      members:
+        - PackageError
+        - is_package
+        - write_package
+        - read_package
+        - MAX_ENTRIES
+        - MAX_DOCUMENT_BYTES
+        - MAX_TOTAL_BYTES
 
 ## Styles
 

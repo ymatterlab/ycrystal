@@ -62,6 +62,9 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - request_preview
         - cancel_render
         - export_pov
+        - choose_background_image
+        - open_material_editor
+        - save_personal_material
         - render_png
         - check_renderer
 
@@ -170,3 +173,11 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - cancel
         - is_busy
         - current_tag
+
+::: ycrystal.gui.material_editor
+    options:
+      members:
+        - PERSONAL_MATERIALS_KEY
+        - load_personal_materials
+        - save_personal_material
+        - MaterialEditorDialog

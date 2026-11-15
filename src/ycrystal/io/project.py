@@ -1,5 +1,10 @@
 """The ``.ycrystal`` project file: versioned JSON with the embedded structure.
 
+A project that uses a background picture is saved as a ZIP package instead: the same
+JSON document as ``project.json`` plus the picture under ``assets/`` (see
+[`ycrystal.io.package`][ycrystal.io.package]). Both forms are recognised by content, so
+the suffix stays ``.ycrystal``.
+
 A project reopens without the original structure file: the canonical structure (cell,
 positions, elements, labels, occupancy, movable flags) is stored in full, together with
 its import provenance, the display settings (including hidden atoms), environment,
@@ -14,7 +19,11 @@ POV-Ray path are not stored in projects.
 Schema history: 1 — first version (M1); 2 — repetitions, cell mode, and bonds (M2); 3 —
 material and background presets, explicit output size (M3); 4 — element and atom
 material overrides, element colours, and the full environment: background type, floor,
-lighting, and reflection panel (M4); 5 — element radii (M5). Older files open with the
+lighting, and reflection panel (M4); 5 — element radii (M5); 6 — background pictures
+(``environment.background.image``, ZIP packages with assets; FR-BGIMAGE-01) and
+custom material variants (top-level ``materials`` list with the full definition of every
+variant the scene uses; FR-MATERIAL-01). Projects without a picture are still single
+JSON files. Older files open with the
 M3 appearance: no overrides, plain background, no floor, and the "soft" lighting.
 Schema-1 files load with bonds disabled to preserve their original appearance. In every
 schema the saved camera describes the output image of ``output.width`` ×
@@ -44,6 +53,7 @@ import numpy as np
 from ase.data import chemical_symbols
 
 from ycrystal import __version__
+from ycrystal.core.background import BackgroundImage
 from ycrystal.core.bonds import BondSettings
 from ycrystal.core.camera import Camera
 from ycrystal.core.scene import AtomId, Environment, SceneSettings
@@ -53,8 +63,11 @@ from ycrystal.render.pov_writer import RenderSettings
 PROJECT_FORMAT = "ycrystal-project"
 """Value of the ``format`` key that identifies a project file."""
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 """Schema version written by this Ycrystal; newer versions are refused on load."""
+
+PACKAGE_DOCUMENT = "project.json"
+"""Name of the JSON document inside a project package."""
 
 PROJECT_SUFFIX = ".ycrystal"
 """File-name suffix of project files."""
@@ -177,6 +190,7 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             },
         },
         "environment": _environment_to_dict(project.environment),
+        "materials": custom_definitions(scene),
         "camera": None if project.camera is None else project.camera.to_dict(),
         "output": {
             "width": project.output.width,
@@ -198,6 +212,7 @@ def _environment_to_dict(e: Environment) -> dict[str, Any]:
             "color": list(e.background),
             "bottom": list(e.background_bottom),
             "clouds": e.clouds,
+            "image": None if e.image is None else _image_to_dict(e.image),
         },
         "floor": {
             "enabled": e.floor,
@@ -216,6 +231,106 @@ def _environment_to_dict(e: Environment) -> dict[str, Any]:
             "reflector": e.reflector,
         },
     }
+
+
+def _image_to_dict(image: BackgroundImage) -> dict[str, Any]:
+    return {
+        "asset": image.asset,
+        "name": image.name,
+        "width": image.width,
+        "height": image.height,
+        "format": image.format,
+        "mean_color": list(image.mean_color),
+        "fit": image.fit,
+        "zoom": image.zoom,
+        "offset": [image.offset_x, image.offset_y],
+        "brightness": image.brightness,
+    }
+
+
+def _image_from(d: Any) -> BackgroundImage | None:
+    if d is None:
+        return None
+    offset = d.get("offset", (0.0, 0.0))
+    return BackgroundImage(
+        asset=str(d["asset"]),
+        name=str(d.get("name", "picture")),
+        width=int(d["width"]),
+        height=int(d["height"]),
+        format=str(d.get("format", "png")),
+        mean_color=_rgb(d.get("mean_color", (0.5, 0.5, 0.5))),
+        fit=str(d.get("fit", "fill")),
+        zoom=float(d.get("zoom", 1.0)),
+        offset_x=float(offset[0]),
+        offset_y=float(offset[1]),
+        brightness=float(d.get("brightness", 1.0)),
+    )
+
+
+def custom_definitions(scene: SceneSettings) -> list[dict[str, Any]]:
+    """Return the stored definitions of the custom materials a scene uses, by id."""
+    from ycrystal.presets import get_definition
+    from ycrystal.presets.custom import CUSTOM_PREFIX
+
+    ids = sorted(m for m in scene.material_ids() if m.startswith(CUSTOM_PREFIX))
+    return [get_definition(material_id).to_dict() for material_id in ids]
+
+
+def register_custom_definitions(entries: Any) -> None:
+    """Register the custom material definitions of a project or style document.
+
+    Raises
+    ------
+    ProjectError
+        If a definition is damaged, uses an unknown or non-editable base, has invalid
+        values, or was made by a newer Ycrystal.
+    """
+    from ycrystal.presets import register_definition
+    from ycrystal.presets.custom import DefinitionError, MaterialDefinition
+
+    if entries is None:
+        return
+    if not isinstance(entries, list):
+        raise ProjectError("The list of custom materials is damaged.")
+    for entry in entries:
+        try:
+            register_definition(MaterialDefinition.from_dict(entry))
+        except DefinitionError as exc:
+            raise ProjectError(str(exc)) from None
+
+
+def referenced_assets(environment: Environment) -> list:
+    """Return the stored pictures an environment refers to (from the session registry).
+
+    Raises
+    ------
+    ycrystal.io.images.ImageError
+        If a referenced picture is not registered.
+    """
+    from ycrystal.io.images import get_image
+
+    return [] if environment.image is None else [get_image(environment.image.asset)]
+
+
+def check_assets(environment: Environment, assets: dict) -> None:
+    """Check that the pictures an environment refers to are present and consistent.
+
+    Raises
+    ------
+    ProjectError
+        If a picture is missing or its recorded size or format differs.
+    """
+    image = environment.image
+    if image is None:
+        return
+    asset = assets.get(image.asset)
+    if asset is None:
+        raise ProjectError(
+            f"The background picture {image.name!r} is missing from the file. Choose the "
+            "picture again, or open a copy of the project that was saved with it."
+        )
+    if (asset.width, asset.height, asset.format) != (image.width, image.height, image.format):
+        raise ProjectError(f"The background picture {image.name!r} does not match its record.")
 
 
 def project_from_dict(data: Any) -> Project:
@@ -254,6 +369,7 @@ def project_from_dict(data: Any) -> Project:
             "Update Ycrystal to open it."
         )
     try:
+        register_custom_definitions(data.get("materials"))
         structure = _structure_from(data["structure"])
         scene = _scene_from(data.get("scene") or {}, version)
         output = _output_from(data.get("output") or {})
@@ -332,10 +448,16 @@ def _image(value: Any) -> tuple[int, int, int]:
 
 def _known_material(material_id: str) -> str:
     from ycrystal.presets import PresetError, get_material
+    from ycrystal.presets.custom import CUSTOM_PREFIX
 
     try:
         return get_material(material_id).id
     except PresetError:
+        if material_id.startswith(CUSTOM_PREFIX):
+            raise ProjectError(
+                f"The file uses the custom material {material_id!r} but does not contain its "
+                "definition."
+            ) from None
         raise ProjectError(
             f"The project uses the material {material_id!r}, which this Ycrystal does not "
             "know. Update Ycrystal to open it."
@@ -407,6 +529,7 @@ def _environment_from(d: dict[str, Any], output: RenderSettings) -> Environment:
         light_size=float(light.get("light_size", defaults.light_size)),
         shadows=bool(light.get("shadows", defaults.shadows)),
         reflector=bool(light.get("reflector", defaults.reflector)),
+        image=_image_from(background.get("image")),
     )
 
 
@@ -452,7 +575,9 @@ def _jsonable(value: Any) -> Any:
 def save_project(path: str | Path, project: Project) -> Path:
     """Write a project file atomically.
 
-    The JSON text is written to a temporary file ``.ycrystal-*.tmp`` in the target
+    A project whose environment refers to a background picture is written as a ZIP
+    package with the picture (see [`ycrystal.io.package`][ycrystal.io.package]); others
+    as plain JSON. The JSON text is written to a temporary file ``.ycrystal-*.tmp`` in the target
     directory, which then replaces `path` with a single rename. An existing file at
     `path` is overwritten without asking; if writing fails, it is left unchanged.
 
@@ -475,11 +600,17 @@ def save_project(path: str | Path, project: Project) -> Path:
         If the directory or file cannot be written; the temporary file is removed.
     ValueError
         If a value cannot be written as JSON, for example a non-finite coordinate.
+    ycrystal.io.images.ImageError
+        If the background picture is not registered in this session.
     """
     path = Path(path)
-    text = (
-        json.dumps(project_to_dict(project), indent=1, ensure_ascii=False, allow_nan=False) + "\n"
-    )
+    document = project_to_dict(project)
+    assets = referenced_assets(project.environment)
+    if assets:
+        from ycrystal.io.package import write_package
+
+        return write_package(path, PACKAGE_DOCUMENT, document, assets)
+    text = json.dumps(document, indent=1, ensure_ascii=False, allow_nan=False) + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix=".ycrystal-", suffix=".tmp", dir=path.parent)
     try:
@@ -498,7 +629,9 @@ def load_project(path: str | Path) -> Project:
     Parameters
     ----------
     path
-        Project file (UTF-8 JSON). The original structure file is not needed.
+        Project file: UTF-8 JSON or a ZIP package with pictures (recognised by
+        content). The original structure and picture files are not needed; the
+        package's pictures are registered for this session.
 
     Returns
     -------
@@ -509,8 +642,8 @@ def load_project(path: str | Path) -> Project:
     ------
     ProjectError
         If the file cannot be read, is not UTF-8 text or valid JSON (the message gives
-        the line), or fails the checks of
-        [`project_from_dict`][ycrystal.io.project.project_from_dict].
+        the line), is a damaged or unsafe package, misses a referenced picture, or
+        fails the checks of [`project_from_dict`][ycrystal.io.project.project_from_dict].
 
     Examples
     --------
@@ -525,19 +658,47 @@ def load_project(path: str | Path) -> Project:
     ('SrTiO3', True)
     """
     path = Path(path)
+    data, assets = read_document(path, PACKAGE_DOCUMENT, ProjectError, "project")
+    try:
+        project = project_from_dict(data)
+        check_assets(project.environment, assets)
+    except ProjectError as exc:
+        raise ProjectError(f"{path.name}: {exc}") from exc
+    from ycrystal.io.images import register_image
+
+    for asset in assets.values():
+        register_image(asset)
+    return project
+
+
+def read_document(
+    path: Path, document_name: str, error: type[Exception], noun: str
+) -> tuple[Any, dict]:
+    """Read a plain JSON file or a ZIP package: ``(document, pictures by identity)``.
+
+    The form is recognised by content. Errors are raised as ``error`` with a message
+    that starts with the file name (``noun`` is ``"project"`` or ``"style"``).
+    """
+    from ycrystal.io.package import PackageError, is_package, read_package
+
+    try:
+        packaged = is_package(path)
+    except OSError as exc:
+        raise error(f"Cannot read {path}: {exc.strerror or exc}") from exc
+    if packaged:
+        try:
+            return read_package(path, document_name)
+        except PackageError as exc:
+            raise error(f"{path.name}: {exc}") from exc
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:
-        raise ProjectError(f"Cannot read {path}: {exc.strerror or exc}") from exc
+        raise error(f"Cannot read {path}: {exc.strerror or exc}") from exc
     except UnicodeDecodeError as exc:
-        raise ProjectError(f"{path.name} is not a Ycrystal project (not UTF-8 text).") from exc
+        raise error(f"{path.name} is not a Ycrystal {noun} (not UTF-8 text).") from exc
     try:
-        data = json.loads(text)
+        return json.loads(text), {}
     except json.JSONDecodeError as exc:
-        raise ProjectError(
-            f"{path.name} is not valid project JSON (line {exc.lineno}: {exc.msg})."
+        raise error(
+            f"{path.name} is not valid {noun} JSON (line {exc.lineno}: {exc.msg})."
         ) from exc
-    try:
-        return project_from_dict(data)
-    except ProjectError as exc:
-        raise ProjectError(f"{path.name}: {exc}") from exc

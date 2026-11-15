@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16) and FR-PREVIEW-01 (preview resolution; branch `feature/preview-resolution`). Repository private.
+Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures), and FR-MATERIAL-01 (custom material variants); the last two on branch `feature/appearance-extensions`. Repository private.
 
 ## Milestones
 
@@ -93,6 +93,88 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## FR-BGIMAGE-01: background pictures with portable assets (post-0.2.0, 15 November 2026)
+
+Development after version 0.2.0; branch `feature/appearance-extensions`. Background type **Image**
+shows a user's PNG or JPEG picture behind the structure in the POV-Ray preview and the
+PNG, framed in the output frame (Fill/Fit, zoom, frame-relative offsets, brightness,
+Reset Framing). Projects and styles that use a picture become ZIP packages that carry it.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Framing arithmetic: Fit/Fill for wide, tall, square, and extreme pictures in 3:2, 1:1, 2:3 frames keep the picture's proportions; Fill covers, Fit fits; zoom and offsets in frame units | Pass | `test_fit_and_fill_keep_the_shape_for_all_orientations`; doctest in `ycrystal.core.background` |
+| Reference validation (digest, size, format, mode, finite ranges), Reset Framing, live colour = picture mean | Pass | `test_reference_validation_and_reset` |
+| Import: PNG/JPEG kept byte-for-byte when POV-Ray reads them as they are; EXIF orientation 6 normalised to an upright PNG (corner colours checked); content identity (same bytes, other name → same id; same name, other bytes → different id); unreadable, truncated, GIF, missing, oversized files refused with messages | Pass | `test_import_keeps_or_normalises_and_identifies_by_content`, `test_unusable_pictures_are_refused` |
+| Writer: self-lit `image_map … once` backdrop in a light group, `no_shadow no_reflection`, margin colour layer, mean colour for reflections; transparent output, other modes, and no picture leave it out (record kept); floor not removed; bounds unchanged; built-in thumbnails' scene digests unchanged | Pass | `test_writer_backdrop_and_precedence`; existing `test_presets.py` digest tests |
+| Staging: the picture is copied next to the scene under a short content name (paths with spaces/non-ASCII); not for transparent output | Pass | `test_scene_files_stage_the_picture` |
+| Real POV-Ray 3.7 renders with a labelled-quadrant fixture: orientation, Fit margins at 16.7/283.3 px of 300, Fill crop, zoom 0.5 with offsets (centre at the expected pixel), brightness 0.5 (half linear light), PNG alpha shows the margin colour, EXIF JPEG upright, JPEG, portrait picture in 3:2, 1:1, 2:3 outputs undistorted, square picture filling a portrait output, same composition at 150 × 100 and 600 × 400 | Pass | `test_rendered_framing_orientation_and_alpha`, `test_rendered_sources_outputs_and_resolutions` |
+| Glass shows the picture through the atom; an exported folder renders after being moved | Pass | `test_glass_shows_the_picture_and_project_renders_after_relocation` |
+| Projects: ZIP package (`project.json` + `assets/<sha256>.png`), schema 6, reopened after deleting the source and clearing the session registry; projects without pictures stay JSON; existing example projects load; missing picture, tampered picture, unsafe entry name, corrupt archive, and a JSON project naming a picture fail with messages | Pass | `test_project_package_round_trip_without_the_source`, `test_damaged_and_unsafe_packages_fail_clearly` |
+| Styles: Environment style with picture as package (style schema 2), reopened after deleting the source; plain styles stay JSON; a schema-1 style loads; corrupt package refused | Pass | `test_environment_style_carries_its_picture` |
+| GUI: Choose Image is one undo step (undo/redo), marks the project modified and the preview out of date, changes neither camera, output size, nor bounds; live view shows the mean colour; continuous zoom edits merge into one step; offsets, brightness, Fit; Replace keeps framing; Reset Framing; Remove; undo still finds a replaced picture; unusable file keeps the background | Pass | `test_choose_image_is_one_undoable_step_that_changes_nothing_else`, `test_framing_controls_merge_reset_remove_and_replace`, `test_unusable_file_keeps_the_current_background` |
+| GUI: floor notice with Turn Off Floor, transparency notice (picture kept), presets remember the picture; a framing change during a running preview discards the stale result | Pass | `test_floor_and_transparency_notices_and_presets`, `test_framing_change_discards_a_running_preview` |
+| GUI: save project and Environment style as packages, export copies the picture; reopen in a new window and import the style after deleting the source and clearing the registry | Pass | `test_project_style_and_export_carry_the_picture` |
+| GUI on the Mint display (scripted, real POV-Ray): Background group with picture controls and floor notice; preview with a landscape picture | Pass (scripted) | `artifacts/appearance/background-group.png`, `window-image-background.png` (gitignored) |
+| Hands-on use by a person; very large photographs (time and memory) | Unverified | |
+
+Decisions: the picture is identified by the SHA-256 of its stored bytes and kept in a
+session registry, so undo/redo never loses it; it is stored unchanged when POV-Ray reads
+it as it is, otherwise as an upright PNG. Projects and styles are ZIP packages only when
+they carry a picture (detected by content, suffix unchanged); limits: 64 MB per picture,
+12000 px per side, 50 megapixels; packages up to 256 entries and 1 GB unpacked, with
+relative safe names only. Preview requests are identified by the scene revision, which
+every picture or framing change increases. The picture lies on a self-lit plane behind
+the scene (not in a sky sphere), is excluded from reflections (`no_reflection`; reflective
+atoms see the picture's mean colour as POV-Ray background), and is seen through
+refraction. Applying an environment preset keeps the picture record (not drawn) so that
+switching back to Image restores it.
+
+Regression runs (both features together): `pytest -m "not povray"` 406 passed (strict mode; 34 new non-POV-Ray tests for both
+features, and three existing assertions updated: schema number 6 in `test_project.py` and
+`test_aspect.py`, the reserved `custom` category in `test_presets.py`); `pytest -m
+povray` on `test_background_image.py`, `test_custom_materials.py`,
+`test_gui_material_editor.py`, `test_gui_render.py`, `test_gui.py`,
+`test_preview_resolution.py`, `test_povray_jobs.py`, and the command-line render 11
+passed; `test_presets.py` environment, combination, and floor renders 20 passed (the 30
+per-material renders were not rerun: built-in declarations and thumbnail scene digests
+are unchanged); `ycrystal pkg.ycrystal --render` on a package with a picture and a
+variant (path with a space and ü) rendered with both; doctests; `zensical build --clean
+--strict`; ruff.
+
+## FR-MATERIAL-01: custom material variants (post-0.2.0, 15 November 2026)
+
+Development after version 0.2.0; branch `feature/appearance-extensions`. **Customize Material…**
+(Appearance tab, Edit menu) starts from a Ycrystal recipe, edits typed parameters, and
+applies the variant to the default material, an element, or the selected atoms, or saves
+it as a personal material.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Untouched variants of all 13 editable bases (Matte, Satin, Glossy, Ceramic, Plastic, Glass, Frosted glass, Gem, Marble, Jade, Granite, Stone, Wood) write declarations token-for-token equal to the built-ins; kind, colour behaviour, includes, texture space unchanged; built-ins unchanged | Pass | `test_untouched_variants_equal_the_built_in_recipes`; doctest in `ycrystal.presets.custom` |
+| Each control changes its POV-Ray property: diffuse, specular/roughness, reflection, phong/phong size, filter, interior ior, normal bumps strength/scale, gem fresnel reflection, pattern scale of pigment (marble) and texture (stone) kinds; live look follows | Pass | `test_each_control_changes_its_pov_property` |
+| Invalid values (out of range, NaN, ∞), unknown parameters, empty names, native bases (explanation names `T_Gold_3C`), unknown bases, newer versions, tampered ids, missing parameters rejected | Pass | `test_invalid_definitions_are_rejected` |
+| Ids derived from content (`custom_<base>_<digest>`): same definition → same id, other name → other id, never a built-in id; registration idempotent; editing previews registered unlisted | Pass | `test_ids_are_content_derived_and_never_collide` |
+| Precedence atom > element > default with periodic-image-specific overrides; bond halves take their atom's variant; readable name/description comments; standard include still external | Pass | `test_precedence_periodic_images_and_bond_halves` |
+| Projects and styles embed every used definition and reopen on a clean profile (registry cleared) with identical scenes and declarations; style transfer keeps part and compatibility rules; tampered or missing definitions fail with messages | Pass | `test_projects_and_styles_reopen_on_a_clean_profile` |
+| Real POV-Ray renders: untouched Satin, Frosted glass, Marble variants pixel-identical to the built-ins; specular, ior, bump strength, and pattern-scale changes change the image | Pass | `test_rendered_variants` |
+| GUI: debounced preview without undo step or modified flag; Cancel restores; Apply is one undo step with undo/redo; menu shows the variant (✎); selection captured at opening; element target; precedence | Pass | `test_preview_then_cancel_leaves_no_trace`, `test_apply_is_one_undoable_step`, `test_selection_is_captured_and_precedence_holds` |
+| GUI: native materials read-only with explanation; glass filter explanation; Reset to Base; pattern-only controls | Pass | `test_native_materials_are_read_only_and_reset_restores_the_base` |
+| Personal materials: Save as My Material stores the definition in QSettings, gallery lists it (badge fallback icon), it returns after a restart, and a project opens on a clean profile without it; editing during a running preview discards the stale result; a real POV-Ray thumbnail is rendered for a saved variant | Pass | `test_personal_materials_persist_and_files_need_no_profile`, `test_editing_discards_a_stale_preview`, `test_saved_material_gets_a_real_thumbnail` |
+| GUI on the Mint display (scripted, real POV-Ray): Customize Material dialog (Frosted glass), preview with the applied variant over a background picture | Pass (scripted) | `artifacts/appearance/customize-material.png`, `preview-custom-material.png` (gitignored) |
+| Hands-on use by a person (dialog flow, gallery browsing) | Unverified | |
+
+Decisions: parameter defaults are explicit data in `ycrystal.presets.custom.SCHEMAS`
+(equal to the built-in recipes, checked by tests), and recipe text is generated from
+them; no POV-Ray text is parsed. Every parameter (including hidden ones such as ambient)
+is stored, so a saved figure does not change if a built-in default changes. Personal
+materials are a JSON list in `QSettings` (`materials/personal`), thumbnails in
+`material-thumbnails/` next to the settings file. Projects (schema 6, top-level
+`materials`) and styles (schema 2) embed the definitions they use; package and asset
+machinery is shared with FR-BGIMAGE-01 (variants need no binary assets). Native
+materials and ASE styles stay read-only.
+
+Regression runs: see FR-BGIMAGE-01 above (one run for both features).
+
 ## FR-MEASURE-01: distance and bond-angle measurements (post-0.2.0, 15 November 2026)
 
 Development after version 0.2.0; merged in PR #16. **Distance** and **Bond
@@ -139,8 +221,7 @@ behind others must be brought into view (orbit) before it can be clicked.
 
 ## FR-PREVIEW-01: preview resolution (post-0.2.0, 15 November 2026)
 
-Development after version 0.2.0 (not part of 0.1.0 or 0.2.0); branch
-`feature/preview-resolution`. The POV-Ray preview dock gets a **Resolution** selector: Small 480 px wide (the
+Development after version 0.2.0 (not part of 0.1.0 or 0.2.0); merged in PR #17. The POV-Ray preview dock gets a **Resolution** selector: Small 480 px wide (the
 default), Medium 800 px, Large 1200 px, or a custom width (16–4000 px). The height
 follows the output's aspect ratio. The main viewport stays the interactive VTK view.
 

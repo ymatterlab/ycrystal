@@ -9,6 +9,7 @@
         - scene_to_pov
         - render_ini
         - write_scene_files
+        - stage_assets
 
 ## Lighting
 

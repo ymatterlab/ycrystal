@@ -33,6 +33,7 @@ from ycrystal.core.scene import RGB, Environment, SceneSettings
 from ycrystal.gui.color_dialog import ColorDialog, color_values
 from ycrystal.gui.gallery import preset_icon
 from ycrystal.presets import (
+    custom_materials,
     environment_from_preset,
     environments,
     get_environment,
@@ -42,7 +43,14 @@ from ycrystal.presets import (
     materials,
 )
 
-BACKGROUND_MODE_NAMES = {"solid": "Solid colour", "gradient": "Vertical gradient", "sky": "Sky"}
+BACKGROUND_MODE_NAMES = {
+    "solid": "Solid colour",
+    "gradient": "Vertical gradient",
+    "sky": "Sky",
+    "image": "Image",
+}
+
+FIT_NAMES = {"fill": "Fill (crop to the frame)", "fit": "Fit (whole picture)"}
 """Background modes as named in the panel."""
 
 
@@ -161,6 +169,12 @@ class AppearancePanel(QScrollArea):
     lighting_setup_requested = Signal()
     """Open the Lighting Setup window."""
 
+    image_requested = Signal()
+    """Choose (or replace) the background picture."""
+
+    customize_requested = Signal()
+    """Open *Customize Material…* (edit the parameters of a material recipe)."""
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWidgetResizable(True)
@@ -172,6 +186,7 @@ class AppearancePanel(QScrollArea):
         self._environment = Environment()
         self._elements: list[str] = []
         self._syncing = False
+        self._custom_ids: tuple[str, ...] = ()
 
         # ----- materials ----------------------------------------------------------------
         group = QGroupBox("Materials")
@@ -188,6 +203,13 @@ class AppearancePanel(QScrollArea):
         gallery.clicked.connect(lambda: self.gallery_requested.emit("materials"))
         row.addWidget(gallery)
         form.addLayout(row)
+        self.customize_button = QPushButton("Customize Material…")
+        self.customize_button.setToolTip(
+            "Start from a Ycrystal material and adjust its parameters (highlight, reflection, "
+            "glass, relief, pattern scale); the variant can be saved as one of your materials"
+        )
+        self.customize_button.clicked.connect(self.customize_requested.emit)
+        form.addWidget(self.customize_button)
         self.element_table = QTableWidget(0, 5)
         self.element_table.setHorizontalHeaderLabels(
             ["Element", "Colour", "Radius", "", "Material"]
@@ -276,6 +298,84 @@ class AppearancePanel(QScrollArea):
             lambda v: self._edit("Clouds", "env:clouds", clouds=v / 100.0)
         )
         bform.addRow("Clouds", self.clouds_spin)
+        # Background picture (Image type, FR-BGIMAGE-01).
+        self.image_label = QLabel()
+        self.image_label.setWordWrap(True)
+        bform.addRow("Picture", self.image_label)
+        image_row = QHBoxLayout()
+        self.image_choose_button = QPushButton("Choose Image…")
+        self.image_choose_button.setToolTip(
+            "Import a PNG or JPEG picture. It is copied into the project, so the original "
+            "file is not needed later."
+        )
+        self.image_choose_button.clicked.connect(lambda: self._emit(self.image_requested))
+        image_row.addWidget(self.image_choose_button)
+        self.image_remove_button = QPushButton("Remove")
+        self.image_remove_button.setToolTip("Remove the picture; the background colour remains")
+        self.image_remove_button.clicked.connect(
+            lambda: self._edit("Remove Background Image", image=None)
+        )
+        image_row.addWidget(self.image_remove_button)
+        self.image_buttons = QWidget()
+        self.image_buttons.setLayout(image_row)
+        image_row.setContentsMargins(0, 0, 0, 0)
+        bform.addRow(self.image_buttons)
+        self.fit_combo = QComboBox()
+        for fit, name in FIT_NAMES.items():
+            self.fit_combo.addItem(name, fit)
+        self.fit_combo.setToolTip(
+            "Fill covers the whole output frame and crops the picture; Fit shows the whole "
+            "picture with margins in the background colour. The picture is never stretched."
+        )
+        self.fit_combo.currentIndexChanged.connect(
+            lambda _i: self._edit_image("Image Framing", fit=self.fit_combo.currentData())
+        )
+        bform.addRow("Framing", self.fit_combo)
+        self.zoom_spin = _spin(10, 1000, 5, 0, " %")
+        self.zoom_spin.setToolTip("Size relative to the fitted or filled picture")
+        self.zoom_spin.valueChanged.connect(
+            lambda v: self._edit_image("Image Zoom", "env:image_zoom", zoom=v / 100)
+        )
+        bform.addRow("Zoom", self.zoom_spin)
+        self.offset_x_spin = _spin(-100, 100, 1, 0, " %")
+        self.offset_x_spin.setToolTip(
+            "Moves the picture right (positive) or left, in percent of the output frame width"
+        )
+        self.offset_x_spin.valueChanged.connect(
+            lambda v: self._edit_image("Image Offset", "env:image_offset_x", offset_x=v / 100)
+        )
+        bform.addRow("Horizontal", self.offset_x_spin)
+        self.offset_y_spin = _spin(-100, 100, 1, 0, " %")
+        self.offset_y_spin.setToolTip(
+            "Moves the picture up (positive) or down, in percent of the output frame height"
+        )
+        self.offset_y_spin.valueChanged.connect(
+            lambda v: self._edit_image("Image Offset", "env:image_offset_y", offset_y=v / 100)
+        )
+        bform.addRow("Vertical", self.offset_y_spin)
+        self.brightness_spin = _spin(0, 200, 5, 0, " %")
+        self.brightness_spin.setToolTip(
+            "Brightness of the picture (100 % shows its colours unchanged). The picture "
+            "does not light the structure."
+        )
+        self.brightness_spin.valueChanged.connect(
+            lambda v: self._edit_image(
+                "Image Brightness", "env:image_brightness", brightness=v / 100
+            )
+        )
+        bform.addRow("Brightness", self.brightness_spin)
+        self.reset_framing_button = QPushButton("Reset Framing")
+        self.reset_framing_button.setToolTip("Fill, 100 % zoom, centred, 100 % brightness")
+        self.reset_framing_button.clicked.connect(self._reset_framing)
+        bform.addRow(self.reset_framing_button)
+        self.image_note = QLabel()
+        self.image_note.setWordWrap(True)
+        bform.addRow(self.image_note)
+        self.floor_off_button = QPushButton("Turn Off Floor")
+        self.floor_off_button.setToolTip("The floor covers the picture in this view")
+        self.floor_off_button.clicked.connect(lambda: self._edit("Floor", floor=False))
+        bform.addRow(self.floor_off_button)
+        self._background_form = bform
         self.transparent_check = QCheckBox("Transparent PNG background")
         self.transparent_check.setToolTip(
             "Rendered images get an alpha channel; floors and backdrops are left out"
@@ -399,13 +499,39 @@ class AppearancePanel(QScrollArea):
     # ----- helpers ----------------------------------------------------------------------
     def _material_combo(self, with_default: bool) -> QComboBox:
         combo = _narrow_combo()
+        self._fill_material_combo(combo, with_default)
+        return combo
+
+    def _fill_material_combo(self, combo: QComboBox, with_default: bool) -> None:
+        combo.blockSignals(True)
+        combo.clear()
         if with_default:
             combo.addItem("Default", "")
-        for material in materials():
-            combo.addItem(preset_icon(material), material.name, material.id)
+        for material in materials() + custom_materials():
+            name = f"{material.name} ✎" if material.custom else material.name
+            combo.addItem(preset_icon(material), name, material.id)
             index = combo.count() - 1
             combo.setItemData(index, material.description, Qt.ItemDataRole.ToolTipRole)
-        return combo
+        combo.blockSignals(False)
+
+    def refresh_materials(self) -> None:
+        """Rebuild the material menus (new custom materials or thumbnails)."""
+        self._custom_ids = ("<refresh>",)
+        syncing, self._syncing = self._syncing, True
+        try:
+            self._refresh_custom_materials()
+        finally:
+            self._syncing = syncing
+
+    def _refresh_custom_materials(self) -> None:
+        """Rebuild the material menus when custom materials were added."""
+        ids = tuple(m.id for m in custom_materials())
+        if ids == self._custom_ids:
+            return
+        self._custom_ids = ids
+        self._fill_material_combo(self.material_combo, with_default=False)
+        if self._elements:
+            self._rebuild_elements(self._elements)
 
     def _emit(self, signal: Signal, *args: object) -> None:
         if not self._syncing:
@@ -417,6 +543,77 @@ class AppearancePanel(QScrollArea):
         new = replace(self._environment, **changes)
         if new != self._environment:
             self.environment_requested.emit(new, text, merge_key)
+
+    def _edit_image(self, text: str, merge_key: str = "", **changes: object) -> None:
+        image = self._environment.image
+        if self._syncing or image is None:
+            return
+        self._edit(text, merge_key, image=replace(image, **changes))
+
+    def _reset_framing(self) -> None:
+        image = self._environment.image
+        if image is not None:
+            self._edit("Reset Image Framing", image=image.reset_framing())
+
+    def _sync_image(self, env: Environment) -> None:
+        """Show the picture controls (only for the Image background type)."""
+        image_mode = env.background_mode == "image"
+        image = env.image
+        for widget in (
+            self.image_label,
+            self.image_buttons,
+            self.fit_combo,
+            self.zoom_spin,
+            self.offset_x_spin,
+            self.offset_y_spin,
+            self.brightness_spin,
+            self.reset_framing_button,
+            self.image_note,
+        ):
+            self._background_form.setRowVisible(widget, image_mode)
+        self._background_form.setRowVisible(
+            self.floor_off_button, image_mode and env.floor and not env.transparent
+        )
+        self.image_choose_button.setText("Replace…" if image else "Choose Image…")
+        self.image_remove_button.setEnabled(image is not None)
+        for widget in (
+            self.fit_combo,
+            self.zoom_spin,
+            self.offset_x_spin,
+            self.offset_y_spin,
+            self.brightness_spin,
+            self.reset_framing_button,
+        ):
+            widget.setEnabled(image is not None)
+        if image is None:
+            self.image_label.setText("No picture chosen; the background colour is shown.")
+        else:
+            self.image_label.setText(f"{image.name} — {image.width} × {image.height} px")
+            self.image_label.setToolTip(
+                f"Stored in the project (content {image.asset[:12]}…); the original file is "
+                "not needed."
+            )
+            self.fit_combo.setCurrentIndex(self.fit_combo.findData(image.fit))
+            self.zoom_spin.setValue(image.zoom * 100)
+            self.offset_x_spin.setValue(image.offset_x * 100)
+            self.offset_y_spin.setValue(image.offset_y * 100)
+            self.brightness_spin.setValue(image.brightness * 100)
+        notes = []
+        if env.transparent:
+            notes.append(
+                "Transparent PNG background is on: the picture is left out of renders (its "
+                "settings are kept)."
+            )
+        elif env.floor:
+            notes.append(
+                "The floor covers the picture in this orthographic view. Turn off the floor "
+                "to see the picture."
+            )
+        notes.append(
+            "The 3D view shows the picture's average colour; the POV-Ray preview (F5) shows "
+            "the picture. It does not light the structure and is not seen in reflections."
+        )
+        self.image_note.setText(" ".join(notes))
 
     def _rebuild_elements(self, elements: list[str]) -> None:
         self._elements = list(elements)
@@ -497,6 +694,7 @@ class AppearancePanel(QScrollArea):
         self._syncing = True
         try:
             self._environment = environment
+            self._refresh_custom_materials()
             self.material_combo.setCurrentIndex(self.material_combo.findData(settings.material))
             elements = [element for element, _, _ in element_colors]
             if elements != self._elements:
@@ -547,11 +745,15 @@ class AppearancePanel(QScrollArea):
             self.top_button.set_color(env.background)
             self.bottom_button.set_color(env.background_bottom)
             self.top_label.setText(
-                {"solid": "Colour", "gradient": "Top", "sky": "Zenith"}[env.background_mode]
+                {"solid": "Colour", "gradient": "Top", "sky": "Zenith", "image": "Margin"}[
+                    env.background_mode
+                ]
             )
             self.bottom_label.setText("Horizon" if env.background_mode == "sky" else "Bottom")
-            self.bottom_button.setEnabled(env.background_mode != "solid")
-            self.bottom_label.setEnabled(env.background_mode != "solid")
+            two_colours = env.background_mode in ("gradient", "sky")
+            self.bottom_button.setEnabled(two_colours)
+            self.bottom_label.setEnabled(two_colours)
+            self._sync_image(env)
             self.clouds_spin.setValue(round(env.clouds * 100))
             self.clouds_spin.setEnabled(env.background_mode == "sky")
             self.transparent_check.setChecked(env.transparent)

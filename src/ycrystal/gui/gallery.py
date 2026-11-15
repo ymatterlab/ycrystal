@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 from ycrystal.presets import (
     ENVIRONMENT_CATEGORIES,
     MATERIAL_CATEGORIES,
+    custom_materials,
     environments,
     materials,
 )
@@ -43,9 +44,37 @@ TARGET_SELECTION = "selection"
 
 
 def preset_icon(preset: object) -> QIcon:
-    """Return the thumbnail of a preset as an icon (empty if the file is missing)."""
+    """Return the thumbnail of a preset as an icon (empty if the file is missing).
+
+    A custom material without its own rendered thumbnail shows its base material's
+    thumbnail with a pencil badge, so it stays recognisable (and distinguishable).
+    """
     path = preset.thumbnail()
+    if path is None and getattr(preset, "custom", False):
+        from ycrystal.presets import get_material
+
+        return _badged(get_material(preset.base).thumbnail())
     return QIcon(QPixmap(str(path))) if path is not None else QIcon()
+
+
+def _badged(path: object) -> QIcon:
+    from PySide6.QtGui import QColor, QFont, QPainter, QPixmap
+
+    pixmap = QPixmap(str(path)) if path is not None else QPixmap()
+    if pixmap.isNull():
+        pixmap = QPixmap(128, 128)
+        pixmap.fill(QColor(200, 200, 205))
+    painter = QPainter(pixmap)
+    size = pixmap.width() // 3
+    painter.setBrush(QColor(255, 255, 255, 230))
+    painter.setPen(QColor(60, 60, 70))
+    painter.drawEllipse(pixmap.width() - size - 4, 4, size, size)
+    font = QFont()
+    font.setPixelSize(int(size * 0.7))
+    painter.setFont(font)
+    painter.drawText(pixmap.width() - size - 4, 4, size, size, Qt.AlignmentFlag.AlignCenter, "✎")
+    painter.end()
+    return QIcon(pixmap)
 
 
 class PresetGallery(QDialog):
@@ -85,7 +114,7 @@ class PresetGallery(QDialog):
             raise ValueError("kind must be 'materials' or 'environments'")
         self.kind = kind
         self.settings = settings
-        self._presets = materials() if kind == "materials" else environments()
+        self._presets = materials() + custom_materials() if kind == "materials" else environments()
         categories = MATERIAL_CATEGORIES if kind == "materials" else ENVIRONMENT_CATEGORIES
         self.setWindowTitle("Material Gallery" if kind == "materials" else "Environment Gallery")
         self.resize(760, 620)
@@ -157,6 +186,29 @@ class PresetGallery(QDialog):
         self._refilter()
 
     # ----- public ---------------------------------------------------------------------
+    def refresh_presets(self) -> None:
+        """Show custom materials registered since the gallery was opened."""
+        if self.kind != "materials":
+            return
+        current = self.current_id()
+        self._presets = materials() + custom_materials()
+        items = {
+            self.list.item(row).data(Qt.ItemDataRole.UserRole): self.list.item(row)
+            for row in range(self.list.count())
+        }
+        for preset in self._presets:
+            item = items.get(preset.id)
+            if item is None:
+                item = QListWidgetItem(preset.name)
+                item.setData(Qt.ItemDataRole.UserRole, preset.id)
+                item.setToolTip(self._details(preset))
+                self.list.addItem(item)
+            if preset.custom or preset.id not in items:  # thumbnails may be new
+                item.setIcon(preset_icon(preset))
+        if current is not None:
+            self.select_preset(current)
+        self._refilter()
+
     def favourites(self) -> list[str]:
         """Return the favourite preset ids of this gallery."""
         value = self.settings.value(FAVOURITES_KEY.format(kind=self.kind), [])
@@ -218,6 +270,8 @@ class PresetGallery(QDialog):
     # ----- internals ------------------------------------------------------------------
     def _details(self, preset: object) -> str:
         parts = [preset.description, f"Category: {preset.category_name}."]
+        if getattr(preset, "custom", False):
+            parts.append("Custom material (stored in your settings and in files that use it).")
         if self.kind == "materials":
             parts.append(
                 "Keeps the element colours."
