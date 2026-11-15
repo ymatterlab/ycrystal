@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ycrystal import presets as presets_module
 from ycrystal.core import aspect, measure
 from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
 from ycrystal.core.camera import Camera, default_camera
@@ -54,6 +55,11 @@ from ycrystal.core.structure import Structure
 from ycrystal.gui.commands import SceneSettingsCommand
 from ycrystal.gui.gallery import TARGET_DEFAULT, TARGET_SELECTION, PresetGallery
 from ycrystal.gui.lighting_setup import LightingSetupWindow
+from ycrystal.gui.material_editor import (
+    MaterialEditorDialog,
+    load_personal_materials,
+    save_personal_material,
+)
 from ycrystal.gui.panels.appearance_panel import AppearancePanel
 from ycrystal.gui.panels.measurement_panel import MeasurementPanel, MeasurementRow
 from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
@@ -329,6 +335,16 @@ class MainWindow(QMainWindow):
         self.project_path: Path | None = project_path
         self.geometry = build_geometry(self.structure, self.scene_settings)
         self.settings = QSettings()
+        # Personal custom materials (FR-MATERIAL-01) live in the user's settings, with
+        # their rendered thumbnails in a folder next to the settings file.
+        presets_module.CUSTOM_THUMBNAILS = Path(self.settings.fileName()).parent / (
+            "material-thumbnails"
+        )
+        self.personal_material_notes = load_personal_materials(self.settings)[1]
+        self.material_editor: MaterialEditorDialog | None = None
+        self._material_preview = False
+        self._material_edit_atoms: frozenset[AtomId] = frozenset()
+        self._thumbnail_renders: list[RenderProcess] = []
         self._render: RenderProcess | None = None
         self._render_destination: Path | None = None
         self._result_dialog: RenderResultDialog | None = None
@@ -406,6 +422,8 @@ class MainWindow(QMainWindow):
         panel.environment_requested.connect(self.set_environment)
         panel.lighting_requested.connect(self.set_lighting)
         panel.lighting_setup_requested.connect(self.open_lighting_setup)
+        panel.image_requested.connect(lambda: self.choose_background_image())
+        panel.customize_requested.connect(lambda: self.open_material_editor())
         self.material_gallery: PresetGallery | None = None
         self.environment_gallery: PresetGallery | None = None
         self.render_panel.output_requested.connect(self.set_output_size)
@@ -591,6 +609,12 @@ class MainWindow(QMainWindow):
             action.triggered.connect(
                 lambda checked, m=mode: self.set_measurement_mode(m if checked else None)
             )
+        self.customize_material_action = QAction(
+            "Customize Material…",
+            self,
+            statusTip="Adjust the parameters of a material recipe and apply or save the variant",
+        )
+        self.customize_material_action.triggered.connect(lambda: self.open_material_editor())
         self.material_gallery_action = QAction(
             "Material Gallery…", self, statusTip="Browse materials with POV-Ray thumbnails"
         )
@@ -685,6 +709,7 @@ class MainWindow(QMainWindow):
         edit_menu.addSeparator()
         edit_menu.addAction(self.selection_material_action)
         edit_menu.addAction(self.material_gallery_action)
+        edit_menu.addAction(self.customize_material_action)
         edit_menu.addAction(self.environment_gallery_action)
         view_menu = self.menuBar().addMenu("&View")
         view_menu.addAction(self.fit_action)
@@ -2155,7 +2180,9 @@ class MainWindow(QMainWindow):
         cell-edge colour that stays visible on it, as one step.
         """
         preset = get_environment(environment_id)
-        environment = environment_from_preset(preset.id)
+        # The preset replaces the background type; a chosen picture is remembered (not
+        # drawn) so that switching back to the Image type restores it.
+        environment = replace(environment_from_preset(preset.id), image=self.environment.image)
         settings = replace(self.scene_settings, cell_edge_color=preset.cell_edge_color)
         if environment == self.environment and settings == self.scene_settings:
             self._sync_appearance()
@@ -2165,6 +2192,60 @@ class MainWindow(QMainWindow):
                 self, settings, f"Environment: {preset.name}", environment=environment
             )
         )
+
+    def choose_background_image(self, path: str | Path | None = None) -> bool:
+        """Import a PNG or JPEG picture as background (*Background ▸ Choose Image…*).
+
+        The picture is checked and copied into the session (and into the project when it
+        is saved); the background type becomes Image. Replacing a picture keeps the
+        framing. One undoable step; an unusable file shows a message and changes nothing.
+
+        Parameters
+        ----------
+        path
+            Picture file; ``None`` shows a file dialog.
+
+        Returns
+        -------
+        bool
+            Whether a picture was applied.
+        """
+        from ycrystal.io.images import ImageError, import_image
+
+        if path is None:
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Choose Background Image",
+                self._last_directory(),
+                "Pictures (*.png *.jpg *.jpeg);;All files (*)",
+            )
+            if not path:
+                return False
+        path = Path(path)
+        try:
+            asset = import_image(path)
+        except ImageError as exc:
+            self.show_error("Cannot Use This Picture", str(exc))
+            return False
+        self._remember_directory(path)
+        old = self.environment.image
+        framing = (
+            {}
+            if old is None
+            else {
+                "fit": old.fit,
+                "zoom": old.zoom,
+                "offset_x": old.offset_x,
+                "offset_y": old.offset_y,
+                "brightness": old.brightness,
+            }
+        )
+        image = asset.reference(**framing)
+        self.set_environment(
+            replace(self.environment, background_mode="image", image=image),
+            "Replace Background Image" if old is not None else "Background Image",
+        )
+        return True
 
     def set_environment(self, environment: Environment, text: str, merge_key: str = "") -> None:
         """Apply an edited environment (background, floor, or lights) as an undoable step.
@@ -2297,6 +2378,7 @@ class MainWindow(QMainWindow):
             self.material_gallery.apply_requested.connect(self._apply_gallery_material)
             self.material_gallery.reset_requested.connect(self._reset_gallery_material)
         gallery = self.material_gallery
+        gallery.refresh_presets()
         elements = list(dict.fromkeys(self.structure.symbols))
         gallery.set_targets(elements, len(self.selection), target)
         current = self.scene_settings.material
@@ -2307,6 +2389,130 @@ class MainWindow(QMainWindow):
         gallery.show()
         gallery.raise_()
         return gallery
+
+    # ----- custom materials (FR-MATERIAL-01) ----------------------------------------------
+    def open_material_editor(self, target: str | None = None) -> MaterialEditorDialog:
+        """Show *Customize Material…* (window-modal) and return the dialog.
+
+        Parameters
+        ----------
+        target
+            ``"default"``, ``"element:<symbol>"``, or ``"selection"``; ``None`` chooses
+            the selection if atoms are selected, else the default material.
+
+        Notes
+        -----
+        The selection is captured when the dialog opens. While editing, the view and the
+        POV-Ray preview show the variant without an undo step; *Apply* assigns it as one
+        step, *Cancel* restores the previous display.
+        """
+        settings = self.scene_settings
+        self._material_edit_atoms = frozenset(self.selection)
+        elements = list(dict.fromkeys(self.structure.symbols))
+        targets = [("Default material", TARGET_DEFAULT)]
+        current = {TARGET_DEFAULT: settings.material}
+        overrides = dict(settings.element_materials)
+        for element in elements:
+            targets.append((f"Element {element}", f"element:{element}"))
+            current[f"element:{element}"] = overrides.get(element, settings.material)
+        if self._material_edit_atoms:
+            n = len(self._material_edit_atoms)
+            targets.append((f"Selected atoms ({n})", TARGET_SELECTION))
+            first = min(self._material_edit_atoms)
+            index = self.geometry.index_of(first)
+            element = self.geometry.elements[index] if index is not None else ""
+            current[TARGET_SELECTION] = settings.material_for(first, element)
+        if target is None:
+            target = TARGET_SELECTION if self._material_edit_atoms else TARGET_DEFAULT
+        dialog = MaterialEditorDialog(targets, current, target, self)
+        dialog.preview_requested.connect(self._preview_material_edit)
+        dialog.applied.connect(self._apply_material_edit)
+        dialog.cancelled.connect(self._end_material_preview)
+        dialog.saved.connect(self.save_personal_material)
+        dialog.finished.connect(lambda _r: setattr(self, "material_editor", None))
+        self.material_editor = dialog
+        dialog.open()
+        return dialog
+
+    def _assigned(self, settings: SceneSettings, target: str, material_id: str) -> SceneSettings:
+        if target == TARGET_DEFAULT:
+            return replace(settings, material=material_id)
+        if target == TARGET_SELECTION:
+            return settings.with_atom_materials(self._material_edit_atoms, material_id)
+        return settings.with_element_material(target.split(":", 1)[1], material_id)
+
+    def _preview_material_edit(self, target: str, material_id: str) -> None:
+        preview = self._assigned(self.scene_settings, target, material_id)
+        self._material_preview = preview != self.scene_settings
+        self.set_display_geometry(build_geometry(self.structure, preview))
+
+    def _end_material_preview(self) -> None:
+        if self._material_preview:
+            self._material_preview = False
+            self.set_display_geometry(build_geometry(self.structure, self.scene_settings))
+
+    def _apply_material_edit(self, target: str, material_id: str) -> None:
+        self._end_material_preview()
+        name = get_material(material_id).name
+        if target == TARGET_DEFAULT:
+            text = f"Material: {name}"
+        elif target == TARGET_SELECTION:
+            n = len(self._material_edit_atoms)
+            text = f"Material of {n} {'atom' if n == 1 else 'atoms'}: {name}"
+        else:
+            text = f"Material of {target.split(':', 1)[1]}: {name}"
+        self._push_settings(self._assigned(self.scene_settings, target, material_id), text)
+        self._refresh_material_lists()
+
+    def _refresh_material_lists(self) -> None:
+        """Show new custom materials and thumbnails in the panel and the gallery."""
+        self.appearance_panel.refresh_materials()
+        self._sync_appearance()
+        if self.material_gallery is not None:
+            self.material_gallery.refresh_presets()
+
+    def save_personal_material(self, definition: object) -> bool:
+        """Keep a custom material in the user's settings and render its thumbnail.
+
+        Returns
+        -------
+        bool
+            False if the same definition was already saved.
+        """
+        added = save_personal_material(self.settings, definition)
+        self._refresh_material_lists()
+        if added:
+            self.statusBar().showMessage(f"Saved {definition.name} in My materials.", 6000)
+            self._render_custom_thumbnail(definition.id)
+        return added
+
+    def _render_custom_thumbnail(self, material_id: str) -> bool:
+        """Render a custom material's gallery thumbnail in the background (if POV-Ray is found)."""
+        from ycrystal.render.thumbnails import material_thumbnail_job
+
+        try:
+            executable = find_povray(self.configured_povray())
+        except PovrayNotFoundError:
+            return False  # the gallery shows the base thumbnail with a badge
+        job = material_thumbnail_job(material_id)
+        process = RenderProcess(job, executable, self)
+
+        def finished(result: RenderResult) -> None:
+            try:
+                if result.ok and result.image_path is not None:
+                    folder = Path(presets_module.CUSTOM_THUMBNAILS)
+                    folder.mkdir(parents=True, exist_ok=True)
+                    copy_result(result.image_path, folder / f"{material_id}.png")
+                    self._refresh_material_lists()
+            finally:
+                job.cleanup()
+                if process in self._thumbnail_renders:
+                    self._thumbnail_renders.remove(process)
+
+        process.finished.connect(finished)
+        self._thumbnail_renders.append(process)
+        process.start()
+        return True
 
     def open_environment_gallery(self) -> PresetGallery:
         """Show the environment gallery (non-modal) and return it."""
@@ -2477,7 +2683,9 @@ class MainWindow(QMainWindow):
         ``.pov`` file; the ``.ini`` file is replaced without asking. The scene header
         records the POV-Ray version found at export time, if any, and the standard
         include files the materials need. If an include file is not found on this
-        computer, an error message says so (the files are still written).
+        computer, an error message says so (the files are still written). A background
+        picture is copied next to the scene (``bg_<digest>.png`` or ``.jpg``) and named
+        relatively, so the folder can be moved as a whole.
         """
         if path is None:
             path, _ = QFileDialog.getSaveFileName(
@@ -2503,6 +2711,17 @@ class MainWindow(QMainWindow):
             renderer_note=self._renderer_note(),
         )
         message = f"Exported {pov} and {ini.name}"
+        env = self.environment
+        if (
+            env.background_mode == "image"
+            and env.image is not None
+            and not settings.transparent_background
+        ):
+            from ycrystal.io.images import asset_filename
+
+            message += (
+                f" with the background picture {asset_filename(env.image.asset, env.image.format)}"
+            )
         includes = required_includes(self.geometry)
         missing = missing_includes(includes)
         if includes:
@@ -2702,6 +2921,10 @@ class MainWindow(QMainWindow):
         self._preview_timer.stop()
         self._lighting_timer.stop()
         self.preview_queue.cancel()
+        for process in list(self._thumbnail_renders):
+            process.cancel()
+        if self.material_editor is not None:
+            self.material_editor.reject()
         if self.lighting_setup is not None:
             self.lighting_setup.close_view()
             self.lighting_setup.close()

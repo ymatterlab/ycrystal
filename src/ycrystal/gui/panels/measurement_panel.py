@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QAction, QGuiApplication, QKeySequence
+from PySide6.QtCore import QEvent, QObject, Signal
+from PySide6.QtGui import QGuiApplication, QKeyEvent, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
@@ -107,11 +107,9 @@ class MeasurementPanel(QWidget):
             row.addWidget(button)
         layout.addLayout(row)
 
-        copy_action = QAction("Copy", self.table)
-        copy_action.setShortcut(QKeySequence.StandardKey.Copy)
-        copy_action.setShortcutContext(Qt.ShortcutContext.WidgetShortcut)
-        copy_action.triggered.connect(self.copy_selected)
-        self.table.addAction(copy_action)
+        # Ctrl+C on the table copies the selected rows (instead of Qt's current-cell copy).
+        # A filter rather than a shortcut, so it works whenever the table gets the key.
+        self.table.installEventFilter(self)
         self.copy_button.clicked.connect(self.copy_selected)
         self.remove_button.clicked.connect(lambda: self.remove_requested.emit(self.selected_rows()))
         self.clear_button.clicked.connect(self.clear_requested.emit)
@@ -143,6 +141,17 @@ class MeasurementPanel(QWidget):
     def copy_text(self) -> str:
         """Return the copy text of the selected rows, one line each."""
         return "\n".join(self._rows[r].copy for r in self.selected_rows())
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802, D102
+        if (
+            watched is self.table
+            and event.type() == QEvent.Type.KeyPress
+            and isinstance(event, QKeyEvent)
+            and event.matches(QKeySequence.StandardKey.Copy)
+        ):
+            self.copy_selected()
+            return True
+        return super().eventFilter(watched, event)
 
     def copy_selected(self) -> None:
         """Put the selected rows' copy text on the clipboard."""

@@ -4,6 +4,12 @@ A style is the presentation of a project without its structure and camera: mater
 colours, radii, display settings, the environment, and the output size. It can be
 applied to another structure; the structure's scientific data are never changed.
 
+A style whose environment has a background picture is saved as a ZIP package with the
+picture (``style.json`` plus ``assets/``, see [`ycrystal.io.package`][ycrystal.io.package]),
+so it works after the original picture file is moved or deleted; other styles stay
+plain JSON. Style schema 2 adds the picture record and the definitions of the custom
+materials the style uses (FR-MATERIAL-01); schema-1 styles still load.
+
 Transfer rules
 --------------
 A style has four parts; [`apply_style`][ycrystal.io.style.apply_style] applies any
@@ -72,8 +78,11 @@ from ycrystal.core.structure import Structure
 STYLE_FORMAT = "ycrystal-style"
 """Value of the ``format`` key that identifies a style file."""
 
-STYLE_SCHEMA_VERSION = 1
+STYLE_SCHEMA_VERSION = 2
 """Style schema written by this Ycrystal; newer versions are refused on load."""
+
+STYLE_DOCUMENT = "style.json"
+"""Name of the JSON document inside a style package."""
 
 STYLE_SUFFIX = ".ycstyle"
 """File-name suffix of style files."""
@@ -309,6 +318,7 @@ def style_to_dict(style: Style) -> dict[str, Any]:
         "source": {"composition": style.source_name, "symbols": list(style.source_symbols)},
         "scene": project["scene"],
         "environment": project["environment"],
+        "materials": project["materials"],
         "output": {"width": style.output_size[0], "height": style.output_size[1]},
     }
 
@@ -328,6 +338,7 @@ def style_from_dict(data: Any) -> Style:
         _environment_from,
         _output_from,
         _scene_from,
+        register_custom_definitions,
     )
 
     if not isinstance(data, dict) or data.get("format") != STYLE_FORMAT:
@@ -345,6 +356,7 @@ def style_from_dict(data: Any) -> Style:
         if project_schema > SCHEMA_VERSION:
             raise StyleError("This style was saved by a newer Ycrystal; update Ycrystal to use it.")
         output = _output_from(data.get("output") or {})
+        register_custom_definitions(data.get("materials"))
         scene = _scene_from(data.get("scene") or {}, project_schema)
         environment = _environment_from(data.get("environment") or {}, output)
         source = data.get("source") or {}
@@ -361,15 +373,27 @@ def style_from_dict(data: Any) -> Style:
 
 
 def save_style(path: str | Path, style: Style) -> Path:
-    """Write a style file atomically (UTF-8 JSON) and return its path.
+    """Write a style file atomically and return its path.
+
+    UTF-8 JSON, or a ZIP package when the environment has a background picture.
 
     Raises
     ------
     OSError
         If the file cannot be written; an existing file is then left unchanged.
+    ycrystal.io.images.ImageError
+        If the background picture is not registered in this session.
     """
+    from ycrystal.io.project import referenced_assets
+
     path = Path(path)
-    text = json.dumps(style_to_dict(style), indent=1, ensure_ascii=False, allow_nan=False) + "\n"
+    document = style_to_dict(style)
+    assets = referenced_assets(style.environment)
+    if assets:
+        from ycrystal.io.package import write_package
+
+        return write_package(path, STYLE_DOCUMENT, document, assets)
+    text = json.dumps(document, indent=1, ensure_ascii=False, allow_nan=False) + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix=".ycstyle-", suffix=".tmp", dir=path.parent)
     try:
@@ -388,27 +412,26 @@ def load_style(path: str | Path) -> Style:
     Raises
     ------
     StyleError
-        If the file cannot be read, is not valid JSON, or fails the checks of
+        If the file cannot be read, is not valid JSON, is a damaged or unsafe package,
+        misses its picture, or fails the checks of
         [`style_from_dict`][ycrystal.io.style.style_from_dict]; the message starts with
-        the file name.
+        the file name. A package's picture is registered for this session.
     """
+    from ycrystal.io.images import register_image
+    from ycrystal.io.project import ProjectError, check_assets, read_document
+
     path = Path(path)
+    data, assets = read_document(path, STYLE_DOCUMENT, StyleError, "style")
     try:
-        text = path.read_text(encoding="utf-8")
-    except OSError as exc:
-        raise StyleError(f"Cannot read {path}: {exc.strerror or exc}") from exc
-    except UnicodeDecodeError as exc:
-        raise StyleError(f"{path.name} is not a Ycrystal style (not UTF-8 text).") from exc
-    try:
-        data = json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise StyleError(
-            f"{path.name} is not valid style JSON (line {exc.lineno}: {exc.msg})."
-        ) from exc
-    try:
-        return style_from_dict(data)
+        style = style_from_dict(data)
+        check_assets(style.environment, assets)
+    except ProjectError as exc:
+        raise StyleError(f"{path.name}: {str(exc).replace('project', 'style')}") from exc
     except StyleError as exc:
         raise StyleError(f"{path.name}: {exc}") from exc
+    for asset in assets.values():
+        register_image(asset)
+    return style
 
 
 def _placeholder_structure() -> Structure:

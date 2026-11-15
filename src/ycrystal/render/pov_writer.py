@@ -24,6 +24,7 @@ from pathlib import Path
 import numpy as np
 
 from ycrystal import __version__
+from ycrystal.core.background import placement
 from ycrystal.core.camera import Camera
 from ycrystal.core.lighting import (
     AREA_LIGHT_ADAPTIVE,
@@ -201,8 +202,18 @@ def _environment_comment(environment: Environment, transparent: bool) -> str:
     e = environment
     if transparent:
         background = "transparent (alpha); floor and backdrop left out"
-    elif e.background_mode == "solid":
+        if e.background_mode == "image" and e.image is not None:
+            background += f' (background picture "{_comment_safe(e.image.name)}" kept, not drawn)'
+    elif e.background_mode == "solid" or (e.background_mode == "image" and e.image is None):
         background = f"solid {_rgb_text(e.background)}"
+    elif e.background_mode == "image":
+        image = e.image
+        background = (
+            f'picture "{_comment_safe(image.name)}" ({image.width} x {image.height} px), '
+            f"{image.fit}, zoom {_f(image.zoom)}, offset {_f(image.offset_x)} "
+            f"{_f(image.offset_y)}, brightness {_f(image.brightness)}, "
+            f"margin {_rgb_text(e.background)}"
+        )
     elif e.background_mode == "gradient":
         background = f"gradient {_rgb_text(e.background_bottom)} to {_rgb_text(e.background)}"
     else:
@@ -223,6 +234,11 @@ def _environment_comment(environment: Environment, transparent: bool) -> str:
         f"elevation {_f(e.key_elevation)} deg, {size}, shadows {'on' if e.shadows else 'off'}; "
         f"fill {_f(e.fill_light)}; reflection panel {'on' if e.reflector else 'off'}."
     )
+
+
+def _comment_safe(text: str) -> str:
+    """Text for a one-line comment (no line breaks or quotes)."""
+    return " ".join(str(text).split()).replace('"', "'")
 
 
 def _rgb_text(color: RGB) -> str:
@@ -322,7 +338,10 @@ def scene_to_pov(
     eye_distance = max(camera.distance, depth_needed + 1.0)
 
     floor = environment.floor and not transparent
-    backdrop = environment.background_mode != "solid" and not transparent
+    picture = environment.image if environment.background_mode == "image" else None
+    backdrop = (
+        environment.background_mode in ("gradient", "sky") or picture is not None
+    ) and not transparent
     tilt = np.radians(FLOOR_TILT_DEG)
     floor_normal = np.cos(tilt) * up - np.sin(tilt) * direction
     floor_height = 0.0
@@ -378,15 +397,22 @@ def scene_to_pov(
     add(_environment_comment(environment, transparent))
     if transparent:
         add("background { color rgbt <0, 0, 0, 1> }  // transparent (Output_Alpha=on)")
-    elif environment.background_mode == "solid":
+    elif environment.background_mode == "solid" or (
+        environment.background_mode == "image" and picture is None
+    ):
         add(f"background {{ color {_srgb(environment.background)} }}")
+    elif picture is not None:
+        add(f"background {{ color {_srgb(picture.mean_color)} }}  // seen only in reflections")
     else:
         mean = tuple(
             0.5 * (a + b)
             for a, b in zip(environment.background, environment.background_bottom, strict=True)
         )
         add(f"background {{ color {_srgb(mean)} }}  // seen only in reflections")
-    if backdrop:
+    if backdrop and picture is not None:
+        frame = (focal, right, up, direction, world_w, world_h)
+        lines.extend(_image_backdrop(environment, points, radii, *frame))
+    elif backdrop:
         lines.extend(_backdrop(environment, points, radii, focal, right, up, direction, world_h))
     if floor:
         add("// Floor: below the structure as seen in the frame, tilted towards the viewer.")
@@ -510,10 +536,7 @@ def _backdrop(
     world_h: float,
 ) -> list[str]:
     """Return a self-lit backdrop plane carrying a gradient or sky aligned with the frame."""
-    far = float(np.max((points - focal) @ direction + radii)) if len(points) else 0.0
-    spread = float(np.max(radii)) if len(radii) else 1.0
-    depth = far + max(spread, 1.0) + 0.25 * world_h
-    distance = float((-direction) @ (focal + depth * direction))
+    distance = _backdrop_distance(points, radii, focal, direction, world_h)
     # Local pattern coordinates: x right, y up across the frame (0 bottom, 1 top), unit
     # length = frame height. POV-Ray's matrix rows are the images of x, y, z and the shift.
     origin = focal - 0.5 * world_h * up
@@ -548,6 +571,108 @@ def _backdrop(
         ]
     lines += ["  no_shadow", "}", "global_lights off", "}"]
     return lines
+
+
+def _backdrop_distance(
+    points: np.ndarray, radii: np.ndarray, focal: np.ndarray, direction: np.ndarray, world_h: float
+) -> float:
+    """Plane constant of a backdrop behind everything drawn (``plane { -direction, d }``)."""
+    far = float(np.max((points - focal) @ direction + radii)) if len(points) else 0.0
+    spread = float(np.max(radii)) if len(radii) else 1.0
+    depth = far + max(spread, 1.0) + 0.25 * world_h
+    return float((-direction) @ (focal + depth * direction))
+
+
+def _image_backdrop(
+    environment: Environment,
+    points: np.ndarray,
+    radii: np.ndarray,
+    focal: np.ndarray,
+    right: np.ndarray,
+    up: np.ndarray,
+    direction: np.ndarray,
+    world_w: float,
+    world_h: float,
+) -> list[str]:
+    """Return a self-lit backdrop plane showing the background picture in the frame.
+
+    The picture is an ``image_map`` placed with
+    [`placement`][ycrystal.core.background.placement] in frame-height units around the
+    frame centre, so its position depends only on the output frame, not on the
+    orientation of the structure. ``once`` leaves the plane outside the picture (and
+    under its transparent pixels) to the lower texture, which has the background
+    colour. The plane casts no shadow, is not lit (``light_group`` without lights), and
+    is invisible to reflection rays (``no_reflection``); refracted rays see it.
+    """
+    from ycrystal.io.images import asset_filename
+
+    image = environment.image
+    assert image is not None
+    distance = _backdrop_distance(points, radii, focal, direction, world_h)
+    cx, cy, w, h = placement(
+        image.width,
+        image.height,
+        world_w / world_h,
+        image.fit,
+        image.zoom,
+        image.offset_x,
+        image.offset_y,
+    )
+    # Local coordinates: x right, y up, unit length = frame height, origin = frame centre.
+    matrix = ", ".join(
+        ", ".join(_f(float(c)) for c in row)
+        for row in (right * world_h, up * world_h, -direction * world_h, focal)
+    )
+    name = asset_filename(image.asset, image.format)
+    kind = "png" if image.format == "png" else "jpeg"
+    return [
+        f'// Background picture "{_comment_safe(image.name)}", stored as {name} next to this file.',
+        "// Placed in the output frame (frame-height units around the frame centre); it is",
+        "// self-lit, casts no shadow, and is not seen in reflections (no_reflection).",
+        "light_group {",
+        f"plane {{ {_v(-direction)}, {_f(distance)}",
+        f"  texture {{ pigment {{ color {_srgb(environment.background)} }} "
+        "finish { ambient 1 diffuse 0 } }",
+        "  texture {",
+        f'    pigment {{ image_map {{ {kind} "{name}" gamma srgb once interpolate 2 }}',
+        f"              translate <-0.5, -0.5, 0> scale <{_f(w)}, {_f(h)}, 1> "
+        f"translate <{_f(cx)}, {_f(cy)}, 0>",
+        f"              matrix <{matrix}> }}",
+        f"    finish {{ ambient {_f(image.brightness)} diffuse 0 }}",
+        "  }",
+        "  no_shadow no_reflection",
+        "}",
+        "global_lights off",
+        "}",
+    ]
+
+
+def stage_assets(
+    directory: Path, environment: Environment, transparent: bool = False
+) -> list[Path]:
+    """Copy the pictures a scene draws into ``directory`` and return their paths.
+
+    Only the background picture of an ``"image"`` environment is drawn (not with a
+    transparent background). Files are named by content
+    ([`asset_filename`][ycrystal.io.images.asset_filename]); an existing file with that
+    name is replaced.
+
+    Raises
+    ------
+    ycrystal.io.images.ImageError
+        If the picture is not registered in this session.
+    OSError
+        If the file cannot be written.
+    """
+    from ycrystal.io.images import get_image
+
+    image = environment.image
+    if environment.background_mode != "image" or image is None or transparent:
+        return []
+    asset = get_image(image.asset)
+    target = Path(directory) / asset.filename
+    target.write_bytes(asset.data)
+    return [target]
 
 
 def render_ini(settings: RenderSettings, pov_name: str, image_name: str) -> str:
@@ -656,7 +781,9 @@ def write_scene_files(
     asking. The ``.ini`` file refers to the scene and the image by relative names, so
     run ``povray basename.ini`` with `directory` as the working directory. The I/O
     restrictions of the Ubuntu and Linux Mint ``povray`` package also allow writing
-    the image only there (or under ``/tmp``).
+    the image only there (or under ``/tmp``). A background picture is copied next to
+    the scene ([`stage_assets`][ycrystal.render.pov_writer.stage_assets]) and named
+    relatively, so the directory can be moved as a whole.
     """
     directory = Path(directory)
     if environment.transparent and not settings.transparent_background:
@@ -664,6 +791,7 @@ def write_scene_files(
     pov_path = directory / f"{basename}.pov"
     ini_path = directory / f"{basename}.ini"
     image_path = directory / f"{basename}.png"
+    stage_assets(directory, environment, settings.transparent_background)
     pov_path.write_text(
         scene_to_pov(geometry, camera, environment, settings, **kwargs), encoding="utf-8"
     )

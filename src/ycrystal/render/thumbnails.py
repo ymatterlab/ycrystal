@@ -107,6 +107,26 @@ def material_scene(material_id: str) -> str:
     )
 
 
+def material_thumbnail_job(material_id: str, parent: Path | None = None) -> object:
+    """Prepare a render job for the thumbnail of a material (also custom variants).
+
+    The scene is the one of [`material_scene`][ycrystal.render.thumbnails.material_scene];
+    the caller runs and cleans up the returned
+    [`RenderJob`][ycrystal.render.jobs.RenderJob].
+    """
+    from ycrystal.render.jobs import prepare_job
+
+    geometry = _material_geometry(material_id)
+    return prepare_job(
+        geometry,
+        _camera(geometry, 0.1),
+        MATERIAL_ENVIRONMENT,
+        RenderSettings(THUMBNAIL_SIZE, THUMBNAIL_SIZE),
+        parent=parent,
+        title=f"Ycrystal thumbnail: material {material_id}",
+    )
+
+
 def environment_scene(environment_id: str) -> str:
     """Return the POV-Ray scene of the thumbnail of environment ``environment_id``."""
     preset = get_environment(environment_id)

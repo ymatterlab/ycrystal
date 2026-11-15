@@ -63,7 +63,8 @@ def test_catalog_meets_the_m4_targets():
     assert DEFAULT_MATERIAL in {m.id for m in mats}
     assert DEFAULT_ENVIRONMENT in {e.id for e in envs}
     assert DEFAULT_LIGHTING in {light.id for light in lighting_presets()}
-    assert {m.category for m in mats} == set(MATERIAL_CATEGORIES)  # every category is used
+    # Every category is used; "custom" is reserved for variants (FR-MATERIAL-01).
+    assert {m.category for m in mats} == set(MATERIAL_CATEGORIES) - {"custom"}
     assert {m.kind for m in mats} == set(MATERIAL_KINDS)  # all four declaration kinds
     assert {e.background_mode for e in envs} == {"solid", "gradient", "sky"}
     assert any(e.floor and e.floor_reflection > 0 for e in envs)  # reflective studio floor

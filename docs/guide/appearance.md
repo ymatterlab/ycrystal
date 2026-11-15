@@ -148,6 +148,44 @@ Mint); the export says which files are needed and warns if one is missing.
 Procedural textures (marble, granite, stone, wood, frosted glass, and the native metals)
 are scaled to each atom, so the pattern has the same size on every atom.
 
+### Customizing a material
+
+**Customize Material…** (Appearance tab, or **Edit ▸ Customize Material…**) starts from a
+material and adjusts its parameters. Choose **Apply to** (the default material, an
+element, or the selected atoms) and **Start from** (the material to vary). The usual
+precedence stays: selected atom > element > default, and each half of a bond takes the
+material of its atom. A selection is the one at the moment the dialog opens; selecting
+other atoms while the dialog is open does not change where the variant goes.
+
+| Start from | Parameters you can change |
+| --- | --- |
+| Matte, Satin, Glossy, Ceramic | Diffuse amount, specular amount, highlight roughness, reflection amount |
+| Plastic | Diffuse amount, specular amount (phong), highlight sharpness (phong size), reflection amount |
+| Glass (tinted), Gem | As above, plus glass filter amount and refractive index |
+| Frosted glass | As Glass, plus bump strength and bump scale of the frosted relief |
+| Marble, Jade, Granite, Stone, Wood | Pattern scale (relative to each atom) |
+
+*Highlight roughness* changes only the size of the highlight; the *bump* values change
+the surface relief. The *glass filter amount* says how much light passes through,
+tinted by the atom colour; it is not a generic opacity or a measured optical constant.
+Materials that use POV-Ray's own definitions (the metals, `M_Glass`, `M_Ruby_Glass`) and
+the ASE styles cannot be edited; the dialog explains why and keeps **Apply** disabled.
+
+While you edit, the 3D view and the POV-Ray preview show the variant (the 3D view only
+approximates highlight and transparency; check the preview). **Reset to Base** returns
+to the values of the material you started from. **Apply** assigns the variant as one
+undoable step; **Cancel** restores the previous look and leaves nothing on the undo
+stack. A variant leaves the built-in materials unchanged; an untouched variant renders
+exactly like its base.
+
+**Save as My Material** keeps the variant in your user settings. It then appears in the
+material menus (marked ✎) and in the gallery's category **My materials**, with a POV-Ray
+thumbnail when POV-Ray is available (otherwise the base material's thumbnail with a ✎
+badge). Every variant has its own id derived from its name and values, so a variant can
+never replace a built-in material or another variant. Projects and styles store the full
+definition of every variant they use, so they open on another computer without your
+personal list, and exported `.pov` files contain the variant's declaration and name.
+
 ## Environments
 
 An environment preset sets the background, the floor, and the lighting together. Choose
@@ -178,6 +216,41 @@ Presets with dark backgrounds also switch the cell edges to a light colour.
 from the bottom to the top of the output frame, whatever the orientation of the
 structure. **Transparent PNG background** gives rendered images an alpha channel; floors,
 gradients, and skies are then left out (transparent glass still lets the alpha through).
+
+### Background picture
+
+Type *Image* shows one of your own pictures behind the structure in the POV-Ray preview
+and the rendered PNG. **Choose Image…** imports a PNG or JPEG file (up to 64 MB, 12000
+pixels per side, and 50 megapixels); the panel shows its name and pixel size. **Replace…**
+swaps the picture and keeps the framing, **Remove** deletes it (the background colour
+remains). A file that cannot be read is refused with a message, and the current
+background stays. Camera-phone pictures with an EXIF orientation are shown upright.
+
+- **Framing**: *Fill* covers the whole output frame and crops what does not fit (the
+  default); *Fit* shows the whole picture, with margins in the **Margin** colour (the
+  background colour). The picture keeps its proportions; it is never stretched.
+- **Zoom** (10–1000 %) scales the filled or fitted picture about its centre.
+  **Horizontal** and **Vertical** move it by percentages of the output frame's width and
+  height (positive: right and up). **Brightness** (0–200 %) scales its colours; 100 %
+  shows them unchanged. **Reset Framing** returns to Fill, 100 %, centred.
+- The picture belongs to the output frame: orbiting or zooming the structure does not
+  move it, and the preview and the final PNG show the same composition at any
+  resolution. Changing the output's aspect ratio refits it.
+- Transparent pixels of a PNG show the margin colour.
+
+The picture is a backdrop, not a light: it does not light the structure, casts no
+shadows, and is not seen in reflections (reflective atoms reflect its average colour).
+Transparent and refractive materials such as glass show the picture through the atom,
+bent by refraction. The 3D view shows the picture's average colour; the POV-Ray preview
+is authoritative. A floor covers the picture in the orthographic view: the panel then
+says so and offers **Turn Off Floor**. With **Transparent PNG background** the picture
+is left out of renders but kept for later. Choosing an environment preset changes the
+background type but remembers the picture, so switching back to *Image* restores it.
+
+The picture is copied into the project when you save, so the original file is not needed
+afterwards (see [Reusing the look](#reusing-the-look-styles)). **File ▸ Export POV-Ray…**
+copies it next to the `.pov` file as `bg_<digest>.png` (or `.jpg`) and refers to it by
+that relative name, so the export folder can be moved as a whole.
 
 ### Floor
 
@@ -278,8 +351,13 @@ the glass. While composing a glass figure, use *Soft* or *Bright* lighting or sw
 ## Reusing the look: styles
 
 Materials, colours, radii, the environment, and the lighting are saved in projects
-(`.ycrystal`, schema 5) and restored exactly when the project is reopened. Projects
-saved by earlier versions open with their original appearance.
+(`.ycrystal`, schema 6) and restored exactly when the project is reopened. Projects
+saved by earlier versions open with their original appearance. A project or style with
+a background picture is saved as a ZIP package that contains the picture (the suffix
+stays `.ycrystal` or `.ycstyle`); others remain a single JSON file. Ycrystal recognises
+both forms by their content. Damaged or unsafe packages, and packages that miss their
+picture, are refused with a message and nothing changes. Ycrystal 0.2.0 and older cannot
+open schema-6 projects or packages.
 
 To give another structure the same look, save a **style**: **File ▸ Export Style…**
 writes a `.ycstyle` file, and **File ▸ Import Style…** applies one to the open structure.
@@ -289,7 +367,7 @@ The import dialog lets you choose the parts to apply:
 | --- | --- |
 | Materials, colours, and radii | Default material; material, colour, and radius of each element |
 | Display | Atom size, repetitions, boundary atoms, cell edges, bond length, radius, and pair rules |
-| Environment | Background, floor, lighting, transparency, and the cell-edge colour |
+| Environment | Background (including a background picture), floor, lighting, transparency, and the cell-edge colour |
 | Output image size | Width and height in pixels |
 
 A style never changes the structure's coordinates, and it has no camera. The import is

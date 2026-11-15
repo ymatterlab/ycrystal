@@ -12,7 +12,7 @@ from PySide6.QtTest import QTest
 from test_gui import _click, _send_drag
 from ycrystal.core import measure
 from ycrystal.core.samples import perovskite_srtio3
-from ycrystal.gui.main_window import MainWindow
+from ycrystal.gui.main_window import MainWindow, _same_camera
 from ycrystal.io.project import Project
 from ycrystal.render.pov_writer import scene_to_pov
 
@@ -318,7 +318,8 @@ def test_helpers_stay_out_of_exports_bounds_fit_and_picking(win, tmp_path):
     assert win.viewport.measurement_actors == []
     assert [win.viewport.pick(p) for p in probes] == with_helpers
     win.fit_action.trigger()
-    assert win.current_camera() == fitted  # Fit ignores the helpers
+    # Fit ignores the helpers (refitting may differ by rounding only).
+    assert _same_camera(win.current_camera(), fitted)
     # Session-only: projects do not store measurements.
     win.pick_measurement_atom((1, (0, 0, 0)))
     win.pick_measurement_atom((2, (0, 0, 0)))

@@ -25,6 +25,7 @@ import numpy as np
 from ase.data import chemical_symbols, covalent_radii
 from ase.data.colors import jmol_colors
 
+from ycrystal.core.background import BackgroundImage
 from ycrystal.core.bonds import BondSettings, periodic_bonds
 from ycrystal.core.structure import Structure
 
@@ -227,8 +228,9 @@ class SceneSettings:
 
 CELL_MODES = ("all", "outline", "unit")
 
-BACKGROUND_MODES = ("solid", "gradient", "sky")
-"""Background kinds: a plain colour, a vertical two-colour gradient, or a sky."""
+BACKGROUND_MODES = ("solid", "gradient", "sky", "image")
+"""Background kinds: a plain colour, a vertical two-colour gradient, a sky, or an
+imported picture (see [`BackgroundImage`][ycrystal.core.background.BackgroundImage])."""
 
 
 @dataclass(frozen=True)
@@ -253,8 +255,9 @@ class Environment:
     Attributes
     ----------
     background
-        Solid background colour, top colour of a gradient, or zenith colour of a sky,
-        as sRGB components between 0 and 1. With `transparent`, shown only in the live
+        Solid background colour, top colour of a gradient, zenith colour of a sky, or
+        the colour around (Fit) and behind (transparent pixels) a background picture, as
+        sRGB components between 0 and 1. With `transparent`, shown only in the live
         view.
     key_light
         Intensity of the key light (POV-Ray ``color rgb`` value); non-positive values
@@ -302,6 +305,10 @@ class Environment:
         Whether an invisible bright disc is added on the key-light side of the structure
         (three scene radii from its centre), so that metals and glass have something
         bright to reflect on dark backgrounds. It is not a light source.
+    image
+        The background picture and its framing, or ``None``. Drawn in the ``"image"``
+        background mode; kept (but not drawn) in other modes and with `transparent`,
+        so that switching back restores it.
     """
 
     background: RGB = (1.0, 1.0, 1.0)  # sRGB
@@ -322,6 +329,7 @@ class Environment:
     light_size: float = 0.0
     shadows: bool = True
     reflector: bool = False
+    image: BackgroundImage | None = None
 
     def __post_init__(self) -> None:
         if self.background_mode not in BACKGROUND_MODES:
@@ -341,10 +349,13 @@ class Environment:
         """Return the live-view background: ``(bottom_or_solid, top_or_None)``.
 
         A floor fills the background of an orthographic view, so the live view shows the
-        floor colour. Gradients and skies become vertical gradients.
+        floor colour. Gradients and skies become vertical gradients; a background
+        picture is shown as its average colour (the POV-Ray preview shows the picture).
         """
         if self.floor and not self.transparent:
             return self.floor_color, None
+        if self.background_mode == "image" and not self.transparent:
+            return (self.image.mean_color if self.image else self.background), None
         if self.background_mode == "solid" or self.transparent:
             return self.background, None
         return self.background_bottom, self.background

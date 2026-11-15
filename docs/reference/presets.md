@@ -22,6 +22,26 @@
         - get_lighting
         - environment_from_preset
         - apply_lighting
+        - register_definition
+        - get_definition
+        - custom_materials
+        - CUSTOM_THUMBNAILS
+
+## Custom material variants
+
+::: ycrystal.presets.custom
+    options:
+      members:
+        - DEFINITION_VERSION
+        - CUSTOM_PREFIX
+        - DefinitionError
+        - Parameter
+        - RecipeSchema
+        - SCHEMAS
+        - MaterialDefinition
+        - schema_for
+        - editable
+        - base_definition
 
 ## Gallery thumbnails
 
@@ -31,6 +51,7 @@
         - THUMBNAIL_SIZE
         - MATERIAL_ENVIRONMENT
         - material_scene
+        - material_thumbnail_job
         - environment_scene
         - scene_digest
         - thumbnail_directory

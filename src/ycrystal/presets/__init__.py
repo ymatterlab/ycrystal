@@ -53,8 +53,10 @@ MATERIAL_CATEGORIES = {
     "metal": "Metals",
     "transparent": "Glass and transparent",
     "decorative": "Decorative textures",
+    "custom": "My materials",
 }
-"""Material category ids and their names in the interface, in display order."""
+"""Material category ids and their names in the interface, in display order. ``custom``
+holds variants made with *Customize Material…* (FR-MATERIAL-01)."""
 
 ENVIRONMENT_CATEGORIES = {
     "plain": "Plain backgrounds",
@@ -156,6 +158,11 @@ class Material:
         Required POV-Ray version and origin of the recipe or identifiers.
     order
         Position in the catalog.
+    base
+        For a custom variant: the built-in material it was made from; empty otherwise.
+    parameters
+        For a custom variant: its parameter values (see
+        [`ycrystal.presets.custom`][ycrystal.presets.custom]).
     """
 
     id: str
@@ -179,6 +186,13 @@ class Material:
     min_povray: str = "3.7"
     provenance: str = ""
     order: int = 0
+    base: str = ""
+    parameters: tuple[tuple[str, float], ...] = ()
+
+    @property
+    def custom(self) -> bool:
+        """Whether this is a custom variant rather than a built-in preset."""
+        return bool(self.base)
 
     @property
     def declaration(self) -> str:
@@ -204,7 +218,16 @@ class Material:
         return _matches(text, query)
 
     def thumbnail(self) -> Path | None:
-        """Path of the POV-Ray thumbnail, or ``None`` if it is missing."""
+        """Path of the POV-Ray thumbnail, or ``None`` if it is missing.
+
+        Custom variants use the thumbnail rendered into
+        [`CUSTOM_THUMBNAILS`][ycrystal.presets.CUSTOM_THUMBNAILS], if any.
+        """
+        if self.custom:
+            if CUSTOM_THUMBNAILS is None:
+                return None
+            path = Path(CUSTOM_THUMBNAILS) / f"{self.id}.png"
+            return path if path.is_file() else None
         return _thumbnail("materials", self.id)
 
 
@@ -458,17 +481,72 @@ def lighting_presets() -> list[LightingPreset]:
 
 
 def get_material(material_id: str) -> Material:
-    """Return the material preset ``material_id``.
+    """Return the material preset or registered custom variant ``material_id``.
 
     Raises
     ------
     PresetError
-        If no preset has this id.
+        If no preset or registered variant has this id.
+    """
+    material = _material_table().get(material_id) or _CUSTOM.get(material_id)
+    if material is None:
+        raise PresetError(f"unknown material {material_id!r}")
+    return material
+
+
+CUSTOM_THUMBNAILS: Path | None = None
+"""Folder with rendered thumbnails of custom variants (set by the application; ``None``
+uses fallbacks)."""
+
+_CUSTOM: dict[str, Material] = {}
+_DEFINITIONS: dict[str, Any] = {}
+_LISTED: set[str] = set()
+
+
+def register_definition(definition: Any, listed: bool = True) -> Material:
+    """Make a custom variant available by its id and return its material.
+
+    Ids are derived from the definition's content, so registering the same definition
+    again is harmless and a variant never replaces a built-in preset or another
+    variant.
+
+    Parameters
+    ----------
+    definition
+        A [`MaterialDefinition`][ycrystal.presets.custom.MaterialDefinition].
+    listed
+        Whether [`custom_materials`][ycrystal.presets.custom_materials] lists it (menus,
+        gallery). Intermediate states shown while editing are registered unlisted.
+    """
+    material_id = definition.id
+    if material_id in _material_table():  # pragma: no cover - prefixes differ
+        raise PresetError(f"custom material id {material_id!r} collides with a preset")
+    if material_id not in _CUSTOM:
+        _DEFINITIONS[material_id] = definition
+        _CUSTOM[material_id] = definition.material()
+    if listed:
+        _LISTED.add(material_id)
+    return _CUSTOM[material_id]
+
+
+def get_definition(material_id: str) -> Any:
+    """Return the definition of a registered custom variant.
+
+    Raises
+    ------
+    PresetError
+        If ``material_id`` is not a registered variant.
     """
     try:
-        return _material_table()[material_id]
+        return _DEFINITIONS[material_id]
     except KeyError:
-        raise PresetError(f"unknown material {material_id!r}") from None
+        raise PresetError(f"{material_id!r} is not a custom material") from None
+
+
+def custom_materials() -> list[Material]:
+    """Return the listed custom variants (personal ones and those files use), by name."""
+    listed = (_CUSTOM[i] for i in _LISTED)
+    return sorted(listed, key=lambda m: (m.name.casefold(), m.id))
 
 
 def get_environment(environment_id: str) -> EnvironmentPreset:

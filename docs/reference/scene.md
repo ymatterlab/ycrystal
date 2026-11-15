@@ -35,6 +35,19 @@
         - points_and_radii
         - bounding_sphere
 
+## Background pictures
+
+::: ycrystal.core.background
+    options:
+      members:
+        - BackgroundImage
+        - placement
+        - FIT_MODES
+        - IMAGE_FORMATS
+        - ZOOM_RANGE
+        - OFFSET_RANGE
+        - BRIGHTNESS_RANGE
+
 ## Colours
 
 ::: ycrystal.core.colors
