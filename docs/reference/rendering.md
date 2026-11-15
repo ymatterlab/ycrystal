@@ -10,6 +10,20 @@
         - render_ini
         - write_scene_files
 
+## Output size
+
+::: ycrystal.core.aspect
+    options:
+      members:
+        - MIN_OUTPUT_PIXELS
+        - MAX_OUTPUT_PIXELS
+        - OutputSizeError
+        - round_pixels
+        - matches_ratio
+        - linked_size
+        - preset_size
+        - swapped
+
 ::: ycrystal.render.povray
     options:
       members:

@@ -109,6 +109,7 @@ def test_save_and_reopen_after_source_file_is_moved(window, qtbot, tmp_path):
     window.viewport.set_camera(turned(window))
     window.select({(0, (1, 1, 1)), (1, (0, 0, 0))})
     window.hide_selected()
+    window.render_panel.lock_button.click()  # unlock: set width and height independently
     window.width_spin.setValue(900)
     window.height_spin.setValue(500)
     window.set_background("transparent")
@@ -138,6 +139,7 @@ def test_save_and_reopen_after_source_file_is_moved(window, qtbot, tmp_path):
     np.testing.assert_allclose(reopened.view_up, camera.view_up, atol=1e-12)
     assert reopened.parallel_scale == pytest.approx(camera.parallel_scale, rel=1e-12)
     assert (other.width_spin.value(), other.height_spin.value()) == (900, 500)
+    assert not other.aspect_locked()  # the lock state is part of the project
     assert other.environment.transparent and other.environment.preset == "transparent"
     assert other.scene_settings.material == "glossy"
     assert other.appearance_panel.material_combo.currentData() == "glossy"

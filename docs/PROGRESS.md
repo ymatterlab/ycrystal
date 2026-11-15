@@ -93,6 +93,39 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## FR-RENDER-01: lock aspect ratio of the output size (post-0.1.0, 15 November 2026)
+
+New development after the 0.1.0 baseline (not part of M0–M6); branch
+`feature/render-aspect-lock`, submitted for review as a pull request. A padlock button beside Width
+and Height in the Render panel keeps the output shape while the resolution changes.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Interface: checkable button, closed/open padlock (shape differs, not only colour), tooltips, Tab + Space, accessible name, locked by default | Pass | `test_lock_button_defaults_and_states`; screenshots `artifacts/aspect/panel-locked.png`, `panel-unlocked.png` |
+| Locked, both directions: 2400 × 1600 → Height 1920 → 2880 × 1920 → Width 3000 → 3000 × 2000 | Pass | `test_locked_editing_links_both_dimensions`, `test_examples_from_the_request` |
+| Unlocked: independent edits (→ 2400 × 1920); relocking captures the current ratio without changing the size | Pass | `test_unlocked_editing_is_independent_and_relocking_captures` |
+| Toggling changes neither dimension, adds no undo step or preview, marks the project modified | Pass | same test |
+| Non-integer ratios, half-up rounding, repeated edits without drift (the naive recomputation drifts 1000 × 700 → 1000 × 697) | Pass | `test_repeated_edits_do_not_drift`, `test_non_integer_ratio_repeated_edits_without_drift` |
+| Presets (locked: new target; unlocked: once), Custom state, one-step undo restoring the ratio, atomic Swap inverting the target | Pass | `test_presets_set_the_target_when_locked`, `test_presets_apply_once_when_unlocked`, `test_swap_is_atomic_and_inverts_the_target` |
+| Limits and invalid input: linked dimension outside 16–8000 px refuses the whole edit, restores the pair, explains (panel and status bar); invalid text ignored | Pass | `test_limits_reject_the_whole_edit`, `test_limits_reject_the_edit_and_explain` |
+| No recursive signals or duplicate updates: one request, one frame update, one scene revision (preview trigger) per edit | Pass | `test_one_request_one_refresh_per_edit` (this also removed two to three redundant revision bumps per size change caused by camera notifications) |
+| Composition kept when only the resolution changes (camera, roll, pan, zoom, blue frame) | Pass | `test_resolution_change_keeps_the_composition` |
+| Persistence and compatibility: lock state and ratio in `output` (optional keys, schema stays 5); 0.1.0 projects open locked to their own ratio; a ratio that does not fit the size is replaced | Pass | `test_lock_state_in_projects_and_old_files`, `test_lock_state_is_saved_and_restored`, `test_old_projects_open_locked_to_their_own_ratio` |
+| GUI on the Mint display: button states, linked/unlocked edits, Custom, blue frame ratio (725 × 604 px frame for 2880 × 2400) | Pass (scripted) | `artifacts/aspect/window-unlocked.png` |
+| Hands-on use by a person (mouse and keyboard in the Render tab) | Unverified | |
+
+Design: one pure module (`ycrystal.core.aspect`) does the arithmetic; the panel emits one
+complete request per edit (width, height, target ratio) and refreshes its controls under
+`QSignalBlocker`; the window applies it through the existing undo command, which now also
+restores the target ratio. Toggling the lock is not an undo step.
+
+Regression runs: `pytest -m "not povray"` 306 passed (strict mode); `pytest -m povray`
+on `test_gui_render.py`, `test_release.py`, `test_gui.py` 9 passed (output frame, framing
+gate, release workflow); doctests; `zensical build --clean --strict`; pre-commit on the
+changed files. One existing test (`test_save_and_reopen_after_source_file_is_moved`)
+typed an independent 900 × 500 size with the spin boxes; with the new locked default it
+now unlocks first, and it also checks that the lock state is restored.
+
 ## FR-COLOR-01: explicit colour entry and colour names (post-0.1.0, 15 November 2026)
 
 New development after the 0.1.0 baseline (not part of M0–M6); branch

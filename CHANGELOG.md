@@ -5,6 +5,12 @@ before 1.0 the Python interface may change between minor versions.
 
 ## Unreleased
 
+- Lock aspect ratio (FR-RENDER-01): a padlock button beside Width and Height in the
+  Render panel. Locked (default), editing one dimension computes the other from a kept
+  target ratio without cumulative drift; unlocked, they are independent. Presets and
+  Swap respect the lock; edits that would exceed 16–8000 px are refused with an
+  explanation; the lock state is saved in projects (older projects open locked).
+
 - Colour dialog for element, background, and floor colours (FR-COLOR-01): spectrum, the
   140 CSS named colours, and typed input as hex, RGB 0–255, RGB 0–1, HSV, HSL,
   `rgb()/hsv()/hsl()`, or a colour name; all fields stay in sync; numbers are never

@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ycrystal.core import aspect
 from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
 from ycrystal.core.camera import Camera, default_camera
 from ycrystal.core.scene import (
@@ -305,6 +306,9 @@ class MainWindow(QMainWindow):
         self._saved_camera: Camera | None = None
         self._output_size = (project.output.width, project.output.height)
         self._saved_output: tuple[int, int] = self._output_size
+        self._aspect_locked, self._aspect_ratio = _lock_state(project.output)
+        self._saved_lock = (self._aspect_locked, self._aspect_ratio)
+        self._applying_output = False
         self.scene_revision = 0
         self.preview_result: tuple[RenderResult, int] | None = None
         self.preview_discarded = 0
@@ -358,7 +362,11 @@ class MainWindow(QMainWindow):
         panel.lighting_requested.connect(self.set_lighting)
         self.material_gallery: PresetGallery | None = None
         self.environment_gallery: PresetGallery | None = None
-        self.render_panel.size_requested.connect(self.set_output_size)
+        self.render_panel.output_requested.connect(self.set_output_size)
+        self.render_panel.lock_requested.connect(self.set_aspect_locked)
+        self.render_panel.limit_exceeded.connect(
+            lambda message: self.statusBar().showMessage(message, 8000)
+        )
         self.preview_panel = PreviewPanel(self)
         self.preview_dock = QDockWidget("POV-Ray preview", self)
         self.preview_dock.setObjectName("preview_dock")
@@ -376,7 +384,7 @@ class MainWindow(QMainWindow):
         self._preview_timer.timeout.connect(self.request_preview)
         self._build_actions()
         self._build_status_bar()
-        self.render_panel.sync(*self._output_size)
+        self.render_panel.sync(*self._output_size, self._aspect_locked, self._aspect_ratio)
         self.viewport.set_output_aspect(self._output_size[0] / self._output_size[1])
         self.boundary_action.setChecked(self.scene_settings.boundary_images)
         self.set_display_geometry(self.geometry)
@@ -738,7 +746,8 @@ class MainWindow(QMainWindow):
         self.boundary_action.setChecked(project.scene.boundary_images)
         self.set_rotation_mode(self.rotation_mode())
         self._output_size = (project.output.width, project.output.height)
-        self.render_panel.sync(*self._output_size)
+        self._aspect_locked, self._aspect_ratio = _lock_state(project.output)
+        self.render_panel.sync(*self._output_size, self._aspect_locked, self._aspect_ratio)
         self.viewport.set_output_aspect(self._output_size[0] / self._output_size[1])
         self._update_output_label()
         self.set_display_geometry(build_geometry(self.structure, self.scene_settings))
@@ -763,6 +772,8 @@ class MainWindow(QMainWindow):
             return True
         if self._output_size != self._saved_output:
             return True
+        if (self._aspect_locked, self._aspect_ratio) != self._saved_lock:
+            return True
         if self._saved_camera is None or not self._camera_initialised:
             return False
         return not _same_camera(self._saved_camera, self.current_camera())
@@ -770,6 +781,7 @@ class MainWindow(QMainWindow):
     def _mark_clean(self) -> None:
         self.undo_stack.setClean()
         self._saved_output = self._output_size
+        self._saved_lock = (self._aspect_locked, self._aspect_ratio)
         self._saved_camera = self.current_camera() if self._camera_initialised else None
         self._refresh_title()
 
@@ -1071,6 +1083,7 @@ class MainWindow(QMainWindow):
         settings: SceneSettings,
         environment: Environment | None = None,
         output_size: tuple[int, int] | None = None,
+        aspect_ratio: float | None = None,
     ) -> None:
         """Apply settings, environment, and output size (used by undo commands).
 
@@ -1082,6 +1095,8 @@ class MainWindow(QMainWindow):
             New environment, or ``None`` to keep the current one.
         output_size
             New output size, or ``None`` to keep the current one.
+        aspect_ratio
+            New target ratio of the aspect lock, or ``None`` to keep it.
 
         Notes
         -----
@@ -1095,8 +1110,8 @@ class MainWindow(QMainWindow):
         if environment is not None:
             self.environment = environment
         self.scene_settings = settings
-        if output_size is not None:
-            self._apply_output_size(*output_size)
+        if output_size is not None or aspect_ratio is not None:
+            self._apply_output_size(*(output_size or self._output_size), aspect_ratio)
         if changed:
             self.boundary_action.setChecked(settings.boundary_images)
             self.set_display_geometry(build_geometry(self.structure, settings))
@@ -1631,7 +1646,11 @@ class MainWindow(QMainWindow):
         """
         width, height = self._output_size
         return RenderSettings(
-            width=width, height=height, transparent_background=self.environment.transparent
+            width=width,
+            height=height,
+            transparent_background=self.environment.transparent,
+            aspect_locked=self._aspect_locked,
+            aspect_ratio=self._aspect_ratio,
         )
 
     def preview_settings(self) -> RenderSettings:
@@ -1654,16 +1673,35 @@ class MainWindow(QMainWindow):
         """Return the output image ``(width, height)`` in pixels."""
         return self._output_size
 
-    def set_output_size(self, width: int, height: int) -> None:
+    def set_output_size(self, width: int, height: int, ratio: float | None = None) -> None:
         """Set the output image size in pixels as an undoable step; the camera is kept.
 
         The frame in the 3D view takes the new aspect ratio; the image keeps its centre
-        and visible height in Å. Values are clamped to 16–8000 pixels. Consecutive size
-        changes merge into one undo step.
+        and visible height in Å, so a new resolution at the same ratio keeps the
+        composition. Values are clamped to 16–8000 pixels. Consecutive size changes merge
+        into one undo step.
+
+        Parameters
+        ----------
+        width, height
+            New size in pixels.
+        ratio
+            New target ratio of the aspect lock (from the Render panel: kept for edits,
+            the preset for presets, inverted for Swap). ``None`` keeps the current
+            target if the size matches it, and otherwise takes ``width / height``.
         """
-        width, height = (max(16, min(8000, int(v))) for v in (width, height))
-        self.render_panel.sync(width, height)
+        width, height = (
+            max(aspect.MIN_OUTPUT_PIXELS, min(aspect.MAX_OUTPUT_PIXELS, int(v)))
+            for v in (width, height)
+        )
+        if ratio is None:
+            keep = aspect.matches_ratio((width, height), self._aspect_ratio)
+            ratio = self._aspect_ratio if keep else width / height
         if (width, height) == self._output_size:
+            if ratio != self._aspect_ratio:  # e.g. a preset the size already matches
+                self._aspect_ratio = ratio
+                self._refresh_title()
+            self._sync_render_panel()
             return
         self.undo_stack.push(
             SceneSettingsCommand(
@@ -1672,15 +1710,51 @@ class MainWindow(QMainWindow):
                 f"Output Size {width} × {height}",
                 "output-size",
                 output_size=(width, height),
+                aspect_ratio=ratio,
             )
         )
 
-    def _apply_output_size(self, width: int, height: int) -> None:
-        self.render_panel.sync(width, height)
+    def aspect_locked(self) -> bool:
+        """Return whether the output aspect ratio is locked (Render panel)."""
+        return self._aspect_locked
+
+    def aspect_ratio(self) -> float:
+        """Return the target ratio ``width / height`` of the aspect lock."""
+        return self._aspect_ratio
+
+    def set_aspect_locked(self, locked: bool) -> None:
+        """Lock or unlock the output aspect ratio (the lock button beside Width/Height).
+
+        Locking captures the ratio of the current size; neither dimension changes. The
+        lock state is saved in projects (a change marks the project modified) but is not
+        an undo step, since it does not change the image.
+        """
+        self._aspect_locked = bool(locked)
+        if self._aspect_locked:
+            self._aspect_ratio = self._output_size[0] / self._output_size[1]
+        self._sync_render_panel()
+        self._refresh_title()
+        state = "locked" if locked else "unlocked"
+        self.statusBar().showMessage(f"Aspect ratio {state}", 3000)
+
+    def _sync_render_panel(self) -> None:
+        self.render_panel.sync(*self._output_size, self._aspect_locked, self._aspect_ratio)
+
+    def _apply_output_size(self, width: int, height: int, ratio: float | None = None) -> None:
+        if ratio is None and not aspect.matches_ratio((width, height), self._aspect_ratio):
+            ratio = width / height  # e.g. a style import: lock onto the new shape
+        if ratio is not None:
+            self._aspect_ratio = ratio
         if (width, height) == self._output_size:
+            self._sync_render_panel()
             return
         self._output_size = (width, height)
-        self.viewport.set_output_aspect(width / height)
+        self._sync_render_panel()
+        self._applying_output = True  # the camera notifications below are this one change
+        try:
+            self.viewport.set_output_aspect(width / height)
+        finally:
+            self._applying_output = False
         self._update_output_label()
         self._scene_changed()
         self._refresh_title()
@@ -1838,6 +1912,8 @@ class MainWindow(QMainWindow):
 
     # ----- preview and revisions --------------------------------------------------------
     def _on_view_changed(self) -> None:
+        if self._applying_output:
+            return  # the size change reports itself once, below
         self._update_output_label()
         self._refresh_title()
         self._scene_changed()
@@ -2197,6 +2273,14 @@ class MainWindow(QMainWindow):
         self.preview_queue.cancel()
         self.viewport.close_viewport()
         super().closeEvent(event)
+
+
+def _lock_state(output: RenderSettings) -> tuple[bool, float]:
+    """Lock state and target ratio of a project's output (consistent with its size)."""
+    ratio = output.target_ratio()
+    if not aspect.matches_ratio((output.width, output.height), ratio):
+        ratio = output.width / output.height  # stored ratio does not fit the size
+    return output.aspect_locked, ratio
 
 
 def _same_camera(a: Camera, b: Camera) -> bool:

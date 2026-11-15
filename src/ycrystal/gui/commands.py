@@ -39,6 +39,9 @@ class SceneSettingsCommand(QUndoCommand):
     output_size
         New output image ``(width, height)`` in pixels, applied in the same step;
         ``None`` leaves it unchanged.
+    aspect_ratio
+        New target ratio of the Render panel's aspect lock, restored together with the
+        output size on undo; ``None`` leaves it unchanged.
     """
 
     def __init__(
@@ -49,6 +52,7 @@ class SceneSettingsCommand(QUndoCommand):
         merge_key: str = "",
         environment: Environment | None = None,
         output_size: tuple[int, int] | None = None,
+        aspect_ratio: float | None = None,
     ) -> None:
         super().__init__(text)
         self._window = window
@@ -58,6 +62,8 @@ class SceneSettingsCommand(QUndoCommand):
         self._new_environment = environment
         self._old_size = window.output_size() if output_size is not None else None
         self._new_size = output_size
+        self._old_ratio = window.aspect_ratio() if aspect_ratio is not None else None
+        self._new_ratio = aspect_ratio
         self._merge_key = merge_key
 
     def id(self) -> int:  # noqa: A003 - Qt API name
@@ -78,16 +84,25 @@ class SceneSettingsCommand(QUndoCommand):
             if self._old_size is None:
                 self._old_size = other._old_size
             self._new_size = other._new_size
+        if other._new_ratio is not None:
+            if self._old_ratio is None:
+                self._old_ratio = other._old_ratio
+            self._new_ratio = other._new_ratio
         if (
             self._new == self._old
             and self._new_environment == self._old_environment
             and self._new_size == self._old_size
+            and self._new_ratio == self._old_ratio
         ):
             self.setObsolete(True)  # merged back to the start: drop the step
         return True
 
     def redo(self) -> None:
-        self._window.apply_scene_settings(self._new, self._new_environment, self._new_size)
+        self._window.apply_scene_settings(
+            self._new, self._new_environment, self._new_size, self._new_ratio
+        )
 
     def undo(self) -> None:
-        self._window.apply_scene_settings(self._old, self._old_environment, self._old_size)
+        self._window.apply_scene_settings(
+            self._old, self._old_environment, self._old_size, self._old_ratio
+        )
