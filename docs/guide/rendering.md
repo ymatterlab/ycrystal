@@ -117,16 +117,32 @@ the export lists them and warns if one is not installed.
 ## POV-Ray preview
 
 **Render ▸ Preview** (F5, or the **Preview** button) renders the framed view with
-POV-Ray at a small size — 480 pixels on the longer side, same aspect ratio and
-background as the output, without antialiasing — and shows it in the **POV-Ray
-preview** dock. It is a real POV-Ray image of the same scene, not an approximation.
+POV-Ray at a reduced size — same aspect ratio and background as the output, without
+antialiasing — and shows it in the **POV-Ray preview** dock. It is a real POV-Ray image
+of the same scene, not an approximation.
+
+**Resolution** in the dock sets the preview's width: **Small** (480 px, the default),
+**Medium** (800 px), **Large** (1200 px), or **Custom** (type a width, 16–4000 px). The
+height follows the output's aspect ratio, rounded to whole pixels: for a 3:2 output
+480 × 320, 800 × 533, and 1200 × 800 px; for a 2:3 portrait output Small gives
+480 × 720 px. The line below shows the actual preview size next to the final PNG size.
+POV-Ray renders the preview at that size (it is not an enlarged small image), so higher
+resolutions show more detail but take longer. A preview is never larger than the final
+image; a very tall output is limited to 4000 px of preview height, and an extremely wide
+or tall output keeps each side at least 16 px, so the shape is never distorted. The
+resolution changes only the preview: the output size, camera, framing, materials, and
+lighting stay as they are. The choice is a personal preference, remembered between
+sessions and not stored in projects. Resizing the dock only rescales the shown image;
+it never starts a render.
 
 With **Update automatically** checked (the default; the choice is remembered), a new
 preview starts shortly after each change to the view, scene, appearance, or output size.
 Only one preview process runs at a time: a newer request cancels the running preview.
 Every change increases a scene revision number; a preview that finishes for an older
-revision is discarded and the dock says so. When the shown preview no longer matches
-the view, the dock marks it out of date. Preview problems (for example POV-Ray not
+revision, or for a resolution that has since changed, is discarded and the dock says so.
+When the shown preview no longer matches the view or the resolution, the dock marks it
+out of date; a new resolution then renders automatically if **Update automatically** is
+on, or when you press **Preview**. Preview problems (for example POV-Ray not
 found) appear in the dock, without a dialog.
 
 ## Render a PNG in the application

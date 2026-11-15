@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
 from PySide6.QtCore import QSettings, Qt, QTimer
@@ -129,8 +130,12 @@ STYLE_PART_LABELS = {
 AUTO_PREVIEW_DEFAULT = True
 """Whether automatic previews are on when the user has not chosen yet."""
 
-PREVIEW_LONG_SIDE = 480
-"""Longer side of POV-Ray previews in pixels; the shorter side follows the output aspect."""
+SETTINGS_PREVIEW_RESOLUTION = "render/preview_resolution"
+"""``QSettings`` key of the preview resolution choice (``small``, ``medium``, ``large``,
+or ``custom``; see [`PREVIEW_PRESETS`][ycrystal.core.aspect.PREVIEW_PRESETS])."""
+
+SETTINGS_PREVIEW_WIDTH = "render/preview_custom_width"
+"""``QSettings`` key of the custom preview width in pixels."""
 
 PREVIEW_DELAY_MS = 600
 """Pause after the last change before an automatic preview starts."""
@@ -191,6 +196,19 @@ View ▸ Show All Atoms brings hidden balls back.</p>
 The blue frame shows the rendered area. The live view approximates materials and
 lighting; Preview (F5) renders the framed view small with POV-Ray, Render writes the
 full-size PNG, and Cancel stops a running render.</p>"""
+
+
+class PreviewRequest(NamedTuple):
+    """Identity of a preview job: the scene revision and the requested pixel size.
+
+    A finished preview is shown only if its request equals the window's current one,
+    so neither an older scene nor an older preview resolution can replace the latest
+    result.
+    """
+
+    revision: int
+    width: int
+    height: int
 
 
 class RenderResultDialog(QDialog):
@@ -273,8 +291,12 @@ class MainWindow(QMainWindow):
     preview_result
         ``(RenderResult, revision)`` of the last preview that finished, including
         discarded and cancelled ones.
+    preview_shown
+        [`PreviewRequest`][ycrystal.gui.main_window.PreviewRequest] of the preview image
+        shown in the dock, or ``None``.
     preview_discarded
-        Number of preview results discarded because the scene had changed.
+        Number of preview results discarded because the scene or the preview
+        resolution had changed.
 
     Raises
     ------
@@ -321,7 +343,11 @@ class MainWindow(QMainWindow):
         self._applying_output = False
         self.scene_revision = 0
         self.preview_result: tuple[RenderResult, int] | None = None
+        self.preview_shown: PreviewRequest | None = None
         self.preview_discarded = 0
+        # Preview resolution: a user preference (QSettings), not part of the project.
+        self._preview_mode = aspect.DEFAULT_PREVIEW
+        self._preview_custom_width = aspect.preview_preset_width(aspect.DEFAULT_PREVIEW)
         self.last_error: tuple[str, str] | None = None
         self.last_render_path: Path | None = None
         self.render_finished_result: RenderResult | None = None
@@ -406,6 +432,8 @@ class MainWindow(QMainWindow):
         self.measure_dock.hide()
         self.measure_panel.remove_requested.connect(self.remove_measurements)
         self.measure_panel.clear_requested.connect(self.clear_measurements)
+        self._restore_preview_resolution()
+        self.preview_panel.resolution_requested.connect(self.set_preview_resolution)
         self.preview_queue = RenderQueue(self)
         self.preview_queue.finished.connect(self._on_preview_finished)
         self.preview_queue.progress.connect(self.preview_panel.set_progress)
@@ -1867,18 +1895,110 @@ class MainWindow(QMainWindow):
     def preview_settings(self) -> RenderSettings:
         """Return the settings of POV-Ray previews.
 
-        Same aspect ratio and background as the output; the longer side is
-        `PREVIEW_LONG_SIDE` pixels (never larger than the output) and antialiasing is
-        off for speed.
+        Same aspect ratio and background as the output; the size comes from the
+        preview resolution choice
+        ([`preview_size`][ycrystal.gui.main_window.MainWindow.preview_size]) and
+        antialiasing is off for speed. The output settings are not affected.
         """
-        width, height = self._output_size
-        scale = min(1.0, PREVIEW_LONG_SIDE / max(width, height))
+        size = self.preview_size()
         return RenderSettings(
-            width=max(16, round(width * scale)),
-            height=max(16, round(height * scale)),
+            width=size.width,
+            height=size.height,
             antialias=False,
             transparent_background=self.environment.transparent,
         )
+
+    def preview_size(self) -> aspect.PreviewSize:
+        """Return the preview size for the resolution choice and the current output.
+
+        See [`preview_size`][ycrystal.core.aspect.preview_size] for the rounding and the
+        limits.
+        """
+        return aspect.preview_size(self._output_size, self.preview_resolution()[1])
+
+    def preview_resolution(self) -> tuple[str, int]:
+        """Return the preview resolution choice: ``(mode, requested width in px)``.
+
+        ``mode`` is ``"small"``, ``"medium"``, ``"large"``, or ``"custom"``.
+        """
+        if self._preview_mode == "custom":
+            return "custom", self._preview_custom_width
+        return self._preview_mode, aspect.preview_preset_width(self._preview_mode)
+
+    def set_preview_resolution(self, mode: str, width: int | None = None) -> None:
+        """Choose the resolution of POV-Ray previews (a preference, not undoable).
+
+        The choice is remembered in `settings`, not in the project, and never changes
+        the output size, camera, or scene. With automatic previews on, a new preview
+        follows after the usual pause; otherwise the shown preview is marked out of
+        date.
+
+        Parameters
+        ----------
+        mode
+            ``"small"`` (480 px wide), ``"medium"`` (800 px), ``"large"`` (1200 px), or
+            ``"custom"``.
+        width
+            Custom width in pixels (used with ``"custom"``; ``None`` keeps the
+            remembered custom width).
+
+        Raises
+        ------
+        ValueError
+            For an unknown mode or a custom width outside
+            [`MIN_PREVIEW_PIXELS`][ycrystal.core.aspect.MIN_PREVIEW_PIXELS] to
+            [`MAX_PREVIEW_PIXELS`][ycrystal.core.aspect.MAX_PREVIEW_PIXELS].
+        """
+        keys = [key for key, _label, _width in aspect.PREVIEW_PRESETS]
+        if mode not in (*keys, "custom"):
+            raise ValueError(f"unknown preview resolution {mode!r}")
+        custom = self._preview_custom_width
+        if mode == "custom" and width is not None:
+            custom = int(width)
+            if not aspect.MIN_PREVIEW_PIXELS <= custom <= aspect.MAX_PREVIEW_PIXELS:
+                self._sync_preview_panel()
+                raise ValueError(
+                    f"The preview width must be between {aspect.MIN_PREVIEW_PIXELS} and "
+                    f"{aspect.MAX_PREVIEW_PIXELS} px."
+                )
+        before = self.preview_size()
+        self._preview_mode, self._preview_custom_width = mode, custom
+        self.settings.setValue(SETTINGS_PREVIEW_RESOLUTION, mode)
+        if mode == "custom":
+            self.settings.setValue(SETTINGS_PREVIEW_WIDTH, custom)
+        self._sync_preview_panel()
+        if self.preview_size()[:2] != before[:2]:
+            self._preview_resolution_changed()
+
+    def _restore_preview_resolution(self) -> None:
+        """Read the remembered preview resolution; invalid values give the default."""
+        mode = str(self.settings.value(SETTINGS_PREVIEW_RESOLUTION, aspect.DEFAULT_PREVIEW))
+        keys = [key for key, _label, _width in aspect.PREVIEW_PRESETS]
+        try:
+            custom = int(self.settings.value(SETTINGS_PREVIEW_WIDTH, self._preview_custom_width))
+        except (TypeError, ValueError):
+            custom = self._preview_custom_width
+        if not aspect.MIN_PREVIEW_PIXELS <= custom <= aspect.MAX_PREVIEW_PIXELS:
+            custom = self._preview_custom_width
+        self._preview_mode = mode if mode in (*keys, "custom") else aspect.DEFAULT_PREVIEW
+        self._preview_custom_width = custom
+        self._sync_preview_panel()
+
+    def _sync_preview_panel(self) -> None:
+        self.preview_panel.sync_resolution(
+            self._preview_mode, self._preview_custom_width, self.preview_size(), self._output_size
+        )
+
+    def _preview_resolution_changed(self) -> None:
+        """Mark the shown preview out of date and, if automatic, schedule a new one."""
+        auto = self._camera_initialised and self.preview_panel.auto_check.isChecked()
+        if self.preview_panel.state == "ready":
+            follow = "A new preview follows." if auto else "Press Preview (F5)."
+            self.preview_panel.set_status(
+                f"Out of date: the preview resolution changed. {follow}", "stale"
+            )
+        if auto:
+            self._preview_timer.start()
 
     def output_size(self) -> tuple[int, int]:
         """Return the output image ``(width, height)`` in pixels."""
@@ -1974,6 +2094,7 @@ class MainWindow(QMainWindow):
     def _update_output_label(self, *_args: object) -> None:
         width, height = self._output_size
         self.output_label.setText(f"  {width} × {height} px  ")
+        self._sync_preview_panel()  # the preview height follows the output shape
 
     # ----- appearance -----------------------------------------------------------------
     def set_material(self, material_id: str) -> None:
@@ -2262,6 +2383,7 @@ class MainWindow(QMainWindow):
             self.preview_panel.set_status(str(exc), "error")
             return False
         settings = self.preview_settings()
+        request = PreviewRequest(self.scene_revision, settings.width, settings.height)
         job = prepare_job(
             self.geometry,
             self.current_camera(),
@@ -2269,37 +2391,41 @@ class MainWindow(QMainWindow):
             settings,
             title=f"Ycrystal preview: {self.structure.composition()}",
         )
-        self.preview_queue.submit(job, executable, self.scene_revision)
+        self.preview_queue.submit(job, executable, request)
         self.preview_panel.set_status(
             f"Rendering preview ({settings.width} × {settings.height} px)…", "busy"
         )
         self._update_cancel_action()
         return True
 
-    def _on_preview_finished(self, result: RenderResult, revision: int) -> None:
-        self.preview_result = (result, revision)
+    def _current_preview_request(self) -> PreviewRequest:
+        size = self.preview_size()
+        return PreviewRequest(self.scene_revision, size.width, size.height)
+
+    def _on_preview_finished(self, result: RenderResult, request: PreviewRequest) -> None:
+        self.preview_result = (result, request.revision)
         self._update_cancel_action()
         if result.cancelled:
             if not self.preview_queue.is_busy():
                 self.preview_panel.set_status("Preview cancelled.", "stale")
             return
-        if revision != self.scene_revision:
+        if request != self._current_preview_request():
             self.preview_discarded += 1
             if not self.preview_queue.is_busy():
+                what = "scene" if request.revision != self.scene_revision else "preview resolution"
                 self.preview_panel.set_status(
-                    "The scene changed during rendering; that preview was discarded. "
+                    f"The {what} changed during rendering; that preview was discarded. "
                     "Press Preview (F5).",
                     "stale",
                 )
             return
+        size = f"{request.width} × {request.height} px"
         if result.ok and result.image_path is not None:
             self.preview_panel.set_image(QPixmap(str(result.image_path)))
-            width, height = self.preview_settings().width, self.preview_settings().height
-            self.preview_panel.set_status(
-                f"Up to date · {width} × {height} px · {result.elapsed:.1f} s", "ready"
-            )
+            self.preview_shown = request
+            self.preview_panel.set_status(f"Up to date · {size} · {result.elapsed:.1f} s", "ready")
         else:
-            self.preview_panel.set_status(f"Preview failed. {result.message}", "error")
+            self.preview_panel.set_status(f"Preview failed ({size}). {result.message}", "error")
 
     def _update_cancel_action(self) -> None:
         final = self._render is not None and self._render.is_running()

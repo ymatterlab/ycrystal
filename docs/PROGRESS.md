@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements). Repository private.
+Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16) and FR-PREVIEW-01 (preview resolution; branch `feature/preview-resolution`). Repository private.
 
 ## Milestones
 
@@ -95,7 +95,7 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 
 ## FR-MEASURE-01: distance and bond-angle measurements (post-0.2.0, 15 November 2026)
 
-Development after version 0.2.0; branch `feature/measurements`. **Distance** and **Bond
+Development after version 0.2.0; merged in PR #16. **Distance** and **Bond
 angle** modes (View along toolbar and Edit menu, mutually exclusive) measure between
 clicked displayed atoms; results go to a new **Measurements** dock at the bottom of the
 window. Session-only: nothing is saved in projects.
@@ -136,6 +136,54 @@ so the output camera stays the same but the preview is marked out of date (and r
 if automatic); removed measurements are not restored by undo; the dashed lines are drawn
 in front of all atoms, so a guide may cross atoms that lie in front of it; a ball hidden
 behind others must be brought into view (orbit) before it can be clicked.
+
+## FR-PREVIEW-01: preview resolution (post-0.2.0, 15 November 2026)
+
+Development after version 0.2.0 (not part of 0.1.0 or 0.2.0); branch
+`feature/preview-resolution`. The POV-Ray preview dock gets a **Resolution** selector: Small 480 px wide (the
+default), Medium 800 px, Large 1200 px, or a custom width (16–4000 px). The height
+follows the output's aspect ratio. The main viewport stays the interactive VTK view.
+
+Starting point (verified in `MainWindow.preview_settings`): 480 px on the longer side,
+never larger than the output, antialiasing off, so 480 × 320 at 3:2 and 320 × 480 at
+2:3. The new presets are widths, as requested: landscape and square outputs keep their
+previous default size, while a portrait output's default Small preview is now 480 px
+wide (480 × 720 at 2:3 instead of 320 × 480).
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Presets and rounding: 3:2 gives 480 × 320, 800 × 533, 1200 × 800; 2:3, 16:9, 4:3, 1:1 outputs; never larger than the output; every combination of 36 output sizes × 6 widths is within half a pixel of the output shape and inside the limits | Pass | `test_presets_at_three_to_two`, `test_portrait_and_other_shapes`, `test_every_size_matches_the_output_shape`; doctest in `ycrystal.core.aspect` |
+| Limits: custom width 16–4000 px (spin box range; other values raise and change nothing); preview height at most 4000 px; each side at least 16 px for extreme shapes (8000 × 16 output → 8000 × 16 preview); the shape is never distorted; unreadable stored values fall back to the default | Pass | `test_limits_keep_the_shape`, `test_custom_width_and_limits`, `test_preference_is_restored` |
+| Selector shows the actual preview size and the final PNG size, with the reason for any limit; Custom enables the width field and remembers its width; portrait and non-3:2 outputs update the shown size | Pass | `test_selector_presets_show_the_actual_size`, `test_custom_width_and_limits`, `test_portrait_and_non_three_to_two_outputs` |
+| No effect on the figure: output size, output settings (incl. lock ratio), camera, exported scene text, undo history, and modified state are unchanged by resolution changes | Pass | `test_selector_presets_show_the_actual_size`, `test_preview_png_has_the_requested_size` |
+| POV-Ray receives the requested size (job `.ini` has `Width=800`, `Height=533`, `Antialias=off`); real POV-Ray PNGs are 800 × 533 (Medium, 1200 × 800 output) and 480 × 720 (Small, 800 × 1200 output) | Pass | `test_requested_size_reaches_povray`, `test_preview_png_has_the_requested_size` (POV-Ray 3.7) |
+| Preference persists in QSettings (`render/preview_resolution`, `render/preview_custom_width`), not in projects | Pass | `test_preference_is_restored` |
+| Lifecycle: automatic preview off marks the shown preview out of date and starts nothing; on, a debounced preview at the new size follows; the scene revision does not change | Pass | `test_resolution_change_marks_outdated_or_updates` |
+| Stale results: the request identity is (scene revision, width, height); a result for an older resolution is discarded with an explanation; a newer request supersedes a running one and only the latest is shown | Pass | `test_stale_resolution_results_never_replace_the_latest`; existing `test_stale_preview_is_discarded`, `test_newer_preview_supersedes_older_one` |
+| Display: the image fits the dock without distortion; resizing never starts a render; a large image or long status text does not widen the dock or the window | Pass | `test_resizing_the_panel_fits_without_rendering` |
+| GUI on the Mint display (scripted, real POV-Ray): dock at 334 × 272 px with Small, Medium, a portrait Large preview limited to the output, and a Custom width marked out of date; the dock width stays constant | Pass (scripted) | `artifacts/preview/dock-*.png` (gitignored) |
+| Hands-on use by a person (choosing presets and typing a custom width) | Unverified | |
+
+Design: `ycrystal.core.aspect.preview_size` (pure) computes the preview size from the
+output size and the requested width; `MainWindow.preview_settings` uses it, so preview
+jobs keep the output's background and the preview's antialiasing setting. The choice is
+window state backed by QSettings and is neither undoable nor saved in projects. The
+preview queue tags each job with a `PreviewRequest` (revision, width, height); the dock
+shows a result only if its request equals the current one. The dock's status and size
+labels wrap within the dock width instead of widening it.
+
+Regression runs (on top of the merged FR-MEASURE-01): `pytest -m "not povray"` 379
+passed (strict mode; 12 new tests);
+`pytest -m povray` on `test_gui_render.py`, `test_preview_resolution.py`, `test_gui.py`,
+and `test_release.py::test_render_from_command_line` 6 passed (other POV-Ray tests not
+rerun: exported scenes and final renders are unchanged); doctests in
+`ycrystal.core.aspect`; `zensical build --clean --strict`; pre-commit on the changed
+files.
+
+Remaining limitations: rounding the height to whole pixels changes the preview's frame
+by less than half a preview pixel (as before); a requested size larger than the output is
+reduced to the output size, so Large on a small output shows the output size; the shown
+image is scaled to the dock, so a preview larger than the dock is displayed reduced.
 
 ## FR-LIGHT-01: Lighting Setup window and live lighting (post-0.1.0, 15 November 2026)
 
