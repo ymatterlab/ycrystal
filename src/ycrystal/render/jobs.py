@@ -77,8 +77,13 @@ def run_job(job: RenderJob, executable: str, timeout: float | None = 600.0) -> R
     """Run POV-Ray synchronously (CLI, tests, renderer check). The GUI uses QProcess."""
     try:
         completed = subprocess.run(
-            [executable, *job.arguments()], cwd=job.directory, capture_output=True,
-            text=True, errors="replace", timeout=timeout, check=False,
+            [executable, *job.arguments()],
+            cwd=job.directory,
+            capture_output=True,
+            text=True,
+            errors="replace",
+            timeout=timeout,
+            check=False,
         )
     except subprocess.TimeoutExpired as exc:
         log = (exc.stdout or "") + (exc.stderr or "") if isinstance(exc.stdout, str) else ""

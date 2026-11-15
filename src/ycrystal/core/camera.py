@@ -135,9 +135,7 @@ class Camera:
             raise ValueError("zoom factor must be positive")
         return self._replace(parallel_scale=self.parallel_scale / factor)
 
-    def fitted(
-        self, points: Any, radii: Any, aspect: float, margin: float = 0.06
-    ) -> Camera:
+    def fitted(self, points: Any, radii: Any, aspect: float, margin: float = 0.06) -> Camera:
         """Keep the orientation; centre and scale so every sphere is visible.
 
         ``aspect`` is the output width / height.
@@ -170,7 +168,11 @@ class Camera:
 
     @classmethod
     def looking_along(
-        cls, direction: Any, view_up: Any, focal_point: Any = (0, 0, 0), distance: float = 50.0,
+        cls,
+        direction: Any,
+        view_up: Any,
+        focal_point: Any = (0, 0, 0),
+        distance: float = 50.0,
         parallel_scale: float = 10.0,
     ) -> Camera:
         d = np.asarray(direction, dtype=float)

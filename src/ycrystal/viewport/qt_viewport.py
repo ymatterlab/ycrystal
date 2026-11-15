@@ -98,7 +98,8 @@ class StructureViewport(QWidget):
         self._geometry: DisplayGeometry | None = None
         # Any camera change (mouse navigation, wheel, Fit, programmatic) notifies listeners.
         self._plotter.renderer.GetActiveCamera().AddObserver(
-            "ModifiedEvent", self._on_camera_modified)
+            "ModifiedEvent", self._on_camera_modified
+        )
 
     # ----- scene ------------------------------------------------------------------
     def set_scene(self, geometry: DisplayGeometry, environment: Environment) -> None:
@@ -125,13 +126,18 @@ class StructureViewport(QWidget):
             mesh = pv.PolyData(edges.reshape(-1, 3), lines=lines.ravel())
             tubes = mesh.tube(radius=geometry.cell_edge_radius, n_sides=16, capping=True)
             corners = pv.PolyData(np.unique(edges.reshape(-1, 3).round(9), axis=0)).glyph(
-                geom=pv.Sphere(radius=geometry.cell_edge_radius, theta_resolution=16,
-                               phi_resolution=12),
-                scale=False, orient=False,
+                geom=pv.Sphere(
+                    radius=geometry.cell_edge_radius, theta_resolution=16, phi_resolution=12
+                ),
+                scale=False,
+                orient=False,
             )
             plotter.add_mesh(
-                tubes.merge(corners), color=geometry.cell_edge_color, name="cell_edges",
-                reset_camera=False, render=False,
+                tubes.merge(corners),
+                color=geometry.cell_edge_color,
+                name="cell_edges",
+                reset_camera=False,
+                render=False,
             )
         self._geometry = geometry
         plotter.render()
@@ -162,8 +168,9 @@ class StructureViewport(QWidget):
         if self._geometry is None:
             return None
         width, height = self.render_size()
-        return pick_sphere(self.camera(), width, height, pixel, self._geometry.positions,
-                           self._geometry.radii)
+        return pick_sphere(
+            self.camera(), width, height, pixel, self._geometry.positions, self._geometry.radii
+        )
 
     def handle_click(self, position: QPointF, toggle: bool) -> None:
         """Called for a left click without dragging (widget coordinates)."""

@@ -68,8 +68,9 @@ def test_self_test_reports_missing_renderer(no_povray):
 
 
 def test_explain_failure_messages():
-    fast_math = explain_failure(1, "File 'scene.pov' line 9: Parse Error: Viewing angle has "
-                                   "to be smaller than 180 degrees.")
+    fast_math = explain_failure(
+        1, "File 'scene.pov' line 9: Parse Error: Viewing angle has to be smaller than 180 degrees."
+    )
     assert "-ffast-math" in fast_math and "--disable-optimiz" in fast_math
     io = explain_failure(1, "Parse Error: I/O restriction settings prohibit access to file")
     assert "povray.conf" in io
@@ -78,12 +79,12 @@ def test_explain_failure_messages():
 
 
 def _job(tmp_path):
-    camera = Camera(position=(0, 0, 10), focal_point=(0, 0, 0), view_up=(0, 1, 0),
-                    parallel_scale=2)
+    camera = Camera(position=(0, 0, 10), focal_point=(0, 0, 0), view_up=(0, 1, 0), parallel_scale=2)
     from conftest import spread_geometry
 
-    return prepare_job(spread_geometry(), camera, Environment(), RenderSettings(32, 24),
-                       parent=tmp_path)
+    return prepare_job(
+        spread_geometry(), camera, Environment(), RenderSettings(32, 24), parent=tmp_path
+    )
 
 
 def test_job_directory_uses_ascii_names(tmp_path):
@@ -96,8 +97,10 @@ def test_job_directory_uses_ascii_names(tmp_path):
 
 
 def test_failed_render_is_explained(tmp_path):
-    fake = make_script(tmp_path / "povray", "echo 'Parse Error: Viewing angle has to be "
-                                            "smaller than 180' >&2; exit 1")
+    fake = make_script(
+        tmp_path / "povray",
+        "echo 'Parse Error: Viewing angle has to be smaller than 180' >&2; exit 1",
+    )
     result = run_job(_job(tmp_path), str(fake))
     assert not result.ok and result.returncode == 1
     assert "-ffast-math" in result.message
@@ -110,7 +113,7 @@ def test_success_without_image_is_a_failure(tmp_path):
 
 
 def test_runs_in_job_directory(tmp_path):
-    fake = make_script(tmp_path / "povray", 'pwd > cwd.txt; printf PNG > scene.png; exit 0')
+    fake = make_script(tmp_path / "povray", "pwd > cwd.txt; printf PNG > scene.png; exit 0")
     job = _job(tmp_path)
     result = run_job(job, str(fake))
     assert result.ok and result.image_path == job.image_path

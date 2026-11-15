@@ -41,17 +41,28 @@ def _send_drag(widget, start, end, button, modifiers=Qt.KeyboardModifier.NoModif
     start, end = np.asarray(start, float), np.asarray(end, float)
     send(QEvent.Type.MouseButtonPress, start, button, button)
     for i in range(1, steps + 1):
-        send(QEvent.Type.MouseMove, start + (end - start) * i / steps,
-             Qt.MouseButton.NoButton, button)
+        send(
+            QEvent.Type.MouseMove,
+            start + (end - start) * i / steps,
+            Qt.MouseButton.NoButton,
+            button,
+        )
     send(QEvent.Type.MouseButtonRelease, end, button, Qt.MouseButton.NoButton)
 
 
 def _send_wheel(widget, pos, clicks):
     point = QPointF(*pos)
     for _ in range(abs(clicks)):
-        event = QWheelEvent(point, widget.mapToGlobal(point), QPoint(0, 0),
-                            QPoint(0, 120 if clicks > 0 else -120), Qt.MouseButton.NoButton,
-                            Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.NoScrollPhase, False)
+        event = QWheelEvent(
+            point,
+            widget.mapToGlobal(point),
+            QPoint(0, 0),
+            QPoint(0, 120 if clicks > 0 else -120),
+            Qt.MouseButton.NoButton,
+            Qt.KeyboardModifier.NoModifier,
+            Qt.ScrollPhase.NoScrollPhase,
+            False,
+        )
         QApplication.sendEvent(widget, event)
 
 
@@ -66,8 +77,16 @@ def test_window_launches_with_sample_and_fitted_view(window):
 
 def test_camera_round_trip_and_vtk_projection_agree(window):
     width, height = window.viewport.render_size()
-    camera = Camera(position=(4, -12, 6), focal_point=(1.5, 2.0, 1.0), view_up=(0.1, 0.2, 1),
-                    parallel_scale=3.7).orbit(azimuth=17, elevation=-9).pan(0.4, 0.3)
+    camera = (
+        Camera(
+            position=(4, -12, 6),
+            focal_point=(1.5, 2.0, 1.0),
+            view_up=(0.1, 0.2, 1),
+            parallel_scale=3.7,
+        )
+        .orbit(azimuth=17, elevation=-9)
+        .pan(0.4, 0.3)
+    )
     window.viewport.set_camera(camera)
     back = window.viewport.camera()
     for ours, theirs in zip(camera.basis(), back.basis(), strict=True):
@@ -75,8 +94,9 @@ def test_camera_round_trip_and_vtk_projection_agree(window):
     np.testing.assert_allclose(back.focal_point, camera.focal_point)
     assert back.parallel_scale == pytest.approx(camera.parallel_scale)
     points = window.geometry.positions
-    np.testing.assert_allclose(window.viewport.vtk_project(points),
-                               camera.project(points, width, height), atol=1e-6)
+    np.testing.assert_allclose(
+        window.viewport.vtk_project(points), camera.project(points, width, height), atol=1e-6
+    )
 
 
 def test_mouse_navigation_changes_only_the_camera(window):
@@ -97,8 +117,13 @@ def test_mouse_navigation_changes_only_the_camera(window):
     width, height = window.viewport.render_size()
     atom = window.geometry.positions[:1]
     start_px = orbited.project(atom, width, height)[0]
-    _send_drag(widget, centre, (w / 2 + 60, h / 2 - 30), Qt.MouseButton.LeftButton,
-               Qt.KeyboardModifier.ShiftModifier)
+    _send_drag(
+        widget,
+        centre,
+        (w / 2 + 60, h / 2 - 30),
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.ShiftModifier,
+    )
     panned = window.viewport.camera()
     np.testing.assert_allclose(panned.basis()[2], orbited.basis()[2], atol=1e-9)
     moved = panned.project(atom, width, height)[0] - start_px
@@ -151,8 +176,9 @@ def test_live_view_matches_camera_model(window, spread):
     width, height = window.viewport.render_size()
     rgba = window.viewport.screenshot(transparent=True)
     assert rgba.shape[:2] == (height, width)
-    matches = match_spheres(camera.project(spread.positions, width, height), spread.colors,
-                            find_blobs(rgba))
+    matches = match_spheres(
+        camera.project(spread.positions, width, height), spread.colors, find_blobs(rgba)
+    )
     assert max(m.error_px for m in matches) < 1.0, [m.error_px for m in matches]
     assert all(m.hue_ok for m in matches)
 
@@ -183,8 +209,10 @@ def test_render_from_gui_matches_live_view(window, spread, povray_executable, qt
     width, height = window.viewport.render_size()
     window.width_spin.setValue(width)
     window.transparent_check.setChecked(True)
-    assert (window.current_render_settings().width,
-            window.current_render_settings().height) == (width, height)
+    assert (window.current_render_settings().width, window.current_render_settings().height) == (
+        width,
+        height,
+    )
 
     destination = tmp_path / "Résultat final" / "render ü.png"
     assert window.render_png(destination, show_result=False) is True
@@ -229,11 +257,21 @@ def _click(widget, pixel, modifiers=Qt.KeyboardModifier.NoModifier):
     """Left click (no drag) at a device-pixel position of the viewport."""
     ratio = widget.devicePixelRatioF()
     point = QPointF(pixel[0] / ratio, pixel[1] / ratio)
-    for kind, buttons in ((QEvent.Type.MouseButtonPress, Qt.MouseButton.LeftButton),
-                          (QEvent.Type.MouseButtonRelease, Qt.MouseButton.NoButton)):
-        QApplication.sendEvent(widget, QMouseEvent(kind, point, widget.mapToGlobal(point),
-                                                   Qt.MouseButton.LeftButton, buttons,
-                                                   modifiers))
+    for kind, buttons in (
+        (QEvent.Type.MouseButtonPress, Qt.MouseButton.LeftButton),
+        (QEvent.Type.MouseButtonRelease, Qt.MouseButton.NoButton),
+    ):
+        QApplication.sendEvent(
+            widget,
+            QMouseEvent(
+                kind,
+                point,
+                widget.mapToGlobal(point),
+                Qt.MouseButton.LeftButton,
+                buttons,
+                modifiers,
+            ),
+        )
 
 
 def _visible_pixels(window):
@@ -311,8 +349,11 @@ def test_delete_hides_one_equivalent_atom_with_undo_redo(perovskite_window, qtbo
 
     QTest.keyClick(widget, Qt.Key.Key_Z, Qt.KeyboardModifier.ControlModifier)
     assert len(win.geometry) == 15 and target in win.geometry
-    QTest.keyClick(widget, Qt.Key.Key_Z,
-                   Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
+    QTest.keyClick(
+        widget,
+        Qt.Key.Key_Z,
+        Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier,
+    )
     assert len(win.geometry) == 14
 
     win.show_all_action.trigger()

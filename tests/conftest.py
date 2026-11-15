@@ -46,7 +46,8 @@ def isolated_qsettings(tmp_path_factory: pytest.TempPathFactory) -> None:
 
     QSettings.setDefaultFormat(QSettings.Format.IniFormat)
     QSettings.setPath(
-        QSettings.Format.IniFormat, QSettings.Scope.UserScope,
+        QSettings.Format.IniFormat,
+        QSettings.Scope.UserScope,
         str(tmp_path_factory.mktemp("qsettings")),
     )
     QCoreApplication.setOrganizationName("Ycrystal-tests")

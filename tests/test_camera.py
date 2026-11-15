@@ -9,16 +9,17 @@ from ycrystal.core.camera import Camera, default_camera
 
 def simple_camera(scale: float = 5.0) -> Camera:
     # Eye on +z looking at the origin, y up: screen right = +x, screen up = +y.
-    return Camera(position=(0, 0, 10), focal_point=(0, 0, 0), view_up=(0, 1, 0),
-                  parallel_scale=scale)
+    return Camera(
+        position=(0, 0, 10), focal_point=(0, 0, 0), view_up=(0, 1, 0), parallel_scale=scale
+    )
 
 
 def test_basis_is_orthonormal_and_right_handed():
-    camera = Camera(position=(3, -7, 2), focal_point=(0.5, 1, -1), view_up=(0.2, 0.1, 1),
-                    parallel_scale=4)
+    camera = Camera(
+        position=(3, -7, 2), focal_point=(0.5, 1, -1), view_up=(0.2, 0.1, 1), parallel_scale=4
+    )
     r, u, d = camera.basis()
-    np.testing.assert_allclose(np.array([r, u, d]) @ np.array([r, u, d]).T, np.eye(3),
-                               atol=1e-12)
+    np.testing.assert_allclose(np.array([r, u, d]) @ np.array([r, u, d]).T, np.eye(3), atol=1e-12)
     assert np.dot(np.cross(r, u), -d) == pytest.approx(1.0)
 
 
@@ -26,8 +27,9 @@ def test_projection_axes_and_non_square_extent():
     camera = simple_camera(scale=5.0)
     width, height = 400, 200  # 2:1 output, visible 20 x 10 angstrom
     assert camera.visible_size(width, height) == (20.0, 10.0)
-    pixels = camera.project([(0, 0, 0), (1, 0, 0), (0, 1, 0), (10, 5, 0), (-10, -5, 3)],
-                            width, height)
+    pixels = camera.project(
+        [(0, 0, 0), (1, 0, 0), (0, 1, 0), (10, 5, 0), (-10, -5, 3)], width, height
+    )
     np.testing.assert_allclose(pixels, [(200, 100), (220, 100), (200, 80), (400, 0), (0, 200)])
 
 
@@ -53,8 +55,9 @@ def test_orbit_keeps_focal_point_distance_and_projects_focal_to_centre():
 def test_orbit_directions_match_vtk_conventions():
     # Signs and axes must agree with vtkCamera.Azimuth/Elevation (screen-up / screen-right
     # axes through the focal point), so scripted views mean the same in both places.
-    camera = Camera(position=(2, -9, 3), focal_point=(0.3, 0.2, -0.1), view_up=(0, 0, 1),
-                    parallel_scale=3)
+    camera = Camera(
+        position=(2, -9, 3), focal_point=(0.3, 0.2, -0.1), view_up=(0, 0, 1), parallel_scale=3
+    )
     for azimuth, elevation in ((25, 0), (0, 25), (-40, 15)):
         vtk_cam = vtkCamera()
         vtk_cam.SetPosition(*camera.position)
@@ -107,8 +110,13 @@ def test_invalid_cameras_are_rejected():
     with pytest.raises(ValueError):
         Camera(position=(0, 0, 1), focal_point=(0, 0, 0), view_up=(0, 1, 0), parallel_scale=0)
     with pytest.raises(ValueError):
-        Camera(position=(0, 0, 1), focal_point=(0, 0, 0), view_up=(0, 1, 0), parallel_scale=1,
-               projection="perspective")
+        Camera(
+            position=(0, 0, 1),
+            focal_point=(0, 0, 0),
+            view_up=(0, 1, 0),
+            parallel_scale=1,
+            projection="perspective",
+        )
 
 
 @pytest.mark.parametrize("seed", range(5))

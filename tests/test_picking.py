@@ -5,8 +5,9 @@ from ycrystal.core.picking import pick_sphere
 
 
 def top_camera(scale: float = 5.0) -> Camera:
-    return Camera(position=(0, 0, 10), focal_point=(0, 0, 0), view_up=(0, 1, 0),
-                  parallel_scale=scale)
+    return Camera(
+        position=(0, 0, 10), focal_point=(0, 0, 0), view_up=(0, 1, 0), parallel_scale=scale
+    )
 
 
 def test_pick_front_most_sphere_and_misses():
@@ -28,5 +29,7 @@ def test_pick_matches_projection_for_rotated_panned_view(spread):
     camera = off_axis_camera(spread, width / height)
     pixels = camera.project(spread.positions, width, height)
     for index, pixel in enumerate(pixels):
-        assert pick_sphere(camera, width, height, tuple(pixel), spread.positions,
-                           spread.radii) == index
+        assert (
+            pick_sphere(camera, width, height, tuple(pixel), spread.positions, spread.radii)
+            == index
+        )

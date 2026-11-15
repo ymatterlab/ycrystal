@@ -53,8 +53,11 @@ def find_blobs(rgba: np.ndarray, alpha_threshold: int = 128, min_area: int = 12)
         ya, xa = np.asarray(ys), np.asarray(xs)
         rgb = rgba[ya, xa, :3].astype(float).mean(axis=0) / 255.0
         blobs.append(
-            Blob((float(xa.mean() + 0.5), float(ya.mean() + 0.5)), len(ys),
-                 (float(rgb[0]), float(rgb[1]), float(rgb[2])))
+            Blob(
+                (float(xa.mean() + 0.5), float(ya.mean() + 0.5)),
+                len(ys),
+                (float(rgb[0]), float(rgb[1]), float(rgb[2])),
+            )
         )
     return blobs
 

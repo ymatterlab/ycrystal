@@ -68,7 +68,9 @@ def run_self_test(configured: str | None = None, timeout: float = 60.0) -> SelfT
         rgba = load_rgba(result.image_path)
         if rgba.shape[:2] != (settings.height, settings.width):
             return SelfTestResult(
-                False, executable, version,
+                False,
+                executable,
+                version,
                 f"Wrong image size {rgba.shape[1]}x{rgba.shape[0]}; expected "
                 f"{settings.width}x{settings.height}.",
             )
@@ -77,16 +79,22 @@ def run_self_test(configured: str | None = None, timeout: float = 60.0) -> SelfT
         worst = max(m.error_px for m in matches)
         if worst > TOLERANCE_PX or not all(m.hue_ok for m in matches):
             return SelfTestResult(
-                False, executable, version,
+                False,
+                executable,
+                version,
                 f"Rendered spheres are misplaced (max error {worst:.2f} px) or have the "
                 "wrong colours; the camera export does not match this POV-Ray build.",
-                worst, matches,
+                worst,
+                matches,
             )
         return SelfTestResult(
-            True, executable, version,
+            True,
+            executable,
+            version,
             f"POV-Ray {version or '(unknown version)'} at {executable} passed: sphere centres "
             f"within {worst:.2f} px of the camera model.",
-            worst, matches,
+            worst,
+            matches,
         )
     finally:
         job.cleanup()

@@ -91,8 +91,10 @@ def scene_to_pov(
     add("global_settings { assumed_gamma 1.0 }")
     add("")
     add("// Colours below are written as sRGB values and converted to linear light.")
-    add("#declare Ycr_Linear = function(c) { select(c - 0.04045, c / 12.92, "
-        "pow((c + 0.055) / 1.055, 2.4)) }")
+    add(
+        "#declare Ycr_Linear = function(c) { select(c - 0.04045, c / 12.92, "
+        "pow((c + 0.055) / 1.055, 2.4)) }"
+    )
     add("#macro Ycr_sRGB(R, G, B) rgb <Ycr_Linear(R), Ycr_Linear(G), Ycr_Linear(B)> #end")
     add("")
     add("// Orthographic camera. right/up lengths are the visible width/height (angstrom).")
@@ -126,11 +128,12 @@ def scene_to_pov(
         add(f"  pigment {{ color {_srgb(color)} }}")
         add("  finish { Ycr_Finish_Default }")
         add("}")
-    add(f"#declare Ycr_Texture_Cell = texture {{ pigment {{ color "
-        f"{_srgb(geometry.cell_edge_color)} }} finish {{ Ycr_Finish_Default }} }}")
+    add(
+        f"#declare Ycr_Texture_Cell = texture {{ pigment {{ color "
+        f"{_srgb(geometry.cell_edge_color)} }} finish {{ Ycr_Finish_Default }} }}"
+    )
     add("")
-    add(f"// Atoms ({len(geometry)}): source atom number (1-based, input order) and periodic "
-        "image")
+    add(f"// Atoms ({len(geometry)}): source atom number (1-based, input order) and periodic image")
     if geometry.hidden_count:
         add(f"// ({geometry.hidden_count} atoms hidden in Ycrystal are not written.)")
     for atom_id, element, pos, rad in zip(
@@ -147,8 +150,10 @@ def scene_to_pov(
         r_edge = _f(geometry.cell_edge_radius)
         corners: list[np.ndarray] = []
         for start, end in geometry.cell_edges:
-            add(f"cylinder {{ {_v(start)}, {_v(end)}, {r_edge} texture {{ Ycr_Texture_Cell }} "
-                "no_shadow }")
+            add(
+                f"cylinder {{ {_v(start)}, {_v(end)}, {r_edge} texture {{ Ycr_Texture_Cell }} "
+                "no_shadow }"
+            )
             for point in (start, end):
                 if not any(np.allclose(point, c) for c in corners):
                     corners.append(point)
@@ -161,6 +166,7 @@ def scene_to_pov(
 def render_ini(settings: RenderSettings, pov_name: str, image_name: str) -> str:
     """Render options. Every output-affecting option is explicit so that user or
     system ``povray.ini`` defaults cannot change the result."""
+
     def quoted(name: str) -> str:
         return '"' + name.replace('"', "") + '"'
 
@@ -203,8 +209,9 @@ def write_scene_files(
     pov_path = directory / f"{basename}.pov"
     ini_path = directory / f"{basename}.ini"
     image_path = directory / f"{basename}.png"
-    pov_path.write_text(scene_to_pov(geometry, camera, environment, settings, **kwargs),
-                        encoding="utf-8")
+    pov_path.write_text(
+        scene_to_pov(geometry, camera, environment, settings, **kwargs), encoding="utf-8"
+    )
     ini_path.write_text(render_ini(settings, pov_path.name, image_path.name), encoding="utf-8")
     return pov_path, ini_path, image_path
 

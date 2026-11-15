@@ -52,8 +52,12 @@ def drag(widget, start, end, button, modifiers=Qt.KeyboardModifier.NoModifier, s
     start, end = np.asarray(start, float), np.asarray(end, float)
     send(QEvent.Type.MouseButtonPress, start, button, button)
     for i in range(1, steps + 1):
-        send(QEvent.Type.MouseMove, start + (end - start) * i / steps,
-             Qt.MouseButton.NoButton, button)
+        send(
+            QEvent.Type.MouseMove,
+            start + (end - start) * i / steps,
+            Qt.MouseButton.NoButton,
+            button,
+        )
         wait(15)
     send(QEvent.Type.MouseButtonRelease, end, button, Qt.MouseButton.NoButton)
 
@@ -61,10 +65,19 @@ def drag(widget, start, end, button, modifiers=Qt.KeyboardModifier.NoModifier, s
 def wheel(widget, pos, clicks):
     point = QPointF(*pos)
     for _ in range(abs(clicks)):
-        QApplication.sendEvent(widget, QWheelEvent(
-            point, widget.mapToGlobal(point), QPoint(0, 0), QPoint(0, 120 if clicks > 0 else -120),
-            Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.NoScrollPhase,
-            False))
+        QApplication.sendEvent(
+            widget,
+            QWheelEvent(
+                point,
+                widget.mapToGlobal(point),
+                QPoint(0, 0),
+                QPoint(0, 120 if clicks > 0 else -120),
+                Qt.MouseButton.NoButton,
+                Qt.KeyboardModifier.NoModifier,
+                Qt.ScrollPhase.NoScrollPhase,
+                False,
+            ),
+        )
 
 
 def render_via_gui(window: MainWindow, destination: Path, transparent: bool) -> dict:
@@ -92,9 +105,11 @@ def measure(camera: Camera, geometry: DisplayGeometry, rgba: np.ndarray) -> dict
         "max_error_px": max(m.error_px for m in matches),
         "colours_match": all(m.hue_ok for m in matches),
         "per_sphere": [
-            {"expected": [round(v, 3) for v in m.expected],
-             "found": [round(v, 3) for v in m.found] if m.found else None,
-             "error_px": round(m.error_px, 3)}
+            {
+                "expected": [round(v, 3) for v in m.expected],
+                "found": [round(v, 3) for v in m.found] if m.found else None,
+                "error_px": round(m.error_px, 3),
+            }
             for m in matches
         ],
     }
@@ -115,8 +130,9 @@ def side_by_side(left: Path, right: Path, out: Path, labels: tuple[str, str]) ->
     with Image.open(left) as a, Image.open(right) as b:
         a, b = a.convert("RGB"), b.convert("RGB")
         gap, header = 12, 26
-        canvas = Image.new("RGB", (a.width + b.width + gap, max(a.height, b.height) + header),
-                           "white")
+        canvas = Image.new(
+            "RGB", (a.width + b.width + gap, max(a.height, b.height) + header), "white"
+        )
         canvas.paste(a, (0, header))
         canvas.paste(b, (a.width + gap, header))
     draw = ImageDraw.Draw(canvas)
@@ -181,8 +197,13 @@ def main() -> int:
     initial = window.viewport.camera()
     drag(widget, (w * 0.45, h * 0.55), (w * 0.62, h * 0.40), Qt.MouseButton.LeftButton)
     drag(widget, (w * 0.30, h * 0.30), (w * 0.35, h * 0.62), Qt.MouseButton.LeftButton)
-    drag(widget, (w * 0.5, h * 0.5), (w * 0.5 + 70, h * 0.5 - 35), Qt.MouseButton.LeftButton,
-         Qt.KeyboardModifier.ShiftModifier)
+    drag(
+        widget,
+        (w * 0.5, h * 0.5),
+        (w * 0.5 + 70, h * 0.5 - 35),
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.ShiftModifier,
+    )
     wheel(widget, (w * 0.5, h * 0.5), 1)
     wait(300)
     camera = window.viewport.camera()
@@ -197,15 +218,18 @@ def main() -> int:
     viewport_rgba = window.viewport.screenshot(transparent=False)
     Image.fromarray(viewport_rgba).save(out / "viewport.png")
     render_via_gui(window, out / "render.png", transparent=False)
-    side_by_side(out / "viewport.png", out / "render.png", out / "comparison.png",
-                 ("Live VTK viewport (approximate lighting)", "POV-Ray render, same camera"))
+    side_by_side(
+        out / "viewport.png",
+        out / "render.png",
+        out / "comparison.png",
+        ("Live VTK viewport (approximate lighting)", "POV-Ray render, same camera"),
+    )
     window.export_pov(out / "scene.pov")
 
     # --- numerical evidence: atoms only, transparent background ----------------------
     # Same mouse-navigated camera; no cell edges and half-size spheres so that every atom
     # is a separate disc (atom centres, and hence the expected pixels, are unchanged).
-    atoms_only = build_geometry(window.structure, SceneSettings(radius_scale=0.25,
-                                                                show_cell=False))
+    atoms_only = build_geometry(window.structure, SceneSettings(radius_scale=0.25, show_cell=False))
     window.set_display_geometry(atoms_only)
     window.viewport.set_axes_visible(False)
     assert window.viewport.camera() == camera
@@ -221,24 +245,32 @@ def main() -> int:
         "navigation": {
             "initial_camera": initial.to_dict(),
             "final_camera": camera.to_dict(),
-            "view_direction_change_deg": float(np.degrees(np.arccos(np.clip(
-                initial.basis()[2] @ camera.basis()[2], -1, 1)))),
-            "focal_point_shift_A": float(np.linalg.norm(
-                np.subtract(camera.focal_point, initial.focal_point))),
+            "view_direction_change_deg": float(
+                np.degrees(np.arccos(np.clip(initial.basis()[2] @ camera.basis()[2], -1, 1)))
+            ),
+            "focal_point_shift_A": float(
+                np.linalg.norm(np.subtract(camera.focal_point, initial.focal_point))
+            ),
             "zoom_ratio": initial.parallel_scale / camera.parallel_scale,
         },
-        "coordinates_unchanged": bool(np.array_equal(
-            window.structure.positions, triclinic_marker().positions)),
+        "coordinates_unchanged": bool(
+            np.array_equal(window.structure.positions, triclinic_marker().positions)
+        ),
         "vtk_vs_model": measure(camera, atoms_only, vtk_rgba),
         "povray_vs_model": measure(camera, atoms_only, pov_rgba),
     }
     (out / "report.json").write_text(json.dumps(report, indent=2))
-    print(json.dumps({k: report[k] for k in ("viewport_px", "navigation",
-                                              "coordinates_unchanged")}, indent=2))
+    print(
+        json.dumps(
+            {k: report[k] for k in ("viewport_px", "navigation", "coordinates_unchanged")}, indent=2
+        )
+    )
     for key in ("vtk_vs_model", "povray_vs_model"):
         r = report[key]
-        print(f"{key}: {r['blobs_found']}/{r['spheres_expected']} spheres, max error "
-              f"{r['max_error_px']:.3f} px, colours match: {r['colours_match']}")
+        print(
+            f"{key}: {r['blobs_found']}/{r['spheres_expected']} spheres, max error "
+            f"{r['max_error_px']:.3f} px, colours match: {r['colours_match']}"
+        )
     window.ask_save_changes = lambda: "discard"  # evidence run: nothing to save
     window.close()
     return 0
