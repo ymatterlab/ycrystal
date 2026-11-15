@@ -39,9 +39,77 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--povray",
         metavar="PATH",
-        help="POV-Ray executable for --check-renderer (default: $YCRYSTAL_POVRAY, then PATH)",
+        help="POV-Ray executable for --check-renderer and --render "
+        "(default: $YCRYSTAL_POVRAY, then PATH)",
+    )
+    batch = parser.add_argument_group("without a window (FILE required)")
+    batch.add_argument(
+        "--render",
+        metavar="OUT.png",
+        help="render FILE (a project as saved, or a structure with default settings) to a "
+        "PNG with POV-Ray and exit",
+    )
+    batch.add_argument(
+        "--export-pov",
+        metavar="OUT.pov",
+        help="write OUT.pov and OUT.ini for FILE and exit (POV-Ray not needed)",
+    )
+    batch.add_argument("--width", type=int, help="output width in pixels (default: FILE's)")
+    batch.add_argument("--height", type=int, help="output height in pixels (default: FILE's)")
+    desktop = parser.add_argument_group("desktop integration (current user)")
+    desktop.add_argument(
+        "--install-desktop",
+        action="store_true",
+        help="add Ycrystal to the applications menu and open .ycrystal projects with it",
+    )
+    desktop.add_argument(
+        "--uninstall-desktop",
+        action="store_true",
+        help="remove the menu entry, icon, and project file type again",
     )
     return parser
+
+
+def _batch(args: argparse.Namespace) -> int:
+    """Run --render / --export-pov; print a result line and return the exit status."""
+    import time
+
+    from ycrystal.batch import export_scene, load_input, render_png
+    from ycrystal.io.project import ProjectError
+    from ycrystal.io.readers import StructureImportError
+    from ycrystal.render.povray import PovrayNotFoundError
+
+    for value, name in ((args.width, "--width"), (args.height, "--height")):
+        if value is not None and not 16 <= value <= 8000:
+            print(f"ERROR: {name} must be between 16 and 8000 pixels", file=sys.stderr)
+            return 2
+    try:
+        project = load_input(args.file, args.format)
+    except (ProjectError, StructureImportError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    if args.export_pov:
+        try:
+            pov, ini = export_scene(project, args.export_pov, args.width, args.height)
+        except OSError as exc:
+            print(f"ERROR: cannot write {args.export_pov}: {exc.strerror or exc}", file=sys.stderr)
+            return 1
+        print(f"Exported {pov} and {ini}")
+    if args.render:
+        started = time.monotonic()
+        try:
+            result = render_png(project, args.render, args.povray, args.width, args.height)
+        except PovrayNotFoundError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        except OSError as exc:
+            print(f"ERROR: cannot write {args.render}: {exc.strerror or exc}", file=sys.stderr)
+            return 1
+        if not result.ok:
+            print(f"ERROR: {result.message}", file=sys.stderr)
+            return 1
+        print(f"Rendered {result.image_path} in {time.monotonic() - started:.1f} s")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -65,12 +133,37 @@ def main(argv: list[str] | None = None) -> int:
     path (if given), prints ``PASS: …`` or ``FAIL: …``, and exits without creating a
     ``QApplication``. It does not read the executable chosen in the GUI.
 
+    ``--render OUT.png`` and ``--export-pov OUT.pov`` work without a window or display:
+    they draw ``FILE`` (a project exactly as saved, or a structure with the default
+    settings and view) through [`ycrystal.batch`][ycrystal.batch], print one line, and
+    return 0, or 1 with an ``ERROR:`` message on standard error (2 for invalid sizes).
+    ``--install-desktop`` / ``--uninstall-desktop`` manage the menu launcher (see
+    [`ycrystal.desktop`][ycrystal.desktop]).
+
     Otherwise a window opens with the ``--sample`` structure. A ``FILE`` argument is
     opened once the event loop runs; if it cannot be read, a message appears and the
     sample stays open. Settings are stored for the organization "Y-Matter Lab" and the
     application "Ycrystal" (``~/.config/Y-Matter Lab/Ycrystal.conf`` on Linux).
     """
-    args = _parser().parse_args(argv)
+    parser = _parser()
+    args = parser.parse_args(argv)
+
+    if args.install_desktop or args.uninstall_desktop:
+        from ycrystal.desktop import install_desktop, uninstall_desktop
+
+        if args.install_desktop:
+            for path in install_desktop():
+                print(f"Installed {path}")
+            print("Ycrystal is now in the applications menu (Science).")
+        else:
+            removed = uninstall_desktop()
+            print("\n".join(f"Removed {path}" for path in removed) or "Nothing to remove.")
+        return 0
+
+    if args.render or args.export_pov:
+        if not args.file:
+            parser.error("--render and --export-pov need a FILE")
+        return _batch(args)
 
     if args.check_renderer:
         from ycrystal.render.selftest import run_self_test
@@ -83,12 +176,21 @@ def main(argv: list[str] | None = None) -> int:
     from PySide6.QtCore import QTimer
     from PySide6.QtWidgets import QApplication
 
+    from ycrystal.desktop import DESKTOP_ID, launcher_installed
     from ycrystal.gui.main_window import MainWindow
 
+    if launcher_installed():
+        # Before the application object exists, so that the desktop portal gets this id.
+        QApplication.setDesktopFileName(DESKTOP_ID)
     app = QApplication.instance() or QApplication(sys.argv[:1])
     app.setApplicationName("Ycrystal")
     app.setOrganizationName("Y-Matter Lab")
     app.setApplicationVersion(__version__)
+    from PySide6.QtGui import QIcon
+
+    from ycrystal.desktop import icon_path
+
+    app.setWindowIcon(QIcon(str(icon_path())))
     window = MainWindow(SAMPLES[args.sample]())
     window.resize(1100, 720)
     window.show()

@@ -26,6 +26,17 @@ For an ordinary render failure the GUI shows an explanation, often with the last
 renderer output. A renderer check is a small diagnostic render, not a guarantee
 that every scene or output directory will work.
 
+## Menu launcher
+
+- *Ycrystal does not appear in the menu*: run `.venv/bin/ycrystal --install-desktop`
+  again from the checkout; Cinnamon may need a few seconds or a new login. The launcher
+  runs the checkout's `.venv/bin/ycrystal` by absolute path, so moving or deleting the
+  checkout breaks it: reinstall the launcher from the new place.
+- *A `.ycrystal` file does not open in Ycrystal*: right-click it, choose
+  *Open With ▸ Other Application*, and pick Ycrystal; `xdg-mime query filetype FILE`
+  should report `application/x-ycrystal-project`.
+- `--uninstall-desktop` removes the launcher, icon, and file type.
+
 ## Current limitations and roadmap
 
 - No atom editing or structure-format export. Display repetitions (numeric or with the

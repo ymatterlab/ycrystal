@@ -10,17 +10,20 @@ nav = [
     { "Home" = "index.md" },
     { "User guide" = [
         { "Install and launch" = "guide/install.md" },
+        { "Examples and the command line" = "guide/examples.md" },
         { "Your first crystal figure" = "guide/first-figure.md" },
         { "Controls and display" = "guide/controls.md" },
         { "Structure files and projects" = "FORMATS.md" },
         { "Materials, backgrounds, and lighting" = "guide/appearance.md" },
         { "Export and rendering" = "guide/rendering.md" },
+        { "Supported formats and platforms" = "guide/support.md" },
         { "Troubleshooting and limitations" = "guide/troubleshooting.md" },
     ] },
     { "Developer guide" = [
         { "Architecture" = "development/architecture.md" },
         { "Documentation workflow" = "development/documentation.md" },
         { "Python examples" = "development/examples.md" },
+        { "Release procedure and checklist" = "development/release.md" },
     ] },
     { "API reference" = [
         "reference/index.md",
@@ -30,6 +33,7 @@ nav = [
         "reference/io.md",
         "reference/rendering.md",
         "reference/presets.md",
+        "reference/cli.md",
         "reference/gui.md",
     ] },
     { "Progress and roadmap" = "PROGRESS.md" },

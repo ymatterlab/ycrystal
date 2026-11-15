@@ -3,8 +3,6 @@
 These interfaces need Qt; the viewport also needs a display and OpenGL when created.
 Only Ycrystal's selected methods and signals are shown, with inherited members omitted.
 
-::: ycrystal.app.main
-
 ::: ycrystal.gui.main_window.MainWindow
     options:
       members:

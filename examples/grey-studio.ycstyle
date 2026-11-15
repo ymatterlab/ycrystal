@@ -1,0 +1,98 @@
+{
+ "format": "ycrystal-style",
+ "schema_version": 1,
+ "project_schema": 5,
+ "generator": "Ycrystal (scripts/make_examples.py)",
+ "saved_at": "2026-11-15T00:00:00+00:00",
+ "source": {
+  "composition": "SrTiO3",
+  "symbols": [
+   "Sr",
+   "Ti",
+   "O",
+   "O",
+   "O"
+  ]
+ },
+ "scene": {
+  "radius_scale": 0.5,
+  "show_cell": true,
+  "cell_edge_radius": 0.035,
+  "cell_edge_color": [
+   0.15,
+   0.15,
+   0.15
+  ],
+  "boundary_images": true,
+  "boundary_tolerance": 0.001,
+  "hidden": [],
+  "repetitions": [
+   2,
+   2,
+   1
+  ],
+  "cell_mode": "outline",
+  "material": "satin",
+  "element_materials": [
+   {
+    "element": "O",
+    "material": "ceramic"
+   },
+   {
+    "element": "Ti",
+    "material": "chrome"
+   }
+  ],
+  "atom_materials": [],
+  "element_radii": [],
+  "element_colors": [],
+  "bonds": {
+   "enabled": true,
+   "tolerance": 1.1,
+   "radius": 0.12,
+   "pairs": []
+  }
+ },
+ "environment": {
+  "preset": "studio_grey",
+  "transparent": false,
+  "background": {
+   "mode": "solid",
+   "color": [
+    0.6,
+    0.6,
+    0.62
+   ],
+   "bottom": [
+    0.6,
+    0.6,
+    0.62
+   ],
+   "clouds": 0.0
+  },
+  "floor": {
+   "enabled": true,
+   "color": [
+    0.62,
+    0.62,
+    0.64
+   ],
+   "reflection": 0.0,
+   "offset": 0.3
+  },
+  "lighting": {
+   "preset": "studio",
+   "key_light": 0.95,
+   "fill_light": 0.4,
+   "key_azimuth": -35.0,
+   "key_elevation": 45.0,
+   "light_size": 1.5,
+   "shadows": true,
+   "reflector": false
+  }
+ },
+ "output": {
+  "width": 800,
+  "height": 600
+ }
+}

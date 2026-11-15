@@ -1,0 +1,112 @@
+"""Regenerate the example projects and style in ``examples/``.
+
+Each example is an ordinary ``.ycrystal`` project (embedded structure, camera, output
+size, materials, environment). Provenance paths are stored relative to the repository
+and timestamps are fixed, so that regenerating gives the same files.
+
+    python scripts/make_examples.py
+
+Render one without opening a window:  ycrystal examples/SrTiO3-studio.ycrystal --render out.png
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from ycrystal.core.camera import Camera
+from ycrystal.core.samples import perovskite_srtio3, triclinic_marker
+from ycrystal.core.scene import SceneSettings, build_geometry
+from ycrystal.io.project import Project, project_to_dict
+from ycrystal.io.readers import read_structure
+from ycrystal.io.style import Style, style_to_dict
+from ycrystal.presets import environment_from_preset, get_environment
+from ycrystal.render.pov_writer import RenderSettings
+
+ROOT = Path(__file__).resolve().parents[1]
+EXAMPLES = ROOT / "examples"
+STAMP = "2026-11-15T00:00:00+00:00"
+
+
+def fitted(structure, settings, direction, up, aspect, orbit=(0.0, 0.0), margin=0.08):
+    geometry = build_geometry(structure, settings)
+    return (
+        Camera.looking_along(direction, up)
+        .orbit(*orbit)
+        .fitted(*geometry.points_and_radii(), aspect, margin=margin)
+    )
+
+
+def relative_source(structure, path: Path):
+    source = dict(structure.metadata.get("source", {}))
+    source["path"] = str(path.relative_to(ROOT))
+    source["imported_at"] = STAMP
+    structure.metadata["source"] = source
+    return structure
+
+
+def write_json(path: Path, data: dict) -> None:
+    data["saved_at"] = STAMP
+    data["generator"] = "Ycrystal (scripts/make_examples.py)"
+    path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"wrote {path.relative_to(ROOT)}")
+
+
+def main() -> None:
+    EXAMPLES.mkdir(exist_ok=True)
+
+    # 1. SrTiO3 2 x 2 x 1 in the grey studio: chrome Ti, ceramic O, satin Sr.
+    srtio3 = perovskite_srtio3()
+    preset = get_environment("studio_grey")
+    scene = (
+        SceneSettings(
+            repetitions=(2, 2, 1), cell_mode="outline", cell_edge_color=preset.cell_edge_color
+        )
+        .with_element_material("Ti", "chrome")
+        .with_element_material("O", "ceramic")
+    )
+    camera = fitted(srtio3, scene, (-1.0, -0.42, -0.3), (0, 0, 1), 4 / 3)
+    project = Project(
+        srtio3,
+        scene=scene,
+        environment=environment_from_preset("studio_grey"),
+        camera=camera,
+        output=RenderSettings(800, 600),
+    )
+    write_json(EXAMPLES / "SrTiO3-studio.ycrystal", project_to_dict(project))
+    style = Style.from_state(srtio3, scene, project.environment, (800, 600))
+    write_json(EXAMPLES / "grey-studio.ycstyle", style_to_dict(style))
+
+    # 2. MgB2 (from the CIF fixture) on a blue gradient, looking down c, B glossy.
+    cif = ROOT / "tests" / "fixtures" / "MgB2.cif"
+    mgb2 = relative_source(read_structure(cif), cif)
+    preset = get_environment("gradient_blue")
+    scene = SceneSettings(
+        repetitions=(3, 3, 1), cell_mode="all", cell_edge_color=preset.cell_edge_color
+    ).with_element_material("B", "glossy")
+    camera = fitted(mgb2, scene, (0.2, 0.35, -1.0), (0, 1, 0), 1.0)
+    project = Project(
+        mgb2,
+        scene=scene,
+        environment=environment_from_preset("gradient_blue"),
+        camera=camera,
+        output=RenderSettings(700, 700),
+    )
+    write_json(EXAMPLES / "MgB2-gradient.ycrystal", project_to_dict(project))
+
+    # 3. Triclinic marker cell, transparent PNG background, matte, larger atoms.
+    triclinic = triclinic_marker()
+    scene = SceneSettings(material="matte", radius_scale=0.6)
+    camera = fitted(triclinic, scene, (0.3, -1.0, -0.2), (0, 0, 1), 3 / 2, (25, 10))
+    project = Project(
+        triclinic,
+        scene=scene,
+        environment=environment_from_preset("transparent"),
+        camera=camera,
+        output=RenderSettings(900, 600, transparent_background=True),
+    )
+    write_json(EXAMPLES / "triclinic-transparent.ycrystal", project_to_dict(project))
+
+
+if __name__ == "__main__":
+    main()
