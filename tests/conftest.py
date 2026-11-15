@@ -133,5 +133,5 @@ def no_blocking_dialogs(monkeypatch):
         raise AssertionError(f"unexpected dialog: {args!r}")
 
     monkeypatch.setattr(MainWindow, "ask_save_changes", lambda self: "discard")
-    for name in ("ask_open_path", "ask_save_path", "ask_choice", "ask_text"):
+    for name in ("ask_open_path", "ask_save_path", "ask_choice", "ask_text", "ask_confirm"):
         monkeypatch.setattr(MainWindow, name, unexpected)

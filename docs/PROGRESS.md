@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0 and M1 complete (merged into `main`); part of M2 done. Repository-tooling maintenance on branch `chore/repo-tooling` (no product milestone change).
+Last updated: 15 November 2026. M0, M1, and M2 complete (M2 on branch `feature/m2-supercells-bonds`); repository tooling merged into `main`.
 
 ## Milestones
 
@@ -8,7 +8,7 @@ Last updated: 15 November 2026. M0 and M1 complete (merged into `main`); part of
 | --- | --- | --- |
 | M0 | Desktop/render feasibility: Qt window, embedded VTK view, camera model, first POV-Ray render matching the view | **Complete** (see evidence and caveats) |
 | M1 | File import (POSCAR/CIF/QE `ibrav=0`) and save/reopen projects | **Complete** (see evidence) |
-| M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **In progress**: boundary images, click selection, hiding, undo/redo done; supercells, bonds, view-direction buttons pending |
+| M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **Complete** (see evidence; drag handles are M5) |
 | M3 | Complete figure workflow: preview, output frame, cancellation, final PNG | Not started |
 | M4 | Material and environment galleries | Not started |
 | M5 | Supercell drag handles, reusable styles, undo coverage | Not started |
@@ -94,7 +94,61 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
-## M2 increment: boundary atoms, selection, hiding (requested ahead of M1)
+## M2 acceptance evidence
+
+Gate: triclinic and hexagonal examples preserve correct geometry, stable selection, and
+original coordinates; expected bond/image counts; reversible repetition changes;
+navigation does not modify coordinates. The first increment (boundary atoms,
+selection, hiding, undo) is listed in the next section.
+
+| Check | Result | How |
+| --- | --- | --- |
+| Orthogonal SrTiO3, n × n × n (n = 1–3) | Pass | (n+1)³ Sr, n³ Ti, 3n²(n+1) O; 6n³ Ti–O and 12n²(n+1) Sr–O bonds; equal to a brute-force distance search over the displayed atoms; no duplicate bonds (`test_supercells_bonds.py`) |
+| Hexagonal MgB2, n × n × m | Pass | (n+1)²(m+1) Mg, 2n²m B; (3n² − 2n)·m B–B bonds (honeycomb); brute force agrees |
+| Diamond Si (conventional cell) | Pass | (n+1)³ + 3n²(n+1) + 4n³ atoms (18 at 1×1×1, as VESTA); 16n³ bonds, all 2.3517 Å |
+| Triclinic cell | Pass | 5n³ atoms at general positions; displayed bonds equal brute force for 1×1×1, 2×3×1, 2×2×2; periodic bonds unique (no reverse pairs) and complete against a search over neighbouring cells |
+| Stable IDs, reversibility, coordinates | Pass | Every atom of 1×1×1 has the same ID and position at 3×3×3; 1 → 3 → 1 reproduces IDs, positions, and bonds exactly; hidden IDs persist across repetition changes; structure arrays unchanged |
+| Non-periodic axes and molecules | Pass | No repetition along non-periodic axes; a molecule shows O–H bonds only |
+| Cell edges | Pass | All unit cells (grid lines), outline of the block, or the original cell; counts checked (e.g. 27 grid lines at 2×2×2) |
+| Repetition controls | Pass | Spin boxes a/b/c (1–20), "− all", "+ all", "1 × 1 × 1"; each change one undo step; the panel follows undo/redo; the view is refitted to the new block; selection kept by ID (`test_gui_scene.py`) |
+| Large-expansion warning | Pass | Above 20,000 displayed atoms Ycrystal asks before applying (estimate computed without building geometry); declining leaves everything unchanged |
+| Bonds panel | Pass | Show/hide, tolerance (× sum of covalent radii; consecutive edits merge into one undo step), radius, per-element-pair switches with per-cell counts and lengths |
+| View directions | Pass | a, b, c, x, y, z (Shift: opposite side); the axis points at the viewer with the next axis up (e.g. down c: a right, b up); triclinic directions follow the lattice vectors; result framed |
+| POV-Ray export | Pass | Bonds as half cylinders textured like their atoms; grid edges; render matches the live view (`artifacts/m2/`) |
+| Projects | Pass | Schema 2 stores repetitions, cell mode, and bond settings; schema-1 projects open with bonds off, exactly as saved |
+| Automated suite | 162 passed, 0 skipped | `pytest -q -rs`; `pre-commit run --all-files` clean |
+
+Display benchmark (`scripts/benchmark_scene.py`, SrTiO3, Intel Meteor Lake integrated
+graphics, Mesa 25.2.8, 1100 × 700 viewport, 8× MSAA). "Drag step" is a synthetic
+left-button drag through VTK's interactor with every step repainted before the next.
+
+| Cells | Atoms | Bonds | Build (s) | Load (s) | Drag step (ms) | Live detail |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2³ | 71 | 192 | 0.02* | 0.16 | 38 | 40×28 spheres |
+| 6³ | 1,315 | 4,320 | 0.03 | 0.09 | 72 | 40×28 |
+| 10³ | 5,631 | 19,200 | 0.07 | 0.22 | 84 | 24×16 |
+| 14³ | 14,939 | 51,744 | 0.17 | 0.41 | 88 | 16×10 |
+| 16³ | 22,065 | 76,800 | 0.26 | 0.50 | 105 | 16×10 |
+| 20³ | 42,461 | 148,800 | 0.59 | 0.82 | 150 | 16×10 |
+
+\* first call 0.49 s (one-time import of ASE's neighbour list). The live view lowers
+sphere and bond tessellation above 2,000 and 8,000 atoms (POV-Ray always renders exact
+spheres); without this, 14³ took 232 ms per step and 20³ 640 ms. The soft limit of
+20,000 atoms keeps a drag step near 100 ms or less on this hardware.
+
+### M2 caveats
+
+- The default bond rule (1.1 × sum of covalent radii, metal–metal off in compounds)
+  also bonds Sr–O in perovskites; switch the pair off in the Bonds panel if not wanted.
+- Bonds are drawn only between displayed atoms (no bonds to atoms beyond the boundary).
+- Each synthetic drag step costs at least ~38 ms even for tiny scenes; most of it is
+  spent in Qt while PyVistaQt's `QOpenGLWidget` presents the frame. It predates M2 and
+  is not investigated further here; VTK's own `QVTKRenderWindowInteractor` is the
+  documented fallback if real interaction proves sluggish.
+- Supercell drag handles (M5), reciprocal-axis view directions, and lighting (M4,
+  POV-Ray currently casts hard shadows) are not part of M2.
+
+## M2 first increment: boundary atoms, selection, hiding (requested ahead of M1)
 
 | Check | Result | How |
 | --- | --- | --- |
@@ -202,7 +256,20 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 - **Picking** uses an analytic ray–sphere intersection with the shared camera model
   (`core/picking.py`), not VTK pickers; a click is a left press/release that moves at
   most 3 px. The selection highlight is a translucent shell drawn only in the live view.
-- **Undo/redo:** `QUndoStack` with one command type that swaps `SceneSettings`.
+- **Undo/redo:** `QUndoStack` with one command type that swaps `SceneSettings`;
+  commands with the same merge key (bond tolerance, bond radius) merge when consecutive.
+- **Supercells (M2):** repetitions live in `SceneSettings` and are always expanded from
+  the original structure; boundary images are added on the faces of the repeated block.
+  Image offsets stay relative to input positions, so IDs, selection, and hidden atoms
+  are stable across repetition changes.
+- **Bonds (M2):** `core/bonds.py` searches the original cell once with ASE's
+  neighbour list (any cell shape) and stores `(i, j, integer shift)` without reverse
+  duplicates; `build_geometry` maps them onto displayed images and gives both renderers
+  explicit endpoint index pairs. Rule and per-pair overrides are in `BondSettings`.
+- **Live-view level of detail (M2):** sphere/bond tessellation drops at 2,000 and 8,000
+  displayed atoms; bonds use the same GPU instancing (`vtkGlyph3DMapper`) as atoms.
+- **Scene panel (M2):** `gui/panels/scene_panel.py` emits requests only; the window turns
+  them into undoable commands and syncs the panel with signals blocked.
 - **Import (M1):** ASE parses; `io/readers.py` adds detection, provenance (path, name,
   format, SHA-256, size, time, reader version, block, element mapping), and checks.
   Questions (format, data block, element mapping) are exceptions that the GUI answers
@@ -220,5 +287,6 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 
 ## Next bounded action
 
-Review and merge the M1 branch. Then complete M2: numeric supercell repetitions,
-periodic bonds, view-direction buttons, and a warning before large expansions.
+Review and merge the M2 branch. Then M3: output-aspect frame, low-resolution POV-Ray
+preview, final render with cancellation and stale-result suppression, and a small
+alpha catalog of materials and backgrounds.

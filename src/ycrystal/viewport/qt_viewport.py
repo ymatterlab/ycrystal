@@ -22,7 +22,9 @@ from PySide6.QtCore import QEvent, QObject, QPointF, Qt, Signal  # noqa: E402
 from PySide6.QtGui import QKeyEvent, QKeySequence, QMouseEvent  # noqa: E402
 from PySide6.QtWidgets import QVBoxLayout, QWidget  # noqa: E402
 from pyvistaqt import QtInteractor  # noqa: E402
-from vtkmodules.vtkFiltersSources import vtkSphereSource  # noqa: E402
+from vtkmodules.vtkCommonTransforms import vtkTransform  # noqa: E402
+from vtkmodules.vtkFiltersGeneral import vtkTransformFilter  # noqa: E402
+from vtkmodules.vtkFiltersSources import vtkCylinderSource, vtkSphereSource  # noqa: E402
 from vtkmodules.vtkRenderingCore import vtkActor, vtkGlyph3DMapper  # noqa: E402
 
 from ycrystal.core.camera import Camera  # noqa: E402
@@ -34,6 +36,19 @@ if qtpy.API_NAME != "PySide6":  # pragma: no cover - environment guard
 
 
 CLICK_TOLERANCE_PX = 3.0
+
+#: Live-view level of detail: (max displayed atoms, sphere theta, sphere phi, bond sides).
+#: Fewer triangles keep large supercells interactive; POV-Ray renders exact spheres.
+DETAIL_LEVELS = ((2000, 40, 28, 20), (8000, 24, 16, 12), (None, 16, 10, 8))
+
+
+def detail_for(n_atoms: int) -> tuple[int, int, int]:
+    for limit, theta, phi, sides in DETAIL_LEVELS:
+        if limit is None or n_atoms <= limit:
+            return theta, phi, sides
+    raise AssertionError("unreachable")
+
+
 HIGHLIGHT_SCALE = 1.25
 HIGHLIGHT_COLOR = (1.0, 0.72, 0.0)
 
@@ -95,6 +110,8 @@ class StructureViewport(QWidget):
         self._plotter.add_axes(interactive=False, line_width=2)
         self._atoms_actor: vtkActor | None = None
         self._highlight_actor: vtkActor | None = None
+        self._bonds_actor: vtkActor | None = None
+        self.detail: tuple[int, int, int] = detail_for(0)
         self._geometry: DisplayGeometry | None = None
         # Any camera change (mouse navigation, wheel, Fit, programmatic) notifies listeners.
         self._plotter.renderer.GetActiveCamera().AddObserver(
@@ -104,20 +121,34 @@ class StructureViewport(QWidget):
     # ----- scene ------------------------------------------------------------------
     def set_scene(self, geometry: DisplayGeometry, environment: Environment) -> None:
         plotter = self._plotter
-        for actor in (self._atoms_actor, self._highlight_actor):
+        for actor in (self._atoms_actor, self._highlight_actor, self._bonds_actor):
             if actor is not None:
                 plotter.remove_actor(actor, render=False)
         self._highlight_actor = None
+        self._bonds_actor = None
         plotter.remove_actor("cell_edges", render=False)
         plotter.set_background(environment.background)
 
         colors = np.clip(np.round(np.asarray(geometry.colors) * 255), 0, 255).astype(np.uint8)
-        actor = _sphere_actor(geometry.positions, geometry.radii, colors)
+        theta, phi, sides = detail_for(len(geometry))
+        self.detail = (theta, phi, sides)
+        actor = _sphere_actor(geometry.positions, geometry.radii, colors, (theta, phi))
         prop = actor.GetProperty()
         prop.SetSpecular(0.3)
         prop.SetSpecularPower(40)
         plotter.add_actor(actor, reset_camera=False, render=False)
         self._atoms_actor = actor
+
+        if len(geometry.bonds):
+            bonds_actor = _bond_actor(
+                geometry.positions, geometry.bonds, colors, geometry.bond_radius, sides
+            )
+            bond_prop = bonds_actor.GetProperty()
+            bond_prop.SetSpecular(0.3)
+            bond_prop.SetSpecularPower(40)
+            bonds_actor.SetPickable(False)
+            plotter.add_actor(bonds_actor, reset_camera=False, render=False)
+            self._bonds_actor = bonds_actor
 
         if len(geometry.cell_edges):
             edges = np.asarray(geometry.cell_edges, dtype=float)
@@ -260,15 +291,18 @@ class StructureViewport(QWidget):
 
 
 def _sphere_actor(
-    positions: np.ndarray, radii: np.ndarray, colors: np.ndarray | None = None
+    positions: np.ndarray,
+    radii: np.ndarray,
+    colors: np.ndarray | None = None,
+    resolution: tuple[int, int] = (40, 28),
 ) -> vtkActor:
     """Instanced spheres (one mesh, many atoms) via vtkGlyph3DMapper."""
     points = pv.PolyData(np.asarray(positions, dtype=float).reshape(-1, 3))
     points.point_data["radius"] = np.asarray(radii, dtype=float)
     sphere = vtkSphereSource()
     sphere.SetRadius(1.0)
-    sphere.SetThetaResolution(40)
-    sphere.SetPhiResolution(28)
+    sphere.SetThetaResolution(resolution[0])
+    sphere.SetPhiResolution(resolution[1])
     mapper = vtkGlyph3DMapper()
     mapper.SetInputData(points)
     mapper.SetSourceConnection(sphere.GetOutputPort())
@@ -283,6 +317,48 @@ def _sphere_actor(
         mapper.ScalarVisibilityOn()
     else:
         mapper.ScalarVisibilityOff()
+    actor = vtkActor()
+    actor.SetMapper(mapper)
+    return actor
+
+
+def _bond_actor(
+    positions: np.ndarray, bonds: np.ndarray, colors: np.ndarray, radius: float, sides: int = 20
+) -> vtkActor:
+    """Instanced half-bond cylinders, each coloured like the atom it starts from."""
+    positions = np.asarray(positions, dtype=float)
+    first, second = positions[bonds[:, 0]], positions[bonds[:, 1]]
+    middle = 0.5 * (first + second)
+    starts = np.vstack([first, second])
+    ends = np.vstack([middle, middle])
+    vectors = ends - starts
+    lengths = np.linalg.norm(vectors, axis=1)
+    points = pv.PolyData(0.5 * (starts + ends))
+    points.point_data["direction"] = vectors
+    points.point_data["scale"] = np.column_stack(
+        [lengths, np.full(len(lengths), radius), np.full(len(lengths), radius)]
+    )
+    points.point_data["colors"] = np.vstack([colors[bonds[:, 0]], colors[bonds[:, 1]]])
+    cylinder = vtkCylinderSource()  # unit height and radius along the y axis
+    cylinder.SetHeight(1.0)
+    cylinder.SetRadius(1.0)
+    cylinder.SetResolution(sides)
+    to_x_axis = vtkTransform()
+    to_x_axis.RotateZ(-90.0)  # glyph orientation aligns the x axis with each bond
+    aligned = vtkTransformFilter()
+    aligned.SetInputConnection(cylinder.GetOutputPort())
+    aligned.SetTransform(to_x_axis)
+    mapper = vtkGlyph3DMapper()
+    mapper.SetInputData(points)
+    mapper.SetSourceConnection(aligned.GetOutputPort())
+    mapper.SetOrientationArray("direction")
+    mapper.SetOrientationModeToDirection()
+    mapper.SetScaleArray("scale")
+    mapper.SetScaleModeToScaleByVectorComponents()
+    mapper.SetScalarModeToUsePointFieldData()
+    mapper.SelectColorArray("colors")
+    mapper.SetColorModeToDirectScalars()
+    mapper.ScalarVisibilityOn()
     actor = vtkActor()
     actor.SetMapper(mapper)
     return actor

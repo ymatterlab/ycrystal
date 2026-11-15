@@ -154,3 +154,30 @@ def test_structure_replace_keeps_validation():
     with pytest.raises(ValueError):
         structure.replace(occupancy=[0.5, 2.0, 1.0])
     assert replace(SceneSettings(), boundary_images=False).boundary_images is False
+
+
+def test_schema2_round_trip_of_repetitions_cells_and_bonds(tmp_path):
+    from ycrystal.core.bonds import BondSettings
+
+    bonds = BondSettings(tolerance=1.25, radius=0.2).with_pair(("O", "Sr"), False)
+    scene = SceneSettings(repetitions=(2, 3, 1), cell_mode="outline", bonds=bonds)
+    project = Project(read_structure(FIXTURES / "SrTiO3.cif"), scene=scene)
+    again = load_project(save_project(tmp_path / "s2.ycrystal", project))
+    assert again.scene == scene
+    data = json.loads((tmp_path / "s2.ycrystal").read_text())
+    assert data["schema_version"] == 2
+    assert data["scene"]["repetitions"] == [2, 3, 1]
+    assert data["scene"]["bonds"]["pairs"] == [{"elements": ["O", "Sr"], "enabled": False}]
+
+
+def test_schema1_project_opens_unchanged_without_bonds(tmp_path):
+    data = project_to_dict(Project(read_structure(FIXTURES / "SrTiO3.cif")))
+    data["schema_version"] = 1
+    for key in ("repetitions", "cell_mode", "bonds"):
+        del data["scene"][key]
+    path = tmp_path / "old.ycrystal"
+    path.write_text(json.dumps(data))
+    project = load_project(path)
+    assert project.scene.repetitions == (1, 1, 1)
+    assert project.scene.bonds.enabled is False  # schema 1 had no bonds
+    assert len(build_geometry(project.structure, project.scene).bonds) == 0

@@ -68,7 +68,14 @@ def test_atoms_written_with_ids_and_textures(scene):
         assert f"Ycr_Texture_{element}" in line
     for element in set(geometry.elements):
         assert f"#declare Ycr_Texture_{element} = texture" in pov
-    assert pov.count("cylinder {") == 12
+    cylinders = [line for line in pov.splitlines() if line.startswith("cylinder")]
+    edges = [line for line in cylinders if "Ycr_Texture_Cell" in line]
+    assert len(edges) == 12
+    # Bonds: one cylinder for a same-element bond, two halves otherwise.
+    halves = sum(
+        1 if geometry.elements[a] == geometry.elements[b] else 2 for a, b in geometry.bonds
+    )
+    assert len(cylinders) - len(edges) == halves
 
 
 def test_background_options(scene):
@@ -115,3 +122,20 @@ def test_write_files_to_directory_with_spaces_and_unicode(tmp_path, scene):
 def test_render_settings_validation():
     with pytest.raises(ValueError):
         RenderSettings(width=0, height=10)
+
+
+def test_bonds_are_written_as_half_cylinders():
+    from ycrystal.core.samples import perovskite_srtio3
+
+    geometry = build_geometry(perovskite_srtio3())  # 6 Ti–O and 24 Sr–O bonds
+    camera = Camera.looking_along((0.3, -1, -0.2), (0, 0, 1))
+    pov = scene_to_pov(geometry, camera, Environment(), RenderSettings())
+    assert "// Bonds (30)" in pov
+    bond_lines = [
+        line
+        for line in pov.splitlines()
+        if line.startswith("cylinder") and "Ycr_Texture_Cell" not in line
+    ]
+    assert len(bond_lines) == 60  # every bond joins two different elements
+    assert sum("Ycr_Texture_O" in line for line in bond_lines) == 30
+    assert sum("Ycr_Texture_Ti" in line for line in bond_lines) == 6

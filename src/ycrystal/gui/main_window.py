@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
+    QDockWidget,
     QFileDialog,
     QInputDialog,
     QLabel,
@@ -25,15 +26,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
 from ycrystal.core.camera import Camera, default_camera
 from ycrystal.core.scene import (
     AtomId,
     DisplayGeometry,
     SceneSettings,
     build_geometry,
+    count_displayed_atoms,
 )
 from ycrystal.core.structure import Structure
 from ycrystal.gui.commands import SceneSettingsCommand
+from ycrystal.gui.panels.scene_panel import MAX_REPETITIONS, ScenePanel
 from ycrystal.io.project import (
     PROJECT_SUFFIX,
     Project,
@@ -60,6 +64,19 @@ from ycrystal.viewport.qt_viewport import StructureViewport
 SETTINGS_POVRAY = "render/povray_executable"
 SETTINGS_LAST_DIR = "files/last_directory"
 
+#: Ask before displaying more atoms than this (measured; see docs/PROGRESS.md, M2).
+SOFT_LIMIT_ATOMS = 20000
+
+#: View-along directions: (label, tooltip). The named axis points toward the viewer.
+VIEW_AXES = {
+    "a": "Look down a (a toward you)",
+    "b": "Look down b (b toward you)",
+    "c": "Look down c (c toward you)",
+    "x": "Look down Cartesian x",
+    "y": "Look down Cartesian y",
+    "z": "Look down Cartesian z",
+}
+
 OPEN_FILTERS = ";;".join(
     [
         "Structures and projects (*.ycrystal *.cif *.vasp *.poscar POSCAR* CONTCAR* *.in *.pwi)",
@@ -81,7 +98,11 @@ MOUSE_HELP = """<table cellspacing="4">
 <tr><td><b>Delete</b></td><td>Hide the selected atoms (view and exports only)</td></tr>
 <tr><td><b>Esc</b></td><td>Clear the selection</td></tr>
 <tr><td><b>Ctrl + Z</b> / <b>Ctrl + Shift + Z</b></td><td>Undo / redo</td></tr>
+<tr><td><b>a b c / x y z</b> buttons</td><td>Look down an axis (Shift: opposite side)</td></tr>
 </table>
+<p>The Structure panel sets repetitions (cells along a × b × c), boundary atoms, and
+cell edges; the Bonds panel sets bond length tolerance, radius, and element pairs.
+Repetitions are always rebuilt from the original structure.</p>
 <p>Atoms on cell faces, edges, and corners are drawn at every equivalent boundary
 position (View ▸ Show Boundary Atoms). Each drawn ball can be hidden on its own;
 View ▸ Show All Atoms brings hidden balls back.</p>
@@ -151,6 +172,22 @@ class MainWindow(QMainWindow):
 
         self.viewport = StructureViewport(self)
         self.setCentralWidget(self.viewport)
+        self.scene_panel = ScenePanel(self)
+        self.scene_dock = QDockWidget("Scene", self)
+        self.scene_dock.setObjectName("scene_dock")
+        self.scene_dock.setWidget(self.scene_panel)
+        self.scene_dock.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetClosable
+        )
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.scene_dock)
+        self.scene_panel.repetitions_requested.connect(self.set_repetitions)
+        self.scene_panel.boundary_requested.connect(self.set_boundary_images)
+        self.scene_panel.cell_mode_requested.connect(self.set_cell_mode)
+        self.scene_panel.bonds_enabled_requested.connect(self.set_bonds_enabled)
+        self.scene_panel.bond_tolerance_requested.connect(self.set_bond_tolerance)
+        self.scene_panel.bond_radius_requested.connect(self.set_bond_radius)
+        self.scene_panel.bond_pair_requested.connect(self.set_bond_pair)
         self._build_actions()
         self._build_status_bar()
         self.width_spin.setValue(project.output.width)
@@ -277,6 +314,21 @@ class MainWindow(QMainWindow):
         view_menu = self.menuBar().addMenu("&View")
         view_menu.addAction(self.fit_action)
         view_menu.addAction(self.reset_view_action)
+        along_menu = view_menu.addMenu("View Along")
+        self.view_actions: dict[str, QAction] = {}
+        for axis, tip in VIEW_AXES.items():
+            action = QAction(axis, self, toolTip=f"{tip}; Shift: from the opposite side")
+            action.triggered.connect(
+                lambda _checked=False, a=axis: self.view_along(
+                    a,
+                    reverse=bool(
+                        QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier
+                    ),
+                )
+            )
+            self.view_actions[axis] = action
+            along_menu.addAction(action)
+        view_menu.addAction(self.scene_dock.toggleViewAction())
         view_menu.addSeparator()
         view_menu.addAction(self.boundary_action)
         view_menu.addAction(self.show_all_action)
@@ -294,8 +346,21 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.open_action)
         toolbar.addAction(self.save_action)
         toolbar.addSeparator()
-        toolbar.addAction(self.undo_action)
-        toolbar.addAction(self.redo_action)
+        # Short toolbar buttons; the Edit menu items carry the shortcuts and full text.
+        self.toolbar_undo = QAction("Undo", self, enabled=False)
+        self.toolbar_undo.triggered.connect(self.undo_stack.undo)
+        self.toolbar_redo = QAction("Redo", self, enabled=False)
+        self.toolbar_redo.triggered.connect(self.undo_stack.redo)
+        self.undo_stack.canUndoChanged.connect(self.toolbar_undo.setEnabled)
+        self.undo_stack.canRedoChanged.connect(self.toolbar_redo.setEnabled)
+        self.undo_stack.undoTextChanged.connect(
+            lambda text: self.toolbar_undo.setToolTip(f"Undo {text} (Ctrl+Z)")
+        )
+        self.undo_stack.redoTextChanged.connect(
+            lambda text: self.toolbar_redo.setToolTip(f"Redo {text} (Ctrl+Shift+Z)")
+        )
+        toolbar.addAction(self.toolbar_undo)
+        toolbar.addAction(self.toolbar_redo)
         toolbar.addSeparator()
         toolbar.addAction(self.fit_action)
         toolbar.addSeparator()
@@ -317,6 +382,17 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.transparent_check)
         toolbar.addSeparator()
         toolbar.addAction(help_action)
+
+        self.addToolBarBreak()
+        view_bar = self.addToolBar("View along")
+        view_bar.setObjectName("view_toolbar")
+        view_bar.setMovable(False)
+        view_bar.addWidget(QLabel(" View along "))
+        for axis in "abc":
+            view_bar.addAction(self.view_actions[axis])
+        view_bar.addSeparator()
+        for axis in "xyz":
+            view_bar.addAction(self.view_actions[axis])
 
     def _build_status_bar(self) -> None:
         bar = self.statusBar()
@@ -579,6 +655,16 @@ class MainWindow(QMainWindow):
         item, ok = QInputDialog.getItem(self, title, label, items, 0, False)
         return item if ok else None
 
+    def ask_confirm(self, title: str, text: str) -> bool:
+        answer = QMessageBox.question(
+            self,
+            title,
+            text,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        return answer == QMessageBox.StandardButton.Yes
+
     def ask_text(self, title: str, label: str, default: str = "") -> str | None:
         text, ok = QInputDialog.getText(self, title, label, QLineEdit.EchoMode.Normal, default)
         return text if ok else None
@@ -595,19 +681,38 @@ class MainWindow(QMainWindow):
         self.geometry = geometry
         self.viewport.set_scene(geometry, self.environment)
         hidden = f" · {geometry.hidden_count} hidden" if geometry.hidden_count else ""
+        a, b, c = self.scene_settings.repetitions
         self.structure_label.setText(
-            f"{self.structure.composition()} · {len(geometry)} atoms shown{hidden} · "
-            "repetitions 1 × 1 × 1"
+            f"{self.structure.composition()} · {_count(len(geometry), 'atom')}, "
+            f"{_count(len(geometry.bonds), 'bond')} shown{hidden} · {a} × {b} × {c} cells"
         )
         self.show_all_action.setEnabled(geometry.hidden_count > 0)
         self.selection = {atom_id for atom_id in self.selection if atom_id in geometry}
         self._update_selection()
+        self._sync_panel()
+
+    def _sync_panel(self) -> None:
+        settings = self.scene_settings
+        pairs = summarize_pairs(periodic_bonds(self.structure, settings.bonds))
+        self.scene_panel.sync(
+            settings,
+            pairs,
+            len(self.geometry),
+            len(self.geometry.bonds),
+            self.geometry.hidden_count,
+        )
 
     def apply_scene_settings(self, settings: SceneSettings) -> None:
-        """Rebuild the displayed geometry from the structure (used by undo commands)."""
+        """Rebuild the displayed geometry from the structure (used by undo commands).
+
+        A change of repetitions also frames the new block (keeping the orientation).
+        """
+        refit = settings.repetitions != self.scene_settings.repetitions
         self.scene_settings = settings
         self.boundary_action.setChecked(settings.boundary_images)
         self.set_display_geometry(build_geometry(self.structure, settings))
+        if refit and self._camera_initialised:
+            self.viewport.fit()
 
     def trigger_shortcut(self, keys: QKeySequence) -> bool:
         """Trigger the enabled window action bound to ``keys``; True if one matched."""
@@ -660,11 +765,100 @@ class MainWindow(QMainWindow):
     def set_boundary_images(self, enabled: bool) -> None:
         if enabled != self.scene_settings.boundary_images:
             text = "Show Boundary Atoms" if enabled else "Hide Boundary Atoms"
-            self.undo_stack.push(
-                SceneSettingsCommand(
-                    self, replace(self.scene_settings, boundary_images=enabled), text
-                )
-            )
+            self._push_settings(replace(self.scene_settings, boundary_images=enabled), text)
+
+    # ----- repetitions, cell edges, bonds (all undoable) -------------------------------
+    def _push_settings(self, new: SceneSettings, text: str, merge_key: str = "") -> bool:
+        if new == self.scene_settings:
+            self._sync_panel()
+            return False
+        self.undo_stack.push(SceneSettingsCommand(self, new, text, merge_key))
+        return True
+
+    def set_repetitions(self, repetitions: tuple[int, int, int]) -> bool:
+        """Show a × b × c cells, rebuilt from the original structure. Returns True if
+        the display changed; asks first when more than SOFT_LIMIT_ATOMS would be shown."""
+        a, b, c = (max(1, min(MAX_REPETITIONS, int(r))) for r in repetitions)
+        new = replace(self.scene_settings, repetitions=(a, b, c))
+        if new == self.scene_settings:
+            self._sync_panel()
+            return False
+        count = count_displayed_atoms(self.structure, new)
+        if count > SOFT_LIMIT_ATOMS and not self.ask_confirm(
+            "Large Expansion",
+            f"{a} × {b} × {c} cells would display {count:,} atoms (more than "
+            f"{SOFT_LIMIT_ATOMS:,}). The view may become slow and POV-Ray renders take "
+            "longer. Continue?",
+        ):
+            self._sync_panel()
+            return False
+        return self._push_settings(new, f"Repetitions {a} × {b} × {c}")
+
+    def set_cell_mode(self, mode: str) -> None:
+        if mode == "none":
+            new = replace(self.scene_settings, show_cell=False)
+        else:
+            new = replace(self.scene_settings, show_cell=True, cell_mode=mode)
+        self._push_settings(new, "Change Cell Edges")
+
+    def set_bonds_enabled(self, enabled: bool) -> None:
+        bonds = replace(self.scene_settings.bonds, enabled=enabled)
+        self._push_settings(
+            replace(self.scene_settings, bonds=bonds), "Show Bonds" if enabled else "Hide Bonds"
+        )
+
+    def set_bond_tolerance(self, value: float) -> None:
+        bonds = replace(self.scene_settings.bonds, tolerance=round(float(value), 4))
+        self._push_settings(
+            replace(self.scene_settings, bonds=bonds),
+            "Change Bond Length Tolerance",
+            merge_key="bond-tolerance",
+        )
+
+    def set_bond_radius(self, value: float) -> None:
+        bonds = replace(self.scene_settings.bonds, radius=round(float(value), 4))
+        self._push_settings(
+            replace(self.scene_settings, bonds=bonds), "Change Bond Radius", merge_key="bond-radius"
+        )
+
+    def set_bond_pair(self, pair: Pair, enabled: bool) -> None:
+        a, b = sorted(pair)
+        bonds = self.scene_settings.bonds.with_pair((a, b), enabled)
+        verb = "Show" if enabled else "Hide"
+        self._push_settings(replace(self.scene_settings, bonds=bonds), f"{verb} {a}–{b} Bonds")
+
+    def view_along(self, axis: str, reverse: bool = False) -> None:
+        """Look down a lattice (a, b, c) or Cartesian (x, y, z) axis.
+
+        The axis points toward the viewer (away with ``reverse``); the next axis in
+        c, b, a (or z, y, x) order that is not parallel to it points up.
+        """
+        cell = self.structure.cell
+        if axis in "abc":
+            if not self.structure.has_cell:
+                return
+            index = "abc".index(axis)
+            toward = cell[index]
+            ups = [cell[2], cell[1], cell[0]]
+        else:
+            index = "xyz".index(axis)
+            toward = np.eye(3)[index]
+            ups = list(np.eye(3)[::-1])
+        toward = toward / np.linalg.norm(toward)
+        if reverse:
+            toward = -toward
+        up = next(u for u in ups if np.linalg.norm(np.cross(u / np.linalg.norm(u), toward)) > 1e-3)
+        current = self.current_camera()
+        camera = Camera.looking_along(
+            -toward,
+            up,
+            focal_point=current.focal_point,
+            distance=current.distance,
+            parallel_scale=current.parallel_scale,
+        )
+        width, height = self.viewport.render_size()
+        points, radii = self.geometry.points_and_radii()
+        self.viewport.set_camera(camera.fitted(points, radii, width / height))
 
     def _update_selection(self) -> None:
         indices = [self.geometry.index_of(atom_id) for atom_id in self.selection]
@@ -884,3 +1078,7 @@ def _same_camera(a: Camera, b: Camera) -> bool:
 def _source_info(structure: Structure) -> dict:
     source = structure.metadata.get("source")
     return source if isinstance(source, dict) else {}
+
+
+def _count(n: int, noun: str) -> str:
+    return f"{n} {noun}{'' if n == 1 else 's'}"
