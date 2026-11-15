@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Prepare reproducible crystal-structure figures and render them with POV-Ray"
 readme = "README.md"
 license = "MIT"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 authors = [{ name = "Y-Matter Lab" }]
 requires-python = ">=3.10"
 classifiers = [
@@ -55,6 +55,9 @@ where = ["src"]
     "thumbnails/index.json",
     "thumbnails/materials/*.png",
     "thumbnails/environments/*.png",
+]
+"ycrystal.resources" = [
+    "*.svg",
 ]
 
 [tool.pytest.ini_options]

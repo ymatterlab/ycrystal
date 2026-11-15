@@ -10,6 +10,7 @@ API guarantee yet. Source analysis is static and does not initialize the applica
 - [Readers, projects, and styles](io.md): imports, versioned project files, reusable styles.
 - [POV export and render jobs](rendering.md): text output, discovery, result objects, lifecycle.
 - [Material, environment, and lighting presets](presets.md): catalogs, manifests, thumbnails.
+- [Command line, batch rendering, and desktop](cli.md): `ycrystal` options without a window, launcher.
 - [GUI adapters](gui.md): selected window/viewport interfaces and asynchronous rendering.
 
 For practical examples and prerequisites, see [Python examples](../development/examples.md).

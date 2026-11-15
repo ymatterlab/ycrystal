@@ -1,0 +1,7 @@
+# Source distribution: package data comes from pyproject.toml; add the files a user or
+# packager needs to install, test, and reproduce the examples.
+include constraints.txt CHANGELOG.md THIRD_PARTY_NOTICES.md CONTRIBUTING.md
+recursive-include examples *.ycrystal *.ycstyle
+recursive-include tests/fixtures *
+include tests/fixtures/README.md
+prune tests/__pycache__

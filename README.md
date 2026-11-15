@@ -32,17 +32,28 @@ cd ycrystal
 
 Use the system interpreter: Conda's bundled `libstdc++` can prevent Mesa from
 loading. POV-Ray is needed for PNG rendering; viewing and exporting `.pov`/`.ini`
-work without it. Check it with `.venv/bin/ycrystal --check-renderer`.
+work without it. Check it with `.venv/bin/ycrystal --check-renderer`. While the
+repository is private, clone it with `gh repo clone ymatterlab/ycrystal` or over SSH.
+
+```bash
+.venv/bin/ycrystal --install-desktop                                    # menu launcher
+.venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png  # no window
+```
+
+Version 0.1.0; see the [changelog](CHANGELOG.md), the
+[support matrix](docs/guide/support.md), and the [third-party notices](THIRD_PARTY_NOTICES.md).
 
 ## Guides and reference
 
-- [Documentation home](docs/index.md) and [installation details](docs/guide/install.md).
+- [Documentation home](docs/index.md), [installation details](docs/guide/install.md), and
+  [examples and the command line](docs/guide/examples.md).
 - [Your first crystal figure](docs/guide/first-figure.md), [controls](docs/guide/controls.md),
   [supported formats and projects](docs/FORMATS.md), [rendering](docs/guide/rendering.md),
   and [troubleshooting](docs/guide/troubleshooting.md).
 - [Developer architecture](docs/development/architecture.md),
   [Python examples](docs/development/examples.md), and [API reference](docs/reference/index.md).
-- [Progress and roadmap](docs/PROGRESS.md) and [contributing](CONTRIBUTING.md).
+- [Progress and roadmap](docs/PROGRESS.md), [release checklist](docs/development/release.md),
+  and [contributing](CONTRIBUTING.md).
 
 Preview and build the source-based reference locally:
 

@@ -1,0 +1,94 @@
+# Release procedure and checklist
+
+How a Ycrystal release is prepared, and the checklist of version 0.1.0. Publication
+(tag, GitHub release, making the repository public) is the maintainer's decision and
+is not part of this procedure.
+
+## Procedure
+
+1. Update `__version__` in `src/ycrystal/__init__.py` and `CHANGELOG.md`.
+2. Run the checks on the reference machine (Linux Mint, X11, POV-Ray 3.7 package):
+
+    ```bash
+    .venv/bin/pre-commit run --all-files
+    YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs
+    .venv/bin/python scripts/docs_examples.py
+    .venv-docs/bin/zensical build --clean --strict
+    ```
+
+    `tests/test_release.py` includes the end-to-end workflow (open a CIF, rotate and
+    pan, expand to 2 × 2 × 2, change an element's finish, choose a studio, render, save,
+    close, reopen without the source file, render again, then POSCAR and QE imports and
+    the rejection of `ibrav ≠ 0`), the command line, the desktop launcher, and the
+    examples.
+3. Clean install: in a new directory, follow [Install and launch](../guide/install.md)
+   exactly (clone, `venv`, `pip install -e . -c constraints.txt`), then run
+   `ycrystal --version`, `--check-renderer`, an example `--render`, a short GUI launch,
+   and `--install-desktop` into a temporary `XDG_DATA_HOME` checked with
+   `desktop-file-validate`.
+4. Build the artifacts and install the wheel into another fresh environment:
+
+    ```bash
+    uv build -o dist        # dist/ycrystal-X.Y.Z.tar.gz and -py3-none-any.whl
+    /usr/bin/python3 -m venv /tmp/yc-wheel
+    /tmp/yc-wheel/bin/python -m pip install dist/ycrystal-X.Y.Z-py3-none-any.whl -c constraints.txt
+    /tmp/yc-wheel/bin/ycrystal examples/SrTiO3-studio.ycrystal --render /tmp/check.png
+    ```
+
+    The wheel contains the presets, thumbnails, and icon; the source distribution adds
+    `constraints.txt`, the examples, the test fixtures, and the notices.
+5. Record the results in `docs/PROGRESS.md` and in the checklist below, marking each
+   item passed, failed, or unverified.
+
+## Checklist for 0.1.0
+
+Status on 15 November 2026 (Linux Mint 22.1, Intel Core Ultra 5 135U, 8 GB RAM, Intel
+Meteor Lake graphics with Mesa 25.2, POV-Ray 3.7.0.10 package, Python 3.12.3).
+
+### Installation
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| System prerequisites (`git povray povray-includes libxcb-cursor0 python3.12-venv`) installed from the Mint repositories | Passed | `dpkg-query`: all installed (POV-Ray 1:3.7.0.10-3build4) |
+| Clean checkout + documented `venv`/`pip` commands | Passed | Fresh directory, `/usr/bin/python3 -m venv`, `pip install -e . -c constraints.txt` (warm pip cache) |
+| First-time download of the wheels (cold pip cache) | Unverified | The development machine's pip cache was warm |
+| `git clone https://…` as documented | Failed while the repository is private | Needs credentials; `gh repo clone` works and is documented |
+| `ycrystal --version`, `--check-renderer` | Passed | `ycrystal 0.1.0`; `PASS … within 0.14 px` |
+| GUI starts from the clean install | Passed | Example project opened; window running after 10 s without errors |
+| Desktop launcher files written, valid, removed | Passed | `--install-desktop` into a temporary `XDG_DATA_HOME`; `desktop-file-validate` silent; `--uninstall-desktop` removed all three files |
+| Launcher appears in the Cinnamon menu and starts Ycrystal; double-clicking a `.ycrystal` file opens it | Unverified | Needs a person at the desktop (`ycrystal --install-desktop`, then check the menu and the file manager) |
+| Wheel installs into a fresh environment and renders an example | Passed | Non-editable install; 30 materials, 12 environments, 42 thumbnails, icon present |
+
+### Workflow and regressions
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| End-to-end workflow of the plan (CIF → … → reopen without source → render again) | Passed (automated, on the Mint display) | `test_release_workflow`: identical images before and after reopening |
+| Same workflow by hand | Unverified | Recommended before publishing |
+| POSCAR and QE (`ibrav = 0`) imports of the same structure | Passed | Same test; reader equivalence tests (M1) |
+| `ibrav ≠ 0` rejected with a clear message | Passed | GUI and command line |
+| Example projects render from the command line | Passed | Each in about 1–2 s at 400 × 300 |
+| Full automated suite | Passed in CI | Ubuntu 24.04, Xvfb, POV-Ray 3.7 (every pull request) |
+| Documentation builds without warnings; examples execute | Passed | `zensical build --strict`; `scripts/docs_examples.py`; CI doctests |
+
+### Performance (development laptop)
+
+| Displayed atoms | Bonds | Load (s) | Drag step (ms) |
+| --- | --- | --- | --- |
+| 71 (SrTiO3 2³) | 192 | 0.14 | 31 |
+| 1,315 (SrTiO3 6³) | 4,320 | 0.10 | 70 |
+
+`scripts/benchmark_scene.py --sizes 2 6 --frames 15`; larger sizes were measured in M2
+(20,000 atoms: about 100 ms per drag step). Preview render times are in
+[the appearance guide](../guide/appearance.md#lighting) and `docs/PROGRESS.md`.
+
+### Review
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Dependency constraints | Passed | Lower bounds in `pyproject.toml`; the tested set pinned in `constraints.txt` (monthly Dependabot updates); Python 3.10/3.11 allowed but unverified |
+| Licences | Passed | MIT; LGPL dependencies installed separately; see `THIRD_PARTY_NOTICES.md` |
+| Exported include dependencies | Passed | Scene headers list them; export warns when missing; documented (`povray-includes`) |
+| Known limitations | Passed | [Troubleshooting and limitations](../guide/troubleshooting.md), [support matrix](../guide/support.md) |
+| Artifacts | Passed | `uv build`: sdist and wheel `ycrystal-0.1.0` |
+| Tag `v0.1.0`, GitHub release, public repository | Not done | Maintainer's decision |
