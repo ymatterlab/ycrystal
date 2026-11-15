@@ -93,6 +93,34 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## FR-COLOR-01: explicit colour entry and colour names (post-0.1.0, 15 November 2026)
+
+New development after the 0.1.0 baseline (not part of M0–M6); branch
+`feature/color-input-names`. Purpose: reproducible element colours without visual
+matching, and colours identifiable by text. An audit against the written requirement
+found and fixed: three bare numbers ≤ 1 and HSV/HSL percentages were silently read as
+fractions; hue ran to 360 with whole-number HSV/HSL (rounding up to two channel steps);
+greys lost their hue; OK accepted unapplied invalid text; named-colour and spectrum texts
+lacked RGB values; exact named colours were labelled "nearest"; the named-colour grid had
+no keyboard access; no note when a material hides the colour.
+
+| Acceptance item | Result | Evidence |
+| --- | --- | --- |
+| 1. RGB `(255, 0, 0)`, HEX `#FF0000`, HSV `(0°, 100%, 100%)`, HSL `(0°, 100%, 50%)`, and `red` give the same colour; black, white, grey, custom colours, range ends (hue 359), round trips | Pass | `test_five_notations_give_the_same_red`, `test_boundaries_and_custom_colours`, `test_each_representation_sets_the_same_dialog_colour`; repeated HSV↔HSL↔hex switching over 4,096 colours stays within one 8-bit step (`test_representation_round_trips_stay_within_one_channel`); integers are 0–255 and decimals 0–1, never guessed (`test_numbers_are_never_reinterpreted`) |
+| 2. Hover/focus texts: named swatch and element colour cell show name, HEX, RGB; spectrum hover updates per location without assigning; non-catalogue colours get exact values plus an explicitly approximate name | Pass | `test_named_swatch_tooltip_text` (`red — #FF0000 — RGB (255, 0, 0)`), `test_colour_buttons_name_their_colour_and_use_the_dialog`, `test_spectrum_hover_does_not_assign`, `test_label_combines_description_and_name` (exact vs nearest) |
+| 3. Keyboard-only editing and selection; invalid entries cannot be accepted; Cancel restores; one undo step | Pass | `test_keyboard_only_selection_and_names`, `test_invalid_text_blocks_ok`, `test_cancel_undo_persistence_and_export` |
+| 4. Scene, live viewport, `.pov` export, reopened project, and imported style keep the base colour | Pass | same test: geometry colour, `Ycr_sRGB(…)` in the export, project and style values identical |
+| 5. Coordinates, radius, material, opacity unchanged by colour edits; own-pigment materials explained | Pass | same test; `test_colour_note_for_materials_with_own_pigment` |
+| Bug reported on the Mint desktop: the dialog took the element's colour as background | Fixed | The colour button's style sheet was unscoped and cascaded into the dialog (its child). Now scoped to `QPushButton#colorButton`, and the dialog is parented to the window; `test_dialog_does_not_take_the_button_colour` |
+| Manual Appearance check on the Mint desktop (numeric entry, hover/focus texts, keyboard, Cancel/Undo, restoration) | Unverified | Needs a person; the automated GUI tests ran on the Mint display |
+
+Unchanged by design: the plain colour descriptions (vocabulary and rules) approved by the
+project owner. The colour model is the existing sRGB 0–1 triple in `SceneSettings`
+(no schema change; 0.1.0 projects open unchanged). Tests: 51 conversion and 14 dialog/GUI
+tests. Caveats: descriptions are English only and approximate; nearest names use
+CIEDE2000 (sRGB, D65); no screen colour picker; the spectrum itself has no keyboard
+navigation (the fields and the named-colour grid do).
+
 ## M6 acceptance evidence
 
 Gate: a clean-install demonstration using only documented instructions, a reproducible

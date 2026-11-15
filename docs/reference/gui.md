@@ -51,6 +51,15 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - render_png
         - check_renderer
 
+::: ycrystal.gui.color_dialog.ColorDialog
+    options:
+      members:
+        - color_changed
+        - color
+        - set_color
+        - hover_text
+        - get_color
+
 ::: ycrystal.gui.gallery.PresetGallery
     options:
       members:
