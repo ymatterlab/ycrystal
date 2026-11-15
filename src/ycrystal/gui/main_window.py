@@ -17,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import QSettings, Qt, QTimer
-from PySide6.QtGui import QAction, QKeySequence, QPixmap, QUndoStack
+from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap, QUndoStack
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ycrystal.core import aspect
+from ycrystal.core import aspect, measure
 from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
 from ycrystal.core.camera import Camera, default_camera
 from ycrystal.core.lighting import resolve_lighting
@@ -54,6 +54,7 @@ from ycrystal.gui.commands import SceneSettingsCommand
 from ycrystal.gui.gallery import TARGET_DEFAULT, TARGET_SELECTION, PresetGallery
 from ycrystal.gui.lighting_setup import LightingSetupWindow
 from ycrystal.gui.panels.appearance_panel import AppearancePanel
+from ycrystal.gui.panels.measurement_panel import MeasurementPanel, MeasurementRow
 from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
 from ycrystal.gui.panels.scene_panel import MAX_REPETITIONS, ScenePanel
 from ycrystal.io.project import (
@@ -248,6 +249,10 @@ class MainWindow(QMainWindow):
         and exported.
     selection
         Selected displayed atoms, as a set of [`AtomId`][ycrystal.core.scene.AtomId].
+    measurements
+        [`MeasurementSession`][ycrystal.core.measure.MeasurementSession]: the
+        measurement mode, the atoms picked so far, and this session's distances and
+        angles (not saved in projects).
     undo_stack
         ``QUndoStack`` of display-setting, material, and background changes. Camera,
         output size, and file actions are not undoable.
@@ -324,6 +329,8 @@ class MainWindow(QMainWindow):
         self.last_style_notes: list[str] = []
         self.last_info: tuple[str, str] | None = None
         self.selection: set[AtomId] = set()
+        self.measurements = measure.MeasurementSession(self.structure)
+        self._measure_revealed = False  # the panel opens by itself only once
         self.undo_stack = QUndoStack(self)
         # Lighting Setup window (created on first use) and an uncommitted drag preview.
         self.lighting_setup: LightingSetupWindow | None = None
@@ -387,6 +394,18 @@ class MainWindow(QMainWindow):
         self.preview_dock.setFeatures(self.scene_dock.features())
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.preview_dock)
         self.splitDockWidget(self.scene_dock, self.preview_dock, Qt.Orientation.Vertical)
+        # Measurements: a bottom dock under the 3D view only (the right docks keep the
+        # bottom-right corner), hidden until the first measurement is completed.
+        self.measure_panel = MeasurementPanel(self)
+        self.measure_dock = QDockWidget("Measurements", self)
+        self.measure_dock.setObjectName("measure_dock")
+        self.measure_dock.setWidget(self.measure_panel)
+        self.measure_dock.setFeatures(self.scene_dock.features())
+        self.setCorner(Qt.Corner.BottomRightCorner, Qt.DockWidgetArea.RightDockWidgetArea)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.measure_dock)
+        self.measure_dock.hide()
+        self.measure_panel.remove_requested.connect(self.remove_measurements)
+        self.measure_panel.clear_requested.connect(self.clear_measurements)
         self.preview_queue = RenderQueue(self)
         self.preview_queue.finished.connect(self._on_preview_finished)
         self.preview_queue.progress.connect(self.preview_panel.set_progress)
@@ -518,6 +537,32 @@ class MainWindow(QMainWindow):
             lambda: self.open_material_gallery(TARGET_SELECTION)
         )
         self.selection_material_action.setEnabled(False)
+        self.measure_distance_action = QAction(
+            "Measure Distance",
+            self,
+            checkable=True,
+            toolTip="Distance mode: click two atoms, A and B, to measure their separation "
+            "in Å. Click again to leave the mode; Esc cancels an incomplete measurement.",
+        )
+        self.measure_distance_action.setIconText("Distance")
+        self.measure_angle_action = QAction(
+            "Measure Bond Angle",
+            self,
+            checkable=True,
+            toolTip="Bond-angle mode: click three atoms, A, B, C, to measure the angle "
+            "A–B–C with B as the vertex (0–180°). No bond is needed. Esc cancels.",
+        )
+        self.measure_angle_action.setIconText("Bond angle")
+        self.measure_group = QActionGroup(self)
+        self.measure_group.setExclusionPolicy(QActionGroup.ExclusionPolicy.ExclusiveOptional)
+        for action, mode in (
+            (self.measure_distance_action, "distance"),
+            (self.measure_angle_action, "angle"),
+        ):
+            self.measure_group.addAction(action)
+            action.triggered.connect(
+                lambda checked, m=mode: self.set_measurement_mode(m if checked else None)
+            )
         self.material_gallery_action = QAction(
             "Material Gallery…", self, statusTip="Browse materials with POV-Ray thumbnails"
         )
@@ -607,6 +652,9 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self.hide_action)
         edit_menu.addAction(self.select_none_action)
         edit_menu.addSeparator()
+        edit_menu.addAction(self.measure_distance_action)
+        edit_menu.addAction(self.measure_angle_action)
+        edit_menu.addSeparator()
         edit_menu.addAction(self.selection_material_action)
         edit_menu.addAction(self.material_gallery_action)
         edit_menu.addAction(self.environment_gallery_action)
@@ -629,6 +677,7 @@ class MainWindow(QMainWindow):
             along_menu.addAction(action)
         view_menu.addAction(self.scene_dock.toggleViewAction())
         view_menu.addAction(self.preview_dock.toggleViewAction())
+        view_menu.addAction(self.measure_dock.toggleViewAction())
         view_menu.addAction(self.lighting_setup_action)
         view_menu.addSeparator()
         view_menu.addAction(self.rotate_ccw_action)
@@ -715,6 +764,10 @@ class MainWindow(QMainWindow):
             self.step_combo.addItem(f"{step}°", step)
         self.step_combo.setCurrentIndex(ROTATION_STEPS.index(15))
         view_bar.addWidget(self.step_combo)
+        view_bar.addSeparator()
+        view_bar.addWidget(QLabel(" Measure "))
+        view_bar.addAction(self.measure_distance_action)
+        view_bar.addAction(self.measure_angle_action)
         self.render_panel.add_actions(
             [self.preview_action, self.render_action], [self.export_action, self.cancel_action]
         )
@@ -722,6 +775,10 @@ class MainWindow(QMainWindow):
 
     def _build_status_bar(self) -> None:
         bar = self.statusBar()
+        self.measure_label = QLabel()
+        self.measure_label.setStyleSheet("font-weight: bold")
+        self.measure_label.setAccessibleName("Measurement instructions")
+        bar.addPermanentWidget(self.measure_label)
         self.selection_label = QLabel()
         self.structure_label = QLabel()
         bar.addPermanentWidget(self.selection_label)
@@ -1068,6 +1125,7 @@ class MainWindow(QMainWindow):
         self.show_all_action.setEnabled(geometry.hidden_count > 0)
         self.selection = {atom_id for atom_id in self.selection if atom_id in geometry}
         self._update_selection()
+        self._check_measurements()
         self._sync_panel()
         self._sync_appearance()
         self._update_lighting_setup()
@@ -1154,6 +1212,10 @@ class MainWindow(QMainWindow):
     # ----- selection and hiding ----------------------------------------------------
     def _on_atom_clicked(self, index: int, toggle: bool) -> None:
         atom_id = self.geometry.atom_ids[index] if index >= 0 else None
+        if self.measurements.mode is not None:
+            if atom_id is not None:  # empty space keeps the picks made so far
+                self.pick_measurement_atom(atom_id)
+            return
         if toggle:
             if atom_id is not None:
                 self.selection ^= {atom_id}
@@ -1177,7 +1239,131 @@ class MainWindow(QMainWindow):
         ):
             self.statusBar().showMessage("Drag cancelled", 4000)
             return
+        if self.cancel_measurement():
+            return
         self.select(set())
+
+    # ----- measurements -------------------------------------------------------------
+    def measurement_mode(self) -> str | None:
+        """Return ``"distance"``, ``"angle"``, or ``None`` (ordinary selection)."""
+        return self.measurements.mode
+
+    def set_measurement_mode(self, mode: str | None) -> None:
+        """Enter a measurement mode, or leave it with ``None``.
+
+        In a mode, clicks on atoms pick A, B (and C) instead of selecting; camera
+        navigation is unchanged. Switching modes cancels an incomplete measurement.
+        The ordinary selection is kept.
+        """
+        self.measurements.set_mode(mode)
+        self.measure_distance_action.setChecked(mode == "distance")
+        self.measure_angle_action.setChecked(mode == "angle")
+        self._sync_measurements()
+
+    def pick_measurement_atom(self, atom_id: AtomId) -> measure.Measurement | None:
+        """Pick a displayed atom for the current measurement (as a click does).
+
+        Returns
+        -------
+        Measurement or None
+            The completed measurement, or ``None`` while more atoms are needed or when
+            the pick was rejected (the status bar explains why).
+        """
+        try:
+            result = self.measurements.pick(atom_id)
+        except measure.MeasurementError as exc:
+            self.statusBar().showMessage(str(exc), 6000)
+            return None
+        if result is not None:
+            text = measure.measurement_text(self.structure, result)
+            self.statusBar().showMessage(text, 10000)
+            self.measure_panel.set_note("")
+            if not self._measure_revealed:
+                self._measure_revealed = True
+                self.measure_dock.show()
+                self.resizeDocks([self.measure_dock], [150], Qt.Orientation.Vertical)
+        self._sync_measurements()
+        return result
+
+    def cancel_measurement(self) -> bool:
+        """Cancel the incomplete measurement and remove its helpers (Esc).
+
+        Also removes the guide of the measurement just completed. Returns whether
+        there was anything to cancel; completed results stay in the table.
+        """
+        pending = bool(self.measurements.pending)
+        if not self.measurements.cancel():
+            return False
+        if pending:
+            self.statusBar().showMessage("Measurement cancelled", 4000)
+        self._sync_measurements()
+        return True
+
+    def remove_measurements(self, rows: list[int]) -> None:
+        """Remove completed measurements by table row."""
+        self.measurements.remove(rows)
+        self._sync_measurements()
+
+    def clear_measurements(self) -> None:
+        """Remove all completed measurements."""
+        self.measurements.clear()
+        self.measure_panel.set_note("")
+        self._sync_measurements()
+
+    def _check_measurements(self) -> None:
+        """Drop measurements that no longer refer to displayed atoms of the structure."""
+        replaced = self.measurements.structure is not self.structure
+        removed, cancelled = self.measurements.invalidate(self.structure, self.geometry)
+        notes = []
+        if replaced and (removed or cancelled):
+            notes.append("Measurements cleared: a different structure was loaded.")
+        elif removed:
+            notes.append(
+                f"Removed {removed} measurement{'s' if removed > 1 else ''}: "
+                "an atom is no longer displayed."
+            )
+        if cancelled and not replaced:
+            notes.append("Incomplete measurement cancelled: an atom is no longer displayed.")
+        if notes:
+            text = " ".join(notes)
+            self.measure_panel.set_note(text)
+            self.statusBar().showMessage(text, 8000)
+        self._sync_measurements()
+
+    def _sync_measurements(self) -> None:
+        """Show the session: table rows, viewport helpers, and the instruction."""
+        session, structure = self.measurements, self.structure
+        rows = []
+        for m in session.results:
+            letters = measure.LETTERS[: len(m.atoms)]
+            atoms = " · ".join(
+                f"{letter}{' (vertex)' if m.kind == 'angle' and letter == 'B' else ''}: "
+                f"{measure.atom_text(structure, atom_id)}"
+                for letter, atom_id in zip(letters, m.atoms, strict=True)
+            )
+            rows.append(
+                MeasurementRow(
+                    kind="Distance" if m.kind == "distance" else "Angle",
+                    atoms=atoms,
+                    result=measure.result_text(m),
+                    copy=measure.measurement_text(structure, m),
+                    exact=f"{m.value!r} {m.unit}",
+                )
+            )
+        self.measure_panel.set_rows(rows)
+        shown = session.pending or (list(session.last.atoms) if session.last else [])
+        kind = session.mode or (session.last.kind if session.last else None)
+        indices = [self.geometry.index_of(atom_id) for atom_id in shown]
+        if shown and all(i is not None for i in indices):
+            points = np.array([measure.atom_position(structure, a) for a in shown])
+            radii = self.geometry.radii[np.array(indices, dtype=int)]
+            self.viewport.set_measurement(points, radii, kind)
+        else:
+            self.viewport.set_measurement(np.zeros((0, 3)), np.zeros(0), None)
+        prompt = session.prompt()
+        if prompt and session.last is not None:
+            prompt = f"{measure.result_text(session.last)} · next: {prompt}"
+        self.measure_label.setText(f"  {prompt}  " if prompt else "")
 
     def hide_selected(self) -> None:
         """Hide the selected displayed atoms as one undoable step (Delete).

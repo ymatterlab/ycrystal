@@ -49,6 +49,12 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - set_aspect_locked
         - current_camera
         - current_render_settings
+        - measurement_mode
+        - set_measurement_mode
+        - pick_measurement_atom
+        - cancel_measurement
+        - remove_measurements
+        - clear_measurements
         - preview_settings
         - request_preview
         - cancel_render
@@ -88,6 +94,7 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - set_lighting
         - lighting_rig
         - set_highlight
+        - set_measurement
         - pick
         - camera
         - set_camera

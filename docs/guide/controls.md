@@ -13,7 +13,8 @@ the in-app summary.
 | View ▸ Reset View | Restore the default orientation and fit |
 | Left click without dragging | Select the front-most ball; empty space clears |
 | Ctrl + click | Add/remove a ball from the selection |
-| Esc | Clear selection |
+| Esc | Clear selection (in a measurement mode: cancel the incomplete measurement) |
+| **Distance** / **Bond angle** (View along toolbar, Edit menu) | Measure between clicked atoms; see [Measurements](#measurements) |
 | Delete or Backspace | Hide selected displayed atoms |
 | Ctrl+M | Material for the selected atoms (Edit ▸ Material for Selection…) |
 | Drag an **a**, **b**, or **c** handle | Add or remove whole cells along that axis |
@@ -128,3 +129,55 @@ them (5° to 90°) about the rotation axis, or about the line of sight in free m
 exact orientations. Clicks still select atoms, and Shift + left drag still pans. Rotation
 changes only the view: coordinates are unchanged, and the mode is not saved in projects.
 Lattice axes are unavailable for structures without a cell.
+
+## Measurements
+
+**Distance** and **Bond angle** in the View along toolbar (also **Edit ▸ Measure
+Distance** and **Edit ▸ Measure Bond Angle**) switch from selecting to measuring. The
+two modes exclude each other; click the active button again to return to ordinary
+selection. Navigation is unchanged: a drag still orbits, pans, or zooms and never picks
+an atom, and only a click without dragging counts.
+
+- **Distance**: click atom A, then atom B. The result is their separation in Å.
+- **Bond angle**: click A, then B, then C. The result is the angle A–B–C in degrees
+  (0° to 180°) with **B as the vertex**, from the arms A − B and C − B. No bond needs to
+  be drawn between the atoms.
+
+The bold text in the status bar says which atom to click next, for example
+“Bond angle: select atom B — angle vertex”. The picked atoms get a teal wire cage and a
+boxed letter (A, B, or “B vertex”); a dashed line joins them, and an angle shows a small
+arc at the vertex. **Esc** cancels an incomplete measurement and removes these marks (a
+second Esc clears the ordinary selection); switching modes also cancels it. After a
+measurement the mode stays on, so the next click starts a new one. Clicking empty space
+keeps the atoms picked so far; clicking the same ball twice in one measurement is
+refused with an explanation.
+
+**Which atoms are measured.** Each ball is one displayed instance: a source atom and its
+periodic image offset `[na nb nc]` (see [Boundary atoms and hiding](#boundary-atoms-and-hiding)).
+Ycrystal measures exactly the instances you click, at `input_position + [na nb nc] @ cell`,
+also in supercells, with boundary images, and in non-orthogonal cells. It does **not**
+replace them by the nearest periodic image (no minimum-image convention): to measure
+across a cell boundary, click the image on the other side. Two images of the same atom
+are different balls and can be measured against each other. The values come from the
+structure's coordinates and cell only, so the camera, zoom, atom size, materials, and
+lighting never change them.
+
+**The Measurements panel** opens at the bottom of the window, under the 3D view, with
+the first completed measurement (**View ▸ Measurements** shows or hides it later). Each
+row gives the type, the atoms (element, input label, 1-based atom number, and image, e.g.
+`A: O #3 [0 0 0] · B (vertex): Ti #2 [0 0 0] · C: O #4 [0 1 0]`), and the result, e.g.
+`1.9525 Å` or `90.00° — vertex B`. New measurements are added below the earlier ones.
+Distances show four decimals and angles two; the full value is in the tooltip, and the
+decimals do not express an uncertainty. **Copy Selected** (or Ctrl+C in the table)
+copies the selected rows as text with atoms, units, and the vertex, for example
+`Angle A–B–C: 90.00° — vertex B (A = O #3 [0 0 0], B = Ti #2 [0 0 0], C = O #4 [0 0 0])`.
+**Remove Selected** and **Clear All** delete rows.
+
+Measurements are inspection data for the current session: they are not saved in
+projects, styles, or exports, and the marks never appear in the POV-Ray preview, the
+rendered PNG, or the `.pov` file; they do not affect Fit, the lights, or picking.
+Opening another structure or project clears all measurements. When a measured ball
+disappears from the display (boundary atoms off, fewer repetitions, hiding), the
+measurements that use it are removed and the panel says so; the others stay, because
+each identity still denotes the same position in the same structure. Undoing the change
+does not bring removed measurements back.
