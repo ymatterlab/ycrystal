@@ -74,8 +74,9 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             "cell_edge_color": list(scene.cell_edge_color),
             "boundary_images": scene.boundary_images,
             "boundary_tolerance": scene.boundary_tolerance,
-            "hidden": [{"atom": source, "image": list(image)}
-                       for source, image in sorted(scene.hidden)],
+            "hidden": [
+                {"atom": source, "image": list(image)} for source, image in sorted(scene.hidden)
+            ],
         },
         "environment": {
             "background": list(project.environment.background),
@@ -171,8 +172,9 @@ def _output_from(d: dict[str, Any]) -> RenderSettings:
         width=int(d.get("width", defaults.width)),
         height=int(d.get("height", defaults.height)),
         antialias=bool(d.get("antialias", defaults.antialias)),
-        transparent_background=bool(d.get("transparent_background",
-                                          defaults.transparent_background)),
+        transparent_background=bool(
+            d.get("transparent_background", defaults.transparent_background)
+        ),
     )
 
 
@@ -203,8 +205,9 @@ def _jsonable(value: Any) -> Any:
 def save_project(path: str | Path, project: Project) -> Path:
     """Write the project atomically (temporary file + rename)."""
     path = Path(path)
-    text = json.dumps(project_to_dict(project), indent=1, ensure_ascii=False,
-                      allow_nan=False) + "\n"
+    text = (
+        json.dumps(project_to_dict(project), indent=1, ensure_ascii=False, allow_nan=False) + "\n"
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix=".ycrystal-", suffix=".tmp", dir=path.parent)
     try:

@@ -60,14 +60,16 @@ from ycrystal.viewport.qt_viewport import StructureViewport
 SETTINGS_POVRAY = "render/povray_executable"
 SETTINGS_LAST_DIR = "files/last_directory"
 
-OPEN_FILTERS = ";;".join([
-    "Structures and projects (*.ycrystal *.cif *.vasp *.poscar POSCAR* CONTCAR* *.in *.pwi)",
-    "Ycrystal projects (*.ycrystal)",
-    "CIF (*.cif)",
-    "VASP POSCAR/CONTCAR (POSCAR* CONTCAR* *.vasp *.poscar)",
-    "Quantum ESPRESSO input (*.in *.pwi)",
-    "All files (*)",
-])
+OPEN_FILTERS = ";;".join(
+    [
+        "Structures and projects (*.ycrystal *.cif *.vasp *.poscar POSCAR* CONTCAR* *.in *.pwi)",
+        "Ycrystal projects (*.ycrystal)",
+        "CIF (*.cif)",
+        "VASP POSCAR/CONTCAR (POSCAR* CONTCAR* *.vasp *.poscar)",
+        "Quantum ESPRESSO input (*.in *.pwi)",
+        "All files (*)",
+    ]
+)
 
 MOUSE_HELP = """<table cellspacing="4">
 <tr><td><b>Left drag</b></td><td>Orbit around the view centre</td></tr>
@@ -104,13 +106,21 @@ class RenderResultDialog(QDialog):
         layout.addWidget(buttons)
         screen = QApplication.primaryScreen().availableGeometry()
         pixmap = label.pixmap()
-        self.resize(min(pixmap.width() + 60, screen.width() - 80),
-                    min(pixmap.height() + 120, screen.height() - 80))
+        self.resize(
+            min(pixmap.width() + 60, screen.width() - 80),
+            min(pixmap.height() + 120, screen.height() - 80),
+        )
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, structure: Structure | None = None, parent: QWidget | None = None,
-                 *, project: Project | None = None, project_path: Path | None = None) -> None:
+    def __init__(
+        self,
+        structure: Structure | None = None,
+        parent: QWidget | None = None,
+        *,
+        project: Project | None = None,
+        project_path: Path | None = None,
+    ) -> None:
         super().__init__(parent)
         if project is None:
             if structure is None:
@@ -129,8 +139,10 @@ class MainWindow(QMainWindow):
         self._camera_initialised = False
         self._pending_camera: Camera | None = project.camera
         self._saved_camera: Camera | None = None
-        self._saved_output: tuple[int, bool] = (project.output.width,
-                                                project.output.transparent_background)
+        self._saved_output: tuple[int, bool] = (
+            project.output.width,
+            project.output.transparent_background,
+        )
         self.last_error: tuple[str, str] | None = None
         self.last_render_path: Path | None = None
         self.render_finished_result: RenderResult | None = None
@@ -156,36 +168,54 @@ class MainWindow(QMainWindow):
 
     # ----- construction -------------------------------------------------------------
     def _build_actions(self) -> None:
-        self.open_action = QAction("Open…", self, shortcut=QKeySequence.StandardKey.Open,
-                                   toolTip="Open a structure file or a Ycrystal project")
+        self.open_action = QAction(
+            "Open…",
+            self,
+            shortcut=QKeySequence.StandardKey.Open,
+            toolTip="Open a structure file or a Ycrystal project",
+        )
         self.open_action.triggered.connect(lambda: self.open_file())
-        self.open_as_action = QAction("Open As…", self,
-                                      toolTip="Open a file, choosing its format explicitly")
+        self.open_as_action = QAction(
+            "Open As…", self, toolTip="Open a file, choosing its format explicitly"
+        )
         self.open_as_action.triggered.connect(self.open_file_as)
-        self.save_action = QAction("Save Project", self, shortcut=QKeySequence.StandardKey.Save,
-                                   toolTip="Save the structure, view, and settings (.ycrystal)")
+        self.save_action = QAction(
+            "Save Project",
+            self,
+            shortcut=QKeySequence.StandardKey.Save,
+            toolTip="Save the structure, view, and settings (.ycrystal)",
+        )
         self.save_action.triggered.connect(lambda: self.save())
-        self.save_as_action = QAction("Save Project As…", self,
-                                      shortcut=QKeySequence("Ctrl+Shift+S"))
+        self.save_as_action = QAction(
+            "Save Project As…", self, shortcut=QKeySequence("Ctrl+Shift+S")
+        )
         self.save_as_action.triggered.connect(lambda: self.save_as())
-        self.fit_action = QAction("Fit", self, shortcut=QKeySequence("F"),
-                                  toolTip="Frame the structure (F)")
+        self.fit_action = QAction(
+            "Fit", self, shortcut=QKeySequence("F"), toolTip="Frame the structure (F)"
+        )
         self.fit_action.triggered.connect(self.viewport.fit)
-        self.reset_view_action = QAction("Reset View", self,
-                                         toolTip="Default orientation, framed to fit")
+        self.reset_view_action = QAction(
+            "Reset View", self, toolTip="Default orientation, framed to fit"
+        )
         self.reset_view_action.triggered.connect(self.reset_view)
-        self.export_action = QAction("Export POV-Ray…", self,
-                                     toolTip="Write editable .pov and .ini files")
+        self.export_action = QAction(
+            "Export POV-Ray…", self, toolTip="Write editable .pov and .ini files"
+        )
         self.export_action.triggered.connect(lambda: self.export_pov())
-        self.render_action = QAction("Render PNG…", self, shortcut=QKeySequence("Ctrl+R"),
-                                     toolTip="Render the current view with POV-Ray")
+        self.render_action = QAction(
+            "Render PNG…",
+            self,
+            shortcut=QKeySequence("Ctrl+R"),
+            toolTip="Render the current view with POV-Ray",
+        )
         self.render_action.triggered.connect(lambda: self.render_png())
         self.set_povray_action = QAction("Set POV-Ray Executable…", self)
         self.set_povray_action.triggered.connect(self.choose_povray)
         self.check_povray_action = QAction("Check Renderer", self)
         self.check_povray_action.triggered.connect(self.check_renderer)
-        help_action = QAction("Mouse Controls", self,
-                              shortcut=QKeySequence.StandardKey.HelpContents)
+        help_action = QAction(
+            "Mouse Controls", self, shortcut=QKeySequence.StandardKey.HelpContents
+        )
         help_action.triggered.connect(self.show_mouse_help)
         formats_action = QAction("Supported File Formats", self)
         formats_action.triggered.connect(self.show_format_help)
@@ -197,29 +227,46 @@ class MainWindow(QMainWindow):
         self.redo_action = self.undo_stack.createRedoAction(self, "Redo")
         self.redo_action.setShortcuts([QKeySequence("Ctrl+Shift+Z"), QKeySequence("Ctrl+Y")])
         self.hide_action = QAction(
-            "Hide Selected Atoms", self, enabled=False,
+            "Hide Selected Atoms",
+            self,
+            enabled=False,
             toolTip="Remove the selected balls from the view and exports (Delete). "
-                    "The structure is unchanged.",
+            "The structure is unchanged.",
         )
-        self.hide_action.setShortcuts([QKeySequence(Qt.Key.Key_Delete),
-                                       QKeySequence(Qt.Key.Key_Backspace)])
+        self.hide_action.setShortcuts(
+            [QKeySequence(Qt.Key.Key_Delete), QKeySequence(Qt.Key.Key_Backspace)]
+        )
         self.hide_action.triggered.connect(self.hide_selected)
-        self.select_none_action = QAction("Select None", self,
-                                          shortcut=QKeySequence(Qt.Key.Key_Escape))
+        self.select_none_action = QAction(
+            "Select None", self, shortcut=QKeySequence(Qt.Key.Key_Escape)
+        )
         self.select_none_action.triggered.connect(self.clear_selection)
-        self.show_all_action = QAction("Show All Atoms", self, enabled=False,
-                                       toolTip="Bring back every hidden ball")
+        self.show_all_action = QAction(
+            "Show All Atoms", self, enabled=False, toolTip="Bring back every hidden ball"
+        )
         self.show_all_action.triggered.connect(self.show_all_atoms)
         self.boundary_action = QAction(
-            "Show Boundary Atoms", self, checkable=True, checked=True,
+            "Show Boundary Atoms",
+            self,
+            checkable=True,
+            checked=True,
             toolTip="Draw atoms at every equivalent position on cell faces, edges, corners",
         )
         self.boundary_action.triggered.connect(self.set_boundary_images)
 
         file_menu = self.menuBar().addMenu("&File")
-        for action in (self.open_action, self.open_as_action, None, self.save_action,
-                       self.save_as_action, None, self.export_action, self.render_action,
-                       None, quit_action):
+        for action in (
+            self.open_action,
+            self.open_as_action,
+            None,
+            self.save_action,
+            self.save_as_action,
+            None,
+            self.export_action,
+            self.render_action,
+            None,
+            quit_action,
+        ):
             file_menu.addSeparator() if action is None else file_menu.addAction(action)
         edit_menu = self.menuBar().addMenu("&Edit")
         edit_menu.addAction(self.undo_action)
@@ -277,8 +324,9 @@ class MainWindow(QMainWindow):
         self.structure_label = QLabel()
         bar.addPermanentWidget(self.selection_label)
         bar.addPermanentWidget(self.structure_label)
-        bar.showMessage("Drag: orbit · Shift/middle drag: pan · wheel: zoom · click: select · "
-                        "Delete: hide")
+        bar.showMessage(
+            "Drag: orbit · Shift/middle drag: pan · wheel: zoom · click: select · Delete: hide"
+        )
 
     def showEvent(self, event) -> None:  # noqa: N802, ANN001
         super().showEvent(event)
@@ -388,7 +436,9 @@ class MainWindow(QMainWindow):
                 choice = self.ask_choice(
                     "Choose Format",
                     f"Ycrystal cannot tell the format of {path.name} from its name and "
-                    "content. Read it as:", names)
+                    "content. Read it as:",
+                    names,
+                )
                 if choice is None:
                     return False
                 fmt = next(key for key, name in FORMAT_NAMES.items() if name == choice)
@@ -414,8 +464,10 @@ class MainWindow(QMainWindow):
                 break
             except BlockChoiceRequired as question:
                 block = self.ask_choice(
-                    "Choose Data Block", f"{path.name} contains several structures. Open:",
-                    question.blocks)
+                    "Choose Data Block",
+                    f"{path.name} contains several structures. Open:",
+                    question.blocks,
+                )
                 if block is None:
                     return False
             except ElementMappingRequired as question:
@@ -434,17 +486,20 @@ class MainWindow(QMainWindow):
         details = f", block {source['block']}" if source.get("block") else ""
         self.statusBar().showMessage(
             f"Imported {path.name} ({FORMAT_NAMES[fmt]}{details}): {len(structure)} atoms, "
-            f"{structure.composition()}", 10000)
+            f"{structure.composition()}",
+            10000,
+        )
         self._remember_directory(path)
         return True
 
     def ask_element_mapping(self, question: ElementMappingRequired) -> dict[str, str] | None:
         mapping = {}
-        for key, suggestion, detail in zip(question.keys, question.suggestions,
-                                           question.details, strict=True):
+        for key, suggestion, detail in zip(
+            question.keys, question.suggestions, question.details, strict=True
+        ):
             symbol = self.ask_text(
-                "Element Needed", f"{question}\n\nElement for {key} ({detail}):",
-                suggestion or "")
+                "Element Needed", f"{question}\n\nElement for {key} ({detail}):", suggestion or ""
+            )
             if not symbol:
                 return None
             mapping[key] = symbol.strip()
@@ -481,18 +536,28 @@ class MainWindow(QMainWindow):
     # ----- dialogs (separate methods so tests can answer them) ------------------------------
     def ask_save_changes(self) -> str:
         """Return "save", "discard", or "cancel"."""
-        buttons = (QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard
-                   | QMessageBox.StandardButton.Cancel)
+        buttons = (
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel
+        )
         answer = QMessageBox.question(
-            self, "Unsaved Changes",
+            self,
+            "Unsaved Changes",
             "The project has unsaved changes (view, display settings, or output options). "
-            "Save them first?", buttons, QMessageBox.StandardButton.Save)
-        return {QMessageBox.StandardButton.Save: "save",
-                QMessageBox.StandardButton.Discard: "discard"}.get(answer, "cancel")
+            "Save them first?",
+            buttons,
+            QMessageBox.StandardButton.Save,
+        )
+        return {
+            QMessageBox.StandardButton.Save: "save",
+            QMessageBox.StandardButton.Discard: "discard",
+        }.get(answer, "cancel")
 
     def ask_open_path(self) -> Path | None:
-        path, _ = QFileDialog.getOpenFileName(self, "Open Structure or Project",
-                                              self._last_directory(), OPEN_FILTERS)
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Open Structure or Project", self._last_directory(), OPEN_FILTERS
+        )
         return Path(path) if path else None
 
     def ask_save_path(self) -> Path | None:
@@ -505,8 +570,9 @@ class MainWindow(QMainWindow):
             else:
                 stem = self.structure.composition()
             default = Path(self._last_directory()) / f"{stem}{PROJECT_SUFFIX}"
-        path, _ = QFileDialog.getSaveFileName(self, "Save Project", str(default),
-                                              f"Ycrystal project (*{PROJECT_SUFFIX})")
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save Project", str(default), f"Ycrystal project (*{PROJECT_SUFFIX})"
+        )
         return Path(path) if path else None
 
     def ask_choice(self, title: str, label: str, items: list[str]) -> str | None:
@@ -575,22 +641,30 @@ class MainWindow(QMainWindow):
         if not self.selection:
             return
         count = len(self.selection)
-        new = replace(self.scene_settings,
-                      hidden=self.scene_settings.hidden | frozenset(self.selection))
+        new = replace(
+            self.scene_settings, hidden=self.scene_settings.hidden | frozenset(self.selection)
+        )
         self.selection = set()
-        self.undo_stack.push(SceneSettingsCommand(
-            self, new, f"Hide {count} Atom{'s' if count > 1 else ''}"))
+        self.undo_stack.push(
+            SceneSettingsCommand(self, new, f"Hide {count} Atom{'s' if count > 1 else ''}")
+        )
 
     def show_all_atoms(self) -> None:
         if self.scene_settings.hidden:
-            self.undo_stack.push(SceneSettingsCommand(
-                self, replace(self.scene_settings, hidden=frozenset()), "Show All Atoms"))
+            self.undo_stack.push(
+                SceneSettingsCommand(
+                    self, replace(self.scene_settings, hidden=frozenset()), "Show All Atoms"
+                )
+            )
 
     def set_boundary_images(self, enabled: bool) -> None:
         if enabled != self.scene_settings.boundary_images:
             text = "Show Boundary Atoms" if enabled else "Hide Boundary Atoms"
-            self.undo_stack.push(SceneSettingsCommand(
-                self, replace(self.scene_settings, boundary_images=enabled), text))
+            self.undo_stack.push(
+                SceneSettingsCommand(
+                    self, replace(self.scene_settings, boundary_images=enabled), text
+                )
+            )
 
     def _update_selection(self) -> None:
         indices = [self.geometry.index_of(atom_id) for atom_id in self.selection]
@@ -609,15 +683,17 @@ class MainWindow(QMainWindow):
             element = self.geometry.elements[index]
             label = self.structure.labels[source]
             name = element if label == element else f"{element} ({label})"
-            text = (f"Selected: {name}, atom #{source + 1}, "
-                    f"image {image[0]} {image[1]} {image[2]}")
+            text = f"Selected: {name}, atom #{source + 1}, image {image[0]} {image[1]} {image[2]}"
             if self.structure.has_cell:
                 frac = position @ np.linalg.inv(self.structure.cell)
                 text += " · frac " + " ".join(f"{v:.4f}" for v in frac)
             text += " · xyz " + " ".join(f"{v:.4f}" for v in position) + " Å"
             if self.structure.movable is not None:
-                fixed = [axis for axis, free in zip("xyz", self.structure.movable[source],
-                                                    strict=True) if not free]
+                fixed = [
+                    axis
+                    for axis, free in zip("xyz", self.structure.movable[source], strict=True)
+                    if not free
+                ]
                 text += f" · fixed {' '.join(fixed)}" if fixed else " · free"
             return text
         counts: dict[str, int] = {}
@@ -640,8 +716,9 @@ class MainWindow(QMainWindow):
         view_w, view_h = self.viewport.render_size()
         width = self.width_spin.value()
         height = max(1, round(width * view_h / view_w))
-        return RenderSettings(width=width, height=height,
-                              transparent_background=self.transparent_check.isChecked())
+        return RenderSettings(
+            width=width, height=height, transparent_background=self.transparent_check.isChecked()
+        )
 
     def _update_output_label(self, *_args: object) -> None:
         settings = self.current_render_settings()
@@ -660,7 +737,8 @@ class MainWindow(QMainWindow):
     def export_pov(self, path: str | Path | None = None) -> Path | None:
         if path is None:
             path, _ = QFileDialog.getSaveFileName(
-                self, "Export POV-Ray Scene",
+                self,
+                "Export POV-Ray Scene",
                 str(Path(self._last_directory()) / f"{self._output_stem()}.pov"),
                 "POV-Ray scene (*.pov)",
             )
@@ -671,8 +749,13 @@ class MainWindow(QMainWindow):
             path = path.with_suffix(".pov")
         settings = self.current_render_settings()
         pov, ini, _ = write_scene_files(
-            path.parent, path.stem, self.geometry, self.current_camera(), self.environment,
-            settings, title=f"Ycrystal scene: {self.structure.composition()}",
+            path.parent,
+            path.stem,
+            self.geometry,
+            self.current_camera(),
+            self.environment,
+            settings,
+            title=f"Ycrystal scene: {self.structure.composition()}",
         )
         self.statusBar().showMessage(f"Exported {pov} and {ini.name}", 8000)
         return pov
@@ -689,7 +772,8 @@ class MainWindow(QMainWindow):
             return False
         if path is None:
             path, _ = QFileDialog.getSaveFileName(
-                self, "Render PNG",
+                self,
+                "Render PNG",
                 str(Path(self._last_directory()) / f"{self._output_stem()}.png"),
                 "PNG image (*.png)",
             )
@@ -701,7 +785,10 @@ class MainWindow(QMainWindow):
         settings = self.current_render_settings()
         version = povray_version(executable)
         job = prepare_job(
-            self.geometry, self.current_camera(), self.environment, settings,
+            self.geometry,
+            self.current_camera(),
+            self.environment,
+            settings,
             title=f"Ycrystal scene: {self.structure.composition()}",
             renderer_note=f"POV-Ray {version or 'unknown version'} ({executable})",
         )
@@ -741,8 +828,9 @@ class MainWindow(QMainWindow):
             self.render_finished_result = result
 
     def choose_povray(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, "Select POV-Ray Executable",
-                                              self.configured_povray() or "/usr/bin")
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select POV-Ray Executable", self.configured_povray() or "/usr/bin"
+        )
         if path:
             self.settings.setValue(SETTINGS_POVRAY, path)
             self.check_renderer()
@@ -764,8 +852,9 @@ class MainWindow(QMainWindow):
     def show_error(self, title: str, text: str) -> None:
         """Report a problem without blocking the event loop."""
         self.last_error = (title, text)
-        box = QMessageBox(QMessageBox.Icon.Warning, title, text, QMessageBox.StandardButton.Ok,
-                          self)
+        box = QMessageBox(
+            QMessageBox.Icon.Warning, title, text, QMessageBox.StandardButton.Ok, self
+        )
         box.setWindowModality(Qt.WindowModality.WindowModal)
         box.open()
         self._message_box = box

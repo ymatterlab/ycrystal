@@ -34,8 +34,13 @@ def triclinic_cell(a, b, c, alpha, beta, gamma) -> np.ndarray:
     """a along x, b in the xy plane (the usual crystallographic setting)."""
     al, be, ga = np.radians([alpha, beta, gamma])
     cy = (np.cos(al) - np.cos(be) * np.cos(ga)) / np.sin(ga)
-    return np.array([[a, 0, 0], [b * np.cos(ga), b * np.sin(ga), 0],
-                     [c * np.cos(be), c * cy, c * np.sqrt(1 - np.cos(be) ** 2 - cy ** 2)]])
+    return np.array(
+        [
+            [a, 0, 0],
+            [b * np.cos(ga), b * np.sin(ga), 0],
+            [c * np.cos(be), c * cy, c * np.sqrt(1 - np.cos(be) ** 2 - cy**2)],
+        ]
+    )
 
 
 def frac(structure) -> np.ndarray:
@@ -56,10 +61,17 @@ def same_set_of_fractions(found: np.ndarray, expected: np.ndarray, tol=1e-6) -> 
 
 
 # ----- detection --------------------------------------------------------------------
-@pytest.mark.parametrize("name, fmt", [
-    ("Si_primitive.vasp", "poscar"), ("POSCAR_vasp4", "poscar"), ("MgB2.cif", "cif"),
-    ("triclinic.pw.in", "qe"), ("SrTiO3.pw.in", "qe"), ("two_blocks.cif", "cif"),
-])
+@pytest.mark.parametrize(
+    "name, fmt",
+    [
+        ("Si_primitive.vasp", "poscar"),
+        ("POSCAR_vasp4", "poscar"),
+        ("MgB2.cif", "cif"),
+        ("triclinic.pw.in", "qe"),
+        ("SrTiO3.pw.in", "qe"),
+        ("two_blocks.cif", "cif"),
+    ],
+)
 def test_detect_by_name_and_content(name, fmt):
     assert detect_format(fx(name)) == fmt
 
@@ -97,7 +109,7 @@ def test_si_primitive_poscar_qe_and_conventional_cif():
 
     cif = read_structure(fx("Si_conventional.cif"))
     np.testing.assert_allclose(cif.cell, a * np.eye(3), atol=1e-12)
-    fcc = np.array([(0, 0, 0), (0, .5, .5), (.5, 0, .5), (.5, .5, 0)])
+    fcc = np.array([(0, 0, 0), (0, 0.5, 0.5), (0.5, 0, 0.5), (0.5, 0.5, 0)])
     assert same_set_of_fractions(frac(cif), np.vstack([fcc, fcc + 0.25]))
     # Conventional = P @ primitive, recorded explicitly for the comparison.
     P = np.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]])
@@ -112,15 +124,14 @@ def test_mgb2_cartesian_poscar_cif_symops_and_qe():
     for s in structures:
         np.testing.assert_allclose(s.cell, expected, atol=1e-8)
         assert s.composition() == "MgB2"
-        assert same_set_of_fractions(frac(s), [(0, 0, 0), (1 / 3, 2 / 3, .5), (2 / 3, 1 / 3, .5)])
+        assert same_set_of_fractions(frac(s), [(0, 0, 0), (1 / 3, 2 / 3, 0.5), (2 / 3, 1 / 3, 0.5)])
     assert_equivalent(structures[0], structures[1])
     assert_equivalent(structures[0], structures[2])
     assert structures[1].metadata["source"]["spacegroup"]["number"] == 191
 
 
 def test_srtio3_selective_dynamics_and_qe_flags_and_labels():
-    vasp, cif, qe = (read_structure(fx(n)) for n in ("SrTiO3.vasp", "SrTiO3.cif",
-                                                      "SrTiO3.pw.in"))
+    vasp, cif, qe = (read_structure(fx(n)) for n in ("SrTiO3.vasp", "SrTiO3.cif", "SrTiO3.pw.in"))
     for s in (vasp, cif, qe):
         np.testing.assert_allclose(s.cell, 3.905 * np.eye(3), atol=1e-12)
     assert_equivalent(vasp, cif)
@@ -132,18 +143,25 @@ def test_srtio3_selective_dynamics_and_qe_flags_and_labels():
     # Species labels are kept separately from elements.
     assert qe.labels == ("Sr", "Ti", "O1", "O1", "O_2")
     assert qe.symbols == ("Sr", "Ti", "O", "O", "O")
-    assert qe.metadata["source"]["qe_species"] == {"Sr": "Sr", "Ti": "Ti", "O1": "O",
-                                                   "O_2": "O"}
+    assert qe.metadata["source"]["qe_species"] == {"Sr": "Sr", "Ti": "Ti", "O1": "O", "O_2": "O"}
     assert cif.labels == ("Sr1", "Ti1", "O1", "O1", "O1")
     np.testing.assert_array_equal(cif.occupancy, np.ones(5))
 
 
 def test_triclinic_negative_scale_bohr_units_and_cif():
     expected = triclinic_cell(4.6, 5.3, 6.1, 78, 84, 71)
-    fractions = np.array([(0.10, 0.15, 0.20), (0.55, 0.30, 0.25), (0.25, 0.70, 0.40),
-                          (0.80, 0.75, 0.65), (0.35, 0.25, 0.80)])
-    structures = [read_structure(fx(n)) for n in ("triclinic.vasp", "triclinic.cif",
-                                                  "triclinic.pw.in")]
+    fractions = np.array(
+        [
+            (0.10, 0.15, 0.20),
+            (0.55, 0.30, 0.25),
+            (0.25, 0.70, 0.40),
+            (0.80, 0.75, 0.65),
+            (0.35, 0.25, 0.80),
+        ]
+    )
+    structures = [
+        read_structure(fx(n)) for n in ("triclinic.vasp", "triclinic.cif", "triclinic.pw.in")
+    ]
     for s in structures:
         np.testing.assert_allclose(s.cell, expected, atol=1e-8)
         np.testing.assert_allclose(s.positions, fractions @ expected, atol=1e-8)
@@ -237,10 +255,22 @@ def test_qe_ambiguous_label_needs_mapping():
     assert s.symbols == ("C", "Fe") and s.labels == ("Cb", "Fe1")
 
 
-@pytest.mark.parametrize("label, element", [
-    ("Fe", "Fe"), ("fe1", "Fe"), ("Fe_up", "Fe"), ("O-2", "O"), ("C1", "C"), ("Sn", "Sn"),
-    ("He", "He"), ("Cb", None), ("Feup", None), ("X1", None), ("1Fe", None),
-])
+@pytest.mark.parametrize(
+    "label, element",
+    [
+        ("Fe", "Fe"),
+        ("fe1", "Fe"),
+        ("Fe_up", "Fe"),
+        ("O-2", "O"),
+        ("C1", "C"),
+        ("Sn", "Sn"),
+        ("He", "He"),
+        ("Cb", None),
+        ("Feup", None),
+        ("X1", None),
+        ("1Fe", None),
+    ],
+)
 def test_element_from_label(label, element):
     assert element_from_label(label) == element
 

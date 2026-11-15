@@ -43,16 +43,20 @@ def test_open_structure_file_replaces_scene(window):
     assert window.windowTitle().startswith("MgB2 (unsaved)")
     assert not window.is_modified()
     assert "Imported MgB2.cif (CIF, block MgB2)" in window.statusBar().currentMessage()
-    pixels = window.current_camera().project(window.geometry.positions,
-                                             *window.viewport.render_size())
+    pixels = window.current_camera().project(
+        window.geometry.positions, *window.viewport.render_size()
+    )
     assert np.all((pixels > 0) & (pixels < window.viewport.render_size()))
 
 
-@pytest.mark.parametrize("name, title", [
-    ("partial_occupancy.cif", "Cannot Open File"),
-    ("qe_ibrav2.pw.in", "Cannot Open File"),
-    ("POSCAR_truncated", "Cannot Open File"),
-])
+@pytest.mark.parametrize(
+    "name, title",
+    [
+        ("partial_occupancy.cif", "Cannot Open File"),
+        ("qe_ibrav2.pw.in", "Cannot Open File"),
+        ("POSCAR_truncated", "Cannot Open File"),
+    ],
+)
 def test_failed_open_keeps_current_scene(window, name, title):
     structure, geometry = window.structure, window.geometry
     camera = window.current_camera()

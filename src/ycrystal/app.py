@@ -16,23 +16,29 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=f"ycrystal {__version__}")
     parser.add_argument(
-        "file", nargs="?",
+        "file",
+        nargs="?",
         help="structure file (POSCAR/CONTCAR, CIF, QE pw.x input) or .ycrystal project",
     )
     parser.add_argument(
-        "--format", choices=["poscar", "cif", "qe", "project"],
+        "--format",
+        choices=["poscar", "cif", "qe", "project"],
         help="read FILE in this format instead of detecting it",
     )
     parser.add_argument(
-        "--sample", choices=sorted(SAMPLES), default="perovskite",
+        "--sample",
+        choices=sorted(SAMPLES),
+        default="perovskite",
         help="synthetic structure shown when no FILE is given",
     )
     parser.add_argument(
-        "--check-renderer", action="store_true",
+        "--check-renderer",
+        action="store_true",
         help="render a small reference scene with POV-Ray, verify it, and exit",
     )
     parser.add_argument(
-        "--povray", metavar="PATH",
+        "--povray",
+        metavar="PATH",
         help="POV-Ray executable for --check-renderer (default: $YCRYSTAL_POVRAY, then PATH)",
     )
     return parser

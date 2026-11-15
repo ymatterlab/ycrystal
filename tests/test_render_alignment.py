@@ -64,9 +64,7 @@ def test_check_detects_mirrored_or_shifted_images(spread, povray_executable, tmp
     mirrored = expected.copy()
     mirrored[:, 0] = width - mirrored[:, 0]
     mirror_matches = match_spheres(mirrored, spread.colors, blobs)
-    assert max(m.error_px for m in mirror_matches) > 5 or not all(
-        m.hue_ok for m in mirror_matches
-    )
+    assert max(m.error_px for m in mirror_matches) > 5 or not all(m.hue_ok for m in mirror_matches)
     shifted = match_spheres(expected + (2.0, 0.0), spread.colors, blobs)
     assert min(m.error_px for m in shifted) > TOLERANCE_PX
 

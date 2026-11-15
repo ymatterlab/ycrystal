@@ -11,14 +11,23 @@ os.environ["QT_API"] = "pyside6"
 from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry  # noqa: E402
 
+#: Set to 1 (as CI does) to make a missing display or POV-Ray an error instead of a
+#: skip, so that the GUI and rendering tests cannot silently pass as "skipped".
+REQUIRE_INTEGRATION = os.environ.get("YCRYSTAL_REQUIRE_INTEGRATION") == "1"
+
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
         return
+    gui_items = [item for item in items if "gui" in item.keywords]
+    if gui_items and REQUIRE_INTEGRATION:
+        raise pytest.UsageError(
+            f"YCRYSTAL_REQUIRE_INTEGRATION=1 but no X11/Wayland display is available for "
+            f"{len(gui_items)} GUI tests. Run under a display or xvfb-run."
+        )
     skip = pytest.mark.skip(reason="no display available for GUI tests")
-    for item in items:
-        if "gui" in item.keywords:
-            item.add_marker(skip)
+    for item in gui_items:
+        item.add_marker(skip)
 
 
 @pytest.fixture(scope="session")
@@ -36,7 +45,10 @@ def povray_executable() -> str:
         if result.ok:
             return str(result.executable)
         reasons.append(f"{candidate}: {result.message}")
-    pytest.skip("no working POV-Ray executable. " + " | ".join(reasons or ["none found"]))
+    message = "no working POV-Ray executable. " + " | ".join(reasons or ["none found"])
+    if REQUIRE_INTEGRATION:
+        pytest.fail(f"YCRYSTAL_REQUIRE_INTEGRATION=1 but {message}", pytrace=False)
+    pytest.skip(message)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -46,7 +58,8 @@ def isolated_qsettings(tmp_path_factory: pytest.TempPathFactory) -> None:
 
     QSettings.setDefaultFormat(QSettings.Format.IniFormat)
     QSettings.setPath(
-        QSettings.Format.IniFormat, QSettings.Scope.UserScope,
+        QSettings.Format.IniFormat,
+        QSettings.Scope.UserScope,
         str(tmp_path_factory.mktemp("qsettings")),
     )
     QCoreApplication.setOrganizationName("Ycrystal-tests")

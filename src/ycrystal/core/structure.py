@@ -82,17 +82,20 @@ class Structure:
 
     def replace(self, **changes: Any) -> Structure:
         values = {
-            "cell": self.cell, "positions": self.positions, "numbers": self.numbers,
-            "labels": self.labels, "pbc": self.pbc, "metadata": dict(self.metadata),
-            "occupancy": self.occupancy, "movable": self.movable,
+            "cell": self.cell,
+            "positions": self.positions,
+            "numbers": self.numbers,
+            "labels": self.labels,
+            "pbc": self.pbc,
+            "metadata": dict(self.metadata),
+            "occupancy": self.occupancy,
+            "movable": self.movable,
         }
         values.update(changes)
         return Structure(**values)
 
     def to_ase(self) -> Atoms:
-        return Atoms(
-            numbers=self.numbers, positions=self.positions, cell=self.cell, pbc=self.pbc
-        )
+        return Atoms(numbers=self.numbers, positions=self.positions, cell=self.cell, pbc=self.pbc)
 
     def __len__(self) -> int:
         return int(self.positions.shape[0])

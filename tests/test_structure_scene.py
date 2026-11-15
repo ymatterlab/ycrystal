@@ -59,10 +59,7 @@ def test_geometry_ids_radii_colors_and_cell_edges():
     assert geometry.colors.shape == (len(structure), 3)
     assert geometry.cell_edges.shape == (12, 2, 3)
     corners = {tuple(np.round(p, 9)) for p in geometry.cell_edges.reshape(-1, 3)}
-    expected = {
-        tuple(np.round(np.array(f) @ structure.cell, 9))
-        for f in np.ndindex(2, 2, 2)
-    }
+    expected = {tuple(np.round(np.array(f) @ structure.cell, 9)) for f in np.ndindex(2, 2, 2)}
     assert corners == expected
     # Every edge is parallel to one lattice vector and has its length.
     lengths = sorted(np.linalg.norm(e[1] - e[0]) for e in geometry.cell_edges)
@@ -71,8 +68,13 @@ def test_geometry_ids_radii_colors_and_cell_edges():
 
 
 def test_geometry_without_cell_and_hidden_cell():
-    molecule = Structure(cell=np.zeros((3, 3)), positions=np.zeros((1, 3)), numbers=[6],
-                         labels=["C"], pbc=(False, False, False))
+    molecule = Structure(
+        cell=np.zeros((3, 3)),
+        positions=np.zeros((1, 3)),
+        numbers=[6],
+        labels=["C"],
+        pbc=(False, False, False),
+    )
     assert build_geometry(molecule).cell_edges.shape == (0, 2, 3)
     hidden = build_geometry(perovskite_srtio3(), SceneSettings(show_cell=False))
     assert hidden.cell_edges.shape == (0, 2, 3)
@@ -119,8 +121,7 @@ def test_boundary_images_off_shows_input_atoms_once():
 def test_wrapping_atoms_outside_the_cell_and_near_one():
     cell = np.diag([4.0, 5.0, 6.0])
     frac = np.array([[1.25, -0.5, 0.3], [0.9999999, 0.5, 0.5]])
-    structure = Structure(cell=cell, positions=frac @ cell, numbers=[8, 22],
-                          labels=["O", "Ti"])
+    structure = Structure(cell=cell, positions=frac @ cell, numbers=[8, 22], labels=["O", "Ti"])
     geometry = build_geometry(structure)
     assert geometry.atom_ids == ((0, (-1, 1, 0)), (1, (-1, 0, 0)), (1, (0, 0, 0)))
     shown = _frac(geometry, structure)
@@ -130,12 +131,12 @@ def test_wrapping_atoms_outside_the_cell_and_near_one():
 
 def test_no_images_along_non_periodic_axes():
     cell = np.diag([4.0, 4.0, 20.0])
-    structure = Structure(cell=cell, positions=[[0.0, 0.0, 26.0]], numbers=[6], labels=["C"],
-                          pbc=(True, True, False))
+    structure = Structure(
+        cell=cell, positions=[[0.0, 0.0, 26.0]], numbers=[6], labels=["C"], pbc=(True, True, False)
+    )
     geometry = build_geometry(structure)
     assert len(geometry) == 4
-    assert {image for _, image in geometry.atom_ids} == {(0, 0, 0), (0, 1, 0), (1, 0, 0),
-                                                        (1, 1, 0)}
+    assert {image for _, image in geometry.atom_ids} == {(0, 0, 0), (0, 1, 0), (1, 0, 0), (1, 1, 0)}
     assert np.all(geometry.positions[:, 2] == 26.0)
 
 

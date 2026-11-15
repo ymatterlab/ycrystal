@@ -23,12 +23,16 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def full_project(structure) -> Project:
-    camera = Camera.looking_along((0.3, -1.0, -0.2), (0, 0, 1), focal_point=(1.1, 0.7, 2.3),
-                                  parallel_scale=3.21).orbit(azimuth=17.3, elevation=-8.9)
+    camera = Camera.looking_along(
+        (0.3, -1.0, -0.2), (0, 0, 1), focal_point=(1.1, 0.7, 2.3), parallel_scale=3.21
+    ).orbit(azimuth=17.3, elevation=-8.9)
     return Project(
         structure=structure,
-        scene=SceneSettings(radius_scale=0.42, boundary_images=True,
-                            hidden=frozenset({(0, (1, 1, 1)), (2, (0, 0, 1))})),
+        scene=SceneSettings(
+            radius_scale=0.42,
+            boundary_images=True,
+            hidden=frozenset({(0, (1, 1, 1)), (2, (0, 0, 1))}),
+        ),
         environment=Environment(background=(0.1, 0.2, 0.3), key_light=0.9, fill_light=0.2),
         camera=camera,
         output=RenderSettings(width=900, height=600, transparent_background=True),
@@ -63,15 +67,18 @@ def test_round_trip_is_exact(tmp_path):
 
 
 def test_file_is_readable_versioned_json(tmp_path):
-    path = save_project(tmp_path / "p.ycrystal", full_project(
-        read_structure(FIXTURES / "MgB2.cif")))
+    path = save_project(
+        tmp_path / "p.ycrystal", full_project(read_structure(FIXTURES / "MgB2.cif"))
+    )
     data = json.loads(path.read_text(encoding="utf-8"))
     assert data["format"] == "ycrystal-project"
     assert data["schema_version"] == SCHEMA_VERSION
     assert data["structure"]["symbols"] == ["Mg", "B", "B"]
     assert data["structure"]["metadata"]["source"]["format"] == "cif"
-    assert data["scene"]["hidden"] == [{"atom": 0, "image": [1, 1, 1]},
-                                       {"atom": 2, "image": [0, 0, 1]}]
+    assert data["scene"]["hidden"] == [
+        {"atom": 0, "image": [1, 1, 1]},
+        {"atom": 2, "image": [0, 0, 1]},
+    ]
 
 
 def test_project_reopens_after_source_file_is_moved(tmp_path):
@@ -96,12 +103,15 @@ def test_newer_schema_is_refused(tmp_path):
         load_project(path)
 
 
-@pytest.mark.parametrize("content, message", [
-    ("{not json", "not valid project JSON"),
-    ('{"format": "something-else"}', "not a Ycrystal project"),
-    ('{"format": "ycrystal-project"}', "no valid schema version"),
-    ('{"format": "ycrystal-project", "schema_version": 1}', "damaged or incomplete"),
-])
+@pytest.mark.parametrize(
+    "content, message",
+    [
+        ("{not json", "not valid project JSON"),
+        ('{"format": "something-else"}', "not a Ycrystal project"),
+        ('{"format": "ycrystal-project"}', "no valid schema version"),
+        ('{"format": "ycrystal-project", "schema_version": 1}', "damaged or incomplete"),
+    ],
+)
 def test_damaged_files(tmp_path, content, message):
     path = tmp_path / "bad.ycrystal"
     path.write_text(content)

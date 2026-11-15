@@ -87,8 +87,9 @@ class BlockChoiceRequired(StructureImportError):
 class ElementMappingRequired(StructureImportError):
     """Element identities must be given for ``keys`` (species labels or species slots)."""
 
-    def __init__(self, message: str, keys: list[str], suggestions: list[str | None],
-                 details: list[str]) -> None:
+    def __init__(
+        self, message: str, keys: list[str], suggestions: list[str | None], details: list[str]
+    ) -> None:
         self.keys = keys
         self.suggestions = suggestions
         self.details = details
@@ -117,8 +118,9 @@ def formats_matching_content(text: str) -> list[str]:
         found.append("project")
     if re.search(r"^\s*data_\S*", text, re.M) and "_cell_length_a" in text:
         found.append("cif")
-    if re.search(r"&system\b", text, re.I) and re.search(r"^\s*ATOMIC_POSITIONS", text,
-                                                          re.M | re.I):
+    if re.search(r"&system\b", text, re.I) and re.search(
+        r"^\s*ATOMIC_POSITIONS", text, re.M | re.I
+    ):
         found.append("qe")
     if _looks_like_poscar(text.splitlines()):
         found.append("poscar")
@@ -225,8 +227,9 @@ def _describe(exc: Exception) -> str:
 
 
 # ----- POSCAR / CONTCAR -------------------------------------------------------------------
-def _read_poscar(text: str, path: Path, *, block: str | None,
-                 element_map: dict[str, str]) -> tuple[Structure, dict[str, Any]]:
+def _read_poscar(
+    text: str, path: Path, *, block: str | None, element_map: dict[str, str]
+) -> tuple[Structure, dict[str, Any]]:
     from ase.io.vasp import read_vasp
 
     lines = text.splitlines()
@@ -248,7 +251,8 @@ def _read_poscar(text: str, path: Path, *, block: str | None,
             raise ElementMappingRequired(
                 f"{path.name} is a VASP 4 file without element names. Enter the element of "
                 "each species in the order of the atom counts.",
-                keys, _symbols_in_comment(lines[0], len(counts)),
+                keys,
+                _symbols_in_comment(lines[0], len(counts)),
                 [f"{n} atom{'s' if n != 1 else ''}" for n in counts],
             )
         symbols = [_checked_symbol(element_map[key]) for key in keys]
@@ -262,7 +266,7 @@ def _read_poscar(text: str, path: Path, *, block: str | None,
     except ValueError:
         n_atoms = 0
     first = 9 if selective else 8
-    coordinates = [ln for ln in lines[first:first + n_atoms] if _floats(ln.split(), 3)]
+    coordinates = [ln for ln in lines[first : first + n_atoms] if _floats(ln.split(), 3)]
     if n_atoms == 0 or len(coordinates) < n_atoms:
         raise StructureImportError(
             f"{path.name}: the atom counts add up to {n_atoms} atoms, but only "
@@ -278,15 +282,20 @@ def _read_poscar(text: str, path: Path, *, block: str | None,
             fixed[index] |= np.asarray(mask, dtype=bool)
         movable = ~fixed
     structure = Structure(
-        cell=atoms.cell.array, positions=atoms.positions, numbers=atoms.numbers,
-        labels=tuple(atoms.get_chemical_symbols()), pbc=(True, True, True), movable=movable,
+        cell=atoms.cell.array,
+        positions=atoms.positions,
+        numbers=atoms.numbers,
+        labels=tuple(atoms.get_chemical_symbols()),
+        pbc=(True, True, True),
+        movable=movable,
     )
     return structure, extra
 
 
 def _symbols_in_comment(comment: str, count: int) -> list[str | None]:
-    symbols = [word for word in re.split(r"[\s,;]+", comment) if word in atomic_numbers
-               and word != "X"]
+    symbols = [
+        word for word in re.split(r"[\s,;]+", comment) if word in atomic_numbers and word != "X"
+    ]
     if len(symbols) >= count:
         return list(symbols[:count])
     return [None] * count
@@ -300,8 +309,9 @@ def _checked_symbol(symbol: str) -> str:
 
 
 # ----- CIF --------------------------------------------------------------------------------
-def _read_cif(text: str, path: Path, *, block: str | None,
-              element_map: dict[str, str]) -> tuple[Structure, dict[str, Any]]:
+def _read_cif(
+    text: str, path: Path, *, block: str | None, element_map: dict[str, str]
+) -> tuple[Structure, dict[str, Any]]:
     from ase.io.cif import parse_cif
 
     blocks = [b for b in parse_cif(io.StringIO(text)) if b.has_structure()]
@@ -359,8 +369,12 @@ def _read_cif(text: str, path: Path, *, block: str | None,
     labels = [site_labels[k] for k in kinds] if kinds is not None else list(symbols)
     occupancy = [site_occupancy[k] for k in kinds] if kinds is not None else None
     structure = Structure(
-        cell=atoms.cell.array, positions=atoms.positions, numbers=atoms.numbers,
-        labels=tuple(labels), pbc=(True, True, True), occupancy=occupancy,
+        cell=atoms.cell.array,
+        positions=atoms.positions,
+        numbers=atoms.numbers,
+        labels=tuple(labels),
+        pbc=(True, True, True),
+        occupancy=occupancy,
     )
     extra: dict[str, Any] = {"block": chosen.name}
     spacegroup = atoms.info.get("spacegroup")
@@ -385,8 +399,9 @@ def element_from_label(label: str) -> str | None:
     return None
 
 
-def _read_qe(text: str, path: Path, *, block: str | None,
-             element_map: dict[str, str]) -> tuple[Structure, dict[str, Any]]:
+def _read_qe(
+    text: str, path: Path, *, block: str | None, element_map: dict[str, str]
+) -> tuple[Structure, dict[str, Any]]:
     from ase.io.espresso import (
         get_atomic_positions,
         get_atomic_species,
@@ -437,8 +452,9 @@ def _read_qe(text: str, path: Path, *, block: str | None,
     if species is None:
         raise StructureImportError(f"{path.name}: the ATOMIC_SPECIES card is missing.")
     species_labels = [entry[0] for entry in species]
-    positions_card = get_atomic_positions(card_lines, n_atoms=int(system["nat"]), cell=cell,
-                                          alat=alat)
+    positions_card = get_atomic_positions(
+        card_lines, n_atoms=int(system["nat"]), cell=cell, alat=alat
+    )
     if positions_card is None:
         raise StructureImportError(f"{path.name}: the ATOMIC_POSITIONS card is missing.")
     labels = [entry[0] for entry in positions_card]
@@ -469,7 +485,8 @@ def _read_qe(text: str, path: Path, *, block: str | None,
         raise ElementMappingRequired(
             f"{path.name}: the species label(s) {', '.join(unresolved)} do not name an "
             "element unambiguously. Enter the element for each label.",
-            unresolved, suggestions,
+            unresolved,
+            suggestions,
             [f"{labels.count(label)} atoms" for label in unresolved],
         )
     flags = [entry[2] for entry in positions_card]
@@ -485,4 +502,3 @@ def _read_qe(text: str, path: Path, *, block: str | None,
         movable=movable,
     )
     return structure, {"qe_species": {label: elements[label] for label in species_labels}}
-

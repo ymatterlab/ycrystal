@@ -49,7 +49,10 @@ def povray_version(executable: str, timeout: float = 15.0) -> str | None:
     """Return the version string reported by ``povray --version`` (e.g. ``3.7.0.10``)."""
     try:
         result = subprocess.run(
-            [executable, "--version"], capture_output=True, text=True, timeout=timeout,
+            [executable, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
             check=False,
         )
     except (OSError, subprocess.SubprocessError):

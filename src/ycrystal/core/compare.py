@@ -43,8 +43,12 @@ def compare_structures(a: Structure, b: Structure, tolerance: float = 1e-4) -> C
         distances = np.linalg.norm(delta @ a.cell, axis=1)
         best = int(np.argmin(distances))
         if distances[best] > tolerance:
-            return Comparison(False, cell_dev, float(distances[best]),
-                              f"atom {i + 1} ({symbol}) has no partner within {tolerance} Å")
+            return Comparison(
+                False,
+                cell_dev,
+                float(distances[best]),
+                f"atom {i + 1} ({symbol}) has no partner within {tolerance} Å",
+            )
         used[candidates[best]] = True
         worst = max(worst, float(distances[best]))
     return Comparison(True, cell_dev, worst, "equivalent")

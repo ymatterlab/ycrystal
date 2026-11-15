@@ -61,8 +61,9 @@ def test_atoms_written_with_ids_and_textures(scene):
     pov = scene_to_pov(geometry, camera, Environment(), RenderSettings())
     spheres = [line for line in pov.splitlines() if line.startswith("sphere") and "atom" in line]
     assert len(spheres) == len(geometry)
-    for (source, image), element, line in zip(geometry.atom_ids, geometry.elements, spheres,
-                                              strict=True):
+    for (source, image), element, line in zip(
+        geometry.atom_ids, geometry.elements, spheres, strict=True
+    ):
         assert f"// atom #{source + 1} {element} image {image}" in line
         assert f"Ycr_Texture_{element}" in line
     for element in set(geometry.elements):
@@ -74,16 +75,19 @@ def test_background_options(scene):
     geometry, camera = scene
     opaque = scene_to_pov(geometry, camera, Environment(background=(1, 1, 1)), RenderSettings())
     assert "background { color Ycr_sRGB(1.0000, 1.0000, 1.0000) }" in opaque
-    clear = scene_to_pov(geometry, camera, Environment(),
-                         RenderSettings(transparent_background=True))
+    clear = scene_to_pov(
+        geometry, camera, Environment(), RenderSettings(transparent_background=True)
+    )
     assert "background { color rgbt <0, 0, 0, 1> }" in clear
 
 
 def test_ini_sets_every_output_option():
-    ini = render_ini(RenderSettings(width=321, height=123, transparent_background=True),
-                     "scene.pov", "scene.png")
-    options = dict(line.split("=", 1) for line in ini.splitlines() if "=" in line
-                   and not line.startswith(";"))
+    ini = render_ini(
+        RenderSettings(width=321, height=123, transparent_background=True), "scene.pov", "scene.png"
+    )
+    options = dict(
+        line.split("=", 1) for line in ini.splitlines() if "=" in line and not line.startswith(";")
+    )
     assert options["Width"] == "321" and options["Height"] == "123"
     assert options["Output_Alpha"] == "on"
     assert options["Display"] == "off"
@@ -100,8 +104,9 @@ def test_write_files_to_directory_with_spaces_and_unicode(tmp_path, scene):
     geometry, camera = scene
     target = tmp_path / "my figures ü"
     target.mkdir()
-    pov, ini, image = write_scene_files(target, "Fe₂O₃ view", geometry, camera, Environment(),
-                                        RenderSettings())
+    pov, ini, image = write_scene_files(
+        target, "Fe₂O₃ view", geometry, camera, Environment(), RenderSettings()
+    )
     assert pov.is_file() and ini.is_file()
     assert f'Input_File_Name="{pov.name}"' in ini.read_text(encoding="utf-8")
     assert image.name == "Fe₂O₃ view.png"
