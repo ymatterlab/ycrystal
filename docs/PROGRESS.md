@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), and FR-VECTOR-01 (atom-attached vectors; branch `feature/vectors`). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), and FR-VECTOR-01 (atom-attached vectors; PR #19). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -95,7 +95,7 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 
 ## FR-VECTOR-01: manual atom-attached vectors (post-0.2.0, 15 November 2026)
 
-Development after version 0.2.0; branch `feature/vectors`. **Edit ▸ Vectors…** (and
+Development after version 0.2.0; merged in PR #19. **Edit ▸ Vectors…** (and
 **Vectors…** in the Appearance tab) attaches Cartesian direction or magnetic-moment (μB)
 arrows to atoms, as source defaults for all periodic images or as image overrides
 (including suppression), with centred or tail-at-centre arrows, uniform or proportional

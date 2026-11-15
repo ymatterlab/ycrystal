@@ -37,6 +37,7 @@ nav = [
         "reference/gui.md",
     ] },
     { "Progress and roadmap" = "PROGRESS.md" },
+    { "Development handoff" = "HANDOFF.md" },
 ]
 
 [project.validation]
