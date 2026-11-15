@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (branch `feature/lighting-editor`, submitted as a pull request); see the [0.2.0 checklist](development/release.md#checklist-for-020). Repository private.
+Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements). Repository private.
 
 ## Milestones
 
@@ -92,6 +92,50 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## FR-MEASURE-01: distance and bond-angle measurements (post-0.2.0, 15 November 2026)
+
+Development after version 0.2.0; branch `feature/measurements`. **Distance** and **Bond
+angle** modes (View along toolbar and Edit menu, mutually exclusive) measure between
+clicked displayed atoms; results go to a new **Measurements** dock at the bottom of the
+window. Session-only: nothing is saved in projects.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Known values: 3 Å distance, 0°, 60°, 90°, 120°, 180°; SrTiO₃ Ti–O = a/2, O–Ti–O = 90° and 180°, Sr–Sr images a and a√3 | Pass | `test_known_distances_and_angles`, `test_displayed_instances_match_the_geometry_in_supercells`; doctest in `ycrystal.core.measure` |
+| B is the vertex: the same three atoms in different orders give the expected different angles | Pass | `test_b_is_the_vertex`, `test_angle_order_vertex_and_repeated_measurements` |
+| Roundoff: `atan2(\|u × v\|, u · v)`; collinear arms give exactly 0°/180°, large coordinates and tiny angles stay accurate; results always within 0–180° | Pass | `test_roundoff_near_zero_and_straight_angles` |
+| Degenerate selections: zero-length arms rejected (in the session at the pick that causes them, keeping earlier picks); the same instance twice rejected; wrong counts, unknown kinds, nonexistent atoms, images without a cell rejected; two distinct atoms at one place give a valid 0 Å distance | Pass | `test_degenerate_selections_are_rejected`, `test_session_rejects_zero_length_arms`, `test_escape_mode_switch_and_rejected_picks` |
+| Periodic images: exact instances, no minimum image (8 Å vs 2 Å example); images of one source atom measurable; displayed positions in 1 × 1 × 1, 2 × 3 × 1, and 2 × 2 × 2 (boundary images off) equal `positions[source] + image @ cell` bit for bit | Pass | `test_exact_images_not_minimum_image`, `test_displayed_instances_match_the_geometry_in_supercells` |
+| Non-orthogonal cells: hexagonal (120° and 60° between image directions, \|a − b\| = a√3); triclinic distances equal the fractional metric-tensor result for 306 ordered instance pairs (3 atoms × 6 images) | Pass | `test_non_orthogonal_cells` |
+| Independence: camera orbit and zoom, atom size, material, and repetitions leave values bit-identical; values equal those from input coordinates | Pass | `test_results_ignore_display_settings`, `test_results_ignore_camera_and_appearance` |
+| Interaction with real mouse events: prompts (“Bond angle: select atom B — angle vertex …”), A/B/C picks, empty-space clicks keep picks, a drag starting on an atom orbits and picks nothing, ordinary selection untouched in the modes and working after them; Esc cancels (a second Esc clears the selection); mode switch cancels; the mode stays on after a measurement; results are appended | Pass | `test_modes_are_discoverable_and_exclusive`, `test_distance_by_clicks_reveals_the_panel`, `test_angle_order_vertex_and_repeated_measurements`, `test_escape_mode_switch_and_rejected_picks`, `test_drags_navigate_and_ordinary_selection_is_preserved` |
+| Panel: revealed on the first measurement under the 3D view only (right docks keep the corner); window size unchanged; rows with type, identities with image offsets, results with units and vertex; Copy Selected and Ctrl+C give self-contained lines; Remove Selected; Clear All; full-precision tooltip | Pass | `test_distance_by_clicks_reveals_the_panel`, `test_copy_remove_and_clear` |
+| Invalidation: boundary images off removes only the measurement whose ball disappeared and cancels the incomplete one, with a note; undo does not resurrect it; hiding a measured atom removes its measurement; loading another structure clears everything | Pass | `test_session_invalidation`, `test_invalidation_on_display_and_structure_changes` |
+| Helpers: non-pickable VTK actors (cages and labels in the scene renderer, dashed lines in a non-interactive overlay layer with the same camera); picking at all atoms and next to the marks is identical with and without helpers; exported scene text, bounds, lights, output camera, Fit, undo stack, modified flag unchanged; projects contain no measurements | Pass | `test_helpers_stay_out_of_exports_bounds_fit_and_picking`, `test_distance_by_clicks_reveals_the_panel`; existing POV-Ray GUI render test |
+| GUI on the Mint display (scripted): angle with cages, labels, dashed arms and arc; distance between two Sr images with the dashed line over the atoms; panel with two rows under the view | Pass (scripted) | `artifacts/measure/angle-pending.png`, `angle-complete.png`, `distance-images.png`, `panel.png` (gitignored) |
+| Hands-on use by a person (clicking in different orientations, keyboard use of the table) | Unverified | |
+
+Design: `ycrystal.core.measure` (pure) computes positions from `AtomId`s and the
+structure, distances, angles, text, and holds the `MeasurementSession` (mode, picks,
+results). The window routes atom clicks to the session while a mode is on, shows the
+instruction in the status bar, passes rows to `MeasurementPanel`, and passes picked
+positions to `StructureViewport.set_measurement`. After every geometry change the session
+drops measurements whose atoms are no longer displayed (or everything for a new
+structure object).
+
+Regression runs (on exactly the committed files): `pytest -m "not povray"` 367 passed
+(strict mode; 21 new tests, 12 pure and 9 GUI); `pytest -m povray` on
+`test_gui_render.py` and `test_gui.py` 4 passed (including the POV-Ray render compared
+with the output frame); doctests in `ycrystal.core.measure`; `zensical build --clean
+--strict`; ruff. Not run: the other POV-Ray tests (exported scenes are unchanged: the
+helpers are not part of the geometry).
+
+Remaining limitations: revealing the panel shrinks the 3D view like any window resize,
+so the output camera stays the same but the preview is marked out of date (and refreshed
+if automatic); removed measurements are not restored by undo; the dashed lines are drawn
+in front of all atoms, so a guide may cross atoms that lie in front of it; a ball hidden
+behind others must be brought into view (orbit) before it can be clicked.
 
 ## FR-LIGHT-01: Lighting Setup window and live lighting (post-0.1.0, 15 November 2026)
 

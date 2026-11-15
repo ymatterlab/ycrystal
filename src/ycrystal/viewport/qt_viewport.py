@@ -54,6 +54,7 @@ from vtkmodules.vtkFiltersSources import vtkCylinderSource, vtkSphereSource  # n
 from vtkmodules.vtkRenderingCore import (  # noqa: E402
     vtkActor,
     vtkActor2D,
+    vtkCoordinate,
     vtkGlyph3DMapper,
     vtkLight,
     vtkPolyDataMapper2D,
@@ -98,6 +99,17 @@ HIGHLIGHT_SCALE = 1.25
 
 HIGHLIGHT_COLOR = (1.0, 0.72, 0.0)
 """Colour of the selection shell (orange, drawn 45 % opaque)."""
+
+MEASURE_SCALE = 1.1
+"""Radius of the measurement cage relative to the atom radius: close around the ball
+(the coarse wire's edges stay about 6 % outside the ball's surface)."""
+
+MEASURE_COLOR = (0.0, 0.6, 0.75)
+"""Colour of the measurement cages (teal). They also differ from the selection by
+shape: sparse wire cages, letter labels, and dashed lines."""
+
+GUIDE_COLOR = (0.0, 0.38, 0.5)
+"""Colour of the measurement guide lines (dark teal, drawn in front of the atoms)."""
 
 HANDLE_COLORS = ((0.85, 0.2, 0.2), (0.15, 0.62, 0.25), (0.2, 0.38, 0.92))
 """Colours of the a, b, and c supercell handles."""
@@ -249,6 +261,8 @@ class StructureViewport(QWidget):
         self.atom_actors: dict[str, vtkActor] = {}
         self.bond_actors: dict[str, vtkActor] = {}
         self._highlight_actor: vtkActor | None = None
+        self.measurement_actors: list[vtkActor | vtkTextActor] = []
+        """Live-view-only measurement helpers (cages, labels, guides); never exported."""
         self.detail: tuple[int, int, int] = detail_for(0)
         self._geometry: DisplayGeometry | None = None
         # Any camera change (mouse navigation, wheel, Fit, programmatic) notifies listeners.
@@ -261,6 +275,17 @@ class StructureViewport(QWidget):
         self._dim_actor, self._frame_actor = _frame_actors()
         self._plotter.renderer.AddViewProp(self._dim_actor)
         self._plotter.renderer.AddViewProp(self._frame_actor)
+        # Measurement guide lines are drawn in a second, non-interactive layer with the
+        # same camera, so that they stay visible in front of the atoms.
+        from vtkmodules.vtkRenderingCore import vtkRenderer
+
+        self._guide_renderer = vtkRenderer()
+        self._guide_renderer.SetLayer(1)
+        self._guide_renderer.InteractiveOff()
+        self._guide_renderer.SetActiveCamera(self._plotter.renderer.GetActiveCamera())
+        window = self._plotter.render_window
+        window.SetNumberOfLayers(max(2, window.GetNumberOfLayers()))
+        window.AddRenderer(self._guide_renderer)
         # Supercell handles (2D markers with a letter) and the drag preview.
         self._supercell: tuple[np.ndarray, tuple[int, int, int], tuple[bool, ...]] | None = None
         self._handles_enabled = True
@@ -449,6 +474,70 @@ class StructureViewport(QWidget):
             actor.SetPickable(False)
             self._plotter.add_actor(actor, reset_camera=False, render=False, name="selection")
             self._highlight_actor = actor
+        self._plotter.render()
+
+    def set_measurement(self, points: np.ndarray, radii: np.ndarray, kind: str | None) -> None:
+        """Show the helpers of a measurement: picked atoms and a guide.
+
+        Parameters
+        ----------
+        points
+            Positions in Å of the picked atoms in order (A, B, C), shape ``(n, 3)``;
+            empty removes the helpers.
+        radii
+            Drawn radii of those atoms (for the cage size).
+        kind
+            ``"distance"`` (dashed line A–B) or ``"angle"`` (dashed arms B–A and B–C,
+            and a solid arc at the vertex B once all three atoms are picked). The lines
+            are drawn in front of the atoms.
+
+        Notes
+        -----
+        Each picked atom gets a wire cage and a boxed letter label (A, B, C; "B vertex"
+        for angles) that stays readable in front of the atoms. The helpers are
+        separate, non-pickable VTK actors: they are not part of the geometry, so
+        exports, bounds, Fit, the lights, and picking ignore them, and the camera does
+        not change.
+        """
+        renderer, guides = self._plotter.renderer, self._guide_renderer
+        for actor in self.measurement_actors:
+            renderer.RemoveActor(actor)
+            guides.RemoveActor(actor)
+        self.measurement_actors = []
+        on_top: list[vtkActor] = []
+        points = np.asarray(points, dtype=float).reshape(-1, 3)
+        if len(points):
+            cage = _sphere_actor(points, np.asarray(radii, float) * MEASURE_SCALE, None, (12, 7))
+            prop = cage.GetProperty()
+            prop.SetRepresentationToWireframe()
+            prop.SetColor(*MEASURE_COLOR)
+            prop.SetLineWidth(1.0)
+            prop.LightingOff()
+            self.measurement_actors.append(cage)
+            segments = []
+            if len(points) >= 2:
+                if kind == "angle":
+                    segments += _dashed(points[1], points[0])
+                    if len(points) == 3:
+                        segments += _dashed(points[1], points[2])
+                else:
+                    segments += _dashed(points[0], points[1])
+            if segments:
+                on_top.append(_segments_actor(np.asarray(segments), 4.0))
+            if kind == "angle" and len(points) == 3:
+                arc = _angle_arc(points[0], points[1], points[2])
+                if arc is not None:
+                    on_top.append(_segments_actor(np.stack([arc[:-1], arc[1:]], axis=1), 3.0))
+            for i, point in enumerate(points):
+                letter = "B vertex" if kind == "angle" and i == 1 else "ABC"[i]
+                self.measurement_actors.append(_anchored_label(letter, point))
+            for actor in self.measurement_actors:
+                actor.SetPickable(False)
+                renderer.AddActor(actor)
+            for actor in on_top:
+                actor.SetPickable(False)
+                guides.AddActor(actor)
+            self.measurement_actors += on_top
         self._plotter.render()
 
     def pick(self, pixel: tuple[float, float]) -> int | None:
@@ -1185,6 +1274,79 @@ def _line_mapper() -> object:
     mapper = vtkPolyDataMapper()
     mapper.SetInputData(pv.PolyData())
     return mapper
+
+
+def _dashed(start: np.ndarray, end: np.ndarray) -> list[tuple[np.ndarray, np.ndarray]]:
+    """Dash segments from ``start`` to ``end`` (dash and gap of about 0.2 Å each)."""
+    start, end = np.asarray(start, float), np.asarray(end, float)
+    length = float(np.linalg.norm(end - start))
+    if length < 1e-9:
+        return []
+    count = max(3, min(20, round(length / 0.4)))
+    t = np.linspace(0.0, 1.0, 2 * count)
+    ends = start + np.outer(t, end - start)
+    return [(ends[i], ends[i + 1]) for i in range(0, 2 * count - 1, 2)]
+
+
+def _angle_arc(a: np.ndarray, b: np.ndarray, c: np.ndarray, steps: int = 32) -> np.ndarray | None:
+    """Points of an arc at the vertex ``b`` from the arm to ``a`` to the arm to ``c``."""
+    u, v = np.asarray(a, float) - b, np.asarray(c, float) - b
+    lu, lv = np.linalg.norm(u), np.linalg.norm(v)
+    if lu < 1e-9 or lv < 1e-9:
+        return None
+    u, v = u / lu, v / lv
+    angle = float(np.arctan2(np.linalg.norm(np.cross(u, v)), u @ v))
+    if angle < 1e-6:
+        return None
+    w = v - (u @ v) * u  # in-plane direction perpendicular to u
+    if np.linalg.norm(w) < 1e-9:  # 180°: any perpendicular direction
+        w = np.cross(u, [1.0, 0.0, 0.0] if abs(u[0]) < 0.9 else [0.0, 1.0, 0.0])
+    w /= np.linalg.norm(w)
+    radius = 0.45 * min(lu, lv)
+    t = np.linspace(0.0, angle, steps)
+    return b + radius * (np.outer(np.cos(t), u) + np.outer(np.sin(t), w))
+
+
+def _segments_actor(segments: np.ndarray, width: float) -> vtkActor:
+    """Line segments ``(n, 2, 3)`` as one actor in the guide colour."""
+    from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
+
+    points = np.asarray(segments, float).reshape(-1, 3)
+    pairs = np.arange(len(points)).reshape(-1, 2)
+    lines = np.column_stack([np.full(len(pairs), 2), pairs])
+    mapper = vtkPolyDataMapper()
+    mapper.SetInputData(pv.PolyData(points, lines=lines.ravel()))
+    actor = vtkActor()
+    actor.SetMapper(mapper)
+    prop = actor.GetProperty()
+    prop.SetColor(*GUIDE_COLOR)
+    prop.SetLineWidth(width)
+    prop.LightingOff()
+    return actor
+
+
+def _anchored_label(text: str, point: np.ndarray) -> vtkTextActor:
+    """Return a boxed label drawn on top of the scene, offset from a world point by pixels."""
+    actor = vtkTextActor()
+    actor.SetInput(text)
+    prop = actor.GetTextProperty()
+    prop.SetFontSize(16)
+    prop.BoldOn()
+    prop.SetColor(0.05, 0.05, 0.08)
+    prop.SetBackgroundColor(1.0, 1.0, 1.0)
+    prop.SetBackgroundOpacity(0.85)
+    prop.SetFrame(True)
+    prop.SetFrameColor(*MEASURE_COLOR)
+    prop.SetFrameWidth(2)
+    reference = vtkCoordinate()
+    reference.SetCoordinateSystemToWorld()
+    reference.SetValue(*np.asarray(point, dtype=float))
+    position = actor.GetPositionCoordinate()
+    position.SetCoordinateSystemToDisplay()
+    position.SetReferenceCoordinate(reference)
+    position.SetValue(6, 6)
+    actor._reference = reference  # keep the coordinate alive with the actor
+    return actor
 
 
 def _overlay_actor(color: tuple[float, float, float]) -> vtkActor2D:

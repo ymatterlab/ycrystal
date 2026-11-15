@@ -19,6 +19,26 @@
         - triclinic_marker
         - SAMPLES
 
+## Measurements
+
+Distances and bond angles between displayed instances, used by the measurement modes
+of the window. Session-only: nothing here is saved in projects.
+
+::: ycrystal.core.measure
+    options:
+      members:
+        - KINDS
+        - MeasurementError
+        - Measurement
+        - atom_position
+        - distance
+        - bond_angle
+        - measure
+        - atom_text
+        - result_text
+        - measurement_text
+        - MeasurementSession
+
 ## Comparison helpers
 
 These support reader-equivalence checks, not GUI supercell controls.
