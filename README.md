@@ -20,7 +20,7 @@ Python interfaces are evolving developer functionality, without a stable API gua
 Linux Mint 22 / Ubuntu 24.04, system Python 3.12, X11 with OpenGL:
 
 ```bash
-sudo apt install git povray libxcb-cursor0 python3.12-venv
+sudo apt install git povray povray-includes libxcb-cursor0 python3.12-venv
 git clone https://github.com/ymatterlab/ycrystal.git
 cd ycrystal
 /usr/bin/python3 -m venv .venv
