@@ -35,6 +35,27 @@
         - points_and_radii
         - bounding_sphere
 
+## Atom-attached vectors
+
+::: ycrystal.core.vectors
+    options:
+      members:
+        - MEANINGS
+        - PLACEMENTS
+        - LENGTH_MODES
+        - ZERO_MODULUS
+        - MIN_ARROW_LENGTH
+        - MAX_HEAD_FRACTION
+        - STYLE_RANGES
+        - VectorRecord
+        - VectorSet
+        - VectorStyle
+        - Arrow
+        - arrow_length
+        - arrow_for
+        - resolve_arrows
+        - arrow_spheres
+
 ## Background pictures
 
 ::: ycrystal.core.background

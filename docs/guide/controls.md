@@ -15,6 +15,7 @@ the in-app summary.
 | Ctrl + click | Add/remove a ball from the selection |
 | Esc | Clear selection (in a measurement mode: cancel the incomplete measurement) |
 | **Distance** / **Bond angle** (View along toolbar, Edit menu) | Measure between clicked atoms; see [Measurements](#measurements) |
+| **Edit ▸ Vectors…** | Attach direction or magnetic-moment arrows to atoms; see [Vectors](#vectors-arrows-on-atoms) |
 | Delete or Backspace | Hide selected displayed atoms |
 | Ctrl+M | Material for the selected atoms (Edit ▸ Material for Selection…) |
 | Drag an **a**, **b**, or **c** handle | Add or remove whole cells along that axis |
@@ -181,3 +182,76 @@ disappears from the display (boundary atoms off, fewer repetitions, hiding), the
 measurements that use it are removed and the panel says so; the others stay, because
 each identity still denotes the same position in the same structure. Undoing the change
 does not bring removed measurements back.
+
+## Vectors (arrows on atoms)
+
+**Edit ▸ Vectors…** (or **Vectors…** in the Appearance tab) attaches arrows to atoms, for
+example to illustrate a magnetic structure. You enter the vectors yourself; Ycrystal does
+not compute, read, or infer magnetic moments.
+
+**What a vector is.** Three Cartesian components in the structure's own right-handed
+frame, the frame of the atom positions (not fractional or lattice coordinates, and not a
+DFT code's spin axes). The camera never changes them. Each vector has a meaning:
+
+- **Magnetic moment**: components in Bohr magnetons (μB);
+- **Direction**: a dimensionless illustration, never presented as a measured moment.
+
+The table shows the components and the modulus. A zero vector is kept as data (modulus 0)
+and draws no arrow; vectors with a modulus up to 10⁻⁹ count as zero.
+
+**Attaching.** Select atoms in the 3D view, then **Add/Set for Selection…**. The editor
+asks where the vector goes:
+
+- **Selected displayed atom(s) only**: exactly those balls (source atom and periodic
+  image), as an *image override*;
+- **All periodic images of their source atom(s)**: a *source default* that every image
+  of the atom shows, with the same components in every cell.
+
+An image override takes precedence over its source default, and **Suppress on Selected
+Images** removes the arrow from chosen balls even if their source has a default. Each ball
+shows at most one vector. Atoms of the same element are never grouped: two iron atoms can
+carry opposite moments. Ycrystal infers no alternating signs, propagation vector, or
+magnetic symmetry, so an antiferromagnetic pattern has to be assigned explicitly (per
+source atom, per image, or with a magnetic repeat cell as the structure).
+
+While the editor is open, the 3D view and the POV-Ray preview show the new vector without
+an undo step; selecting other atoms does not change the editor's targets. **Apply** is
+one undo step (also for many atoms at once), **Cancel** restores the previous state.
+
+The table lists every source default, image override, and suppression with its atom,
+image, components, meaning, modulus, and how many displayed balls show it. Choosing rows
+selects their balls in the 3D view. **Edit…** changes the components of the chosen rows,
+**Reverse** negates them, **Show/Hide** hides arrows without deleting the data, and
+**Remove** deletes rows (removing an image override brings back the source default). Each
+action is one undo step.
+
+**Arrow appearance** (all arrows): **Placement** *Centred on atom* (the default; the arrow
+runs from `r − L u/2` to `r + L u/2`) or *Tail at atom centre* (`r` to `r + L u`), where
+`u` is the unit direction and `L` the total length, head included. **Length** is either
+*uniform* (`L` in Å for every arrow) or *proportional* (`L` = scale × modulus, with scale
+in Å per μB for moments and Å per unit for directions). Switching never changes the
+components. Shaft radius, head length and radius, colour, and material (built-in or one
+of your custom materials) are separate from the atoms; materials with their own colours
+ignore the arrow colour. On short arrows the head takes at most 60 % of the length and
+the whole arrow gets thinner in proportion; the length itself is never changed. A short
+arrow can be hidden inside its atom: make it longer or the atom smaller.
+
+**In figures.** Arrows are part of the figure: the POV-Ray preview, the PNG, and the
+`.pov` file contain them (as a cylinder and a cone each, with a comment naming the atom
+and the components), lit and shadowed like the atoms. **Fit** and the render keep whole
+arrows in view, including their heads; adding or editing a vector does not move the
+camera by itself. The lights stay where they are (they depend on the atoms and cell
+only). Arrows are never picked by clicks and do not change measurements, bonds, or atom
+counts.
+
+**What happens when the display changes.** Hiding an atom hides its arrow. Fewer
+repetitions hide the arrows of images that are no longer displayed, without deleting
+their overrides; more repetitions bring them back. Changing atom radii does not change
+arrows. Opening another structure starts without vectors.
+
+**Saving.** Projects store all vectors at full precision (project schema 7), including
+suppressions and the arrow appearance, and the definition of a custom arrow material.
+Styles carry only the arrow appearance (with the *Materials, colours, and radii* part);
+they never transfer vectors to another structure, and importing a style keeps the
+current structure's vectors. `examples/vectors-synthetic-afm.ycrystal` shows a small
+synthetic two-site cell with opposite moments assigned by hand.

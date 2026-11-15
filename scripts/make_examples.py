@@ -107,6 +107,51 @@ def main() -> None:
     )
     write_json(EXAMPLES / "triclinic-transparent.ycrystal", project_to_dict(project))
 
+    vector_example()
+
+
+def vector_example() -> None:
+    """4. Synthetic two-site cubic cell with explicitly assigned opposite moments.
+
+    An illustration of FR-VECTOR-01 (source defaults of +2.2 and -2.2 μB along z), not
+    a claim about the magnetic ground state of any real material.
+    """
+    import numpy as np
+
+    from ycrystal.core.bonds import BondSettings
+    from ycrystal.core.structure import Structure
+    from ycrystal.core.vectors import VectorRecord, VectorSet, VectorStyle
+
+    a = 2.87
+    structure = Structure(
+        cell=np.eye(3) * a,
+        positions=np.array([[0.0, 0.0, 0.0], [a / 2, a / 2, a / 2]]),
+        numbers=[26, 26],
+        labels=["Fe1", "Fe2"],
+        metadata={
+            "note": "Synthetic two-site cubic cell for the vector example (not a real material)."
+        },
+    )
+    vectors = VectorSet(
+        sources=((0, VectorRecord((0.0, 0.0, 2.2))), (1, VectorRecord((0.0, 0.0, -2.2))))
+    )
+    scene = SceneSettings(
+        radius_scale=0.35,
+        repetitions=(2, 2, 1),
+        bonds=BondSettings(enabled=False),
+        vectors=vectors,
+        vector_style=VectorStyle(length=2.2, color=(0.75, 0.1, 0.1)),
+    )
+    camera = fitted(structure, scene, (-0.7, -1.0, -0.35), (0, 0, 1), 4 / 3)
+    project = Project(
+        structure,
+        scene=scene,
+        environment=environment_from_preset("white"),
+        camera=camera,
+        output=RenderSettings(800, 600),
+    )
+    write_json(EXAMPLES / "vectors-synthetic-afm.ycrystal", project_to_dict(project))
+
 
 if __name__ == "__main__":
     main()

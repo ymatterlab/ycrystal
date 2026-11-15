@@ -351,13 +351,13 @@ the glass. While composing a glass figure, use *Soft* or *Bright* lighting or sw
 ## Reusing the look: styles
 
 Materials, colours, radii, the environment, and the lighting are saved in projects
-(`.ycrystal`, schema 6) and restored exactly when the project is reopened. Projects
+(`.ycrystal`, schema 7) and restored exactly when the project is reopened. Projects
 saved by earlier versions open with their original appearance. A project or style with
 a background picture is saved as a ZIP package that contains the picture (the suffix
 stays `.ycrystal` or `.ycstyle`); others remain a single JSON file. Ycrystal recognises
 both forms by their content. Damaged or unsafe packages, and packages that miss their
 picture, are refused with a message and nothing changes. Ycrystal 0.2.0 and older cannot
-open schema-6 projects or packages.
+open schema-6 or later projects or packages.
 
 To give another structure the same look, save a **style**: **File ▸ Export Style…**
 writes a `.ycstyle` file, and **File ▸ Import Style…** applies one to the open structure.
@@ -365,7 +365,7 @@ The import dialog lets you choose the parts to apply:
 
 | Part | Contents |
 | --- | --- |
-| Materials, colours, and radii | Default material; material, colour, and radius of each element |
+| Materials, colours, and radii | Default material; material, colour, and radius of each element; the appearance of vector arrows (never the vectors themselves) |
 | Display | Atom size, repetitions, boundary atoms, cell edges, bond length, radius, and pair rules |
 | Environment | Background (including a background picture), floor, lighting, transparency, and the cell-edge colour |
 | Output image size | Width and height in pixels |

@@ -20,7 +20,7 @@ from ycrystal.core.structure import Structure
 from ycrystal.io import images
 from ycrystal.io.images import ImageError, import_image
 from ycrystal.io.package import is_package
-from ycrystal.io.project import Project, ProjectError, load_project, save_project
+from ycrystal.io.project import SCHEMA_VERSION, Project, ProjectError, load_project, save_project
 from ycrystal.io.style import Style, StyleError, load_style, save_style
 from ycrystal.render.jobs import prepare_job, run_job
 from ycrystal.render.pov_writer import RenderSettings, scene_to_pov, write_scene_files
@@ -227,7 +227,7 @@ def test_project_package_round_trip_without_the_source(pictures, tmp_path):
         names = archive.namelist()
         document = json.loads(archive.read("project.json"))
     assert names == ["project.json", f"assets/{asset.id}.png"]
-    assert document["schema_version"] == 6 and document["assets"][0]["id"] == asset.id
+    assert document["schema_version"] == SCHEMA_VERSION and document["assets"][0]["id"] == asset.id
     pictures["png"].unlink()  # the original picture is gone
     forget_images()  # a fresh session
     again = load_project(path)
@@ -235,7 +235,8 @@ def test_project_package_round_trip_without_the_source(pictures, tmp_path):
     assert images.get_image(asset.id).data == asset.data
     # Without a picture the project stays plain JSON; old JSON projects still load.
     plain = save_project(tmp_path / "plain.ycrystal", Project(perovskite_srtio3()))
-    assert not is_package(plain) and json.loads(plain.read_text())["schema_version"] == 6
+    assert not is_package(plain)
+    assert json.loads(plain.read_text())["schema_version"] == SCHEMA_VERSION
     for example in Path("examples").glob("*.ycrystal"):
         assert load_project(example).environment.image is None
 
