@@ -15,6 +15,7 @@ writer produces text only; running POV-Ray is the job of
 
 from __future__ import annotations
 
+import dataclasses
 import datetime as _dt
 from dataclasses import dataclass
 from pathlib import Path
@@ -81,8 +82,17 @@ def _srgb(color: RGB) -> str:
     return "Ycr_sRGB(" + ", ".join(f"{c:.4f}" for c in color) + ")"
 
 
-def _identifier(element: str) -> str:
-    return "Ycr_Texture_" + "".join(ch for ch in element if ch.isalnum())
+def _identifier(element: str, declaration: str = "texture") -> str:
+    prefix = "Ycr_Material_" if declaration == "material" else "Ycr_Texture_"
+    return prefix + "".join(ch for ch in element if ch.isalnum())
+
+
+def _surface(element: str, declaration: str) -> str:
+    """Object modifier that applies an element's declared texture or material."""
+    return f"{declaration} {{ {_identifier(element, declaration)} }}"
+
+
+_CELL_FINISH = "ambient 0.08 diffuse 0.75 specular 0.35 roughness 0.02"
 
 
 def scene_to_pov(
@@ -103,10 +113,12 @@ def scene_to_pov(
     camera
         View to reproduce.
     environment
-        Background colour and light intensities.
+        Background colour, transparency, and light intensities.
     settings
         Output size and background transparency. The size sets the camera's visible
-        width and height; it should match the size in the ``.ini`` file.
+        width and height; it should match the size in the ``.ini`` file. The background
+        is transparent if either ``settings.transparent_background`` or
+        ``environment.transparent`` is set.
     title
         Text of the first comment line.
     renderer_note
@@ -115,7 +127,13 @@ def scene_to_pov(
     Returns
     -------
     str
-        The scene text. It needs no ``#include`` files.
+        The scene text. It lists the standard ``#include`` files its material needs
+        (none for the built-in presets).
+
+    Raises
+    ------
+    ycrystal.presets.PresetError
+        If ``geometry.material`` is not a known material preset.
 
     Notes
     -----
@@ -128,8 +146,10 @@ def scene_to_pov(
 
     Lights sit on the viewer's side at a distance that grows with the scene: the key
     light at the upper left and a shadowless fill light at the lower right; a light
-    with non-positive intensity is omitted. Each element gets one texture (pigment
-    from its first displayed colour, a shared finish). Each atom is a ``sphere`` with
+    with non-positive intensity is omitted. Each element gets one declaration from its
+    first displayed colour and the material preset: a ``texture`` for opaque finishes,
+    or a ``material`` (pigment ``filter`` plus ``interior``) for transparent presets.
+    Each atom is a ``sphere`` with
     a comment giving its 1-based source atom number, element, and image offset; a comment states how
     many atoms are hidden. Bonds are two half cylinders coloured like their endpoint
     atoms, using geometry.bond_radius. Cell edges are cylinders with spheres at the corners, marked
@@ -138,6 +158,11 @@ def scene_to_pov(
     The header records the generation time (UTC), so two exports of the same scene
     differ in that line.
     """
+    from ycrystal.presets import get_material
+
+    material = get_material(geometry.material)
+    declaration = material.declaration
+    transparent = settings.transparent_background or environment.transparent
     right, up, direction = camera.basis()
     world_w, world_h = camera.visible_size(settings.width, settings.height)
     focal = np.asarray(camera.focal_point)
@@ -162,10 +187,19 @@ def scene_to_pov(
         add(f"// Renderer used: {renderer_note}")
     add("// Units: angstrom; right-handed world coordinates (unchanged from the structure).")
     add(f"// Image: {settings.width} x {settings.height} px; render with the matching .ini file.")
-    add("// No #include files are required.")
+    if material.includes:
+        add(
+            "// Requires standard POV-Ray include files: "
+            + ", ".join(material.includes)
+            + " (shipped with POV-Ray; not self-contained)."
+        )
+    else:
+        add("// No #include files are required.")
     add("")
     add(f"#version {POV_LANGUAGE_VERSION};")
     add("global_settings { assumed_gamma 1.0 }")
+    for include in material.includes:
+        add(f'#include "{include}"')
     add("")
     add("// Colours below are written as sRGB values and converted to linear light.")
     add(
@@ -183,7 +217,7 @@ def scene_to_pov(
     add(f"  up        {_v(up * world_h)}")
     add("}")
     add("")
-    if settings.transparent_background:
+    if transparent:
         add("background { color rgbt <0, 0, 0, 1> }  // transparent (Output_Alpha=on)")
     else:
         add(f"background {{ color {_srgb(environment.background)} }}")
@@ -194,20 +228,27 @@ def scene_to_pov(
     if environment.fill_light > 0:
         add(f"light_source {{ {_v(fill_pos)} color rgb {_f(environment.fill_light)} shadowless }}")
     add("")
-    add("#declare Ycr_Finish_Default = finish {")
-    add("  ambient 0.08 diffuse 0.75 specular 0.35 roughness 0.02")
-    add("}")
+    add(f'// Material "{material.id}": {material.name}. {material.description}')
+    add(f"#declare Ycr_Finish = finish {{ {material.finish} }}")
     textures: dict[str, RGB] = {}
     for element, color in zip(geometry.elements, geometry.colors, strict=True):
         textures.setdefault(element, (float(color[0]), float(color[1]), float(color[2])))
     for element, color in textures.items():
-        add(f"#declare {_identifier(element)} = texture {{")
-        add(f"  pigment {{ color {_srgb(color)} }}")
-        add("  finish { Ycr_Finish_Default }")
-        add("}")
+        if declaration == "material":
+            add(f"#declare {_identifier(element, declaration)} = material {{")
+            add(f"  texture {{ pigment {{ color {_srgb(color)} filter {_f(material.filter)} }}")
+            add("            finish { Ycr_Finish } }")
+            if material.interior:
+                add(f"  interior {{ {material.interior} }}")
+            add("}")
+        else:
+            add(f"#declare {_identifier(element)} = texture {{")
+            add(f"  pigment {{ color {_srgb(color)} }}")
+            add("  finish { Ycr_Finish }")
+            add("}")
     add(
         f"#declare Ycr_Texture_Cell = texture {{ pigment {{ color "
-        f"{_srgb(geometry.cell_edge_color)} }} finish {{ Ycr_Finish_Default }} }}"
+        f"{_srgb(geometry.cell_edge_color)} }} finish {{ {_CELL_FINISH} }} }}"
     )
     add("")
     add(f"// Atoms ({len(geometry)}): source atom number (1-based, input order) and periodic image")
@@ -218,23 +259,23 @@ def scene_to_pov(
     ):
         source, image = atom_id
         add(
-            f"sphere {{ {_v(pos)}, {_f(float(rad))} texture {{ {_identifier(element)} }} }}"
+            f"sphere {{ {_v(pos)}, {_f(float(rad))} {_surface(element, declaration)} }}"
             f"  // atom #{source + 1} {element} image {image}"
         )
     if len(geometry.bonds):
         add("")
-        add(f"// Bonds ({len(geometry.bonds)}): each half takes the texture of its atom.")
+        add(f"// Bonds ({len(geometry.bonds)}): each half takes the {declaration} of its atom.")
         r_bond = _f(geometry.bond_radius)
         for a, b in geometry.bonds:
             start, end = geometry.positions[a], geometry.positions[b]
-            tex_a = _identifier(geometry.elements[a])
-            tex_b = _identifier(geometry.elements[b])
+            tex_a = _surface(geometry.elements[a], declaration)
+            tex_b = _surface(geometry.elements[b], declaration)
             if tex_a == tex_b:
-                add(f"cylinder {{ {_v(start)}, {_v(end)}, {r_bond} texture {{ {tex_a} }} }}")
+                add(f"cylinder {{ {_v(start)}, {_v(end)}, {r_bond} {tex_a} }}")
             else:
                 mid = 0.5 * (start + end)
-                add(f"cylinder {{ {_v(start)}, {_v(mid)}, {r_bond} texture {{ {tex_a} }} }}")
-                add(f"cylinder {{ {_v(mid)}, {_v(end)}, {r_bond} texture {{ {tex_b} }} }}")
+                add(f"cylinder {{ {_v(start)}, {_v(mid)}, {r_bond} {tex_a} }}")
+                add(f"cylinder {{ {_v(mid)}, {_v(end)}, {r_bond} {tex_b} }}")
     if len(geometry.cell_edges):
         add("")
         add("// Cell edges (no_shadow: edges do not darken atoms).")
@@ -274,7 +315,9 @@ def render_ini(settings: RenderSettings, pov_name: str, image_name: str) -> str:
     str
         The ``.ini`` text: PNG output with 8 bits per channel and sRGB gamma, alpha
         only for transparent backgrounds, ``Quality=9``, the requested size and
-        antialiasing, and no display window, pause, or verbose output.
+        antialiasing, and no display window or pause. ``Verbose=on`` makes POV-Ray
+        print ``Rendered N of M pixels`` progress lines, which Ycrystal shows during
+        renders; it does not change the image.
     """
 
     def quoted(name: str) -> str:
@@ -299,7 +342,7 @@ def render_ini(settings: RenderSettings, pov_name: str, image_name: str) -> str:
         "Jitter=off",
         "Display=off",
         "Pause_When_Done=off",
-        "Verbose=off",
+        "Verbose=on",
         "",
     ]
     return "\n".join(lines)
@@ -328,7 +371,8 @@ def write_scene_files(
     camera
         View to reproduce.
     environment
-        Background colour and light intensities.
+        Background, transparency, and light intensities. A transparent environment
+        also switches on ``Output_Alpha`` in the ``.ini`` file.
     settings
         Output image settings.
     **kwargs
@@ -359,6 +403,8 @@ def write_scene_files(
     the image only there (or under ``/tmp``).
     """
     directory = Path(directory)
+    if environment.transparent and not settings.transparent_background:
+        settings = dataclasses.replace(settings, transparent_background=True)
     pov_path = directory / f"{basename}.pov"
     ini_path = directory / f"{basename}.ini"
     image_path = directory / f"{basename}.png"

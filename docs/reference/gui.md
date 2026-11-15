@@ -22,8 +22,14 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - set_bond_radius
         - set_bond_pair
         - view_along
+        - set_material
+        - set_background
+        - set_output_size
         - current_camera
         - current_render_settings
+        - preview_settings
+        - request_preview
+        - cancel_render
         - export_pov
         - render_png
         - check_renderer
@@ -39,6 +45,14 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - camera
         - set_camera
         - fit
+        - set_output_aspect
+        - output_aspect
+        - frame_rect
+        - frame_factor
+        - output_camera
+        - set_output_camera
+        - set_frame_visible
+        - frame_to_output
         - render_size
         - screenshot
         - close_viewport
@@ -47,6 +61,18 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
     options:
       members:
         - finished
+        - progress
         - start
         - is_running
         - cancel
+
+::: ycrystal.render.process.RenderQueue
+    options:
+      members:
+        - started
+        - finished
+        - progress
+        - submit
+        - cancel
+        - is_busy
+        - current_tag

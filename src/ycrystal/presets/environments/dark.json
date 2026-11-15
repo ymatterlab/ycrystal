@@ -1,0 +1,18 @@
+{
+  "id": "dark",
+  "name": "Dark grey",
+  "order": 3,
+  "description": "Dark background with light cell edges; suits metallic and glass atoms.",
+  "background": [
+    0.13,
+    0.13,
+    0.15
+  ],
+  "transparent": false,
+  "cell_edge_color": [
+    0.82,
+    0.82,
+    0.85
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

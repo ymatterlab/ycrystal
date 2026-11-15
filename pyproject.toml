@@ -46,6 +46,10 @@ version = { attr = "ycrystal.__version__" }
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+# Preset manifests (materials, environments) ship with the package.
+"ycrystal.presets" = ["materials/*.json", "environments/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 qt_api = "pyside6"

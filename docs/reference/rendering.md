@@ -20,6 +20,7 @@
     options:
       members:
         - RenderResult
+        - parse_progress
         - prepare_job
         - finish_job
         - run_job

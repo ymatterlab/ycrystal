@@ -19,7 +19,8 @@ the in-app summary.
 | Ctrl+Shift+Z or Ctrl+Y | Redo a display-setting change |
 | Ctrl+O | Open a structure or project |
 | Ctrl+S / Ctrl+Shift+S | Save Project / Save Project As… |
-| Ctrl+R | Render PNG… |
+| F5 | POV-Ray preview of the framed view |
+| Ctrl+R | Render PNG… (toolbar **Cancel Render** stops it) |
 | Ctrl+Q | Quit (asks about unsaved changes) |
 
 ## Boundary atoms and hiding
@@ -41,25 +42,27 @@ IDs. Hidden IDs survive toggling boundary images off and on. Selection highlight
 are viewport overlays and do not appear in the figure.
 
 Undo/redo covers hiding, Show All Atoms, boundary images, repetitions, cell-edge
-modes, and bond settings. Consecutive tolerance/radius adjustments merge into one step. Camera navigation,
+modes, bond settings, materials, and backgrounds. Consecutive tolerance/radius adjustments merge into one step. Camera navigation,
 output settings, file opens, and saves are not undoable. Opening a new file clears
 the undo history. A changed camera or output setting still marks the project modified.
 
 ## Output framing
 
-The toolbar accepts widths from 16 to 8000 pixels. Height is calculated from the
-viewport's aspect ratio and rounded to the nearest pixel, with a minimum of 1.
-Resizing the window can therefore change the output height and horizontal framing.
-Projection is orthographic; atoms do not shrink with distance from the camera.
+The output size is set in **Scene ▸ Render** (width and height, 16 to 8000 pixels,
+with aspect presets). A blue frame in the 3D view marks the rendered area; outside it
+the view is dimmed. Resizing the window moves the frame on screen but does not change
+the image. Projection is orthographic; atoms do not shrink with distance from the
+camera. See [output size and frame](rendering.md#output-size-and-frame).
 
 The structure's coordinates, occupancies, and movable flags are scientific data.
-Camera, radii, colours, boundary images, hiding, background, and lighting are
-presentation state. The GUI currently exposes only some of those settings; it has
-no atom editor, material gallery, or light editor.
+Camera, radii, colours, boundary images, hiding, materials, background, and lighting
+are presentation state. The GUI offers a small material and background catalog
+(**Scene ▸ Appearance**); it has no atom editor, per-atom materials, galleries, or
+light editor yet.
 
 ## Supercells, bonds, and directions
 
-The **Scene** dock has **Structure** and **Bonds** tabs. If closed, reopen it from
+The **Scene** dock has **Structure**, **Bonds**, **Appearance**, and **Render** tabs. If closed, reopen it from
 **View ▸ Scene**. Under Structure, set repetitions along a, b, c (1 to 20),
 use **+ all** / **− all**, or reset with **1 × 1 × 1**. Typed counts apply on Enter
 or focus change. The view refits after a repetition change. Expansions above 20,000

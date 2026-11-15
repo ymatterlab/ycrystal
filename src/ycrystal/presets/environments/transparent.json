@@ -1,0 +1,18 @@
+{
+  "id": "transparent",
+  "name": "Transparent (PNG alpha)",
+  "order": 2,
+  "description": "PNG with a transparent background; the live view shows light grey.",
+  "background": [
+    0.86,
+    0.86,
+    0.86
+  ],
+  "transparent": true,
+  "cell_edge_color": [
+    0.15,
+    0.15,
+    0.15
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

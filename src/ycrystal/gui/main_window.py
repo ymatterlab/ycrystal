@@ -20,7 +20,6 @@ from PySide6.QtCore import QSettings, Qt, QTimer
 from PySide6.QtGui import QAction, QKeySequence, QPixmap, QUndoStack
 from PySide6.QtWidgets import (
     QApplication,
-    QCheckBox,
     QDialog,
     QDialogButtonBox,
     QDockWidget,
@@ -31,7 +30,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QScrollArea,
-    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -41,12 +39,14 @@ from ycrystal.core.camera import Camera, default_camera
 from ycrystal.core.scene import (
     AtomId,
     DisplayGeometry,
+    Environment,
     SceneSettings,
     build_geometry,
     count_displayed_atoms,
 )
 from ycrystal.core.structure import Structure
 from ycrystal.gui.commands import SceneSettingsCommand
+from ycrystal.gui.panels.output_panel import AppearancePanel, PreviewPanel, RenderPanel
 from ycrystal.gui.panels.scene_panel import MAX_REPETITIONS, ScenePanel
 from ycrystal.io.project import (
     PROJECT_SUFFIX,
@@ -65,10 +65,11 @@ from ycrystal.io.readers import (
     detect_format,
     read_structure,
 )
+from ycrystal.presets import environment_from_preset, get_environment, get_material
 from ycrystal.render.jobs import RenderResult, copy_result, prepare_job
 from ycrystal.render.pov_writer import RenderSettings, write_scene_files
 from ycrystal.render.povray import PovrayNotFoundError, find_povray, povray_version
-from ycrystal.render.process import RenderProcess
+from ycrystal.render.process import RenderProcess, RenderQueue
 from ycrystal.viewport.qt_viewport import StructureViewport
 
 SETTINGS_POVRAY = "render/povray_executable"
@@ -76,6 +77,18 @@ SETTINGS_POVRAY = "render/povray_executable"
 
 SETTINGS_LAST_DIR = "files/last_directory"
 """``QSettings`` key of the directory last used for opening or saving."""
+
+SETTINGS_AUTO_PREVIEW = "render/auto_preview"
+"""``QSettings`` key of the *Update automatically* choice of the preview panel."""
+
+AUTO_PREVIEW_DEFAULT = True
+"""Whether automatic previews are on when the user has not chosen yet."""
+
+PREVIEW_LONG_SIDE = 480
+"""Longer side of POV-Ray previews in pixels; the shorter side follows the output aspect."""
+
+PREVIEW_DELAY_MS = 600
+"""Pause after the last change before an automatic preview starts."""
 
 
 #: Ask before displaying more atoms than this (measured; see docs/PROGRESS.md, M2).
@@ -121,8 +134,9 @@ Repetitions are always rebuilt from the original structure.</p>
 position (View ▸ Show Boundary Atoms). Each drawn ball can be hidden on its own;
 View ▸ Show All Atoms brings hidden balls back.</p>
 <p>Navigation and hiding change only the presentation, never atomic coordinates.<br>
-The live view approximates lighting; Render produces the POV-Ray image of the same
-framing. The output image has the viewport's aspect ratio.</p>"""
+The blue frame shows the rendered area. The live view approximates materials and
+lighting; Preview (F5) renders the framed view small with POV-Ray, Render writes the
+full-size PNG, and Cancel stops a running render.</p>"""
 
 
 class RenderResultDialog(QDialog):
@@ -174,15 +188,20 @@ class MainWindow(QMainWindow):
     scene_settings
         Current display settings; changed only through undoable commands.
     environment
-        Background and lights used for export and rendering.
+        Background preset, transparency, and lights used for export and rendering;
+        changed through undoable commands.
     geometry
         The [`DisplayGeometry`][ycrystal.core.scene.DisplayGeometry] currently drawn
         and exported.
     selection
         Selected displayed atoms, as a set of [`AtomId`][ycrystal.core.scene.AtomId].
     undo_stack
-        ``QUndoStack`` of display-setting changes. Camera, output, and file actions are
-        not undoable.
+        ``QUndoStack`` of display-setting, material, and background changes. Camera,
+        output size, and file actions are not undoable.
+    scene_revision
+        Counter increased by every change that affects the rendered image (view,
+        scene, appearance, output size). Previews made for an older revision are
+        discarded when they finish.
     project_path
         Project file of the current scene, or ``None`` if it has not been saved.
     settings
@@ -193,6 +212,11 @@ class MainWindow(QMainWindow):
         Destination of the last successful render.
     render_finished_result
         [`RenderResult`][ycrystal.render.jobs.RenderResult] of the last finished render.
+    preview_result
+        ``(RenderResult, revision)`` of the last preview that finished, including
+        discarded and cancelled ones.
+    preview_discarded
+        Number of preview results discarded because the scene had changed.
 
     Raises
     ------
@@ -202,7 +226,8 @@ class MainWindow(QMainWindow):
     Notes
     -----
     The saved or default camera is applied after the window is first shown, once the
-    layout has given the 3D view its final size.
+    layout has given the 3D view its final size. Cameras exchanged with projects, export,
+    and rendering are output cameras: they describe the image inside the output frame.
     """
 
     def __init__(
@@ -231,10 +256,11 @@ class MainWindow(QMainWindow):
         self._camera_initialised = False
         self._pending_camera: Camera | None = project.camera
         self._saved_camera: Camera | None = None
-        self._saved_output: tuple[int, bool] = (
-            project.output.width,
-            project.output.transparent_background,
-        )
+        self._output_size = (project.output.width, project.output.height)
+        self._saved_output: tuple[int, int] = self._output_size
+        self.scene_revision = 0
+        self.preview_result: tuple[RenderResult, int] | None = None
+        self.preview_discarded = 0
         self.last_error: tuple[str, str] | None = None
         self.last_render_path: Path | None = None
         self.render_finished_result: RenderResult | None = None
@@ -259,19 +285,48 @@ class MainWindow(QMainWindow):
         self.scene_panel.bond_tolerance_requested.connect(self.set_bond_tolerance)
         self.scene_panel.bond_radius_requested.connect(self.set_bond_radius)
         self.scene_panel.bond_pair_requested.connect(self.set_bond_pair)
+        self.appearance_panel = AppearancePanel(self)
+        self.render_panel = RenderPanel(self)
+        self.scene_panel.addTab(self.appearance_panel, "Appearance")
+        self.scene_panel.addTab(self.render_panel, "Render")
+        self.width_spin = self.render_panel.width_spin
+        self.height_spin = self.render_panel.height_spin
+        self.appearance_panel.material_requested.connect(self.set_material)
+        self.appearance_panel.background_requested.connect(self.set_background)
+        self.render_panel.size_requested.connect(self.set_output_size)
+        self.preview_panel = PreviewPanel(self)
+        self.preview_dock = QDockWidget("POV-Ray preview", self)
+        self.preview_dock.setObjectName("preview_dock")
+        self.preview_dock.setWidget(self.preview_panel)
+        self.preview_dock.setFeatures(self.scene_dock.features())
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.preview_dock)
+        self.splitDockWidget(self.scene_dock, self.preview_dock, Qt.Orientation.Vertical)
+        self.preview_queue = RenderQueue(self)
+        self.preview_queue.finished.connect(self._on_preview_finished)
+        self.preview_queue.progress.connect(self.preview_panel.set_progress)
+        self.preview_queue.started.connect(lambda _tag: self._update_cancel_action())
+        self._preview_timer = QTimer(self)
+        self._preview_timer.setSingleShot(True)
+        self._preview_timer.setInterval(PREVIEW_DELAY_MS)
+        self._preview_timer.timeout.connect(self.request_preview)
         self._build_actions()
         self._build_status_bar()
-        self.width_spin.setValue(project.output.width)
-        self.transparent_check.setChecked(project.output.transparent_background)
+        self.render_panel.sync(*self._output_size)
+        self.viewport.set_output_aspect(self._output_size[0] / self._output_size[1])
         self.boundary_action.setChecked(self.scene_settings.boundary_images)
         self.set_display_geometry(self.geometry)
-        self.viewport.camera_changed.connect(self._update_output_label)
-        self.viewport.camera_changed.connect(self._refresh_title)
+        self.preview_panel.auto_check.setChecked(
+            self.settings.value(SETTINGS_AUTO_PREVIEW, AUTO_PREVIEW_DEFAULT, type=bool)
+        )
+        self.preview_panel.auto_check.toggled.connect(self._on_auto_preview_toggled)
+        self.preview_panel.set_status(
+            "Press Preview (F5) for a POV-Ray image of the frame.", "empty"
+        )
+        self.viewport.camera_changed.connect(self._on_view_changed)
         self.viewport.atom_clicked.connect(self._on_atom_clicked)
         self.viewport.key_pressed.connect(self.trigger_shortcut)
         self.undo_stack.cleanChanged.connect(self._refresh_title)
-        self.width_spin.valueChanged.connect(self._refresh_title)
-        self.transparent_check.toggled.connect(self._refresh_title)
+        self._update_output_label()
         self._refresh_title()
 
     # ----- construction -------------------------------------------------------------
@@ -317,6 +372,20 @@ class MainWindow(QMainWindow):
             toolTip="Render the current view with POV-Ray",
         )
         self.render_action.triggered.connect(lambda: self.render_png())
+        self.preview_action = QAction(
+            "Preview",
+            self,
+            shortcut=QKeySequence(Qt.Key.Key_F5),
+            toolTip="Render a small POV-Ray image of the framed view (F5)",
+        )
+        self.preview_action.triggered.connect(lambda: self.request_preview())
+        self.cancel_action = QAction(
+            "Cancel Render",
+            self,
+            enabled=False,
+            toolTip="Stop the running POV-Ray render (or preview)",
+        )
+        self.cancel_action.triggered.connect(self.cancel_render)
         self.set_povray_action = QAction("Set POV-Ray Executable…", self)
         self.set_povray_action.triggered.connect(self.choose_povray)
         self.check_povray_action = QAction("Check Renderer", self)
@@ -400,11 +469,15 @@ class MainWindow(QMainWindow):
             self.view_actions[axis] = action
             along_menu.addAction(action)
         view_menu.addAction(self.scene_dock.toggleViewAction())
+        view_menu.addAction(self.preview_dock.toggleViewAction())
         view_menu.addSeparator()
         view_menu.addAction(self.boundary_action)
         view_menu.addAction(self.show_all_action)
         render_menu = self.menuBar().addMenu("&Render")
+        render_menu.addAction(self.preview_action)
         render_menu.addAction(self.render_action)
+        render_menu.addAction(self.cancel_action)
+        render_menu.addSeparator()
         render_menu.addAction(self.set_povray_action)
         render_menu.addAction(self.check_povray_action)
         help_menu = self.menuBar().addMenu("&Help")
@@ -435,22 +508,14 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
         toolbar.addAction(self.fit_action)
         toolbar.addSeparator()
-        toolbar.addAction(self.export_action)
+        toolbar.addAction(self.preview_action)
         toolbar.addAction(self.render_action)
-        toolbar.addSeparator()
-        toolbar.addWidget(QLabel(" Output width "))
-        self.width_spin = QSpinBox()
-        self.width_spin.setRange(16, 8000)
-        self.width_spin.setValue(1200)
-        self.width_spin.setSuffix(" px")
-        self.width_spin.setToolTip("Rendered image width; the height follows the view's aspect")
-        self.width_spin.valueChanged.connect(self._update_output_label)
-        toolbar.addWidget(self.width_spin)
+        toolbar.addAction(self.cancel_action)
         self.output_label = QLabel()
+        self.output_label.setToolTip("Output image size (Scene panel ▸ Render)")
         toolbar.addWidget(self.output_label)
-        self.transparent_check = QCheckBox("Transparent background")
-        self.transparent_check.setToolTip("Write a PNG with an alpha channel")
-        toolbar.addWidget(self.transparent_check)
+        toolbar.addSeparator()
+        toolbar.addAction(self.export_action)
         toolbar.addSeparator()
         toolbar.addAction(help_action)
 
@@ -464,6 +529,10 @@ class MainWindow(QMainWindow):
         view_bar.addSeparator()
         for axis in "xyz":
             view_bar.addAction(self.view_actions[axis])
+        self.render_panel.add_actions(
+            [self.preview_action, self.render_action], [self.export_action, self.cancel_action]
+        )
+        self.preview_panel.set_action(self.preview_action)
 
     def _build_status_bar(self) -> None:
         bar = self.statusBar()
@@ -487,8 +556,7 @@ class MainWindow(QMainWindow):
         if camera is None:
             self.reset_view()
         else:
-            self.viewport.set_camera(camera)
-            self._update_output_label()
+            self.viewport.set_output_camera(camera)
         self._mark_clean()
 
     # ----- project state ----------------------------------------------------------------
@@ -511,14 +579,16 @@ class MainWindow(QMainWindow):
         self.undo_stack.clear()
         self.selection = set()
         self.boundary_action.setChecked(project.scene.boundary_images)
-        self.width_spin.setValue(project.output.width)
-        self.transparent_check.setChecked(project.output.transparent_background)
+        self._output_size = (project.output.width, project.output.height)
+        self.render_panel.sync(*self._output_size)
+        self.viewport.set_output_aspect(self._output_size[0] / self._output_size[1])
+        self._update_output_label()
         self.set_display_geometry(build_geometry(self.structure, self.scene_settings))
         if self._camera_initialised:
             if project.camera is None:
                 self.reset_view()
             else:
-                self.viewport.set_camera(project.camera)
+                self.viewport.set_output_camera(project.camera)
             self._mark_clean()
         else:
             self._pending_camera = project.camera
@@ -527,21 +597,22 @@ class MainWindow(QMainWindow):
     def is_modified(self) -> bool:
         """Return whether the scene differs from the last saved or opened state.
 
-        Display-setting changes, a different output width or transparency setting, and
-        any change of the view count as modifications.
+        Display-setting, material, and background changes, a different output size,
+        and any change of the output camera count as modifications. Resizing the
+        window does not: the output camera stays the same.
         """
         if not self.undo_stack.isClean():
             return True
-        if (self.width_spin.value(), self.transparent_check.isChecked()) != self._saved_output:
+        if self._output_size != self._saved_output:
             return True
         if self._saved_camera is None or not self._camera_initialised:
             return False
-        return not _same_camera(self._saved_camera, self.viewport.camera())
+        return not _same_camera(self._saved_camera, self.current_camera())
 
     def _mark_clean(self) -> None:
         self.undo_stack.setClean()
-        self._saved_output = (self.width_spin.value(), self.transparent_check.isChecked())
-        self._saved_camera = self.viewport.camera() if self._camera_initialised else None
+        self._saved_output = self._output_size
+        self._saved_camera = self.current_camera() if self._camera_initialised else None
         self._refresh_title()
 
     def _refresh_title(self, *_args: object) -> None:
@@ -802,6 +873,8 @@ class MainWindow(QMainWindow):
         self.selection = {atom_id for atom_id in self.selection if atom_id in geometry}
         self._update_selection()
         self._sync_panel()
+        self.appearance_panel.sync(self.scene_settings.material, self.environment.preset)
+        self._scene_changed()
 
     def _sync_panel(self) -> None:
         settings = self.scene_settings
@@ -814,9 +887,21 @@ class MainWindow(QMainWindow):
             self.geometry.hidden_count,
         )
 
-    def apply_scene_settings(self, settings: SceneSettings) -> None:
-        """Rebuild the displayed geometry from the structure (used by undo commands)."""
+    def apply_scene_settings(
+        self, settings: SceneSettings, environment: Environment | None = None
+    ) -> None:
+        """Rebuild the displayed geometry from the structure (used by undo commands).
+
+        Parameters
+        ----------
+        settings
+            New display settings. A change of repetitions also frames the new block.
+        environment
+            New environment, or ``None`` to keep the current one.
+        """
         refit = settings.repetitions != self.scene_settings.repetitions
+        if environment is not None:
+            self.environment = environment
         self.scene_settings = settings
         self.boundary_action.setChecked(settings.boundary_images)
         self.set_display_geometry(build_geometry(self.structure, settings))
@@ -994,9 +1079,8 @@ class MainWindow(QMainWindow):
             distance=current.distance,
             parallel_scale=current.parallel_scale,
         )
-        width, height = self.viewport.render_size()
         points, radii = self.geometry.points_and_radii()
-        self.viewport.set_camera(camera.fitted(points, radii, width / height))
+        self.viewport.set_output_camera(camera.fitted(points, radii, self.viewport.output_aspect()))
 
     def _update_selection(self) -> None:
         indices = [self.geometry.index_of(atom_id) for atom_id in self.selection]
@@ -1042,33 +1126,187 @@ class MainWindow(QMainWindow):
         return f"Selected: {len(self.selection)} atoms ({parts})"
 
     def reset_view(self) -> None:
-        """Show the default orientation, framed to fit (*View ▸ Reset View*)."""
-        width, height = self.viewport.render_size()
+        """Show the default orientation, fitted into the output frame (*View ▸ Reset View*)."""
         points, radii = self.geometry.points_and_radii()
-        self.viewport.set_camera(default_camera(points, radii, width / height))
-        self._update_output_label()
-
-    def current_camera(self) -> Camera:
-        """Return the camera of the 3D view."""
-        return self.viewport.camera()
-
-    def current_render_settings(self) -> RenderSettings:
-        """Return the output settings for export and rendering.
-
-        The width comes from the toolbar; the height is the width times the 3D view's
-        height-to-width ratio, rounded, so the image shows exactly what the view
-        shows. Antialiasing is always on.
-        """
-        view_w, view_h = self.viewport.render_size()
-        width = self.width_spin.value()
-        height = max(1, round(width * view_h / view_w))
-        return RenderSettings(
-            width=width, height=height, transparent_background=self.transparent_check.isChecked()
+        self.viewport.set_output_camera(
+            default_camera(points, radii, self.viewport.output_aspect())
         )
 
+    def current_camera(self) -> Camera:
+        """Return the output camera: the view inside the output frame.
+
+        This camera, together with the output size of
+        [`current_render_settings`][ycrystal.gui.main_window.MainWindow.current_render_settings],
+        defines the exported and rendered image and is saved in projects.
+        """
+        return self.viewport.output_camera()
+
+    def current_render_settings(self) -> RenderSettings:
+        """Return the output settings for export and final renders.
+
+        Width and height are the output size (Scene panel ▸ Render); the background is
+        transparent when the background preset is. Antialiasing is on.
+        """
+        width, height = self._output_size
+        return RenderSettings(
+            width=width, height=height, transparent_background=self.environment.transparent
+        )
+
+    def preview_settings(self) -> RenderSettings:
+        """Return the settings of POV-Ray previews.
+
+        Same aspect ratio and background as the output; the longer side is
+        `PREVIEW_LONG_SIDE` pixels (never larger than the output) and antialiasing is
+        off for speed.
+        """
+        width, height = self._output_size
+        scale = min(1.0, PREVIEW_LONG_SIDE / max(width, height))
+        return RenderSettings(
+            width=max(16, round(width * scale)),
+            height=max(16, round(height * scale)),
+            antialias=False,
+            transparent_background=self.environment.transparent,
+        )
+
+    def set_output_size(self, width: int, height: int) -> None:
+        """Set the output image size in pixels; the output camera is kept.
+
+        The frame in the 3D view takes the new aspect ratio; the image keeps its centre
+        and visible height in Å. Not undoable; counts as a project modification.
+        """
+        width, height = (max(16, min(8000, int(v))) for v in (width, height))
+        self.render_panel.sync(width, height)
+        if (width, height) == self._output_size:
+            return
+        self._output_size = (width, height)
+        self.viewport.set_output_aspect(width / height)
+        self._update_output_label()
+        self._scene_changed()
+        self._refresh_title()
+
     def _update_output_label(self, *_args: object) -> None:
-        settings = self.current_render_settings()
-        self.output_label.setText(f" → {settings.width} × {settings.height} px ")
+        width, height = self._output_size
+        self.output_label.setText(f"  {width} × {height} px  ")
+
+    # ----- appearance -----------------------------------------------------------------
+    def set_material(self, material_id: str) -> None:
+        """Apply material preset ``material_id`` to all atoms and bonds (undoable)."""
+        material = get_material(material_id)
+        self._push_settings(
+            replace(self.scene_settings, material=material.id), f"Material: {material.name}"
+        )
+
+    def set_background(self, environment_id: str) -> None:
+        """Apply background preset ``environment_id`` (undoable).
+
+        The preset also sets a cell-edge colour that stays visible on it.
+        """
+        preset = get_environment(environment_id)
+        environment = environment_from_preset(preset.id, self.environment)
+        settings = replace(self.scene_settings, cell_edge_color=preset.cell_edge_color)
+        if environment == self.environment and settings == self.scene_settings:
+            return
+        self.undo_stack.push(
+            SceneSettingsCommand(
+                self, settings, f"Background: {preset.name}", environment=environment
+            )
+        )
+
+    # ----- preview and revisions --------------------------------------------------------
+    def _on_view_changed(self) -> None:
+        self._update_output_label()
+        self._refresh_title()
+        self._scene_changed()
+
+    def _scene_changed(self) -> None:
+        """Note a change of the rendered image: new revision, stale preview, auto update."""
+        self.scene_revision += 1
+        if self.preview_panel.state == "ready":
+            self.preview_panel.set_status(
+                "Out of date: the view or scene changed. Press Preview (F5).", "stale"
+            )
+        if self._camera_initialised and self.preview_panel.auto_check.isChecked():
+            self._preview_timer.start()
+
+    def _on_auto_preview_toggled(self, enabled: bool) -> None:
+        self.settings.setValue(SETTINGS_AUTO_PREVIEW, enabled)
+        if enabled:
+            self._preview_timer.start()
+        else:
+            self._preview_timer.stop()
+
+    def request_preview(self) -> bool:
+        """Render a small POV-Ray preview of the output frame (*Preview*, F5).
+
+        The job runs in the background through a
+        [`RenderQueue`][ycrystal.render.process.RenderQueue]: a running preview is
+        cancelled and replaced, and a result made for an older `scene_revision` is
+        discarded. No dialog is shown; the preview panel reports problems.
+
+        Returns
+        -------
+        bool
+            Whether a preview job was submitted (``False`` if POV-Ray is not found or
+            the view is not ready yet).
+        """
+        self._preview_timer.stop()
+        if not self._camera_initialised:
+            return False
+        try:
+            executable = find_povray(self.configured_povray())
+        except PovrayNotFoundError as exc:
+            self.preview_panel.set_status(str(exc), "error")
+            return False
+        settings = self.preview_settings()
+        job = prepare_job(
+            self.geometry,
+            self.current_camera(),
+            self.environment,
+            settings,
+            title=f"Ycrystal preview: {self.structure.composition()}",
+        )
+        self.preview_queue.submit(job, executable, self.scene_revision)
+        self.preview_panel.set_status(
+            f"Rendering preview ({settings.width} × {settings.height} px)…", "busy"
+        )
+        self._update_cancel_action()
+        return True
+
+    def _on_preview_finished(self, result: RenderResult, revision: int) -> None:
+        self.preview_result = (result, revision)
+        self._update_cancel_action()
+        if result.cancelled:
+            if not self.preview_queue.is_busy():
+                self.preview_panel.set_status("Preview cancelled.", "stale")
+            return
+        if revision != self.scene_revision:
+            self.preview_discarded += 1
+            if not self.preview_queue.is_busy():
+                self.preview_panel.set_status(
+                    "The scene changed during rendering; that preview was discarded. "
+                    "Press Preview (F5).",
+                    "stale",
+                )
+            return
+        if result.ok and result.image_path is not None:
+            self.preview_panel.set_image(QPixmap(str(result.image_path)))
+            width, height = self.preview_settings().width, self.preview_settings().height
+            self.preview_panel.set_status(
+                f"Up to date · {width} × {height} px · {result.elapsed:.1f} s", "ready"
+            )
+        else:
+            self.preview_panel.set_status(f"Preview failed. {result.message}", "error")
+
+    def _update_cancel_action(self) -> None:
+        final = self._render is not None and self._render.is_running()
+        self.cancel_action.setEnabled(final or self.preview_queue.is_busy())
+
+    def cancel_render(self) -> None:
+        """Stop the running final render, or else the running preview (*Cancel Render*)."""
+        if self._render is not None and self._render.is_running():
+            self._render.cancel()
+        elif self.preview_queue.is_busy():
+            self.preview_queue.cancel()
 
     # ----- export / render ----------------------------------------------------------
     def configured_povray(self) -> str | None:
@@ -1106,7 +1344,8 @@ class MainWindow(QMainWindow):
         Notes
         -----
         Existing files are replaced. The file dialog asks before replacing the
-        ``.pov`` file; the ``.ini`` file is replaced without asking.
+        ``.pov`` file; the ``.ini`` file is replaced without asking. The scene header
+        records the POV-Ray version found at export time, if any.
         """
         if path is None:
             path, _ = QFileDialog.getSaveFileName(
@@ -1129,18 +1368,28 @@ class MainWindow(QMainWindow):
             self.environment,
             settings,
             title=f"Ycrystal scene: {self.structure.composition()}",
+            renderer_note=self._renderer_note(),
         )
         self.statusBar().showMessage(f"Exported {pov} and {ini.name}", 8000)
         return pov
+
+    def _renderer_note(self) -> str | None:
+        try:
+            executable = find_povray(self.configured_povray())
+        except PovrayNotFoundError:
+            return "none found when this scene was exported"
+        return f"POV-Ray {povray_version(executable) or 'unknown version'} ({executable})"
 
     def render_png(self, path: str | Path | None = None, show_result: bool = True) -> bool:
         """Start a POV-Ray render of the current view (*Render PNG…*, Ctrl+R).
 
         After a synchronous version query (up to 15 seconds) and job preparation,
         POV-Ray runs in the background in a temporary job directory. The method
-        returns once that process has been requested. When it finishes, the PNG is
-        copied to the destination (replacing an existing file), the job directory
-        is deleted, and the image is shown or an error message explains the failure.
+        returns once that process has been requested; the toolbar's Cancel stops it
+        and the status bar shows its progress. When it finishes, the PNG is copied to
+        the destination (replacing an existing file), the job directory is deleted, and
+        the image is shown or an error message explains the failure. A cancelled render
+        leaves the destination untouched and shows no error.
 
         Parameters
         ----------
@@ -1196,11 +1445,17 @@ class MainWindow(QMainWindow):
         self._show_result = show_result
         self._render = RenderProcess(job, executable, self)
         self._render.finished.connect(self._on_render_finished)
+        self._render.progress.connect(
+            lambda percent: self.statusBar().showMessage(
+                f"Rendering {settings.width} × {settings.height} px with POV-Ray… {percent} %"
+            )
+        )
         self.render_action.setEnabled(False)
         self.statusBar().showMessage(
             f"Rendering {settings.width} × {settings.height} px with POV-Ray…"
         )
         self._render.start()
+        self._update_cancel_action()
         return True
 
     def _on_render_finished(self, result: RenderResult) -> None:
@@ -1208,7 +1463,9 @@ class MainWindow(QMainWindow):
         self.render_action.setEnabled(True)
         destination = self._render_destination
         try:
-            if result.ok and result.image_path is not None and destination is not None:
+            if result.cancelled:
+                self.statusBar().showMessage("Render cancelled.", 10000)
+            elif result.ok and result.image_path is not None and destination is not None:
                 try:
                     saved = copy_result(result.image_path, destination)
                 except OSError as exc:
@@ -1226,6 +1483,7 @@ class MainWindow(QMainWindow):
             if process is not None:
                 process.job.cleanup()
             self.render_finished_result = result
+            self._update_cancel_action()
 
     def choose_povray(self) -> None:
         """Ask for a POV-Ray executable, store it, and check it."""
@@ -1282,6 +1540,8 @@ class MainWindow(QMainWindow):
             return
         if self._render is not None and self._render.is_running():
             self._render.cancel()
+        self._preview_timer.stop()
+        self.preview_queue.cancel()
         self.viewport.close_viewport()
         super().closeEvent(event)
 

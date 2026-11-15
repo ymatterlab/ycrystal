@@ -24,6 +24,7 @@ A job goes through these steps; the caller owns the job directory throughout:
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import tempfile
@@ -101,6 +102,11 @@ class RenderResult:
         disappears when the job is cleaned up.
     message
         Readable explanation of a failure; empty when `ok` is true.
+    cancelled
+        Whether the run was stopped on request (then `ok` is false and the message
+        says so; it is not an error to report).
+    elapsed
+        Wall-clock seconds the process ran, when measured (0 otherwise).
     """
 
     ok: bool
@@ -108,6 +114,42 @@ class RenderResult:
     log: str
     image_path: Path | None
     message: str = ""
+    cancelled: bool = False
+    elapsed: float = 0.0
+
+
+_PROGRESS = re.compile(r"Rendered\s+(\d+)\s+of\s+(\d+)\s+pixels")
+
+
+def parse_progress(output: str) -> int | None:
+    r"""Return the latest render progress in percent from POV-Ray output.
+
+    POV-Ray prints ``Rendered N of M pixels`` lines when ``Verbose=on``, which the
+    ``.ini`` files written by Ycrystal set.
+
+    Parameters
+    ----------
+    output
+        A chunk of POV-Ray's output (lines may be separated by carriage returns).
+
+    Returns
+    -------
+    int or None
+        Percentage between 0 and 100 from the last progress line, or ``None`` if the
+        chunk contains none.
+
+    Examples
+    --------
+    >>> parse_progress("Rendered 1024 of 480000 pixels (0%)\rRendered 240000 of 480000 pixels")
+    50
+    >>> parse_progress("Parsing...") is None
+    True
+    """
+    matches = _PROGRESS.findall(output)
+    if not matches:
+        return None
+    done, total = (int(v) for v in matches[-1])
+    return 100 if total <= 0 else max(0, min(100, round(100 * done / total)))
 
 
 def prepare_job(

@@ -19,7 +19,8 @@
 | “Viewing angle has to be smaller than 180” | A known self-built 3.8 build with `-ffast-math` rejects unset camera fields. Use the distribution 3.7 package and run Check Renderer. Rebuild custom binaries without that optimisation if necessary. |
 | I/O restriction / permission denied | Ycrystal's jobs write in a temporary working directory. Check its permissions and whether `povray.conf` permits the working directory. Run an exported `.ini` from its own directory. |
 | Render finished but cannot save the PNG | Choose a writable destination. The GUI removes its job files after handling the failure; retry the render. |
-| A project reopens with a different crop | Match the original window shape. Output height and visible width depend on the viewport aspect. |
+| The preview dock says “out of date” or “discarded” | The view or scene changed after the preview started. Press **Preview** (F5), or enable **Update automatically**. |
+| The preview dock shows an error | Previews report problems in the dock instead of a dialog; the same renderer setup fixes apply. |
 
 For an ordinary render failure the GUI shows an explanation, often with the last
 renderer output. A renderer check is a small diagnostic render, not a guarantee
@@ -30,12 +31,12 @@ that every scene or output directory will work.
 - No atom editing or structure-format export. Display repetitions and periodic bonds
   are available, but interactive supercell drag handles remain planned. The comparison
   module's `supercell` helper transforms scientific data for developer comparisons.
-- No preview/output-aspect frame, render cancellation button, material or environment
-  galleries, or light controls.
+- Only a small material/background catalog (five materials, three backgrounds) applied
+  to all atoms; no per-atom materials, galleries with thumbnails, or light controls yet.
 - The current reader accepts ordered structures only: partial/mixed CIF occupancy,
   overlapping sites, QE `ibrav != 0`, and QE `crystal_sg` are rejected.
-- Projects save the view, but viewport aspect still depends on the window. Camera
-  navigation and output settings are outside undo/redo.
+- Camera navigation and output size are outside undo/redo (they still mark the project
+  modified).
 - Linux Mint 22.1 / Ubuntu 24.04, system Python 3.12, X11, and POV-Ray 3.7 are the
   integration baseline. Other platforms, Wayland, and POV-Ray 3.8 remain unverified.
 - Python interfaces are evolving and carry no stable API guarantee yet.

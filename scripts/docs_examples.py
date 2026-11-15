@@ -13,6 +13,7 @@ from ycrystal.core.samples import perovskite_srtio3
 from ycrystal.core.scene import Environment, SceneSettings, build_geometry
 from ycrystal.io.project import Project, load_project, save_project
 from ycrystal.io.readers import read_structure
+from ycrystal.presets import environment_from_preset, materials
 from ycrystal.render.pov_writer import RenderSettings, write_scene_files
 
 
@@ -54,6 +55,14 @@ def main() -> None:
         assert pov.is_file() and ini.is_file() and not image.exists()
         assert "(1 atoms hidden in Ycrystal are not written.)" in pov.read_text()
         assert 'Output_File_Name="SrTiO3.png"' in ini.read_text()
+
+        # Presets: a glass material on a transparent background (M3 alpha catalog).
+        glass = build_geometry(structure, replace(scene, material="glass"))
+        clear = environment_from_preset("transparent")
+        pov, ini, _ = write_scene_files(directory, "glass", glass, camera, clear, settings)
+        assert "interior { ior 1.45 }" in pov.read_text() and clear.transparent
+        assert "Output_Alpha=on" in ini.read_text()
+        assert [m.id for m in materials()] == ["matte", "satin", "glossy", "metallic", "glass"]
     print("Documentation examples passed (no display or renderer).")
 
 

@@ -11,8 +11,14 @@ The top-level JSON object has the keys ``format`` (always ``"ycrystal-project"``
 ``environment``, ``camera``, and ``output``. Machine-specific settings such as the
 POV-Ray path are not stored in projects.
 
-Schema history: 1 — first version (M1); 2 — repetitions, cell mode, and bonds (M2).
-Schema-1 files load with bonds disabled to preserve their original appearance.
+Schema history: 1 — first version (M1); 2 — repetitions, cell mode, and bonds (M2);
+3 — material and background presets, explicit output size (M3). Schema-1 files load
+with bonds disabled to preserve their original appearance. In every schema the saved
+camera describes the output image of ``output.width`` × ``output.height`` pixels
+(schemas 1 and 2 recorded the output size the camera was rendered at), so reopening
+reproduces the framing exactly, whatever the window size. Schema-1/2 files get the
+``"satin"`` material they were drawn with, and the ``"transparent"`` background preset
+if their output had a transparent background.
 """
 
 from __future__ import annotations
@@ -39,7 +45,7 @@ from ycrystal.render.pov_writer import RenderSettings
 PROJECT_FORMAT = "ycrystal-project"
 """Value of the ``format`` key that identifies a project file."""
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 """Schema version written by this Ycrystal; newer versions are refused on load."""
 
 PROJECT_SUFFIX = ".ycrystal"
@@ -65,13 +71,13 @@ class Project:
     scene
         Display settings, including hidden atoms and the boundary policy.
     environment
-        Background colour and light intensities.
+        Background preset, colour, transparency, and light intensities.
     camera
-        Saved view, or ``None`` to use the default view when the project is opened.
+        Camera of the output image (``output.width`` × ``output.height``), or ``None``
+        to use the default view when the project is opened.
     output
-        Output image settings. The GUI restores only the width and the transparency
-        setting from it; the height follows the window's aspect ratio when the project
-        is opened, and antialiasing is always on.
+        Output image size and antialiasing. ``transparent_background`` mirrors
+        ``environment.transparent``, which is authoritative.
 
     Notes
     -----
@@ -136,6 +142,7 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             ],
             "repetitions": list(scene.repetitions),
             "cell_mode": scene.cell_mode,
+            "material": scene.material,
             "bonds": {
                 "enabled": scene.bonds.enabled,
                 "tolerance": scene.bonds.tolerance,
@@ -147,6 +154,8 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             },
         },
         "environment": {
+            "preset": project.environment.preset,
+            "transparent": project.environment.transparent,
             "background": list(project.environment.background),
             "key_light": project.environment.key_light,
             "fill_light": project.environment.fill_light,
@@ -156,7 +165,7 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             "width": project.output.width,
             "height": project.output.height,
             "antialias": project.output.antialias,
-            "transparent_background": project.output.transparent_background,
+            "transparent_background": project.environment.transparent,
         },
     }
 
@@ -182,8 +191,8 @@ def project_from_dict(data: Any) -> Project:
     ProjectError
         If the document is not a Ycrystal project, has no valid schema version, was
         written with a newer schema, or is damaged or incomplete (for example missing
-        structure entries, element symbols that contradict the atomic numbers, or
-        invalid camera values).
+        structure entries, element symbols that contradict the atomic numbers,
+        invalid camera values, or an unknown material or background preset).
     """
     if not isinstance(data, dict) or data.get("format") != PROJECT_FORMAT:
         raise ProjectError("This is not a Ycrystal project file.")
@@ -199,10 +208,10 @@ def project_from_dict(data: Any) -> Project:
     try:
         structure = _structure_from(data["structure"])
         scene = _scene_from(data.get("scene") or {}, version)
-        environment = _environment_from(data.get("environment") or {})
+        output = _output_from(data.get("output") or {})
+        environment = _environment_from(data.get("environment") or {}, output)
         camera_data = data.get("camera")
         camera = None if camera_data is None else Camera.from_dict(camera_data)
-        output = _output_from(data.get("output") or {})
     except ProjectError:
         raise
     except (KeyError, TypeError, ValueError, IndexError) as exc:
@@ -248,7 +257,20 @@ def _scene_from(d: dict[str, Any], version: int = SCHEMA_VERSION) -> SceneSettin
         repetitions=tuple(int(v) for v in d.get("repetitions", defaults.repetitions)),
         cell_mode=str(d.get("cell_mode", defaults.cell_mode)),
         bonds=_bonds_from(d.get("bonds"), version),
+        material=_known_material(str(d.get("material", defaults.material))),
     )
+
+
+def _known_material(material_id: str) -> str:
+    from ycrystal.presets import PresetError, get_material
+
+    try:
+        return get_material(material_id).id
+    except PresetError:
+        raise ProjectError(
+            f"The project uses the material {material_id!r}, which this Ycrystal does not "
+            "know. Update Ycrystal to open it."
+        ) from None
 
 
 def _bonds_from(d: Any, version: int) -> BondSettings:
@@ -270,12 +292,26 @@ def _bonds_from(d: Any, version: int) -> BondSettings:
     )
 
 
-def _environment_from(d: dict[str, Any]) -> Environment:
+def _environment_from(d: dict[str, Any], output: RenderSettings) -> Environment:
+    from ycrystal.presets import PresetError, get_environment
+
     defaults = Environment()
+    # Schemas 1–2 had no environment preset; their transparency lived in "output".
+    transparent = bool(d.get("transparent", output.transparent_background))
+    preset_id = str(d.get("preset", "transparent" if transparent else defaults.preset))
+    try:
+        get_environment(preset_id)
+    except PresetError:
+        raise ProjectError(
+            f"The project uses the background {preset_id!r}, which this Ycrystal does not "
+            "know. Update Ycrystal to open it."
+        ) from None
     return Environment(
         background=_rgb(d.get("background", defaults.background)),
         key_light=float(d.get("key_light", defaults.key_light)),
         fill_light=float(d.get("fill_light", defaults.fill_light)),
+        transparent=transparent,
+        preset=preset_id,
     )
 
 
