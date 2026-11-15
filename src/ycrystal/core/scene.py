@@ -239,12 +239,16 @@ class Environment:
     (see [`environment_from_preset`][ycrystal.presets.environment_from_preset])
     initialises all fields; each group can then be changed separately.
 
-    Lights are placed relative to the camera, on the viewer's side: the key light in the
-    direction given by `key_azimuth` and `key_elevation`, and a shadowless fill light at
-    the lower right. The floor, gradients, and skies are drawn relative to the output
-    frame as well, so they look the same for any orientation of the structure. The live
-    VTK view approximates them (see
-    [`StructureViewport.set_scene`][ycrystal.viewport.qt_viewport.StructureViewport.set_scene]).
+    Lights are placed relative to the output camera, around its focal point: the key
+    light in the direction given by `key_azimuth` and `key_elevation`, and a shadowless
+    fill light at the lower right; [`resolve_lighting`][ycrystal.core.lighting.resolve_lighting]
+    turns these values into world positions for the POV-Ray scene and the live view. The
+    floor, gradients, and skies are drawn relative to the output frame as well, so they
+    look the same for any orientation of the structure. The live VTK view uses the key
+    and fill lights and approximates the background (see
+    [`StructureViewport.set_scene`][ycrystal.viewport.qt_viewport.StructureViewport.set_scene]);
+    shadows, area-light softness, reflections, and the reflection panel appear only in
+    POV-Ray.
 
     Attributes
     ----------
@@ -282,17 +286,22 @@ class Environment:
         Id of the lighting preset the light values came from (see
         [`lighting_presets`][ycrystal.presets.lighting_presets]).
     key_azimuth
-        Key-light direction in degrees to the right of the viewer (negative: left).
+        Key-light direction in degrees, measured around the focal point in the plane of
+        screen right and viewing direction: 0 points toward the viewer, positive to the
+        right of the image (negative: left), ±180 behind the structure.
     key_elevation
-        Key-light direction in degrees above the frame's horizontal.
+        Key-light direction in degrees above the frame's horizontal (toward screen up);
+        the horizontal turns with the camera's roll.
     light_size
-        Key light as an area light of this size, in multiples of the scene radius; 0 for
-        a point light with sharp shadows.
+        Diameter of the key light as a circular area light, in multiples of the scene
+        radius (the bounding radius of the displayed atoms and cell edges); 0 for a point
+        light with sharp shadows.
     shadows
         Whether the key light casts shadows.
     reflector
-        Whether an invisible bright panel near the key light is added, so that metals and
-        glass have something bright to reflect on dark backgrounds.
+        Whether an invisible bright disc is added on the key-light side of the structure
+        (three scene radii from its centre), so that metals and glass have something
+        bright to reflect on dark backgrounds. It is not a light source.
     """
 
     background: RGB = (1.0, 1.0, 1.0)  # sRGB

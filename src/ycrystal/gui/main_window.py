@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
 from ycrystal.core import aspect
 from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
 from ycrystal.core.camera import Camera, default_camera
+from ycrystal.core.lighting import resolve_lighting
 from ycrystal.core.scene import (
     AtomId,
     DisplayGeometry,
@@ -51,6 +52,7 @@ from ycrystal.core.scene import (
 from ycrystal.core.structure import Structure
 from ycrystal.gui.commands import SceneSettingsCommand
 from ycrystal.gui.gallery import TARGET_DEFAULT, TARGET_SELECTION, PresetGallery
+from ycrystal.gui.lighting_setup import LightingSetupWindow
 from ycrystal.gui.panels.appearance_panel import AppearancePanel
 from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
 from ycrystal.gui.panels.scene_panel import MAX_REPETITIONS, ScenePanel
@@ -131,6 +133,9 @@ PREVIEW_LONG_SIDE = 480
 
 PREVIEW_DELAY_MS = 600
 """Pause after the last change before an automatic preview starts."""
+
+LIGHTING_SETUP_DELAY_MS = 30
+"""Longest delay before the Lighting Setup window follows a camera or scene change."""
 
 
 #: Ask before displaying more atoms than this (measured; see docs/PROGRESS.md, M2).
@@ -320,6 +325,13 @@ class MainWindow(QMainWindow):
         self.last_info: tuple[str, str] | None = None
         self.selection: set[AtomId] = set()
         self.undo_stack = QUndoStack(self)
+        # Lighting Setup window (created on first use) and an uncommitted drag preview.
+        self.lighting_setup: LightingSetupWindow | None = None
+        self._light_preview: Environment | None = None
+        self._lighting_timer = QTimer(self)
+        self._lighting_timer.setSingleShot(True)
+        self._lighting_timer.setInterval(LIGHTING_SETUP_DELAY_MS)
+        self._lighting_timer.timeout.connect(self._update_lighting_setup)
 
         self.viewport = StructureViewport(self)
         self.setCentralWidget(self.viewport)
@@ -360,6 +372,7 @@ class MainWindow(QMainWindow):
         panel.background_requested.connect(self.set_background)
         panel.environment_requested.connect(self.set_environment)
         panel.lighting_requested.connect(self.set_lighting)
+        panel.lighting_setup_requested.connect(self.open_lighting_setup)
         self.material_gallery: PresetGallery | None = None
         self.environment_gallery: PresetGallery | None = None
         self.render_panel.output_requested.connect(self.set_output_size)
@@ -548,6 +561,13 @@ class MainWindow(QMainWindow):
             toolTip="Show the a, b, c handles: drag them to add or remove cells",
         )
         self.handles_action.toggled.connect(self._on_handles_toggled)
+        self.lighting_setup_action = QAction(
+            "Lighting Setup…",
+            self,
+            toolTip="Show the lights, the output camera, and the structure in 3D; drag the "
+            "key light",
+        )
+        self.lighting_setup_action.triggered.connect(self.open_lighting_setup)
         self.rotate_ccw_action = QAction(
             "Rotate Counter-clockwise",
             self,
@@ -609,6 +629,7 @@ class MainWindow(QMainWindow):
             along_menu.addAction(action)
         view_menu.addAction(self.scene_dock.toggleViewAction())
         view_menu.addAction(self.preview_dock.toggleViewAction())
+        view_menu.addAction(self.lighting_setup_action)
         view_menu.addSeparator()
         view_menu.addAction(self.rotate_ccw_action)
         view_menu.addAction(self.rotate_cw_action)
@@ -1049,6 +1070,7 @@ class MainWindow(QMainWindow):
         self._update_selection()
         self._sync_panel()
         self._sync_appearance()
+        self._update_lighting_setup()
         self._scene_changed()
 
     def _sync_appearance(self) -> None:
@@ -1147,9 +1169,12 @@ class MainWindow(QMainWindow):
     def clear_selection(self) -> None:
         """Deselect all atoms (*Edit ▸ Select None*, Esc).
 
-        During a supercell-handle or axis drag, Esc cancels the drag instead.
+        During a supercell-handle, axis, or light-handle drag, Esc cancels the drag
+        instead.
         """
-        if self.viewport.cancel_interaction():
+        if self.viewport.cancel_interaction() or (
+            self.lighting_setup is not None and self.lighting_setup.overview.cancel_drag()
+        ):
             self.statusBar().showMessage("Drag cancelled", 4000)
             return
         self.select(set())
@@ -1756,6 +1781,7 @@ class MainWindow(QMainWindow):
         finally:
             self._applying_output = False
         self._update_output_label()
+        self._update_lighting_setup()
         self._scene_changed()
         self._refresh_title()
 
@@ -1853,6 +1879,97 @@ class MainWindow(QMainWindow):
         light = get_lighting(lighting_id)
         self.set_environment(apply_lighting(self.environment, light.id), f"Lighting: {light.name}")
 
+    # ----- lighting setup (FR-LIGHT-01) ----------------------------------------------------
+    def lighting_environment(self) -> Environment:
+        """Return the environment whose lights are shown: a drag preview or the current one."""
+        return self._light_preview if self._light_preview is not None else self.environment
+
+    def open_lighting_setup(self) -> LightingSetupWindow:
+        """Show the Lighting Setup window (*View ▸ Lighting Setup…*), creating it once.
+
+        The window has its own overview camera and only shows the rig resolved from the
+        output camera; its graphics never reach the main view, picking, fitting, or
+        exports.
+        """
+        if self.lighting_setup is None:
+            setup = LightingSetupWindow(self)
+            setup.angle_requested.connect(self._on_light_angle_requested)
+            overview = setup.overview
+            overview.key_drag_changed.connect(self._on_light_drag_changed)
+            overview.key_drag_finished.connect(self._on_light_drag_finished)
+            overview.key_drag_cancelled.connect(self._on_light_drag_cancelled)
+            setup.addAction(self.undo_action)  # Ctrl+Z and Ctrl+Shift+Z work there too
+            setup.addAction(self.redo_action)
+            self.lighting_setup = setup
+        setup = self.lighting_setup
+        setup.show()
+        setup.raise_()
+        setup.activateWindow()
+        self._update_lighting_setup()
+        return setup
+
+    def _schedule_lighting_setup(self) -> None:
+        """Update the Lighting Setup window soon; camera motion is throttled this way."""
+        if (
+            self.lighting_setup is not None
+            and self.lighting_setup.isVisible()
+            and not self._lighting_timer.isActive()
+        ):
+            self._lighting_timer.start()
+
+    def _update_lighting_setup(self) -> None:
+        setup = self.lighting_setup
+        if setup is None or not setup.isVisible():
+            return
+        self._lighting_timer.stop()
+        environment = self.lighting_environment()
+        camera = self.current_camera()
+        rig = resolve_lighting(environment, camera, self.geometry)
+        setup.show_rig(
+            rig, self.geometry, camera.visible_size(*self._output_size), environment.light_size
+        )
+
+    def _on_light_angle_requested(self, field: str, value: float) -> None:
+        """Apply a numeric angle edit from the Lighting Setup window (merges like the panel)."""
+        new = replace(self.environment, **{field: value})
+        if new != self.environment:
+            self.set_environment(new, "Light Direction", f"env:{field}")
+
+    def _on_light_drag_changed(self, azimuth: float, elevation: float) -> None:
+        """Preview a light-handle drag: live lights, overview, and controls; no undo step."""
+        preview = replace(self.environment, key_azimuth=azimuth, key_elevation=elevation)
+        self._light_preview = preview
+        self.viewport.set_lighting(preview)
+        self.appearance_panel.show_key_direction(azimuth, elevation)
+        self._update_lighting_setup()
+        self.statusBar().showMessage(
+            f"Key light: azimuth {azimuth:+.0f}°, elevation {elevation:+.0f}° · release to "
+            "apply, Esc cancels",
+            4000,
+        )
+
+    def _on_light_drag_finished(self, azimuth: float, elevation: float) -> None:
+        """Apply a light-handle drag as one undoable step (one preview request)."""
+        self._light_preview = None
+        new = replace(self.environment, key_azimuth=azimuth, key_elevation=elevation)
+        if new == self.environment:
+            self._restore_lighting_views()
+            return
+        self.set_environment(new, "Light Direction (Drag)")
+
+    def _on_light_drag_cancelled(self) -> None:
+        """Restore the state from before a cancelled light-handle drag."""
+        self._light_preview = None
+        self._restore_lighting_views()
+        self.statusBar().showMessage("Drag cancelled", 4000)
+
+    def _restore_lighting_views(self) -> None:
+        self.viewport.set_lighting(self.environment)
+        self.appearance_panel.show_key_direction(
+            self.environment.key_azimuth, self.environment.key_elevation
+        )
+        self._update_lighting_setup()
+
     def _open_gallery_from_panel(self, which: str) -> None:
         if which == "environments":
             self.open_environment_gallery()
@@ -1914,6 +2031,7 @@ class MainWindow(QMainWindow):
     def _on_view_changed(self) -> None:
         if self._applying_output:
             return  # the size change reports itself once, below
+        self._schedule_lighting_setup()
         self._update_output_label()
         self._refresh_title()
         self._scene_changed()
@@ -2270,7 +2388,11 @@ class MainWindow(QMainWindow):
         if self._render is not None and self._render.is_running():
             self._render.cancel()
         self._preview_timer.stop()
+        self._lighting_timer.stop()
         self.preview_queue.cancel()
+        if self.lighting_setup is not None:
+            self.lighting_setup.close_view()
+            self.lighting_setup.close()
         self.viewport.close_viewport()
         super().closeEvent(event)
 

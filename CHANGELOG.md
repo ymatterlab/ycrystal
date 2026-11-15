@@ -5,6 +5,15 @@ before 1.0 the Python interface may change between minor versions.
 
 ## Unreleased
 
+- Lighting Setup and live lighting (FR-LIGHT-01): **Lighting Setup…** opens a 3D
+  overview of the key and fill lights, the output camera and frame, the focal point and
+  geometry centre, the azimuth/elevation guides, the area-light diameter, and the
+  reflection panel, with its own camera. Dragging the key-light handles sets azimuth and
+  elevation (one undo step; Esc cancels). The live view now uses the key and fill lights
+  at their real positions and intensities instead of VTK's default light kit. One shared
+  helper (`ycrystal.core.lighting.resolve_lighting`) resolves the lights for POV-Ray and
+  both views; exported scenes are unchanged.
+
 - Lock aspect ratio (FR-RENDER-01): a padlock button beside Width and Height in the
   Render panel. Locked (default), editing one dimension computes the other from a kept
   target ratio without cumulative drift; unlocked, they are independent. Presets and

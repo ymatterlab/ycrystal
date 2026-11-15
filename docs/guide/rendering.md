@@ -152,7 +152,8 @@ cancellations. The job files are not kept for editing; export a scene if you nee
 them. A failed copy can leave the `.part` file behind.
 
 The finished PNG uses the same displayed atoms, bonds, and framing as the preview and
-the frame in the live view. VTK's approximate lighting can differ from POV-Ray's
-key/fill lighting. Viewport orientation axes, the frame, and selection highlights are
+the frame in the live view. The live view uses the same key and fill light positions,
+but its shading is approximate and it has no shadows or reflections (see
+[lighting](appearance.md#lighting)). Viewport orientation axes, the frame, and selection highlights are
 omitted. A transparent background adds an alpha channel; transparent materials let
 part of it through.

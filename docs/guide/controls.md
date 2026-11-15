@@ -18,6 +18,7 @@ the in-app summary.
 | Ctrl+M | Material for the selected atoms (Edit ▸ Material for Selection…) |
 | Drag an **a**, **b**, or **c** handle | Add or remove whole cells along that axis |
 | Esc or right button during a handle drag | Cancel the drag |
+| Drag a light handle in **Lighting Setup** | Set the key-light direction (one undo step; Esc cancels) |
 | Ctrl+Left / Ctrl+Right | Turn by the step angle about the rotation axis |
 | Ctrl+Z | Undo a display-setting change |
 | Ctrl+Shift+Z or Ctrl+Y | Redo a display-setting change |
