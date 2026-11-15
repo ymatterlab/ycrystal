@@ -75,6 +75,12 @@ The small `docs/assets/perovskite.png` is an intentional documentation exception
 regenerate it with `python scripts/docs_render_example.py` and inspect it before
 committing. Generated HTML (`site/`) and documentation caches stay ignored.
 
+The preset thumbnails in `src/ycrystal/presets/thumbnails/` (128 × 128 px PNGs and
+`index.json`) are another intentional exception: they ship with the package. After
+changing a preset or the scene writer, `tests/test_presets.py` reports out-of-date
+thumbnails; run `python scripts/render_thumbnails.py` (only changed scenes are
+rendered), look at the new images, and commit them with the change.
+
 ## Progress record
 
 When a change alters what is implemented or verified, update

@@ -1,0 +1,24 @@
+{
+  "id": "black",
+  "name": "Black",
+  "order": 5,
+  "category": "plain",
+  "description": "Black background with light cell edges and a reflection panel for metals and glass.",
+  "background": {
+    "mode": "solid",
+    "color": [
+      0,
+      0,
+      0
+    ]
+  },
+  "transparent": false,
+  "lighting": "bright",
+  "reflector": true,
+  "cell_edge_color": [
+    0.82,
+    0.82,
+    0.85
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

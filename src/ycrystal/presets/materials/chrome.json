@@ -1,0 +1,32 @@
+{
+  "id": "chrome",
+  "name": "Chrome (Polished_Chrome)",
+  "order": 19,
+  "category": "metal",
+  "kind": "texture",
+  "description": "POV-Ray polished chrome: dark base, strong mirror reflection.",
+  "pov": {
+    "texture": "Polished_Chrome"
+  },
+  "native": [
+    "Polished_Chrome"
+  ],
+  "includes": [
+    "textures.inc"
+  ],
+  "live": {
+    "ambient": 0.15,
+    "diffuse": 0.6,
+    "specular": 1.0,
+    "specular_power": 90,
+    "opacity": 1.0,
+    "color": [
+      0.72,
+      0.73,
+      0.75
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier Polished_Chrome from the standard include file textures.inc; referenced by name, not copied",
+  "texture_space": "unit"
+}

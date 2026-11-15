@@ -43,10 +43,13 @@ from ycrystal.core.scene import (
     SceneSettings,
     build_geometry,
     count_displayed_atoms,
+    element_color,
 )
 from ycrystal.core.structure import Structure
 from ycrystal.gui.commands import SceneSettingsCommand
-from ycrystal.gui.panels.output_panel import AppearancePanel, PreviewPanel, RenderPanel
+from ycrystal.gui.gallery import TARGET_DEFAULT, TARGET_SELECTION, PresetGallery
+from ycrystal.gui.panels.appearance_panel import AppearancePanel
+from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
 from ycrystal.gui.panels.scene_panel import MAX_REPETITIONS, ScenePanel
 from ycrystal.io.project import (
     PROJECT_SUFFIX,
@@ -65,10 +68,21 @@ from ycrystal.io.readers import (
     detect_format,
     read_structure,
 )
-from ycrystal.presets import environment_from_preset, get_environment, get_material
+from ycrystal.presets import (
+    apply_lighting,
+    environment_from_preset,
+    get_environment,
+    get_lighting,
+    get_material,
+)
 from ycrystal.render.jobs import RenderResult, copy_result, prepare_job
-from ycrystal.render.pov_writer import RenderSettings, write_scene_files
-from ycrystal.render.povray import PovrayNotFoundError, find_povray, povray_version
+from ycrystal.render.pov_writer import RenderSettings, required_includes, write_scene_files
+from ycrystal.render.povray import (
+    PovrayNotFoundError,
+    find_povray,
+    missing_includes,
+    povray_version,
+)
 from ycrystal.render.process import RenderProcess, RenderQueue
 from ycrystal.viewport.qt_viewport import StructureViewport
 
@@ -124,6 +138,7 @@ MOUSE_HELP = """<table cellspacing="4">
 <tr><td><b>Ctrl + click</b></td><td>Add or remove an atom from the selection</td></tr>
 <tr><td><b>Delete</b></td><td>Hide the selected atoms (view and exports only)</td></tr>
 <tr><td><b>Esc</b></td><td>Clear the selection</td></tr>
+<tr><td><b>Ctrl + M</b></td><td>Choose a material for the selected atoms</td></tr>
 <tr><td><b>Ctrl + Z</b> / <b>Ctrl + Shift + Z</b></td><td>Undo / redo</td></tr>
 <tr><td><b>a b c / x y z</b> buttons</td><td>Look down an axis (Shift: opposite side)</td></tr>
 </table>
@@ -264,6 +279,7 @@ class MainWindow(QMainWindow):
         self.last_error: tuple[str, str] | None = None
         self.last_render_path: Path | None = None
         self.render_finished_result: RenderResult | None = None
+        self.last_export_missing_includes: list[str] = []
         self.selection: set[AtomId] = set()
         self.undo_stack = QUndoStack(self)
 
@@ -291,8 +307,20 @@ class MainWindow(QMainWindow):
         self.scene_panel.addTab(self.render_panel, "Render")
         self.width_spin = self.render_panel.width_spin
         self.height_spin = self.render_panel.height_spin
-        self.appearance_panel.material_requested.connect(self.set_material)
-        self.appearance_panel.background_requested.connect(self.set_background)
+        panel = self.appearance_panel
+        panel.material_requested.connect(self.set_material)
+        panel.element_material_requested.connect(
+            lambda element, material_id: self.set_element_material(element, material_id or None)
+        )
+        panel.element_color_requested.connect(self.set_element_color)
+        panel.selection_material_cleared.connect(lambda: self.set_selection_material(None))
+        panel.atom_materials_cleared.connect(self.clear_atom_materials)
+        panel.gallery_requested.connect(self._open_gallery_from_panel)
+        panel.background_requested.connect(self.set_background)
+        panel.environment_requested.connect(self.set_environment)
+        panel.lighting_requested.connect(self.set_lighting)
+        self.material_gallery: PresetGallery | None = None
+        self.environment_gallery: PresetGallery | None = None
         self.render_panel.size_requested.connect(self.set_output_size)
         self.preview_panel = PreviewPanel(self)
         self.preview_dock = QDockWidget("POV-Ray preview", self)
@@ -418,6 +446,26 @@ class MainWindow(QMainWindow):
             "Select None", self, shortcut=QKeySequence(Qt.Key.Key_Escape)
         )
         self.select_none_action.triggered.connect(self.clear_selection)
+        self.selection_material_action = QAction(
+            "Material for Selection…",
+            self,
+            shortcut=QKeySequence("Ctrl+M"),
+            statusTip="Choose a material for the selected atoms (overrides element and default)",
+        )
+        self.selection_material_action.triggered.connect(
+            lambda: self.open_material_gallery(TARGET_SELECTION)
+        )
+        self.selection_material_action.setEnabled(False)
+        self.material_gallery_action = QAction(
+            "Material Gallery…", self, statusTip="Browse materials with POV-Ray thumbnails"
+        )
+        self.material_gallery_action.triggered.connect(lambda: self.open_material_gallery())
+        self.environment_gallery_action = QAction(
+            "Environment Gallery…",
+            self,
+            statusTip="Browse backgrounds, studios, and skies with POV-Ray thumbnails",
+        )
+        self.environment_gallery_action.triggered.connect(self.open_environment_gallery)
         self.show_all_action = QAction(
             "Show All Atoms", self, enabled=False, toolTip="Bring back every hidden ball"
         )
@@ -451,6 +499,10 @@ class MainWindow(QMainWindow):
         edit_menu.addSeparator()
         edit_menu.addAction(self.hide_action)
         edit_menu.addAction(self.select_none_action)
+        edit_menu.addSeparator()
+        edit_menu.addAction(self.selection_material_action)
+        edit_menu.addAction(self.material_gallery_action)
+        edit_menu.addAction(self.environment_gallery_action)
         view_menu = self.menuBar().addMenu("&View")
         view_menu.addAction(self.fit_action)
         view_menu.addAction(self.reset_view_action)
@@ -873,8 +925,21 @@ class MainWindow(QMainWindow):
         self.selection = {atom_id for atom_id in self.selection if atom_id in geometry}
         self._update_selection()
         self._sync_panel()
-        self.appearance_panel.sync(self.scene_settings.material, self.environment.preset)
+        self._sync_appearance()
         self._scene_changed()
+
+    def _sync_appearance(self) -> None:
+        settings = self.scene_settings
+        overrides = dict(settings.element_colors)
+        rows = []
+        for element in dict.fromkeys(self.structure.symbols):
+            z = int(self.structure.numbers[list(self.structure.symbols).index(element)])
+            rows.append((element, overrides.get(element) or element_color(z), element in overrides))
+        self.appearance_panel.sync(settings, self.environment, rows, len(self.selection))
+        if self.material_gallery is not None:
+            self.material_gallery.set_targets(
+                list(dict.fromkeys(self.structure.symbols)), len(self.selection)
+            )
 
     def _sync_panel(self) -> None:
         settings = self.scene_settings
@@ -1086,6 +1151,8 @@ class MainWindow(QMainWindow):
         indices = [self.geometry.index_of(atom_id) for atom_id in self.selection]
         self.viewport.set_highlight([i for i in indices if i is not None])
         self.hide_action.setEnabled(bool(self.selection))
+        self.selection_material_action.setEnabled(bool(self.selection))
+        self._sync_appearance()
         self.selection_label.setText(self.selection_text())
 
     def selection_text(self) -> str:
@@ -1190,27 +1257,150 @@ class MainWindow(QMainWindow):
 
     # ----- appearance -----------------------------------------------------------------
     def set_material(self, material_id: str) -> None:
-        """Apply material preset ``material_id`` to all atoms and bonds (undoable)."""
+        """Set the default material of atoms and bonds (undoable).
+
+        Element and atom overrides keep precedence over the default.
+        """
         material = get_material(material_id)
         self._push_settings(
             replace(self.scene_settings, material=material.id), f"Material: {material.name}"
         )
 
-    def set_background(self, environment_id: str) -> None:
-        """Apply background preset ``environment_id`` (undoable).
+    def set_element_material(self, element: str, material_id: str | None) -> None:
+        """Set or remove (``None``) the material override of ``element`` (undoable)."""
+        if material_id is not None:
+            name = get_material(material_id).name
+            text = f"Material of {element}: {name}"
+        else:
+            text = f"Default Material for {element}"
+        self._push_settings(self.scene_settings.with_element_material(element, material_id), text)
 
-        The preset also sets a cell-edge colour that stays visible on it.
+    def set_atom_material(self, atom_ids: set[AtomId], material_id: str | None) -> None:
+        """Set or remove (``None``) the material override of displayed atoms (undoable).
+
+        Overrides refer to displayed-atom IDs, like hiding, and take precedence over
+        element overrides and the default material.
+        """
+        if not atom_ids:
+            return
+        count = len(atom_ids)
+        noun = "Atom" if count == 1 else "Atoms"
+        if material_id is not None:
+            text = f"Material of {count} {noun}: {get_material(material_id).name}"
+        else:
+            text = f"Default Material for {count} {noun}"
+        self._push_settings(self.scene_settings.with_atom_materials(atom_ids, material_id), text)
+
+    def set_selection_material(self, material_id: str | None) -> None:
+        """Set or remove the material override of the selected atoms (undoable)."""
+        self.set_atom_material(set(self.selection), material_id)
+
+    def clear_atom_materials(self) -> None:
+        """Remove every per-atom material override as one undoable step."""
+        if self.scene_settings.atom_materials:
+            self._push_settings(
+                replace(self.scene_settings, atom_materials=()), "Clear Atom Materials"
+            )
+
+    def set_element_color(self, element: str, color: tuple[float, float, float] | None) -> None:
+        """Set or remove (``None``) the colour override of ``element`` (undoable)."""
+        text = f"Colour of {element}" if color is not None else f"Default Colour for {element}"
+        self._push_settings(self.scene_settings.with_element_color(element, color), text)
+
+    def set_background(self, environment_id: str) -> None:
+        """Apply environment preset ``environment_id`` (undoable).
+
+        The preset sets the background, the floor, the lighting, the transparency, and a
+        cell-edge colour that stays visible on it, as one step.
         """
         preset = get_environment(environment_id)
-        environment = environment_from_preset(preset.id, self.environment)
+        environment = environment_from_preset(preset.id)
         settings = replace(self.scene_settings, cell_edge_color=preset.cell_edge_color)
         if environment == self.environment and settings == self.scene_settings:
+            self._sync_appearance()
             return
         self.undo_stack.push(
             SceneSettingsCommand(
-                self, settings, f"Background: {preset.name}", environment=environment
+                self, settings, f"Environment: {preset.name}", environment=environment
             )
         )
+
+    def set_environment(self, environment: Environment, text: str, merge_key: str = "") -> None:
+        """Apply an edited environment (background, floor, or lights) as an undoable step.
+
+        Consecutive edits with the same non-empty ``merge_key`` (for example dragging a
+        light-intensity spin box) merge into one step.
+        """
+        if environment == self.environment:
+            self._sync_appearance()
+            return
+        self.undo_stack.push(
+            SceneSettingsCommand(
+                self, self.scene_settings, text, merge_key, environment=environment
+            )
+        )
+
+    def set_lighting(self, lighting_id: str) -> None:
+        """Apply lighting preset ``lighting_id``; background and floor stay (undoable)."""
+        light = get_lighting(lighting_id)
+        self.set_environment(apply_lighting(self.environment, light.id), f"Lighting: {light.name}")
+
+    def _open_gallery_from_panel(self, which: str) -> None:
+        if which == "environments":
+            self.open_environment_gallery()
+        else:
+            self.open_material_gallery(TARGET_SELECTION if which == "selection" else None)
+
+    def open_material_gallery(self, target: str | None = None) -> PresetGallery:
+        """Show the material gallery (non-modal) and return it.
+
+        Parameters
+        ----------
+        target
+            Preselected target: ``"default"``, ``"element:<symbol>"``, or
+            ``"selection"``; ``None`` keeps the previous one.
+        """
+        if self.material_gallery is None:
+            self.material_gallery = PresetGallery("materials", self.settings, self)
+            self.material_gallery.apply_requested.connect(self._apply_gallery_material)
+            self.material_gallery.reset_requested.connect(self._reset_gallery_material)
+        gallery = self.material_gallery
+        elements = list(dict.fromkeys(self.structure.symbols))
+        gallery.set_targets(elements, len(self.selection), target)
+        current = self.scene_settings.material
+        if gallery.target().startswith("element:"):
+            element = gallery.target().split(":", 1)[1]
+            current = dict(self.scene_settings.element_materials).get(element, current)
+        gallery.select_preset(current)
+        gallery.show()
+        gallery.raise_()
+        return gallery
+
+    def open_environment_gallery(self) -> PresetGallery:
+        """Show the environment gallery (non-modal) and return it."""
+        if self.environment_gallery is None:
+            self.environment_gallery = PresetGallery("environments", self.settings, self)
+            self.environment_gallery.apply_requested.connect(
+                lambda preset_id, _target: self.set_background(preset_id)
+            )
+        self.environment_gallery.select_preset(self.environment.preset)
+        self.environment_gallery.show()
+        self.environment_gallery.raise_()
+        return self.environment_gallery
+
+    def _apply_gallery_material(self, material_id: str, target: str) -> None:
+        if target == TARGET_DEFAULT:
+            self.set_material(material_id)
+        elif target == TARGET_SELECTION:
+            self.set_selection_material(material_id)
+        elif target.startswith("element:"):
+            self.set_element_material(target.split(":", 1)[1], material_id)
+
+    def _reset_gallery_material(self, target: str) -> None:
+        if target == TARGET_SELECTION:
+            self.set_selection_material(None)
+        elif target.startswith("element:"):
+            self.set_element_material(target.split(":", 1)[1], None)
 
     # ----- preview and revisions --------------------------------------------------------
     def _on_view_changed(self) -> None:
@@ -1345,7 +1535,9 @@ class MainWindow(QMainWindow):
         -----
         Existing files are replaced. The file dialog asks before replacing the
         ``.pov`` file; the ``.ini`` file is replaced without asking. The scene header
-        records the POV-Ray version found at export time, if any.
+        records the POV-Ray version found at export time, if any, and the standard
+        include files the materials need. If an include file is not found on this
+        computer, an error message says so (the files are still written).
         """
         if path is None:
             path, _ = QFileDialog.getSaveFileName(
@@ -1370,7 +1562,21 @@ class MainWindow(QMainWindow):
             title=f"Ycrystal scene: {self.structure.composition()}",
             renderer_note=self._renderer_note(),
         )
-        self.statusBar().showMessage(f"Exported {pov} and {ini.name}", 8000)
+        message = f"Exported {pov} and {ini.name}"
+        includes = required_includes(self.geometry)
+        missing = missing_includes(includes)
+        if includes:
+            message += f" (needs POV-Ray include files: {', '.join(includes)})"
+        self.last_export_missing_includes = missing
+        if missing:
+            self.show_error(
+                "Include Files Not Found",
+                f"The exported scene needs the standard POV-Ray include files "
+                f"{', '.join(missing)}, which were not found on this computer. Install them "
+                "(Linux Mint/Ubuntu: sudo apt install povray-includes) before rendering the "
+                "scene, or choose materials without native POV-Ray identifiers.",
+            )
+        self.statusBar().showMessage(message, 8000)
         return pov
 
     def _renderer_note(self) -> str | None:

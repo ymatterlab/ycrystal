@@ -1,0 +1,26 @@
+{
+  "id": "metal_polished",
+  "name": "Polished metal (F_MetalD)",
+  "order": 12,
+  "category": "metal",
+  "kind": "finish",
+  "description": "Element colour with POV-Ray's hard, polished metal finish F_MetalD (high reflectivity).",
+  "pov": {
+    "finish": "F_MetalD"
+  },
+  "native": [
+    "F_MetalD"
+  ],
+  "includes": [
+    "metals.inc"
+  ],
+  "live": {
+    "ambient": 0.1,
+    "diffuse": 0.6,
+    "specular": 1.0,
+    "specular_power": 100,
+    "opacity": 1.0
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier F_MetalD from the standard include file metals.inc; referenced by name, not copied"
+}

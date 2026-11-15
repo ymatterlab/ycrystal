@@ -1,0 +1,22 @@
+{
+  "id": "ase_ase2",
+  "name": "ASE2 style (ASE)",
+  "order": 8,
+  "category": "finish",
+  "kind": "finish",
+  "description": "ASE's 'ase2' style: metallic sheen with a mild reflection.",
+  "pov": {
+    "finish": "ambient 0.2 brilliance 3 diffuse 0.6 metallic specular 0.7 roughness 0.04 reflection 0.15"
+  },
+  "native": [],
+  "includes": [],
+  "live": {
+    "ambient": 0.2,
+    "diffuse": 0.6,
+    "specular": 0.7,
+    "specular_power": 50,
+    "opacity": 1.0
+  },
+  "min_povray": "3.7",
+  "provenance": "Finish values from ASE's ase.io.pov material style 'ase2' (ASE, LGPL-2.1-or-later); applied to Ycrystal's sRGB colours"
+}

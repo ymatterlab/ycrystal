@@ -1,0 +1,34 @@
+{
+  "id": "wood",
+  "name": "Cherry wood (Cherry_Wood)",
+  "order": 30,
+  "category": "decorative",
+  "kind": "pigment",
+  "description": "POV-Ray's reddish cherry wood with rings.",
+  "pov": {
+    "pigment": "Cherry_Wood",
+    "finish": "ambient 0.06 diffuse 0.8 specular 0.25 roughness 0.03"
+  },
+  "native": [
+    "Cherry_Wood"
+  ],
+  "includes": [
+    "textures.inc"
+  ],
+  "live": {
+    "ambient": 0.12,
+    "diffuse": 0.75,
+    "specular": 0.4,
+    "specular_power": 40,
+    "opacity": 1.0,
+    "color": [
+      0.55,
+      0.25,
+      0.15
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier Cherry_Wood from the standard include file textures.inc; referenced by name, not copied",
+  "texture_space": "unit",
+  "texture_scale": 0.35
+}

@@ -1,0 +1,30 @@
+{
+  "id": "sky_clear",
+  "name": "Clear sky",
+  "order": 11,
+  "category": "sky",
+  "description": "Procedural sky from a pale horizon to a blue zenith.",
+  "background": {
+    "mode": "sky",
+    "color": [
+      0.28,
+      0.48,
+      0.82
+    ],
+    "bottom": [
+      0.78,
+      0.86,
+      0.96
+    ],
+    "clouds": 0.0
+  },
+  "transparent": false,
+  "lighting": "bright",
+  "reflector": false,
+  "cell_edge_color": [
+    0.15,
+    0.15,
+    0.15
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

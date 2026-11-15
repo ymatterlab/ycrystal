@@ -1,0 +1,31 @@
+{
+  "id": "glass_clear",
+  "name": "Clear glass (M_Glass)",
+  "order": 24,
+  "category": "transparent",
+  "kind": "material",
+  "description": "POV-Ray's clear glass material M_Glass (IOR 1.5).",
+  "pov": {
+    "material": "M_Glass"
+  },
+  "native": [
+    "M_Glass"
+  ],
+  "includes": [
+    "textures.inc"
+  ],
+  "live": {
+    "ambient": 0.1,
+    "diffuse": 0.4,
+    "specular": 1.0,
+    "specular_power": 120,
+    "opacity": 0.25,
+    "color": [
+      0.92,
+      0.94,
+      0.95
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier M_Glass from the standard include file textures.inc; referenced by name, not copied"
+}

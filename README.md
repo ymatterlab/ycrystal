@@ -10,8 +10,9 @@ crystal-structure figures and rendering them with [POV-Ray](https://www.povray.o
 inputs, save/reopen `.ycrystal` projects, orbit/pan/zoom, select and hide individual
 displayed atoms, and export or render the current orthographic view. Supercell
 repetitions, periodic bonds, cell-edge modes, and lattice/Cartesian view directions
-are available, as are an output frame, a POV-Ray preview, cancellable renders, and a
-small material and background catalog. Full galleries and lighting controls are planned.
+are available, as are an output frame, a POV-Ray preview, cancellable renders, and
+galleries of 30 materials and 12 environments with POV-Ray thumbnails, per-element and
+per-atom materials, floors, skies, and lighting controls.
 Python interfaces are evolving developer functionality, without a stable API guarantee.
 
 ## Install and run
@@ -19,7 +20,7 @@ Python interfaces are evolving developer functionality, without a stable API gua
 Linux Mint 22 / Ubuntu 24.04, system Python 3.12, X11 with OpenGL:
 
 ```bash
-sudo apt install git povray libxcb-cursor0 python3.12-venv
+sudo apt install git povray povray-includes libxcb-cursor0 python3.12-venv
 git clone https://github.com/ymatterlab/ycrystal.git
 cd ycrystal
 /usr/bin/python3 -m venv .venv

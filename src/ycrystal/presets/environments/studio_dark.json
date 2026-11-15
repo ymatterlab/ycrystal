@@ -1,0 +1,33 @@
+{
+  "id": "studio_dark",
+  "name": "Dark studio, reflective floor",
+  "order": 10,
+  "category": "studio",
+  "description": "Dark glossy floor that mirrors the structure, bright lights, and a reflection panel for metals.",
+  "background": {
+    "mode": "solid",
+    "color": [
+      0.05,
+      0.05,
+      0.06
+    ]
+  },
+  "transparent": false,
+  "floor": {
+    "color": [
+      0.09,
+      0.09,
+      0.1
+    ],
+    "reflection": 0.35,
+    "offset": 0.3
+  },
+  "lighting": "bright",
+  "reflector": true,
+  "cell_edge_color": [
+    0.82,
+    0.82,
+    0.85
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

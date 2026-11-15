@@ -1,0 +1,22 @@
+{
+  "id": "ase_vmd",
+  "name": "VMD style (ASE)",
+  "order": 6,
+  "category": "finish",
+  "kind": "finish",
+  "description": "ASE's 'vmd' style: soft, slightly glossy, close to VMD's default look.",
+  "pov": {
+    "finish": "ambient 0.2 diffuse 0.80 phong 0.25 phong_size 10.0 specular 0.2 roughness 0.1"
+  },
+  "native": [],
+  "includes": [],
+  "live": {
+    "ambient": 0.2,
+    "diffuse": 0.8,
+    "specular": 0.25,
+    "specular_power": 15,
+    "opacity": 1.0
+  },
+  "min_povray": "3.7",
+  "provenance": "Finish values from ASE's ase.io.pov material style 'vmd' (ASE, LGPL-2.1-or-later); applied to Ycrystal's sRGB colours"
+}

@@ -1,14 +1,20 @@
 {
   "id": "dark",
   "name": "Dark grey",
-  "order": 3,
-  "description": "Dark background with light cell edges; suits metallic and glass atoms.",
-  "background": [
-    0.13,
-    0.13,
-    0.15
-  ],
+  "order": 4,
+  "category": "plain",
+  "description": "Dark background with light cell edges and a reflection panel for metals and glass.",
+  "background": {
+    "mode": "solid",
+    "color": [
+      0.13,
+      0.13,
+      0.15
+    ]
+  },
   "transparent": false,
+  "lighting": "bright",
+  "reflector": true,
   "cell_edge_color": [
     0.82,
     0.82,

@@ -8,7 +8,7 @@ have not been verified. Ycrystal is installed from a source checkout at this sta
 
 ```bash
 sudo apt update
-sudo apt install git povray libxcb-cursor0 python3.12-venv
+sudo apt install git povray povray-includes libxcb-cursor0 python3.12-venv
 git clone https://github.com/ymatterlab/ycrystal.git
 cd ycrystal
 /usr/bin/python3 -m venv .venv

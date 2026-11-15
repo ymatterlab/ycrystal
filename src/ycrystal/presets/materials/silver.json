@@ -1,0 +1,32 @@
+{
+  "id": "silver",
+  "name": "Silver (T_Silver_3C)",
+  "order": 15,
+  "category": "metal",
+  "kind": "texture",
+  "description": "POV-Ray silver texture: medium-reflective silver.",
+  "pov": {
+    "texture": "T_Silver_3C"
+  },
+  "native": [
+    "T_Silver_3C"
+  ],
+  "includes": [
+    "metals.inc"
+  ],
+  "live": {
+    "ambient": 0.15,
+    "diffuse": 0.6,
+    "specular": 1.0,
+    "specular_power": 90,
+    "opacity": 1.0,
+    "color": [
+      0.92,
+      0.92,
+      0.88
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier T_Silver_3C from the standard include file metals.inc; referenced by name, not copied",
+  "texture_space": "unit"
+}

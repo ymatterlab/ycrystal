@@ -9,8 +9,9 @@ displayed atoms.
 `ibrav = 0` inputs, save self-contained `.ycrystal` projects, navigate, select and hide
 individual displayed atoms, export scenes, and render PNGs. Supercell repetitions,
 periodic bonds, cell-edge modes, and view-direction controls
-are available, as are an output frame, a POV-Ray preview, cancellable renders, and a
-small material and background catalog. Full galleries and lighting controls are planned.
+are available, as are an output frame, a POV-Ray preview, cancellable renders, and
+galleries of 30 materials and 12 environments with POV-Ray thumbnails, per-element and
+per-atom materials, floors, skies, and lighting controls.
 
 - [Install and launch](guide/install.md) on Linux Mint.
 - Follow [Your first crystal figure](guide/first-figure.md) using the built-in SrTiO3 sample.

@@ -1,0 +1,22 @@
+{
+  "id": "ase_ase3",
+  "name": "ASE3 style (ASE)",
+  "order": 9,
+  "category": "finish",
+  "kind": "finish",
+  "description": "ASE's 'ase3' style: bright metallic sheen without reflection.",
+  "pov": {
+    "finish": "ambient 0.4 brilliance 2 diffuse 0.6 metallic specular 1.0 roughness 0.001 reflection 0.0"
+  },
+  "native": [],
+  "includes": [],
+  "live": {
+    "ambient": 0.35,
+    "diffuse": 0.6,
+    "specular": 0.9,
+    "specular_power": 110,
+    "opacity": 1.0
+  },
+  "min_povray": "3.7",
+  "provenance": "Finish values from ASE's ase.io.pov material style 'ase3' (ASE, LGPL-2.1-or-later); applied to Ycrystal's sRGB colours"
+}

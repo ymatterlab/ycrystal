@@ -1,0 +1,32 @@
+{
+  "id": "aluminium",
+  "name": "Aluminium (Aluminum)",
+  "order": 20,
+  "category": "metal",
+  "kind": "texture",
+  "description": "POV-Ray aluminium texture Aluminum (soft metallic sheen).",
+  "pov": {
+    "texture": "Aluminum"
+  },
+  "native": [
+    "Aluminum"
+  ],
+  "includes": [
+    "textures.inc"
+  ],
+  "live": {
+    "ambient": 0.15,
+    "diffuse": 0.6,
+    "specular": 1.0,
+    "specular_power": 90,
+    "opacity": 1.0,
+    "color": [
+      0.7,
+      0.71,
+      0.72
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier Aluminum from the standard include file textures.inc; referenced by name, not copied",
+  "texture_space": "unit"
+}

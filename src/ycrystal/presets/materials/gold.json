@@ -1,0 +1,32 @@
+{
+  "id": "gold",
+  "name": "Gold (T_Gold_3C)",
+  "order": 14,
+  "category": "metal",
+  "kind": "texture",
+  "description": "POV-Ray gold texture: medium-reflective gold.",
+  "pov": {
+    "texture": "T_Gold_3C"
+  },
+  "native": [
+    "T_Gold_3C"
+  ],
+  "includes": [
+    "metals.inc"
+  ],
+  "live": {
+    "ambient": 0.15,
+    "diffuse": 0.6,
+    "specular": 1.0,
+    "specular_power": 90,
+    "opacity": 1.0,
+    "color": [
+      0.95,
+      0.78,
+      0.45
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier T_Gold_3C from the standard include file metals.inc; referenced by name, not copied",
+  "texture_space": "unit"
+}

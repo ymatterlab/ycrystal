@@ -12,7 +12,10 @@ The top-level JSON object has the keys ``format`` (always ``"ycrystal-project"``
 POV-Ray path are not stored in projects.
 
 Schema history: 1 — first version (M1); 2 — repetitions, cell mode, and bonds (M2);
-3 — material and background presets, explicit output size (M3). Schema-1 files load
+3 — material and background presets, explicit output size (M3); 4 — element and atom
+material overrides, element colours, and the full environment: background type, floor,
+lighting, and reflection panel (M4). Older files open with the M3 appearance: no
+overrides, plain background, no floor, and the "soft" lighting. Schema-1 files load
 with bonds disabled to preserve their original appearance. In every schema the saved
 camera describes the output image of ``output.width`` × ``output.height`` pixels
 (schemas 1 and 2 recorded the output size the camera was rendered at), so reopening
@@ -45,7 +48,7 @@ from ycrystal.render.pov_writer import RenderSettings
 PROJECT_FORMAT = "ycrystal-project"
 """Value of the ``format`` key that identifies a project file."""
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 """Schema version written by this Ycrystal; newer versions are refused on load."""
 
 PROJECT_SUFFIX = ".ycrystal"
@@ -71,7 +74,7 @@ class Project:
     scene
         Display settings, including hidden atoms and the boundary policy.
     environment
-        Background preset, colour, transparency, and light intensities.
+        Background, floor, transparency, and lighting.
     camera
         Camera of the output image (``output.width`` × ``output.height``), or ``None``
         to use the default view when the project is opened.
@@ -143,6 +146,18 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             "repetitions": list(scene.repetitions),
             "cell_mode": scene.cell_mode,
             "material": scene.material,
+            "element_materials": [
+                {"element": element, "material": material_id}
+                for element, material_id in scene.element_materials
+            ],
+            "atom_materials": [
+                {"atom": source, "image": list(image), "material": material_id}
+                for (source, image), material_id in scene.atom_materials
+            ],
+            "element_colors": [
+                {"element": element, "color": list(color)}
+                for element, color in scene.element_colors
+            ],
             "bonds": {
                 "enabled": scene.bonds.enabled,
                 "tolerance": scene.bonds.tolerance,
@@ -153,19 +168,42 @@ def project_to_dict(project: Project) -> dict[str, Any]:
                 ],
             },
         },
-        "environment": {
-            "preset": project.environment.preset,
-            "transparent": project.environment.transparent,
-            "background": list(project.environment.background),
-            "key_light": project.environment.key_light,
-            "fill_light": project.environment.fill_light,
-        },
+        "environment": _environment_to_dict(project.environment),
         "camera": None if project.camera is None else project.camera.to_dict(),
         "output": {
             "width": project.output.width,
             "height": project.output.height,
             "antialias": project.output.antialias,
             "transparent_background": project.environment.transparent,
+        },
+    }
+
+
+def _environment_to_dict(e: Environment) -> dict[str, Any]:
+    return {
+        "preset": e.preset,
+        "transparent": e.transparent,
+        "background": {
+            "mode": e.background_mode,
+            "color": list(e.background),
+            "bottom": list(e.background_bottom),
+            "clouds": e.clouds,
+        },
+        "floor": {
+            "enabled": e.floor,
+            "color": list(e.floor_color),
+            "reflection": e.floor_reflection,
+            "offset": e.floor_offset,
+        },
+        "lighting": {
+            "preset": e.lighting,
+            "key_light": e.key_light,
+            "fill_light": e.fill_light,
+            "key_azimuth": e.key_azimuth,
+            "key_elevation": e.key_elevation,
+            "light_size": e.light_size,
+            "shadows": e.shadows,
+            "reflector": e.reflector,
         },
     }
 
@@ -258,7 +296,25 @@ def _scene_from(d: dict[str, Any], version: int = SCHEMA_VERSION) -> SceneSettin
         cell_mode=str(d.get("cell_mode", defaults.cell_mode)),
         bonds=_bonds_from(d.get("bonds"), version),
         material=_known_material(str(d.get("material", defaults.material))),
+        element_materials=tuple(
+            (str(entry["element"]), _known_material(str(entry["material"])))
+            for entry in d.get("element_materials", [])
+        ),
+        atom_materials=tuple(
+            ((int(entry["atom"]), _image(entry["image"])), _known_material(str(entry["material"])))
+            for entry in d.get("atom_materials", [])
+        ),
+        element_colors=tuple(
+            (str(entry["element"]), _rgb(entry["color"])) for entry in d.get("element_colors", [])
+        ),
     )
+
+
+def _image(value: Any) -> tuple[int, int, int]:
+    image = tuple(int(v) for v in value)
+    if len(image) != 3:
+        raise ValueError("atom image offsets need three integers")
+    return (image[0], image[1], image[2])
 
 
 def _known_material(material_id: str) -> str:
@@ -293,7 +349,7 @@ def _bonds_from(d: Any, version: int) -> BondSettings:
 
 
 def _environment_from(d: dict[str, Any], output: RenderSettings) -> Environment:
-    from ycrystal.presets import PresetError, get_environment
+    from ycrystal.presets import PresetError, get_environment, get_lighting
 
     defaults = Environment()
     # Schemas 1–2 had no environment preset; their transparency lived in "output".
@@ -306,12 +362,38 @@ def _environment_from(d: dict[str, Any], output: RenderSettings) -> Environment:
             f"The project uses the background {preset_id!r}, which this Ycrystal does not "
             "know. Update Ycrystal to open it."
         ) from None
+    background = d.get("background", defaults.background)
+    if not isinstance(background, dict):  # schemas 1–3: a plain colour
+        background = {"mode": "solid", "color": background, "bottom": background}
+    floor = d.get("floor") or {}
+    light = d.get("lighting") or {}
+    lighting_id = str(light.get("preset", defaults.lighting))
+    try:
+        get_lighting(lighting_id)
+    except PresetError:
+        raise ProjectError(
+            f"The project uses the lighting {lighting_id!r}, which this Ycrystal does not "
+            "know. Update Ycrystal to open it."
+        ) from None
     return Environment(
-        background=_rgb(d.get("background", defaults.background)),
-        key_light=float(d.get("key_light", defaults.key_light)),
-        fill_light=float(d.get("fill_light", defaults.fill_light)),
+        background=_rgb(background.get("color", defaults.background)),
+        key_light=float(light.get("key_light", d.get("key_light", defaults.key_light))),
+        fill_light=float(light.get("fill_light", d.get("fill_light", defaults.fill_light))),
         transparent=transparent,
         preset=preset_id,
+        background_mode=str(background.get("mode", defaults.background_mode)),
+        background_bottom=_rgb(background.get("bottom", background.get("color"))),
+        clouds=float(background.get("clouds", defaults.clouds)),
+        floor=bool(floor.get("enabled", defaults.floor)),
+        floor_color=_rgb(floor.get("color", defaults.floor_color)),
+        floor_reflection=float(floor.get("reflection", defaults.floor_reflection)),
+        floor_offset=float(floor.get("offset", defaults.floor_offset)),
+        lighting=lighting_id,
+        key_azimuth=float(light.get("key_azimuth", defaults.key_azimuth)),
+        key_elevation=float(light.get("key_elevation", defaults.key_elevation)),
+        light_size=float(light.get("light_size", defaults.light_size)),
+        shadows=bool(light.get("shadows", defaults.shadows)),
+        reflector=bool(light.get("reflector", defaults.reflector)),
     )
 
 

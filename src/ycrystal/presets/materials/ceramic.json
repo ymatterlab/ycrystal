@@ -1,0 +1,22 @@
+{
+  "id": "ceramic",
+  "name": "Ceramic (glazed)",
+  "order": 4,
+  "category": "finish",
+  "kind": "finish",
+  "description": "Glazed ceramic: bright, small highlight and a light glaze reflection.",
+  "pov": {
+    "finish": "ambient 0.07 diffuse 0.72 specular 0.7 roughness 0.003 reflection 0.05"
+  },
+  "native": [],
+  "includes": [],
+  "live": {
+    "ambient": 0.08,
+    "diffuse": 0.75,
+    "specular": 0.7,
+    "specular_power": 110,
+    "opacity": 1.0
+  },
+  "min_povray": "3.7",
+  "provenance": "Ycrystal recipe (MIT)"
+}

@@ -2,13 +2,14 @@
   "id": "glossy",
   "name": "Glossy",
   "order": 3,
-  "category": "scientific",
-  "description": "Sharp highlight and a faint reflection, like polished plastic.",
+  "category": "finish",
   "kind": "finish",
-  "keeps_element_color": true,
+  "description": "Sharp highlight and a faint reflection.",
   "pov": {
     "finish": "ambient 0.06 diffuse 0.65 specular 0.8 roughness 0.005 phong 0.3 phong_size 80 reflection 0.06"
   },
+  "native": [],
+  "includes": [],
   "live": {
     "ambient": 0.08,
     "diffuse": 0.7,
@@ -16,7 +17,6 @@
     "specular_power": 90,
     "opacity": 1.0
   },
-  "includes": [],
   "min_povray": "3.7",
   "provenance": "Ycrystal recipe (MIT)"
 }

@@ -1,0 +1,34 @@
+{
+  "id": "marble",
+  "name": "White marble (White_Marble)",
+  "order": 26,
+  "category": "decorative",
+  "kind": "pigment",
+  "description": "POV-Ray's white marble with dark veins, polished.",
+  "pov": {
+    "pigment": "White_Marble",
+    "finish": "ambient 0.06 diffuse 0.75 specular 0.6 roughness 0.004 reflection 0.04"
+  },
+  "native": [
+    "White_Marble"
+  ],
+  "includes": [
+    "textures.inc"
+  ],
+  "live": {
+    "ambient": 0.12,
+    "diffuse": 0.75,
+    "specular": 0.4,
+    "specular_power": 40,
+    "opacity": 1.0,
+    "color": [
+      0.88,
+      0.88,
+      0.88
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier White_Marble from the standard include file textures.inc; referenced by name, not copied",
+  "texture_space": "unit",
+  "texture_scale": 0.6
+}

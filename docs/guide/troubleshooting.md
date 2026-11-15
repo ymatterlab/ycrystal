@@ -31,8 +31,13 @@ that every scene or output directory will work.
 - No atom editing or structure-format export. Display repetitions and periodic bonds
   are available, but interactive supercell drag handles remain planned. The comparison
   module's `supercell` helper transforms scientific data for developer comparisons.
-- Only a small material/background catalog (five materials, three backgrounds) applied
-  to all atoms; no per-atom materials, galleries with thumbnails, or light controls yet.
+- Materials and environments come from the built-in catalog; user include files,
+  image backgrounds, and editable material parameters (for example a custom refractive
+  index) are not supported. The live view approximates materials, floors, and skies.
+- Transparent materials with area lights (Studio and Top lighting) render slowly; see
+  [lighting](appearance.md#lighting).
+- Scenes with native POV-Ray materials need the standard include files
+  (`sudo apt install povray-includes`); a missing file is reported on export and render.
 - The current reader accepts ordered structures only: partial/mixed CIF occupancy,
   overlapping sites, QE `ibrav != 0`, and QE `crystal_sg` are rejected.
 - Camera navigation and output size are outside undo/redo (they still mark the project

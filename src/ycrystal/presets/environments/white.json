@@ -2,13 +2,19 @@
   "id": "white",
   "name": "White",
   "order": 1,
-  "description": "Plain white background for papers and slides.",
-  "background": [
-    1.0,
-    1.0,
-    1.0
-  ],
+  "category": "plain",
+  "description": "Plain white background.",
+  "background": {
+    "mode": "solid",
+    "color": [
+      1,
+      1,
+      1
+    ]
+  },
   "transparent": false,
+  "lighting": "soft",
+  "reflector": false,
   "cell_edge_color": [
     0.15,
     0.15,

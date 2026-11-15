@@ -1,4 +1,4 @@
-"""Appearance, output, and preview panels.
+"""Output and preview panels.
 
 Like the scene panel, these widgets only emit requests; the main window applies them
 and calls their ``sync`` methods with signals blocked.
@@ -24,8 +24,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ycrystal.presets import environments, materials
-
 #: Aspect-ratio presets offered for the output image: (label, width / height or None).
 ASPECT_PRESETS: tuple[tuple[str, float | None], ...] = (
     ("Custom", None),
@@ -40,68 +38,6 @@ ASPECT_PRESETS: tuple[tuple[str, float | None], ...] = (
 
 MAX_OUTPUT_PIXELS = 8000
 """Largest width or height offered for rendered images, in pixels."""
-
-
-class AppearancePanel(QWidget):
-    """Material and background choices (the M3 alpha catalog)."""
-
-    material_requested = Signal(str)
-    background_requested = Signal(str)
-
-    def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        layout = QVBoxLayout(self)
-        form = QFormLayout()
-        self.material_combo = QComboBox()
-        for material in materials():
-            self.material_combo.addItem(material.name, material.id)
-            index = self.material_combo.count() - 1
-            self.material_combo.setItemData(
-                index, material.description, Qt.ItemDataRole.ToolTipRole
-            )
-        self.material_combo.currentIndexChanged.connect(
-            lambda _i: self.material_requested.emit(self.material_combo.currentData())
-        )
-        form.addRow("Atoms and bonds", self.material_combo)
-        self.material_note = QLabel()
-        self.material_note.setWordWrap(True)
-        form.addRow("", self.material_note)
-        self.background_combo = QComboBox()
-        for preset in environments():
-            self.background_combo.addItem(preset.name, preset.id)
-            index = self.background_combo.count() - 1
-            self.background_combo.setItemData(
-                index, preset.description, Qt.ItemDataRole.ToolTipRole
-            )
-        self.background_combo.currentIndexChanged.connect(
-            lambda _i: self.background_requested.emit(self.background_combo.currentData())
-        )
-        form.addRow("Background", self.background_combo)
-        self.background_note = QLabel()
-        self.background_note.setWordWrap(True)
-        form.addRow("", self.background_note)
-        layout.addLayout(form)
-        live = QLabel(
-            "The 3D view approximates materials and lighting. Use Preview (F5) to see "
-            "the POV-Ray result."
-        )
-        live.setWordWrap(True)
-        layout.addWidget(live)
-        layout.addStretch(1)
-
-    def sync(self, material_id: str, environment_id: str) -> None:
-        """Show the current material and background without emitting requests."""
-        from ycrystal.presets import get_environment, get_material
-
-        for combo, value in (
-            (self.material_combo, material_id),
-            (self.background_combo, environment_id),
-        ):
-            combo.blockSignals(True)
-            combo.setCurrentIndex(combo.findData(value))
-            combo.blockSignals(False)
-        self.material_note.setText(get_material(material_id).description)
-        self.background_note.setText(get_environment(environment_id).description)
 
 
 class RenderPanel(QWidget):

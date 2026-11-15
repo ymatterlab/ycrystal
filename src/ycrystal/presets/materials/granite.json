@@ -1,0 +1,34 @@
+{
+  "id": "granite",
+  "name": "Pink granite (Pink_Granite)",
+  "order": 28,
+  "category": "decorative",
+  "kind": "pigment",
+  "description": "POV-Ray's speckled pink granite.",
+  "pov": {
+    "pigment": "Pink_Granite",
+    "finish": "ambient 0.06 diffuse 0.8 specular 0.3 roughness 0.02"
+  },
+  "native": [
+    "Pink_Granite"
+  ],
+  "includes": [
+    "textures.inc"
+  ],
+  "live": {
+    "ambient": 0.12,
+    "diffuse": 0.75,
+    "specular": 0.4,
+    "specular_power": 40,
+    "opacity": 1.0,
+    "color": [
+      0.7,
+      0.55,
+      0.52
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier Pink_Granite from the standard include file textures.inc; referenced by name, not copied",
+  "texture_space": "unit",
+  "texture_scale": 0.5
+}

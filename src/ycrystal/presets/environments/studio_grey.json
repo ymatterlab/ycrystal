@@ -1,0 +1,33 @@
+{
+  "id": "studio_grey",
+  "name": "Grey studio with floor",
+  "order": 9,
+  "category": "studio",
+  "description": "Mid-grey floor with soft shadows; neutral backdrop for colourful structures.",
+  "background": {
+    "mode": "solid",
+    "color": [
+      0.6,
+      0.6,
+      0.62
+    ]
+  },
+  "transparent": false,
+  "floor": {
+    "color": [
+      0.62,
+      0.62,
+      0.64
+    ],
+    "reflection": 0.0,
+    "offset": 0.3
+  },
+  "lighting": "studio",
+  "reflector": false,
+  "cell_edge_color": [
+    0.15,
+    0.15,
+    0.15
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

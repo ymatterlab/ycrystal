@@ -1,0 +1,32 @@
+{
+  "id": "brass",
+  "name": "Brass (T_Brass_3C)",
+  "order": 17,
+  "category": "metal",
+  "kind": "texture",
+  "description": "POV-Ray brass texture: medium-reflective brass.",
+  "pov": {
+    "texture": "T_Brass_3C"
+  },
+  "native": [
+    "T_Brass_3C"
+  ],
+  "includes": [
+    "metals.inc"
+  ],
+  "live": {
+    "ambient": 0.15,
+    "diffuse": 0.6,
+    "specular": 1.0,
+    "specular_power": 90,
+    "opacity": 1.0,
+    "color": [
+      0.8,
+      0.65,
+      0.38
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier T_Brass_3C from the standard include file metals.inc; referenced by name, not copied",
+  "texture_space": "unit"
+}

@@ -15,6 +15,7 @@ the in-app summary.
 | Ctrl + click | Add/remove a ball from the selection |
 | Esc | Clear selection |
 | Delete or Backspace | Hide selected displayed atoms |
+| Ctrl+M | Material for the selected atoms (Edit ▸ Material for Selection…) |
 | Ctrl+Z | Undo a display-setting change |
 | Ctrl+Shift+Z or Ctrl+Y | Redo a display-setting change |
 | Ctrl+O | Open a structure or project |
@@ -42,7 +43,9 @@ IDs. Hidden IDs survive toggling boundary images off and on. Selection highlight
 are viewport overlays and do not appear in the figure.
 
 Undo/redo covers hiding, Show All Atoms, boundary images, repetitions, cell-edge
-modes, bond settings, materials, and backgrounds. Consecutive tolerance/radius adjustments merge into one step. Camera navigation,
+modes, bond settings, materials (default, element, and atom), element colours,
+environments, backgrounds, floors, and lighting. Consecutive tolerance/radius and
+light/floor spin-box adjustments merge into one step. Camera navigation,
 output settings, file opens, and saves are not undoable. Opening a new file clears
 the undo history. A changed camera or output setting still marks the project modified.
 
@@ -56,13 +59,14 @@ camera. See [output size and frame](rendering.md#output-size-and-frame).
 
 The structure's coordinates, occupancies, and movable flags are scientific data.
 Camera, radii, colours, boundary images, hiding, materials, background, and lighting
-are presentation state. The GUI offers a small material and background catalog
-(**Scene ▸ Appearance**); it has no atom editor, per-atom materials, galleries, or
-light editor yet.
+are presentation state; see
+[Materials, backgrounds, and lighting](appearance.md) for the **Scene ▸ Appearance**
+tab and the galleries. There is no atom editor.
 
 ## Supercells, bonds, and directions
 
-The **Scene** dock has **Structure**, **Bonds**, **Appearance**, and **Render** tabs. If closed, reopen it from
+The **Scene** dock has **Structure**, **Bonds**, **Appearance**, and **Render** tabs.
+If closed, reopen it from
 **View ▸ Scene**. Under Structure, set repetitions along a, b, c (1 to 20),
 use **+ all** / **− all**, or reset with **1 × 1 × 1**. Typed counts apply on Enter
 or focus change. The view refits after a repetition change. Expansions above 20,000

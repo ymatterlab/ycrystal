@@ -2,13 +2,19 @@
   "id": "transparent",
   "name": "Transparent (PNG alpha)",
   "order": 2,
-  "description": "PNG with a transparent background; the live view shows light grey.",
-  "background": [
-    0.86,
-    0.86,
-    0.86
-  ],
+  "category": "plain",
+  "description": "PNG with a transparent background; the live view shows light grey. Floors and backdrops are left out.",
+  "background": {
+    "mode": "solid",
+    "color": [
+      0.86,
+      0.86,
+      0.86
+    ]
+  },
   "transparent": true,
+  "lighting": "soft",
+  "reflector": false,
   "cell_edge_color": [
     0.15,
     0.15,

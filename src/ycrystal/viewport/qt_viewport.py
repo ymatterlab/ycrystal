@@ -162,9 +162,9 @@ class StructureViewport(QWidget):
         self._plotter.enable_trackball_style()
         self._plotter.enable_parallel_projection()
         self._plotter.add_axes(interactive=False, line_width=2)
-        self._atoms_actor: vtkActor | None = None
+        self.atom_actors: dict[str, vtkActor] = {}
+        self.bond_actors: dict[str, vtkActor] = {}
         self._highlight_actor: vtkActor | None = None
-        self._bonds_actor: vtkActor | None = None
         self.detail: tuple[int, int, int] = detail_for(0)
         self._geometry: DisplayGeometry | None = None
         # Any camera change (mouse navigation, wheel, Fit, programmatic) notifies listeners.
@@ -190,53 +190,75 @@ class StructureViewport(QWidget):
             Geometry to draw. A reference is kept for picking and fitting; it is not
             copied or modified.
         environment
-            Only the background colour is used; the live view keeps VTK's default
-            lighting.
+            Background, floor, and transparency are approximated (see Notes); the live
+            view keeps VTK's default lighting.
 
         Raises
         ------
         ycrystal.presets.PresetError
-            If ``geometry.material`` is not a known material preset.
+            If a material of the geometry is not a known material preset.
 
         Notes
         -----
         The selection highlight is removed; call
         [`set_highlight`][ycrystal.viewport.qt_viewport.StructureViewport.set_highlight]
-        again if needed. Atoms and bonds use the material's live approximation (Phong
-        coefficients and opacity); POV-Ray renders the real material.
+        again if needed. Atoms and half-bonds are grouped by material, one actor per
+        material (``atom_actors`` and ``bond_actors``), each with the material's live
+        approximation (Phong coefficients and opacity); POV-Ray renders the real
+        material. The background is
+        [`Environment.live_background`][ycrystal.core.scene.Environment.live_background]:
+        the floor colour when there is a floor, a vertical gradient for gradients and
+        skies. Shadows, reflections, refraction, clouds, and procedural patterns appear
+        only in the POV-Ray preview and render.
         """
         from ycrystal.presets import get_material
 
-        look = get_material(geometry.material).live
         plotter = self._plotter
-        for actor in (self._atoms_actor, self._highlight_actor, self._bonds_actor):
-            if actor is not None:
-                plotter.remove_actor(actor, render=False)
+        for actor in [*self.atom_actors.values(), *self.bond_actors.values()]:
+            plotter.remove_actor(actor, render=False)
+        self.atom_actors, self.bond_actors = {}, {}
+        if self._highlight_actor is not None:
+            plotter.remove_actor(self._highlight_actor, render=False)
         self._highlight_actor = None
-        self._bonds_actor = None
         plotter.remove_actor("cell_edges", render=False)
-        plotter.set_background(environment.background)
+        bottom, top = environment.live_background()
+        if top is None:
+            plotter.set_background(bottom)
+        else:
+            plotter.set_background(bottom, top=top)
 
         colors = np.clip(np.round(np.asarray(geometry.colors) * 255), 0, 255).astype(np.uint8)
         theta, phi, sides = detail_for(len(geometry))
         self.detail = (theta, phi, sides)
-        actor = _sphere_actor(geometry.positions, geometry.radii, colors, (theta, phi))
-        _apply_look(actor, look)
-        if look.opacity < 1.0:
+        materials = np.asarray(geometry.materials, dtype=object)
+        translucent = False
+        for material_id in dict.fromkeys(geometry.materials):
+            look = get_material(material_id).live
+            translucent |= look.opacity < 1.0
+            rows = np.flatnonzero(materials == material_id)
+            actor = _sphere_actor(
+                geometry.positions[rows], geometry.radii[rows], colors[rows], (theta, phi)
+            )
+            _apply_look(actor, look)
+            plotter.add_actor(actor, reset_camera=False, render=False)
+            self.atom_actors[material_id] = actor
+            if len(geometry.bonds):
+                # Each half-bond belongs to the atom it starts from.
+                first = materials[geometry.bonds[:, 0]] == material_id
+                second = materials[geometry.bonds[:, 1]] == material_id
+                halves = np.vstack([geometry.bonds[first], geometry.bonds[second][:, ::-1]])
+                if len(halves):
+                    bonds_actor = _bond_actor(
+                        geometry.positions, halves, colors, geometry.bond_radius, sides
+                    )
+                    _apply_look(bonds_actor, look)
+                    bonds_actor.SetPickable(False)
+                    plotter.add_actor(bonds_actor, reset_camera=False, render=False)
+                    self.bond_actors[material_id] = bonds_actor
+        if translucent:
             plotter.enable_depth_peeling()
         else:
             plotter.disable_depth_peeling()
-        plotter.add_actor(actor, reset_camera=False, render=False)
-        self._atoms_actor = actor
-
-        if len(geometry.bonds):
-            bonds_actor = _bond_actor(
-                geometry.positions, geometry.bonds, colors, geometry.bond_radius, sides
-            )
-            _apply_look(bonds_actor, look)
-            bonds_actor.SetPickable(False)
-            plotter.add_actor(bonds_actor, reset_camera=False, render=False)
-            self._bonds_actor = bonds_actor
 
         if len(geometry.cell_edges):
             edges = np.asarray(geometry.cell_edges, dtype=float)
@@ -632,12 +654,14 @@ def _sphere_actor(
 def _bond_actor(
     positions: np.ndarray, bonds: np.ndarray, colors: np.ndarray, radius: float, sides: int = 20
 ) -> vtkActor:
-    """Instanced half-bond cylinders, each coloured like the atom it starts from."""
+    """Instanced half-bond cylinders from ``bonds[:, 0]`` to the bond midpoint.
+
+    Each cylinder is coloured like the atom it starts from; pass a bond in both
+    orientations to draw both halves.
+    """
     positions = np.asarray(positions, dtype=float)
-    first, second = positions[bonds[:, 0]], positions[bonds[:, 1]]
-    middle = 0.5 * (first + second)
-    starts = np.vstack([first, second])
-    ends = np.vstack([middle, middle])
+    starts = positions[bonds[:, 0]]
+    ends = 0.5 * (starts + positions[bonds[:, 1]])
     vectors = ends - starts
     lengths = np.linalg.norm(vectors, axis=1)
     points = pv.PolyData(0.5 * (starts + ends))
@@ -645,7 +669,7 @@ def _bond_actor(
     points.point_data["scale"] = np.column_stack(
         [lengths, np.full(len(lengths), radius), np.full(len(lengths), radius)]
     )
-    points.point_data["colors"] = np.vstack([colors[bonds[:, 0]], colors[bonds[:, 1]]])
+    points.point_data["colors"] = colors[bonds[:, 0]]
     cylinder = vtkCylinderSource()  # unit height and radius along the y axis
     cylinder.SetHeight(1.0)
     cylinder.SetRadius(1.0)
