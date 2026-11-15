@@ -21,6 +21,13 @@ the area outside it is dimmed. Two cameras are therefore in play. The *view came
 same orientation and centre and a parallel scale reduced to the frame. Resizing the view
 keeps the output camera unchanged.
 
+Lighting: VTK's default light kit is replaced by two scene lights taken from the shared
+[`LightingRig`][ycrystal.core.lighting.LightingRig] (the key and fill lights of the
+POV-Ray scene, at their world positions, without distance attenuation). They are
+re-resolved from the output camera before every redraw, so they follow orbiting, panning,
+and rolling exactly as the exported lights do. Shadows, area-light softness, reflections,
+refraction, and the reflection panel appear only in POV-Ray.
+
 Importing this module sets the environment variable ``QT_API=pyside6`` for the whole
 process and imports PyVista, PyVistaQt, and VTK. Creating a
 [`StructureViewport`][ycrystal.viewport.qt_viewport.StructureViewport] needs a
@@ -48,11 +55,13 @@ from vtkmodules.vtkRenderingCore import (  # noqa: E402
     vtkActor,
     vtkActor2D,
     vtkGlyph3DMapper,
+    vtkLight,
     vtkPolyDataMapper2D,
     vtkTextActor,
 )
 
 from ycrystal.core.camera import Camera  # noqa: E402
+from ycrystal.core.lighting import LightingRig, resolve_lighting_for_bounds  # noqa: E402
 from ycrystal.core.picking import pick_sphere  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry, Environment  # noqa: E402
 
@@ -227,6 +236,16 @@ class StructureViewport(QWidget):
         self._plotter.enable_trackball_style()
         self._plotter.enable_parallel_projection()
         self._plotter.add_axes(interactive=False, line_width=2)
+        # Lights: the key and fill lights of the shared rig replace PyVista's light kit.
+        renderer = self._plotter.renderer
+        renderer.remove_all_lights()
+        renderer.AutomaticLightCreationOff()  # no automatic headlight when both are off
+        self._lights: dict[str, vtkLight] = {"key": _scene_light(), "fill": _scene_light()}
+        for light in self._lights.values():
+            renderer.AddLight(light)
+        self._environment: Environment | None = None
+        self._bounds: tuple[np.ndarray, float] | None = None
+        self._rig: LightingRig | None = None
         self.atom_actors: dict[str, vtkActor] = {}
         self.bond_actors: dict[str, vtkActor] = {}
         self._highlight_actor: vtkActor | None = None
@@ -281,8 +300,9 @@ class StructureViewport(QWidget):
             Geometry to draw. A reference is kept for picking and fitting; it is not
             copied or modified.
         environment
-            Background, floor, and transparency are approximated (see Notes); the live
-            view keeps VTK's default lighting.
+            Background, floor, and transparency are approximated (see Notes); the key
+            and fill lights are taken from the shared lighting rig (see
+            [`set_lighting`][ycrystal.viewport.qt_viewport.StructureViewport.set_lighting]).
 
         Raises
         ------
@@ -299,8 +319,9 @@ class StructureViewport(QWidget):
         material. The background is
         [`Environment.live_background`][ycrystal.core.scene.Environment.live_background]:
         the floor colour when there is a floor, a vertical gradient for gradients and
-        skies. Shadows, reflections, refraction, clouds, and procedural patterns appear
-        only in the POV-Ray preview and render.
+        skies. Shadows, area-light softness, reflections, refraction, the reflection
+        panel, clouds, and procedural patterns appear only in the POV-Ray preview and
+        render.
         """
         from ycrystal.presets import get_material
 
@@ -372,7 +393,34 @@ class StructureViewport(QWidget):
                 render=False,
             )
         self._geometry = geometry
-        plotter.render()
+        self._environment = environment
+        self._bounds = geometry.bounding_sphere()
+        plotter.render()  # the lights are resolved before the redraw
+
+    def set_lighting(self, environment: Environment) -> None:
+        """Use the lights of ``environment`` without rebuilding the scene.
+
+        The key and fill lights become VTK scene lights at the world positions of
+        [`resolve_lighting`][ycrystal.core.lighting.resolve_lighting] for the output
+        camera and the current geometry: positional, white, with the environment's
+        intensities, no distance attenuation (constant attenuation 1), and no spotlight
+        cone. A light with non-positive intensity is switched off. The positions are
+        resolved again before every redraw, so they follow the camera; they are already
+        in world coordinates and get no further camera-relative transformation.
+
+        Parameters
+        ----------
+        environment
+            Environment whose lighting values are shown; background and floor are not
+            changed (use `set_scene` for those).
+        """
+        self._environment = environment
+        self._plotter.render()
+
+    def lighting_rig(self) -> LightingRig | None:
+        """Return the rig the live lights use now, or ``None`` before a scene is set."""
+        self._update_lights()
+        return self._rig
 
     def set_highlight(self, indices: list[int]) -> None:
         """Mark displayed atoms as selected.
@@ -993,8 +1041,24 @@ class StructureViewport(QWidget):
             # The view was resized: keep the output camera's parallel scale.
             cam.SetParallelScale(cam.GetParallelScale() * self._last_factor / factor)
         self._last_factor = factor
+        self._update_lights()
         self._update_frame_overlay()
         self._update_handles()
+
+    def _update_lights(self) -> None:
+        if self._environment is None or self._bounds is None:
+            self._rig = None
+            for light in self._lights.values():
+                light.SwitchOff()
+            return
+        rig = resolve_lighting_for_bounds(self._environment, self.output_camera(), *self._bounds)
+        self._rig = rig
+        for resolved in (rig.key, rig.fill):
+            light = self._lights[resolved.role]
+            light.SetPosition(*resolved.position)
+            light.SetFocalPoint(*rig.origin)
+            light.SetIntensity(max(resolved.intensity, 0.0))
+            light.SetSwitch(int(resolved.enabled))
 
     def _update_frame_overlay(self) -> None:
         width, height = self.render_size()
@@ -1101,6 +1165,18 @@ def _apply_look(actor: vtkActor, look: object) -> None:
 
 MAX_HANDLE_REPETITIONS = 20
 """Largest cell count a handle drag can reach (the numeric controls use the same)."""
+
+
+def _scene_light() -> vtkLight:
+    """Return a white positional scene light without attenuation or spotlight cone."""
+    light = vtkLight()
+    light.SetLightTypeToSceneLight()
+    light.PositionalOn()
+    light.SetConeAngle(180.0)  # 90° or more: no spotlight
+    light.SetAttenuationValues(1.0, 0.0, 0.0)  # constant: no fall-off with distance
+    light.SetColor(1.0, 1.0, 1.0)
+    light.SwitchOff()
+    return light
 
 
 def _line_mapper() -> object:

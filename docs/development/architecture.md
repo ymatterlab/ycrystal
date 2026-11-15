@@ -11,7 +11,9 @@ extending them.
 | `core/camera.py`, `core/picking.py` | Immutable orthographic camera and analytic picking. Projection uses top-left continuous pixel coordinates. Navigation returns new cameras. No GUI dependency. |
 | `io/readers.py`, `io/project.py` | File detection, ASE-backed readers, provenance, and versioned JSON projects. Questions are exceptions that the caller can answer and retry; no GUI dependency. |
 | `gui/main_window.py`, `gui/commands.py` | Qt actions, dialogs, project state, selection, and display-setting undo stack. Coordinates are never edited by navigation or hiding. |
-| `viewport/qt_viewport.py` | The VTK/PyVistaQt adapter. It consumes shared geometry, exchanges `Camera` objects, draws overlays, and reports clicks. VTK objects stay here. |
+| `core/lighting.py` | `resolve_lighting` turns an environment's relative light values into a world-space `LightingRig` (key, fill, reflection panel) for an output camera and a displayed geometry. Shared by the POV writer, the live view, and the Lighting Setup window; nothing is stored. No Qt or VTK. |
+| `viewport/qt_viewport.py` | The VTK/PyVistaQt adapter. It consumes shared geometry, exchanges `Camera` objects, draws overlays, and reports clicks. VTK objects stay here. Its two scene lights come from the resolved rig. |
+| `viewport/lighting_view.py` | The Lighting Setup overview: a second VTK window with its own camera that draws the rig and reports main-light handle drags as angles. Its graphics never reach the main view, picking, fitting, or exports. |
 | `render/pov_writer.py` | Pure text export of shared geometry/camera into POV-Ray 3.7 and INI output. No renderer process or display needed. |
 | `render/jobs.py`, `render/povray.py` | Isolated job directories, discovery, synchronous execution, results, and image copying. The caller owns cleanup. |
 | `render/process.py` | Asynchronous `QProcess` adapter. Needs a running Qt event loop (`QCoreApplication` is enough), not a window. |
@@ -32,8 +34,8 @@ orientation and centre, parallel scale multiplied by the frame-to-view height ra
 Export, preview, render, and projects use the output camera with the explicit output
 size; resizing the window keeps it. POV-Ray export writes explicit camera vectors and
 may move the orthographic eye backward to put all geometry in front of it without
-changing projection. VTK uses its own lighting and a material's live approximation;
-axes, the frame, and selection are overlays only.
+changing projection. VTK uses the key and fill lights of the shared lighting rig and a
+material's live approximation; axes, the frame, and selection are overlays only.
 
 Materials, environments, and lighting are presets (`ycrystal.presets`: JSON manifests
 in `presets/materials/` and `presets/environments/`, and `presets/lighting.json`). A

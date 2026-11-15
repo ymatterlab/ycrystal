@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 )
 
 from ycrystal.core.colors import color_label, format_color
+from ycrystal.core.lighting import KEY_AZIMUTH_RANGE, KEY_ELEVATION_RANGE
 from ycrystal.core.scene import RGB, Environment, SceneSettings
 from ycrystal.gui.color_dialog import ColorDialog, color_values
 from ycrystal.gui.gallery import preset_icon
@@ -156,6 +157,9 @@ class AppearancePanel(QScrollArea):
 
     lighting_requested = Signal(str)
     """Apply a lighting preset."""
+
+    lighting_setup_requested = Signal()
+    """Open the Lighting Setup window."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -326,22 +330,31 @@ class AppearancePanel(QScrollArea):
             lambda v: self._edit("Fill Light", "env:fill_light", fill_light=v)
         )
         lform.addRow("Fill light", self.fill_spin)
-        self.azimuth_spin = _spin(-180, 180, 5, 0, "°")
-        self.azimuth_spin.setToolTip("Key-light direction: degrees to the right (negative: left)")
+        self.azimuth_spin = _spin(*KEY_AZIMUTH_RANGE, 5, 0, "°")
+        self.azimuth_spin.setToolTip(
+            "Key-light direction around the output camera's focal point F: 0° points toward "
+            "the camera, positive to the right of the image (negative: left), ±180° behind "
+            "the structure"
+        )
         self.azimuth_spin.valueChanged.connect(
             lambda v: self._edit("Light Direction", "env:key_azimuth", key_azimuth=v)
         )
         lform.addRow("Key azimuth", self.azimuth_spin)
-        self.elevation_spin = _spin(-30, 89, 5, 0, "°")
-        self.elevation_spin.setToolTip("Key-light direction: degrees above the horizontal")
+        self.elevation_spin = _spin(*KEY_ELEVATION_RANGE, 5, 0, "°")
+        self.elevation_spin.setToolTip(
+            "Key-light direction: degrees above the image's horizontal (screen up); the "
+            "horizontal turns with the camera"
+        )
         self.elevation_spin.valueChanged.connect(
             lambda v: self._edit("Light Direction", "env:key_elevation", key_elevation=v)
         )
         lform.addRow("Key elevation", self.elevation_spin)
         self.size_spin = _spin(0, 5, 0.1, 1, " × scene")
         self.size_spin.setToolTip(
-            "Area-light size in multiples of the scene radius; 0 is a point light with sharp "
-            "shadows. Area lights soften shadows but slow down transparent materials."
+            "Diameter of the key light as a circular area light, in multiples of the scene "
+            "radius R (the sphere around the displayed atoms and cell edges); 0 is a point "
+            "light with sharp shadows. Area lights soften shadows but slow down transparent "
+            "materials."
         )
         self.size_spin.valueChanged.connect(
             lambda v: self._edit("Light Size", "env:light_size", light_size=v)
@@ -358,6 +371,13 @@ class AppearancePanel(QScrollArea):
             lambda on: self._edit("Reflection Panel", reflector=on)
         )
         lform.addRow(self.reflector_check)
+        self.lighting_setup_button = QPushButton("Lighting Setup…")
+        self.lighting_setup_button.setToolTip(
+            "Show the lights, the output camera, and the structure in 3D and drag the key "
+            "light's direction"
+        )
+        self.lighting_setup_button.clicked.connect(self.lighting_setup_requested)
+        lform.addRow(self.lighting_setup_button)
         self.lighting_note = QLabel()
         self.lighting_note.setWordWrap(True)
         lform.addRow(self.lighting_note)
@@ -440,6 +460,15 @@ class AppearancePanel(QScrollArea):
     def radius_spin(self, element: str) -> QDoubleSpinBox:
         """Return the radius spin box (Å) of an element."""
         return self.element_table.cellWidget(self._elements.index(element), 2)
+
+    def show_key_direction(self, azimuth: float, elevation: float) -> None:
+        """Show key-light angles (for example during a drag) without emitting requests."""
+        self._syncing = True
+        try:
+            self.azimuth_spin.setValue(azimuth)
+            self.elevation_spin.setValue(elevation)
+        finally:
+            self._syncing = False
 
     def sync(
         self,

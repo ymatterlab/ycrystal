@@ -32,6 +32,8 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - set_background
         - set_environment
         - set_lighting
+        - open_lighting_setup
+        - lighting_environment
         - open_material_gallery
         - open_environment_gallery
         - set_rotation_mode
@@ -83,6 +85,8 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - atom_clicked
         - key_pressed
         - set_scene
+        - set_lighting
+        - lighting_rig
         - set_highlight
         - pick
         - camera
@@ -109,6 +113,31 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - render_size
         - screenshot
         - close_viewport
+
+::: ycrystal.gui.lighting_setup.LightingSetupWindow
+    options:
+      members:
+        - angle_requested
+        - show_rig
+        - show_angles
+
+::: ycrystal.viewport.lighting_view.LightingOverview
+    options:
+      members:
+        - key_drag_started
+        - key_drag_changed
+        - key_drag_finished
+        - key_drag_cancelled
+        - set_geometry
+        - set_rig
+        - reset_view
+        - overview_camera
+        - handle_positions
+        - handle_at
+        - begin_drag
+        - drag_to
+        - end_drag
+        - cancel_drag
 
 ::: ycrystal.render.process.RenderProcess
     options:

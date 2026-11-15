@@ -198,13 +198,77 @@ fills the whole background, so the live view simply shows its colour.
 | Flat (no shadows) | Two even, shadowless lights from the front: low contrast for schematic figures. |
 
 The controls below the preset adjust the **Key light** and **Fill light** intensities,
-the key-light direction (**Key azimuth**: degrees to the right, negative to the left;
-**Key elevation**: degrees above the horizontal), **Light size** (an area light, in
-multiples of the scene radius; 0 is a point light with sharp shadows), **Shadows**,
-and the **Reflection panel**: an invisible bright panel near the key light that only
-appears in reflections, so that metals and glass do not look black on dark
-backgrounds. Lights move with the view: the key light always comes from the same side
-of the image.
+the key-light direction (**Key azimuth** and **Key elevation**), **Light size**,
+**Shadows**, and the **Reflection panel**.
+
+#### How the lights are placed
+
+Lights belong to the image, not to the crystal: they are placed relative to the output
+camera, so the key light always comes from the same side of the image while you orbit,
+roll, or pan.
+
+- **Origin:** the camera's focal point *F*, the point at the centre of the image.
+- **Key azimuth:** 0° points from *F* straight toward the camera (a light from the
+  viewer's position); positive values turn to the right of the image, negative to the
+  left; ±180° is behind the structure. The presets use −20° to −65° (upper left).
+- **Key elevation:** degrees above the image's horizontal, toward the top of the image;
+  −30° to 89°. When you roll the camera, the horizontal rolls with the image.
+- **Distance:** both lights sit at the same distance from *F*: 4 *R* + |*C* − *F*| +
+  10 Å, where *C* and *R* are the centre and radius of a sphere around the displayed
+  atoms and cell edges (boundary atoms and repeated cells included, hidden atoms left
+  out). Zooming or changing the output size does not move the lights; panning away from
+  the structure moves them a little further out. Light does not get weaker with
+  distance, so the distance changes the direction of shadows slightly, not the
+  brightness.
+- **Fill light:** a fixed direction at the lower right, in front of the structure
+  (azimuth +35°, elevation −11.6° in the same convention). It never casts shadows; only
+  its intensity can be changed.
+- **Intensities** are the brightness of white light (POV-Ray `color rgb`); 0 switches a
+  light off.
+- **Light size:** 0 is a point light with sharp shadows. A larger value makes the key
+  light a round area light whose *diameter* is the value times the scene radius *R*
+  (0.5 on a structure with *R* = 4.4 Å gives a light 2.2 Å across). POV-Ray turns the
+  round light toward each point it lights, so it behaves like a glowing ball of that
+  size. Shadows are sampled from a 5 × 5 grid of points on the light, refined
+  adaptively where a shadow edge needs it.
+- **Reflection panel:** an invisible bright disc on the key-light side of the structure
+  that only appears in reflections, so that metals and glass do not look black on dark
+  backgrounds. It is not a light source and does not light anything.
+
+#### Lighting Setup window
+
+**Lighting Setup…** (below the lighting controls, or **View ▸ Lighting Setup…**) opens a
+3D overview of the lights, the output camera, and a lightweight copy of the displayed
+structure:
+
+- orange sphere: the key light; blue cube: the fill light; both with labels and guide
+  lines from *F*;
+- black cross: *F*; purple octahedron: *C*;
+- grey cone and line: the output camera's viewing direction (its distance does not
+  matter for an orthographic image); blue rectangle: the output frame;
+- grey ring: the horizontal circle at the light distance, with the azimuth and elevation
+  arcs of the key light;
+- wire sphere: the area-light diameter, when the light size is not 0; white disc: the
+  reflection panel, when it is on.
+
+Drag the orange key-light sphere to change azimuth and elevation together, or the flat
+orange disc on the ring to change only the azimuth. The angles are always measured in
+the output camera's frame, whichever way you have turned the overview, and they snap to
+whole degrees like the spin boxes. While you drag, the live view, the spin boxes, and
+the overview follow; releasing the button applies the change as one undoable step (and
+starts the automatic preview if it is on). Esc or the right mouse button cancels the
+drag and restores the previous direction. Elsewhere in the overview, drag to orbit,
+Shift-drag or middle-drag to pan, and use the wheel to zoom; this never changes the
+image. **Reset Overview** fits the overview again. The window also has azimuth and
+elevation spin boxes for the keyboard and a read-out of the resolved values.
+
+#### What the live view shows
+
+The live view uses the key and fill lights at their real positions and intensities
+(without distance fall-off), so the shading direction matches the POV-Ray image. It
+does not show shadows, the softness of area lights, reflections, refraction, or the
+reflection panel; check those in the POV-Ray preview. The live view's shading is an
+approximation and is not expected to match the POV-Ray image pixel for pixel.
 
 Area lights (Studio, Top) soften shadows at little cost for opaque materials, but make
 transparent materials much slower to render, because POV-Ray traces shadow rays through

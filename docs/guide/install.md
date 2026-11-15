@@ -40,7 +40,7 @@ uv pip install --python .venv/bin/python -e . -c constraints.txt
 ## Check the installation
 
 ```bash
-.venv/bin/ycrystal --version          # ycrystal 0.1.0
+.venv/bin/ycrystal --version          # ycrystal 0.2.0
 .venv/bin/ycrystal --check-renderer   # PASS: POV-Ray 3.7… passed
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png
 ```

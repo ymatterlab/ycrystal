@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0–M5 complete and merged into `main` (M5 in PR #11); M6 (release readiness, version 0.1.0) complete on branch `release/m6-v0.1`, not yet tagged or published. Repository private.
+Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (branch `feature/lighting-editor`, submitted as a pull request); see the [0.2.0 checklist](development/release.md#checklist-for-020). Repository private.
 
 ## Milestones
 
@@ -93,10 +93,59 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## FR-LIGHT-01: Lighting Setup window and live lighting (post-0.1.0, 15 November 2026)
+
+New development after the 0.1.0 baseline (not part of M0–M6), released in 0.2.0;
+branch `feature/lighting-editor`, submitted as a pull request. Three increments: (A) one shared
+helper resolves the lights, (B) a Lighting Setup window shows them in 3D with draggable
+key-light handles, (C) the live view uses the resolved key and fill lights instead of
+VTK's default light kit.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| A: extraction preserves the export: 672 scenes (4 geometries × 4 cameras incl. orbit/roll, pan, zoom × all 6 lighting and 12 environment presets plus custom, zero-intensity, and shadowless area cases × 2 output sizes) byte-identical before/after, apart from the time stamp | Pass | scripted comparison (scratch script, not kept in the repository); `test_reference_example_is_unchanged` (the SrTiO₃ numbers of the lighting analysis: key (−20.576, 13.544, 12.458), fill (17.361, −3.551, 23.965), area axes 2.178 Å); `test_writer_lights_are_the_resolved_rig` (19 presets/cases) |
+| A: conventions: azimuth 0 toward the viewer, +90 screen right, elevation toward screen up; orbit and roll move world positions but not view-relative ones; pan adds \|C − F\| to the distance; zoom and output size change nothing; supercells, boundary images, cell edges, and hidden atoms change C and R as documented | Pass | `test_angles_follow_the_output_camera`, `test_pan_zoom_and_output_size`, `test_displayed_geometry_sets_the_scale` |
+| A: intensities (0 omits a light), area diameter = light size × R with axes along screen right/up, panel at C + 3R × key direction with radius 1.6R, fill always shadowless; inverse angles with wrapping, clamping, and the pole | Pass | `test_intensities_size_and_panel`, `test_angles_round_trip_wrap_clamp_and_pole`, `test_guide_arcs_lie_on_the_placement_sphere`; doctest in `ycrystal.core.lighting` |
+| C: live view has exactly the two rig lights (scene lights, positional, cone ≥ 90°, attenuation (1, 0, 0), no automatic headlight) at the resolved positions and intensities; they follow orbit/roll/pan, repetitions, intensity changes (0 switches off), and presets | Pass | `test_main_view_uses_the_resolved_rig_instead_of_the_light_kit`, `test_main_view_lights_follow_camera_geometry_and_settings` |
+| B: button **Lighting Setup…** and **View ▸ Lighting Setup…**; overview shows key/fill (sphere/cube, labels, intensities), F (cross), C (octahedron), output camera (cone and axis) and frame, horizon ring and azimuth/elevation arcs, area-light diameter (wire sphere) and reflection panel when enabled; read-out of D, R, \|C − F\| | Pass | `test_lighting_setup_opens_and_shows_the_rig`; screenshots `artifacts/lighting/setup-dramatic.png`, `setup-studio-like.png` |
+| B: independent overview camera: orbiting it changes neither the output camera, the environment, the scene revision, the exported lights, nor the main view's props; the overview follows output-camera changes (throttled) without moving its own camera; output-size changes redraw the frame | Pass | `test_overview_navigation_changes_nothing_else`, `test_overview_follows_the_output_camera_but_keeps_its_own` |
+| B: helper graphics are excluded from exports, geometry bounds, Fit, and picking (separate renderer and window) | Pass | `test_helper_graphics_stay_out_of_exports_bounds_and_picking` |
+| B: numeric edits (panel and the window's own keyboard spin boxes, merged like the panel) and presets update the overview | Pass | `test_numeric_edits_and_presets_update_the_overview` |
+| B: drag with real mouse events: live lights, both spin boxes, and the overview follow without an undo step, revision, or preview; release = one undo step, one revision, the debounced automatic preview starts; undo restores | Pass | `test_key_drag_previews_then_commits_one_step` |
+| B: Esc in the overview, Esc in the main window (Select None), and the right button cancel and restore lights, spin boxes, and overview; no undo step | Pass | `test_cancelled_drag_restores_everything` (3 cases) |
+| B: limits and basis: dragging above the structure stops at 89°; the azimuth handle changes only the azimuth; angles are interpreted in the output camera's basis also after orbiting the overview; an unchanged drag adds no step | Pass | `test_drag_respects_limits_and_the_output_basis`, `test_unchanged_drag_adds_no_step` |
+| Projects and presets: no new stored state (the project's lighting keys are unchanged); a dragged direction survives save/reopen; presets unchanged | Pass | `test_projects_and_presets_keep_their_lighting`; existing project and preset tests |
+| GUI on the Mint display (scripted): overview, labels, drag preview and commit, live view lit from the left (dramatic) and from the right (azimuth +60°) | Pass (scripted) | `artifacts/lighting/main-key-left.png`, `main-key-right.png`, `setup-after-drag.png`, `setup-area-panel.png` |
+| Hands-on use by a person (mouse drags in the overview, Esc, keyboard spin boxes) | Unverified | |
+
+Design: `ycrystal.core.lighting` (pure) returns a frozen `LightingRig` with world
+positions, directions, intensities, shadow flags, area axes, and the panel; it is derived
+on demand from the environment, the output camera, and the displayed geometry, and
+nothing new is saved. `scene_to_pov` writes its lights from the rig. The live viewport
+re-resolves the rig before every redraw (bounds cached per scene) and sets two VTK scene
+lights at those world positions, so no second camera-relative transformation is applied.
+The Lighting Setup window (`ycrystal.gui.lighting_setup`) wraps a second VTK view
+(`ycrystal.viewport.lighting_view`) with its own camera and default readability lights.
+Drags report whole-degree angles; the window previews them (live lights, spin boxes,
+overview) without touching the environment and applies the final angles on release
+through the existing undoable environment command.
+
+Regression runs: `pytest -m "not povray"` 346 passed (strict mode; 40 new tests);
+`pytest -m povray` on `test_gui_render.py`, `test_gui.py`, `test_gui_appearance.py`,
+`test_release.py::test_render_from_command_line`, and
+`test_presets.py::test_mixed_overrides_render_and_floor_shadows` 7 passed (the other
+53 POV-Ray tests were not rerun because every exported scene is byte-identical); doctests;
+`zensical build --clean --strict`; pre-commit on the changed files.
+
+Remaining limitations: the live view has no shadows, area-light softness, reflections,
+refraction, or reflection panel, and its Phong shading is not expected to match POV-Ray
+pixel for pixel; the overview's labels can overlap when lights, F, and the camera line up
+in the chosen view (orbit the overview or press Reset Overview).
+
 ## FR-RENDER-01: lock aspect ratio of the output size (post-0.1.0, 15 November 2026)
 
 New development after the 0.1.0 baseline (not part of M0–M6); branch
-`feature/render-aspect-lock`, submitted for review as a pull request. A padlock button beside Width
+`feature/render-aspect-lock`, merged in PR #14. A padlock button beside Width
 and Height in the Render panel keeps the output shape while the resolution changes.
 
 | Check | Result | Evidence |
@@ -676,6 +725,10 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
   (a `sky_sphere` would be one colour under orthographic projection) inside an empty
   `light_group`; the floor is tilted 20° towards the viewer; area lights have no jitter
   so renders are deterministic.
+- **Lighting rig (FR-LIGHT-01):** lights are values relative to the output camera
+  (origin F, screen basis) resolved on demand by `ycrystal.core.lighting`; the POV
+  writer, the live view's two scene lights, and the Lighting Setup overview consume the
+  same rig, and no resolved positions are stored.
 - **Undo model (M5):** one command type carries scene settings plus optional
   environment and output size; handle drags, style imports, and size changes are single
   steps; merge keys combine spin-box edits. Camera navigation stays outside undo.
@@ -693,6 +746,6 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 
 ## Next bounded action
 
-Review and merge the M6 branch. Then the maintainer decides on publication: a hands-on
-run of the release workflow and the menu launcher, tag `v0.1.0`, attach the artifacts
-from `uv build` to a GitHub release, and choose the repository's visibility.
+Hands-on checks of the 0.2.0 features (Lighting Setup window, aspect lock, colour
+dialog) by a person; the maintainer decides whether to publish a GitHub release for
+`v0.2.0`.

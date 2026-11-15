@@ -10,6 +10,27 @@
         - render_ini
         - write_scene_files
 
+## Lighting
+
+::: ycrystal.core.lighting
+    options:
+      members:
+        - resolve_lighting
+        - resolve_lighting_for_bounds
+        - LightingRig
+        - ResolvedLight
+        - ReflectionPanel
+        - key_direction
+        - angles_of
+        - wrap_azimuth
+        - light_distance
+        - arc_points
+        - KEY_AZIMUTH_RANGE
+        - KEY_ELEVATION_RANGE
+        - FILL_COEFFICIENTS
+        - AREA_LIGHT_SAMPLES
+        - AREA_LIGHT_ADAPTIVE
+
 ## Output size
 
 ::: ycrystal.core.aspect

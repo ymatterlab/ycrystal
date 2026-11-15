@@ -25,6 +25,11 @@ import numpy as np
 
 from ycrystal import __version__
 from ycrystal.core.camera import Camera
+from ycrystal.core.lighting import (
+    AREA_LIGHT_ADAPTIVE,
+    AREA_LIGHT_SAMPLES,
+    resolve_lighting_for_bounds,
+)
 from ycrystal.core.scene import RGB, DisplayGeometry, Environment
 
 POV_LANGUAGE_VERSION = "3.7"
@@ -274,10 +279,12 @@ def scene_to_pov(
     whole frame) in front of the eye; under orthographic projection this does not change
     the image.
 
-    Lights sit on the viewer's side at a distance that grows with the scene: the key
-    light in the environment's direction (an area light without jitter when
-    ``light_size`` > 0, so renders are deterministic) and a shadowless fill light at the
-    lower right; a light with non-positive intensity is omitted.
+    Lights come from [`resolve_lighting`][ycrystal.core.lighting.resolve_lighting]: they
+    are placed around the camera's focal point at ``4 R + |C - F| + 10`` Å (``R`` and
+    ``C`` from the geometry's bounding sphere), the key light in the environment's
+    direction (a circular, oriented area light without jitter when ``light_size`` > 0,
+    so renders are deterministic) and a shadowless fill light at the lower right; a
+    light with non-positive intensity is omitted. There is no distance attenuation.
 
     A floor is a plane below the drawn spheres as seen in the frame, tilted by
     [`FLOOR_TILT_DEG`][ycrystal.render.pov_writer.FLOOR_TILT_DEG] towards the viewer;
@@ -285,8 +292,9 @@ def scene_to_pov(
     a backdrop plane behind the scene, aligned with the frame (a ``sky_sphere`` would be
     a single colour in an orthographic view); it sits in a ``light_group`` without lights
     because it needs no lighting. Transparent backgrounds leave out floor and backdrop.
-    The optional reflection panel is a bright disc near the key light marked
-    ``no_image``: invisible to the camera, it appears only in reflections.
+    The optional reflection panel is a bright disc on the key-light side of the
+    structure (``3 R`` from ``C``) marked ``no_image``: invisible to the camera, it
+    appears only in reflections.
 
     Each material is declared once per element colour (once in total for materials with
     their own pigment), as a ``texture`` or a ``material``. Materials in unit texture
@@ -326,11 +334,7 @@ def scene_to_pov(
         eye_distance = max(eye_distance, (floor_height + 1.0 - frame_low) / np.sin(tilt))
     location = focal - eye_distance * direction
 
-    light_distance = 4.0 * radius + float(np.linalg.norm(center - focal)) + 10.0
-    az, el = np.radians(environment.key_azimuth), np.radians(environment.key_elevation)
-    key_dir = np.cos(el) * (np.sin(az) * right - np.cos(az) * direction) + np.sin(el) * up
-    key_pos = focal + light_distance * key_dir
-    fill_pos = focal + light_distance * _unit(0.70 * right - 0.25 * up - 1.0 * direction)
+    rig = resolve_lighting_for_bounds(environment, camera, center, radius)
 
     lines: list[str] = []
     add = lines.append
@@ -397,23 +401,24 @@ def scene_to_pov(
         add("}")
     add("")
     add("// Lights are placed relative to the camera (key from the environment, lower-right fill).")
-    if environment.key_light > 0:
+    key, fill, panel = rig.key, rig.fill, rig.panel
+    if key.enabled:
         extra = ""
-        if environment.light_size > 0:
-            size = environment.light_size * radius
+        if key.area_axes is not None:
+            axis1, axis2 = key.area_axes
             extra += (
-                f" area_light {_v(right * size)}, {_v(up * size)}, 5, 5 adaptive 1 circular orient"
+                f" area_light {_v(axis1)}, {_v(axis2)}, {AREA_LIGHT_SAMPLES}, "
+                f"{AREA_LIGHT_SAMPLES} adaptive {AREA_LIGHT_ADAPTIVE} circular orient"
             )
-        if not environment.shadows:
+        if not key.shadows:
             extra += " shadowless"
-        add(f"light_source {{ {_v(key_pos)} color rgb {_f(environment.key_light)}{extra} }}")
-    if environment.fill_light > 0:
-        add(f"light_source {{ {_v(fill_pos)} color rgb {_f(environment.fill_light)} shadowless }}")
-    if environment.reflector:
-        panel = center + 3.0 * radius * key_dir
+        add(f"light_source {{ {_v(key.position)} color rgb {_f(key.intensity)}{extra} }}")
+    if fill.enabled:
+        add(f"light_source {{ {_v(fill.position)} color rgb {_f(fill.intensity)} shadowless }}")
+    if panel is not None:
         add("// Reflection panel: invisible to the camera, seen in reflections only.")
         add(
-            f"disc {{ {_v(panel)}, {_v(-key_dir)}, {_f(1.6 * radius)} "
+            f"disc {{ {_v(panel.center)}, {_v(panel.normal)}, {_f(panel.radius)} "
             "pigment { rgb 1 } finish { ambient 1 diffuse 0 } no_image no_shadow }"
         )
     add("")
@@ -664,7 +669,3 @@ def write_scene_files(
     )
     ini_path.write_text(render_ini(settings, pov_path.name, image_path.name), encoding="utf-8")
     return pov_path, ini_path, image_path
-
-
-def _unit(vector: np.ndarray) -> np.ndarray:
-    return vector / np.linalg.norm(vector)
