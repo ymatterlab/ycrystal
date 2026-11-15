@@ -1,0 +1,22 @@
+{
+  "id": "satin",
+  "name": "Satin (default)",
+  "order": 2,
+  "category": "scientific",
+  "description": "Soft highlight; the finish Ycrystal used before the catalog existed.",
+  "kind": "finish",
+  "keeps_element_color": true,
+  "pov": {
+    "finish": "ambient 0.08 diffuse 0.75 specular 0.35 roughness 0.02"
+  },
+  "live": {
+    "ambient": 0.1,
+    "diffuse": 0.8,
+    "specular": 0.3,
+    "specular_power": 40,
+    "opacity": 1.0
+  },
+  "includes": [],
+  "min_povray": "3.7",
+  "provenance": "Ycrystal recipe (MIT)"
+}

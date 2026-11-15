@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0, M1, and M2 complete (M2 merged in PR #5, commit `49b50ec`); repository tooling merged into `main`.
+Last updated: 15 November 2026. M0, M1, M2, and M3 complete (M3 on branch `feature/m3-render-workflow`); documentation and repository tooling merged into `main`.
 
 ## Milestones
 
@@ -9,7 +9,7 @@ Last updated: 15 November 2026. M0, M1, and M2 complete (M2 merged in PR #5, com
 | M0 | Desktop/render feasibility: Qt window, embedded VTK view, camera model, first POV-Ray render matching the view | **Complete** (see evidence and caveats) |
 | M1 | File import (POSCAR/CIF/QE `ibrav=0`) and save/reopen projects | **Complete** (see evidence) |
 | M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **Complete** (see evidence; drag handles are M5) |
-| M3 | Complete figure workflow: preview, output frame, cancellation, final PNG | Not started |
+| M3 | Complete figure workflow: preview, output frame, cancellation, final PNG | **Complete** (see evidence; full galleries are M4) |
 | M4 | Material and environment galleries | Not started |
 | M5 | Supercell drag handles, reusable styles, undo coverage | Not started |
 | M6 | Installation path, launcher, user guide, release checks | Not started |
@@ -87,12 +87,53 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 
 ### M1 caveats
 
-- The rendered image takes its aspect ratio from the window, so a project reopened in a
-  differently shaped window keeps the camera but frames a different width. An explicit
-  output frame belongs to M3.
+- ~~The rendered image takes its aspect ratio from the window.~~ Resolved in M3: an
+  explicit output size and frame; projects reopen with the same framing in any window.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## M3 acceptance evidence
+
+Gate: the same saved scene produces correctly framed preview and final images; Cancel
+and failure recovery work; dimensions and alpha pass checks; the alpha catalog is
+usable from import through project save/reopen and PNG output.
+
+| Check | Result | How |
+| --- | --- | --- |
+| Saved scene → framed preview and final images | Pass | `test_saved_scene_renders_framed_preview_and_final`: scene saved from a 1150 × 700 window, reopened in a 900 × 820 window; the output camera is restored exactly; the 480 × 300 preview and the 640 × 400 final PNG both have every sphere centre within 1 px of the output camera's projection, correct colours, and a transparent background |
+| Output frame | Pass | Largest rectangle with the output aspect ratio inside the view (4 % margin), centred, dimmed outside; the output camera (view camera × frame/height ratio) survives window resizes and output-size changes; resizing does not mark the project modified (`test_gui_render.py`) |
+| Live view ↔ POV-Ray through the frame | Pass | Non-square 480 × 320 output in a differently shaped window: POV-Ray centres < 1 px from the model; live-view centres mapped through the frame agree < 1 px (`test_render_from_gui_matches_output_frame`). `scripts/m0_evidence.py` (mouse-navigated, 626 × 417 output): 0.070 px POV-Ray, 0.103 px live view |
+| Output size controls | Pass | Width/height 16–8000 px, aspect presets, swap; toolbar label; the preview keeps the output aspect (480 px long side); not undoable but marks the project modified |
+| True POV-Ray preview | Pass | Same exporter and output camera at preview size, antialiasing off; F5 / button / automatic after changes (600 ms pause); errors shown in the dock without dialogs |
+| Serialized previews, superseded work cancelled | Pass | One preview process at a time: a newer request cancels the running job and replaces any pending one (`test_queue_supersedes_running_and_pending_jobs`: jobs A, B, C → A cancelled, B never started, C rendered; no job directories left) |
+| Stale-result suppression | Pass | Each preview carries the scene revision; a result for an older revision is discarded and the dock says so (`test_stale_preview_is_discarded`) |
+| Final render, progress, Cancel | Pass | `QProcess`, status-bar progress from POV-Ray's `Rendered N of M pixels` lines (`Verbose=on`); Cancel stops it, leaves the destination untouched, shows no error, re-enables Render (`test_cancel_final_render`) |
+| Failure recovery | Pass | A failing renderer shows an explanation; the next render succeeds with the right size (`test_failed_render_then_successful_render`) |
+| Dimensions and alpha | Pass | Final and preview sizes exact; transparent background → alpha 0, opaque presets → 255; glass lets alpha through (correct) |
+| Alpha catalog | Pass | 5 materials (matte, satin = previous finish, glossy, metallic, glass with `interior { ior 1.45 }`) and 3 backgrounds (white, transparent, dark grey with light cell edges) as JSON manifests; all 15 combinations render with POV-Ray 3.7 (`test_presets.py`); undoable; live view uses each material's approximation |
+| Readable export | Pass | `.pov` records Ycrystal and POV-Ray versions and any required standard includes (none for the built-ins; include handling tested with a substituted manifest); `.ini` sets every output option, `Output_Alpha` for transparent backgrounds, `Verbose=on` |
+| Project restoration | Pass | Schema 3 stores material, background preset, transparency, explicit output size; schema-1/2 files open unchanged (satin, transparent preset when their output was transparent); unknown presets refused with an update message |
+| Packaging | Pass | A non-editable wheel contains the 8 preset manifests (`package-data`) |
+| Automated suite | 202 passed, 0 skipped | `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs`; doctests incl. presets and progress parser; `scripts/docs_examples.py`; `zensical build --clean --strict`; `pre-commit run --all-files` |
+
+Hands-on on the Mint display (`artifacts/m3/`): SrTiO3 2 × 2 × 1 with glass atoms on dark grey,
+4:3 output frame, automatic preview "Up to date · 480 × 360 px · 1.4 s", 1200 × 900
+render in 11.2 s showing refraction through the glass.
+
+### M3 caveats
+
+- Previews use full quality without antialiasing; glass, metallic reflection, and large
+  supercells make them slower (seconds). Automatic previews are on by default and can be
+  switched off in the preview dock (the choice is remembered).
+- POV-Ray reports progress about once per second; short renders show only 100 %.
+- Cancel kills the POV-Ray process; nothing partial is kept.
+- The frame margin (4 %) is fixed. Output size is not undoable.
+- One material for all atoms and bonds; per-element/per-atom assignment, galleries with
+  POV-Ray thumbnails, more presets, and lighting controls are M4.
+- `python -m doctest docs/development/examples.md` reports fence-line mismatches (the
+  closing ``` is read as expected output); the outputs themselves match. Pre-existing on
+  `main`; CI does not doctest Markdown.
 
 ## M2 acceptance evidence
 
@@ -372,8 +413,8 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 - **Renderer discovery:** GUI setting → `$YCRYSTAL_POVRAY` → `povray` on `PATH`.
   `--check-renderer` / Render ▸ Check Renderer renders a tiny reference scene and
   verifies sphere positions and colours.
-- **Output framing (M0):** the image uses the viewport's aspect ratio; the user sets
-  the width. An explicit output-aspect frame comes with the figure workflow (M3).
+- **Output framing (M0, superseded in M3):** M0–M2 rendered the viewport's aspect ratio.
+  Since M3 the output size is explicit and the GUI shows the output frame.
 - **Keys:** VTK/PyVista default keys (e.g. `q` closes, `w` wireframe) are disabled in
   the viewport; application shortcuts (F = Fit, Ctrl+R = Render, Delete = hide,
   Esc = select none, Ctrl+Z / Ctrl+Shift+Z = undo/redo) live on the window.
@@ -417,8 +458,22 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
   `ModifiedEvent`; the M0 observer on the interactor never fired because VTK raises
   `EndInteractionEvent` on the interactor style.
 
+- **Output camera (M3):** the GUI keeps VTK's camera for the whole view and derives the
+  output camera (same pose, parallel scale × frame/height ratio). Export, preview,
+  render, and projects use the output camera with the explicit output size; a render
+  start observer keeps it fixed across window resizes.
+- **Presets (M3):** `ycrystal.presets` loads JSON manifests (declaration kind, finish,
+  filter, interior, includes, live approximation, provenance) shipped as package data.
+  Scenes store ids; the POV writer writes a `texture` or a full `material` per element;
+  the viewport applies the live approximation. Background presets also set a visible
+  cell-edge colour, changed together with the environment in one undo step.
+- **Render lifecycle (M3):** `RenderProcess` (progress, cancellation, elapsed time,
+  completion state) and `RenderQueue` (one process, newest request wins, job directory
+  removed after the result slots). The window tags previews with `scene_revision` and
+  discards stale results; final renders use a separate process with Cancel.
+
 ## Next bounded action
 
-M2 is merged. Next product work is M3: output-aspect frame, low-resolution POV-Ray
-preview, final render with cancellation and stale-result suppression, and a small
-alpha catalog of materials and backgrounds.
+Review and merge the M3 branch. Then M4: material/environment manifests at gallery scale
+(at least 20 materials and 12 environments) with genuine POV-Ray thumbnails, search and
+favourites, global/element/selected-atom assignment, and lighting controls.

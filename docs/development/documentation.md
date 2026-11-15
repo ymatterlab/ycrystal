@@ -82,7 +82,7 @@ Display-independent docstring examples (requires the application dependencies,
 not a display or POV-Ray):
 
 ```bash
-.venv/bin/python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py
+.venv/bin/python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py src/ycrystal/presets/__init__.py src/ycrystal/render/jobs.py
 .venv/bin/python scripts/docs_examples.py
 .venv/bin/ruff check .
 .venv/bin/ruff format --check .

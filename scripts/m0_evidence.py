@@ -33,7 +33,7 @@ from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.samples import triclinic_marker  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry, SceneSettings, build_geometry  # noqa: E402
 from ycrystal.gui.main_window import SETTINGS_POVRAY, MainWindow  # noqa: E402
-from ycrystal.render.imagecheck import find_blobs, load_rgba, match_spheres  # noqa: E402
+from ycrystal.render.imagecheck import Blob, find_blobs, load_rgba, match_spheres  # noqa: E402
 from ycrystal.render.povray import find_povray, povray_version  # noqa: E402
 
 
@@ -81,8 +81,7 @@ def wheel(widget, pos, clicks):
         )
 
 
-def render_via_gui(window: MainWindow, destination: Path, transparent: bool) -> dict:
-    window.transparent_check.setChecked(transparent)
+def render_via_gui(window: MainWindow, destination: Path) -> dict:
     window.render_finished_result = None
     if not window.render_png(destination, show_result=False):
         raise SystemExit(f"render did not start: {window.last_error}")
@@ -94,10 +93,32 @@ def render_via_gui(window: MainWindow, destination: Path, transparent: bool) -> 
     return {"path": str(destination)}
 
 
-def measure(camera: Camera, geometry: DisplayGeometry, rgba: np.ndarray) -> dict:
-    height, width = rgba.shape[:2]
+def measure(
+    camera: Camera,
+    geometry: DisplayGeometry,
+    rgba: np.ndarray,
+    window: MainWindow | None = None,
+    size: tuple[int, int] | None = None,
+) -> dict:
+    """Compare sphere centres in ``rgba`` with the output camera's projection.
+
+    With ``window`` and ``size``, ``rgba`` is a live-view screenshot: its blob centres
+    are mapped from the output frame to output-image pixels first.
+    """
+    if window is None:
+        height, width = rgba.shape[:2]
+        blobs = find_blobs(rgba)
+    else:
+        width, height = size
+        blobs = [
+            Blob(
+                tuple(window.viewport.frame_to_output(np.array([b.centroid]), width, height)[0]),
+                b.area,
+                b.mean_rgb,
+            )
+            for b in find_blobs(rgba)
+        ]
     expected = camera.project(geometry.positions, width, height)
-    blobs = find_blobs(rgba)
     matches = match_spheres(expected, geometry.colors, blobs)
     return {
         "image_size": [width, height],
@@ -188,6 +209,7 @@ def main() -> int:
     app.setApplicationName("Ycrystal-evidence")  # separate settings from the real app
     window = MainWindow(triclinic_marker())
     window.settings.setValue(SETTINGS_POVRAY, executable)
+    window.preview_panel.auto_check.setChecked(False)  # no background previews during evidence
     window.resize(1100, 680)
     window.show()
     wait(800)
@@ -207,23 +229,30 @@ def main() -> int:
     )
     wheel(widget, (w * 0.5, h * 0.5), 1)
     wait(300)
-    camera = window.viewport.camera()
     vw, vh = window.viewport.render_size()
-    window.width_spin.setValue(vw)  # render at viewport size so the images overlay exactly
+    # Render at the frame's size in pixels, so the frame region of the live view and the
+    # POV-Ray image overlay one to one. The output camera is kept by set_output_size.
+    _x0, _y0, frame_w, frame_h = window.viewport.frame_rect()
+    window.set_output_size(round(frame_w), round(frame_h))
+    wait(200)
+    out_w, out_h = window.current_render_settings().width, window.current_render_settings().height
+    camera = window.current_camera()
 
     # --- visual evidence: full scene ---------------------------------------------
     window.grab()  # make sure the window is painted
     wait(200)
     shot = app.primaryScreen().grabWindow(window.winId())
     shot.save(str(out / "window.png"))
+    window.viewport.set_frame_visible(False)
+    x0, y0, _fw, _fh = (round(v) for v in window.viewport.frame_rect())
     viewport_rgba = window.viewport.screenshot(transparent=False)
-    Image.fromarray(viewport_rgba).save(out / "viewport.png")
-    render_via_gui(window, out / "render.png", transparent=False)
+    Image.fromarray(viewport_rgba[y0 : y0 + out_h, x0 : x0 + out_w]).save(out / "viewport.png")
+    render_via_gui(window, out / "render.png")
     side_by_side(
         out / "viewport.png",
         out / "render.png",
         out / "comparison.png",
-        ("Live VTK viewport (approximate lighting)", "POV-Ray render, same camera"),
+        ("Live VTK view inside the output frame", "POV-Ray render, same output camera"),
     )
     window.export_pov(out / "scene.pov")
 
@@ -231,22 +260,25 @@ def main() -> int:
     # Same mouse-navigated camera; no cell edges and half-size spheres so that every atom
     # is a separate disc (atom centres, and hence the expected pixels, are unchanged).
     # Bonds are switched off too: a bond would join two discs into one blob.
+    window.set_background("transparent")  # rebuilds the geometry: set it before replacing it
     atoms_only = build_geometry(
         window.structure,
         SceneSettings(radius_scale=0.25, show_cell=False, bonds=BondSettings(enabled=False)),
     )
     window.set_display_geometry(atoms_only)
     window.viewport.set_axes_visible(False)
-    assert window.viewport.camera() == camera
+    assert window.current_camera() == camera
     vtk_rgba = window.viewport.screenshot(transparent=True)
     Image.fromarray(vtk_rgba).save(out / "viewport_atoms.png")
-    render_via_gui(window, out / "render_atoms.png", transparent=True)
+    render_via_gui(window, out / "render_atoms.png")
     pov_rgba = load_rgba(out / "render_atoms.png")
-    expected = camera.project(atoms_only.positions, vw, vh)
+    expected = camera.project(atoms_only.positions, out_w, out_h)
     marker_overlay(out / "render_atoms.png", expected, out / "render_atoms_markers.png")
     report = {
         "environment": environment(executable),
         "viewport_px": [vw, vh],
+        "output_px": [out_w, out_h],
+        "frame_rect_px": [round(v, 2) for v in window.viewport.frame_rect()],
         "navigation": {
             "initial_camera": initial.to_dict(),
             "final_camera": camera.to_dict(),
@@ -261,13 +293,13 @@ def main() -> int:
         "coordinates_unchanged": bool(
             np.array_equal(window.structure.positions, triclinic_marker().positions)
         ),
-        "vtk_vs_model": measure(camera, atoms_only, vtk_rgba),
+        "vtk_vs_model": measure(camera, atoms_only, vtk_rgba, window, (out_w, out_h)),
         "povray_vs_model": measure(camera, atoms_only, pov_rgba),
     }
     (out / "report.json").write_text(json.dumps(report, indent=2))
     print(
         json.dumps(
-            {k: report[k] for k in ("viewport_px", "navigation", "coordinates_unchanged")}, indent=2
+            {k: report[k] for k in ("viewport_px", "output_px", "coordinates_unchanged")}, indent=2
         )
     )
     for key in ("vtk_vs_model", "povray_vs_model"):

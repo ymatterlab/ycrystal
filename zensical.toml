@@ -28,6 +28,7 @@ nav = [
         "reference/camera.md",
         "reference/io.md",
         "reference/rendering.md",
+        "reference/presets.md",
         "reference/gui.md",
     ] },
     { "Progress and roadmap" = "PROGRESS.md" },

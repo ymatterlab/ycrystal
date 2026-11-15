@@ -33,7 +33,13 @@ def full_project(structure) -> Project:
             boundary_images=True,
             hidden=frozenset({(0, (1, 1, 1)), (2, (0, 0, 1))}),
         ),
-        environment=Environment(background=(0.1, 0.2, 0.3), key_light=0.9, fill_light=0.2),
+        environment=Environment(
+            background=(0.86, 0.86, 0.86),
+            key_light=0.9,
+            fill_light=0.2,
+            transparent=True,
+            preset="transparent",
+        ),
         camera=camera,
         output=RenderSettings(width=900, height=600, transparent_background=True),
     )
@@ -156,7 +162,7 @@ def test_structure_replace_keeps_validation():
     assert replace(SceneSettings(), boundary_images=False).boundary_images is False
 
 
-def test_schema2_round_trip_of_repetitions_cells_and_bonds(tmp_path):
+def test_round_trip_of_repetitions_cells_and_bonds(tmp_path):
     from ycrystal.core.bonds import BondSettings
 
     bonds = BondSettings(tolerance=1.25, radius=0.2).with_pair(("O", "Sr"), False)
@@ -165,7 +171,7 @@ def test_schema2_round_trip_of_repetitions_cells_and_bonds(tmp_path):
     again = load_project(save_project(tmp_path / "s2.ycrystal", project))
     assert again.scene == scene
     data = json.loads((tmp_path / "s2.ycrystal").read_text())
-    assert data["schema_version"] == 2
+    assert data["schema_version"] == SCHEMA_VERSION
     assert data["scene"]["repetitions"] == [2, 3, 1]
     assert data["scene"]["bonds"]["pairs"] == [{"elements": ["O", "Sr"], "enabled": False}]
 
@@ -181,3 +187,45 @@ def test_schema1_project_opens_unchanged_without_bonds(tmp_path):
     assert project.scene.repetitions == (1, 1, 1)
     assert project.scene.bonds.enabled is False  # schema 1 had no bonds
     assert len(build_geometry(project.structure, project.scene).bonds) == 0
+
+
+def test_schema3_material_background_and_output(tmp_path):
+    from ycrystal.presets import environment_from_preset
+
+    scene = SceneSettings(material="glass")
+    project = Project(
+        read_structure(FIXTURES / "MgB2.cif"),
+        scene=scene,
+        environment=environment_from_preset("dark"),
+        output=RenderSettings(width=640, height=480),
+    )
+    again = load_project(save_project(tmp_path / "m3.ycrystal", project))
+    assert again.scene.material == "glass"
+    assert again.environment == project.environment
+    assert (again.output.width, again.output.height) == (640, 480)
+    data = json.loads((tmp_path / "m3.ycrystal").read_text())
+    assert data["environment"]["preset"] == "dark" and data["scene"]["material"] == "glass"
+
+
+def test_schema2_transparent_output_becomes_transparent_preset(tmp_path):
+    data = project_to_dict(Project(read_structure(FIXTURES / "MgB2.cif")))
+    data["schema_version"] = 2
+    del data["scene"]["material"]
+    for key in ("preset", "transparent"):
+        del data["environment"][key]
+    data["output"]["transparent_background"] = True
+    path = tmp_path / "v2.ycrystal"
+    path.write_text(json.dumps(data))
+    project = load_project(path)
+    assert project.scene.material == "satin"  # the finish schema-2 files were drawn with
+    assert project.environment.transparent and project.environment.preset == "transparent"
+
+
+@pytest.mark.parametrize("section, key", [("scene", "material"), ("environment", "preset")])
+def test_unknown_presets_are_refused(tmp_path, section, key):
+    data = project_to_dict(Project(read_structure(FIXTURES / "MgB2.cif")))
+    data[section][key] = "unobtainium"
+    path = tmp_path / "future.ycrystal"
+    path.write_text(json.dumps(data))
+    with pytest.raises(ProjectError, match="unobtainium.*Update Ycrystal"):
+        load_project(path)

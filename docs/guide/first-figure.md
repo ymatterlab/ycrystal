@@ -32,10 +32,11 @@ root. The built-in sample works without importing a file.
    `artifacts/first-figure/` directory and save as `SrTiO3.ycrystal`. The title loses
    its modified marker (`*`). The project embeds the structure, view, and display
    settings, so reopening it does not need a source structure file.
-2. In the toolbar, set **Output width** to **640 px**. The adjacent label gives
-   the calculated width × height. Height follows the 3D viewport's aspect ratio;
-   keep the window size fixed for subsequent exports. Leave **Transparent
-   background** unchecked for a white background.
+2. In the **Scene** dock, open the **Render** tab and set **Width** to **640** and
+   **Height** to **400** (or Width 640 and **Aspect 16:10**). The toolbar shows
+   **640 × 400 px**, and a blue frame in the 3D view marks the image area. Press **F**
+   to fit the structure into the frame. In the **Appearance** tab, keep **Satin
+   (default)** and the **White** background.
 3. Choose **File ▸ Export POV-Ray…** and save as
    `artifacts/first-figure/SrTiO3.pov`. Ycrystal writes `SrTiO3.pov` and
    `SrTiO3.ini` in that directory. This step runs no renderer and creates no PNG.
@@ -44,22 +45,25 @@ root. The built-in sample works without importing a file.
 
 ## Render the PNG
 
-1. Choose **Render ▸ Check Renderer**. Expect a pass message naming POV-Ray and
+1. Press **F5** for a preview: the **POV-Ray preview** dock shows a small POV-Ray
+   image of the framed view after a moment. With **Update automatically** checked,
+   it refreshes shortly after each change.
+2. Choose **Render ▸ Check Renderer**. Expect a pass message naming POV-Ray and
    a sphere-centre error below 1 pixel. The check briefly blocks the window. If it
    fails, follow [renderer setup](rendering.md#configure-and-check-pov-ray).
-2. Choose **Render ▸ Render PNG…** (Ctrl+R) and save as
-   `artifacts/first-figure/SrTiO3.png`. The status changes to **Rendering …** and
-   the window stays responsive during the render. A second render cannot start
-   until this one finishes.
-3. When complete, a dialog shows the PNG and its path. The image is 640 pixels wide,
-   with the height shown in the toolbar. It has the same framing and hidden atoms
-   as the live view, with POV-Ray lighting. Orientation axes and selection highlights
-   are omitted. See the [example render](../index.md) for the default view at a fixed
-   640 × 400 aspect.
-4. Press **Ctrl+S** again to save the output settings. Close the window, relaunch,
+3. Choose **Render ▸ Render PNG…** (Ctrl+R) and save as
+   `artifacts/first-figure/SrTiO3.png`. The status bar shows **Rendering …** with the
+   progress, and the window stays responsive. **Cancel Render** would stop it without
+   writing the file.
+4. When complete, a dialog shows the PNG and its path. The image is 640 × 400
+   pixels. It shows exactly the area inside the blue frame, with the same hidden
+   atoms as the live view and POV-Ray lighting. Orientation axes, the frame, and
+   selection highlights are omitted. See the [example render](../index.md) for the
+   default view at 640 × 400.
+5. Press **Ctrl+S** again to save the output settings. Close the window, relaunch,
    and use **File ▸ Open…** to reopen `SrTiO3.ycrystal`. Coordinates, hidden atoms,
-   and camera are restored. A differently shaped window shows a different horizontal
-   extent, so match the original window shape if you need the same framing.
+   output size, and camera are restored, with the same framing in a window of any
+   shape.
 
 Your chosen directory now contains the project, two editable scene files, and the
 PNG. GUI renders use a separate temporary job directory and remove it after

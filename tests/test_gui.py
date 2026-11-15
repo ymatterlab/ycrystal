@@ -171,6 +171,7 @@ def off_axis(window, geometry):
 def test_live_view_matches_camera_model(window, spread):
     window.set_display_geometry(spread)
     window.viewport.set_axes_visible(False)
+    window.viewport.set_frame_visible(False)
     camera = off_axis(window, spread)
     window.viewport.set_camera(camera)
     width, height = window.viewport.render_size()
@@ -200,40 +201,43 @@ def test_missing_renderer_shows_guidance_and_export_still_works(window, monkeypa
 
 
 @pytest.mark.povray
-def test_render_from_gui_matches_live_view(window, spread, povray_executable, qtbot, tmp_path):
+def test_render_from_gui_matches_output_frame(window, spread, povray_executable, qtbot, tmp_path):
+    """A non-square output whose aspect differs from the window: the POV-Ray image
+    equals the output camera, and the live view inside the frame maps onto it."""
     window.settings.setValue(SETTINGS_POVRAY, povray_executable)
+    window.set_background("transparent")  # rebuilds the geometry, so before the test spheres
     window.set_display_geometry(spread)
     window.viewport.set_axes_visible(False)
-    camera = off_axis(window, spread)
-    window.viewport.set_camera(camera)
-    width, height = window.viewport.render_size()
-    window.width_spin.setValue(width)
-    window.transparent_check.setChecked(True)
-    assert (window.current_render_settings().width, window.current_render_settings().height) == (
-        width,
-        height,
-    )
+    window.viewport.set_frame_visible(False)
+    window.set_output_size(480, 320)
+    camera = off_axis_camera(spread, 480 / 320)
+    window.viewport.set_output_camera(camera)
+    out = window.current_camera()
+    np.testing.assert_allclose(out.position, camera.position, rtol=1e-12)
+    assert out.parallel_scale == pytest.approx(camera.parallel_scale, rel=1e-12)
 
     destination = tmp_path / "Résultat final" / "render ü.png"
     assert window.render_png(destination, show_result=False) is True
     # The call returns immediately; the event loop keeps running while POV-Ray works.
     assert window.render_finished_result is None
+    assert window.cancel_action.isEnabled()
     qtbot.waitUntil(lambda: window.render_finished_result is not None, timeout=120_000)
     result = window.render_finished_result
     assert result.ok, result.message
-    assert destination.is_file()
+    assert not window.cancel_action.isEnabled()
 
     pov_rgba = load_rgba(destination)
-    assert pov_rgba.shape == (height, width, 4)
-    vtk_rgba = window.viewport.screenshot(transparent=True)
-    expected = camera.project(spread.positions, width, height)
+    assert pov_rgba.shape == (320, 480, 4) and pov_rgba[0, 0, 3] == 0
+    expected = camera.project(spread.positions, 480, 320)
     pov = match_spheres(expected, spread.colors, find_blobs(pov_rgba))
-    vtk = match_spheres(expected, spread.colors, find_blobs(vtk_rgba))
     assert max(m.error_px for m in pov) < 1.0
-    assert max(m.error_px for m in vtk) < 1.0
-    for a, b in zip(pov, vtk, strict=True):
-        assert np.hypot(a.found[0] - b.found[0], a.found[1] - b.found[1]) < 1.0
-        assert a.hue_ok and b.hue_ok
+    assert all(m.hue_ok for m in pov)
+    # Live view: sphere centres inside the frame, mapped to output pixels.
+    vtk_blobs = find_blobs(window.viewport.screenshot(transparent=True))
+    mapped = window.viewport.frame_to_output(np.array([b.centroid for b in vtk_blobs]), 480, 320)
+    for match in pov:
+        nearest = np.min(np.hypot(*(mapped - np.array(match.found)).T))
+        assert nearest < 1.0
 
 
 # ----- boundary atoms, selection, hiding, undo ------------------------------------------

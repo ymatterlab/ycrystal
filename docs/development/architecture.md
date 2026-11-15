@@ -26,28 +26,43 @@ ID from the shared geometry; it leaves all scientific data intact. Selection hol
 IDs rather than array row indices because rows change when atoms disappear.
 
 The [camera reference](../reference/camera.md) defines direction, handedness,
-half-height scale, and pixels. Changing the output aspect changes the visible
-horizontal extent. POV-Ray export writes explicit camera vectors and may move the
-orthographic eye backward to put all geometry in front of it without changing
-projection. VTK uses its own lighting; axes and selection are overlays only.
+half-height scale, and pixels. Two cameras exist in the GUI: VTK's camera for the
+whole view, and the **output camera** for the image inside the output frame (same
+orientation and centre, parallel scale multiplied by the frame-to-view height ratio).
+Export, preview, render, and projects use the output camera with the explicit output
+size; resizing the window keeps it. POV-Ray export writes explicit camera vectors and
+may move the orthographic eye backward to put all geometry in front of it without
+changing projection. VTK uses its own lighting and a material's live approximation;
+axes, the frame, and selection are overlays only.
+
+Materials and backgrounds are presets (`ycrystal.presets`, JSON manifests in
+`presets/materials/` and `presets/environments/`). The scene stores only ids; the
+POV writer and the viewport resolve them, so both backends draw the same material
+choice. Previews and final renders run as `QProcess` jobs; previews go through a
+`RenderQueue` (one process, newest request wins) and are tagged with the window's scene
+revision so that stale results are discarded.
 
 Projects embed the structure and provenance, plus camera and presentation state.
 They do not store the machine's renderer path or last-used directory; those belong
-to `QSettings`. The schema-2 project stores repetitions, cell mode, and bond rules. Schema-1 projects
-load with bonds off to preserve their appearance. The GUI restores width and transparency and calculates height
-from the current viewport, even though the project file stores all render settings.
+to `QSettings`. Schema 3 stores repetitions, cell mode, bond rules, the material id,
+the background preset, and the explicit output size; the saved camera is the output
+camera for that size (as it already was for schemas 1 and 2). Schema-1 projects load
+with bonds off, and schema-1/2 projects with the satin material, to preserve their
+appearance.
 
 ## Extension points
 
 - Add future readers in `io/readers.py`, producing `Structure` and provenance.
   Keep questions/errors GUI-free, wire the format into GUI/CLI detection, and add
   equivalence/rejection fixtures. Do not put parsing logic in the viewport.
-- Put future material presets in renderer-independent presentation models. Resolve
-  them once for both backends, then implement each backend's appearance. A material
-  gallery should select presets rather than modify scientific coordinates.
+- Add material and background presets as JSON manifests in `src/ycrystal/presets/`
+  (declaration kind, finish/filter/interior, includes, live approximation,
+  provenance) and render every combination in `tests/test_presets.py`. Galleries and
+  per-atom assignment (M4) should select presets rather than modify coordinates.
 - Extend rendering options in `render/pov_writer.py` and their scene/output models;
   extend job lifecycle in `render/jobs.py` / `render/process.py`. Keep GUI orchestration
-  in the interface. A future output frame must establish a shared aspect contract.
+  in the interface. The output frame is the shared aspect contract: keep exported,
+  previewed, and rendered images defined by the output camera and output size.
 - Keep scientific editing separate from the existing display repetitions and bonds.
   Display expansion always starts from the original structure, and is undoable.
   Future scientific editing needs explicit data-layer operations and provenance. `core.compare.supercell` currently exists for reader comparisons

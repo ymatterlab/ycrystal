@@ -8,6 +8,14 @@ Mouse mapping (VTK trackball-camera style, orthographic projection):
 left drag orbits, middle drag or Shift + left drag pans, wheel or right drag zooms.
 A left click without dragging picks the atom under the cursor (Ctrl toggles).
 
+An output frame shows which part of the view the rendered image contains: the largest
+rectangle with the output aspect ratio that fits inside the view with a small margin;
+the area outside it is dimmed. Two cameras are therefore in play. The *view camera*
+(``camera``/``set_camera``) is VTK's camera for the whole view; the *output camera*
+(``output_camera``/``set_output_camera``) is the camera of the rendered image, with the
+same orientation and centre and a parallel scale reduced to the frame. Resizing the view
+keeps the output camera unchanged.
+
 Importing this module sets the environment variable ``QT_API=pyside6`` for the whole
 process and imports PyVista, PyVistaQt, and VTK. Creating a
 [`StructureViewport`][ycrystal.viewport.qt_viewport.StructureViewport] needs a
@@ -31,7 +39,12 @@ from pyvistaqt import QtInteractor  # noqa: E402
 from vtkmodules.vtkCommonTransforms import vtkTransform  # noqa: E402
 from vtkmodules.vtkFiltersGeneral import vtkTransformFilter  # noqa: E402
 from vtkmodules.vtkFiltersSources import vtkCylinderSource, vtkSphereSource  # noqa: E402
-from vtkmodules.vtkRenderingCore import vtkActor, vtkGlyph3DMapper  # noqa: E402
+from vtkmodules.vtkRenderingCore import (  # noqa: E402
+    vtkActor,
+    vtkActor2D,
+    vtkGlyph3DMapper,
+    vtkPolyDataMapper2D,
+)
 
 from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.picking import pick_sphere  # noqa: E402
@@ -40,6 +53,13 @@ from ycrystal.core.scene import DisplayGeometry, Environment  # noqa: E402
 if qtpy.API_NAME != "PySide6":  # pragma: no cover - environment guard
     raise ImportError(f"qtpy selected {qtpy.API_NAME}; Ycrystal requires PySide6")
 
+
+FRAME_MARGIN = 0.04
+"""Gap between the output frame and the view edges, as a fraction of each dimension."""
+
+FRAME_COLOR = (0.15, 0.45, 0.95)
+DIM_COLOR = (0.0, 0.0, 0.0)
+DIM_OPACITY = 0.18
 
 CLICK_TOLERANCE_PX = 3.0
 """Largest mouse movement (Manhattan distance, logical pixels) that still counts as a click."""
@@ -151,6 +171,14 @@ class StructureViewport(QWidget):
         self._plotter.renderer.GetActiveCamera().AddObserver(
             "ModifiedEvent", self._on_camera_modified
         )
+        self._output_aspect = 1.5
+        self._frame_visible = True
+        self._last_factor: float | None = None
+        self._dim_actor, self._frame_actor = _frame_actors()
+        self._plotter.renderer.AddViewProp(self._dim_actor)
+        self._plotter.renderer.AddViewProp(self._frame_actor)
+        # Before each render: keep the output framing across resizes; redraw the frame.
+        self._plotter.renderer.AddObserver("StartEvent", self._before_render)
 
     # ----- scene ------------------------------------------------------------------
     def set_scene(self, geometry: DisplayGeometry, environment: Environment) -> None:
@@ -165,12 +193,21 @@ class StructureViewport(QWidget):
             Only the background colour is used; the live view keeps VTK's default
             lighting.
 
+        Raises
+        ------
+        ycrystal.presets.PresetError
+            If ``geometry.material`` is not a known material preset.
+
         Notes
         -----
         The selection highlight is removed; call
         [`set_highlight`][ycrystal.viewport.qt_viewport.StructureViewport.set_highlight]
-        again if needed.
+        again if needed. Atoms and bonds use the material's live approximation (Phong
+        coefficients and opacity); POV-Ray renders the real material.
         """
+        from ycrystal.presets import get_material
+
+        look = get_material(geometry.material).live
         plotter = self._plotter
         for actor in (self._atoms_actor, self._highlight_actor, self._bonds_actor):
             if actor is not None:
@@ -184,9 +221,11 @@ class StructureViewport(QWidget):
         theta, phi, sides = detail_for(len(geometry))
         self.detail = (theta, phi, sides)
         actor = _sphere_actor(geometry.positions, geometry.radii, colors, (theta, phi))
-        prop = actor.GetProperty()
-        prop.SetSpecular(0.3)
-        prop.SetSpecularPower(40)
+        _apply_look(actor, look)
+        if look.opacity < 1.0:
+            plotter.enable_depth_peeling()
+        else:
+            plotter.disable_depth_peeling()
         plotter.add_actor(actor, reset_camera=False, render=False)
         self._atoms_actor = actor
 
@@ -194,9 +233,7 @@ class StructureViewport(QWidget):
             bonds_actor = _bond_actor(
                 geometry.positions, geometry.bonds, colors, geometry.bond_radius, sides
             )
-            bond_prop = bonds_actor.GetProperty()
-            bond_prop.SetSpecular(0.3)
-            bond_prop.SetSpecularPower(40)
+            _apply_look(bonds_actor, look)
             bonds_actor.SetPickable(False)
             plotter.add_actor(bonds_actor, reset_camera=False, render=False)
             self._bonds_actor = bonds_actor
@@ -331,12 +368,124 @@ class StructureViewport(QWidget):
         self.camera_changed.emit()
 
     def fit(self) -> None:
-        """Frame the visible structure, keeping the current orientation."""
+        """Fit the visible structure into the output frame, keeping the orientation."""
         if self._geometry is None:
             return
-        width, height = self.render_size()
         points, radii = self._geometry.points_and_radii()
-        self.set_camera(self.camera().fitted(points, radii, width / height))
+        self.set_output_camera(self.output_camera().fitted(points, radii, self._output_aspect))
+
+    # ----- output frame -------------------------------------------------------------
+    def set_output_aspect(self, aspect: float) -> None:
+        """Set the aspect ratio (width / height) of the output frame.
+
+        The output camera is kept: the rendered image keeps its centre and its visible
+        height in Å, and only its width changes with the new aspect ratio.
+
+        Parameters
+        ----------
+        aspect
+            Output width divided by height; must be positive.
+        """
+        if aspect <= 0:
+            raise ValueError("aspect ratio must be positive")
+        output = self.output_camera()
+        self._output_aspect = float(aspect)
+        self._last_factor = self.frame_factor()
+        self.set_output_camera(output)
+
+    def output_aspect(self) -> float:
+        """Return the aspect ratio (width / height) of the output frame."""
+        return self._output_aspect
+
+    def frame_rect(self) -> tuple[float, float, float, float]:
+        """Return the output frame in device pixels.
+
+        Returns
+        -------
+        tuple of float
+            ``(x, y, width, height)`` with the top-left origin of the view: the largest
+            rectangle with the output aspect ratio inside the view minus
+            `FRAME_MARGIN` on every side, centred.
+        """
+        width, height = self.render_size()
+        avail_w, avail_h = width * (1 - 2 * FRAME_MARGIN), height * (1 - 2 * FRAME_MARGIN)
+        if avail_w / avail_h > self._output_aspect:
+            frame_h = avail_h
+            frame_w = frame_h * self._output_aspect
+        else:
+            frame_w = avail_w
+            frame_h = frame_w / self._output_aspect
+        return ((width - frame_w) / 2, (height - frame_h) / 2, frame_w, frame_h)
+
+    def frame_factor(self) -> float:
+        """Return the frame height divided by the view height (between 0 and 1)."""
+        _, height = self.render_size()
+        return self.frame_rect()[3] / height
+
+    def output_camera(self) -> Camera:
+        """Return the camera of the output image (the view inside the output frame).
+
+        Same position, orientation, and centre as
+        [`camera`][ycrystal.viewport.qt_viewport.StructureViewport.camera]; the parallel
+        scale is multiplied by
+        [`frame_factor`][ycrystal.viewport.qt_viewport.StructureViewport.frame_factor].
+        """
+        view = self.camera()
+        return Camera(
+            position=view.position,
+            focal_point=view.focal_point,
+            view_up=view.view_up,
+            parallel_scale=view.parallel_scale * self.frame_factor(),
+        )
+
+    def set_output_camera(self, camera: Camera, render: bool = True) -> None:
+        """Show the view whose output frame matches ``camera``.
+
+        Parameters
+        ----------
+        camera
+            Camera of the output image, for example a saved project camera.
+        render
+            Whether to redraw immediately.
+        """
+        self._last_factor = self.frame_factor()
+        view = Camera(
+            position=camera.position,
+            focal_point=camera.focal_point,
+            view_up=camera.view_up,
+            parallel_scale=camera.parallel_scale / self._last_factor,
+        )
+        self.set_camera(view, render=render)
+
+    def set_frame_visible(self, visible: bool) -> None:
+        """Show or hide the output frame and the dimming outside it."""
+        self._frame_visible = bool(visible)
+        self._dim_actor.SetVisibility(self._frame_visible)
+        self._frame_actor.SetVisibility(self._frame_visible)
+        self._plotter.render()
+
+    def frame_to_output(self, pixels: np.ndarray, width: int, height: int) -> np.ndarray:
+        """Map view pixels inside the frame to pixels of a ``width`` × ``height`` image.
+
+        Used to compare the live view with a rendered image.
+
+        Parameters
+        ----------
+        pixels
+            View pixel coordinates ``(x, y)``, shape ``(K, 2)``, top-left origin.
+        width, height
+            Output image size in pixels.
+
+        Returns
+        -------
+        numpy.ndarray
+            Output image coordinates, shape ``(K, 2)``.
+        """
+        x0, y0, frame_w, frame_h = self.frame_rect()
+        pts = np.asarray(pixels, dtype=float).reshape(-1, 2)
+        return np.column_stack(
+            [(pts[:, 0] - x0) * width / frame_w, (pts[:, 1] - y0) * height / frame_h]
+        )
 
     def render_size(self) -> tuple[int, int]:
         """Return the size of the drawing area in device pixels.
@@ -421,6 +570,32 @@ class StructureViewport(QWidget):
     def _on_camera_modified(self, *_args: object) -> None:
         self.camera_changed.emit()
 
+    def _before_render(self, *_args: object) -> None:
+        factor = self.frame_factor()
+        cam = self._plotter.renderer.GetActiveCamera()
+        if self._last_factor is not None and abs(factor - self._last_factor) > 1e-12:
+            # The view was resized: keep the output camera's parallel scale.
+            cam.SetParallelScale(cam.GetParallelScale() * self._last_factor / factor)
+        self._last_factor = factor
+        self._update_frame_overlay()
+
+    def _update_frame_overlay(self) -> None:
+        width, height = self.render_size()
+        x0, y0, frame_w, frame_h = self.frame_rect()
+        # VTK display coordinates have their origin at the bottom-left.
+        left, right = x0, x0 + frame_w
+        bottom, top = height - (y0 + frame_h), height - y0
+        _set_rectangles(
+            self._dim_actor,
+            [
+                (0, 0, width, bottom),
+                (0, top, width, height),
+                (0, bottom, left, top),
+                (right, bottom, width, top),
+            ],
+        )
+        _set_outline(self._frame_actor, (left, bottom, right, top))
+
 
 def _sphere_actor(
     positions: np.ndarray,
@@ -494,3 +669,47 @@ def _bond_actor(
     actor = vtkActor()
     actor.SetMapper(mapper)
     return actor
+
+
+def _apply_look(actor: vtkActor, look: object) -> None:
+    prop = actor.GetProperty()
+    prop.SetAmbient(look.ambient)
+    prop.SetDiffuse(look.diffuse)
+    prop.SetSpecular(look.specular)
+    prop.SetSpecularPower(look.specular_power)
+    prop.SetOpacity(look.opacity)
+
+
+def _frame_actors() -> tuple[vtkActor2D, vtkActor2D]:
+    dim, frame = vtkActor2D(), vtkActor2D()
+    for actor, color in ((dim, DIM_COLOR), (frame, FRAME_COLOR)):
+        mapper = vtkPolyDataMapper2D()
+        mapper.SetInputData(pv.PolyData())
+        actor.SetMapper(mapper)
+        actor.GetProperty().SetColor(*color)
+        actor.SetPickable(False)
+    dim.GetProperty().SetOpacity(DIM_OPACITY)
+    frame.GetProperty().SetLineWidth(1.5)
+    return dim, frame
+
+
+def _set_rectangles(actor: vtkActor2D, rectangles: list[tuple[float, ...]]) -> None:
+    points, faces = [], []
+    for x0, y0, x1, y1 in rectangles:
+        if x1 - x0 <= 0 or y1 - y0 <= 0:
+            continue
+        start = len(points)
+        points += [(x0, y0, 0), (x1, y0, 0), (x1, y1, 0), (x0, y1, 0)]
+        faces += [4, start, start + 1, start + 2, start + 3]
+    mesh = (
+        pv.PolyData(np.array(points, float).reshape(-1, 3), faces=faces)
+        if points
+        else pv.PolyData()
+    )
+    actor.GetMapper().SetInputData(mesh)
+
+
+def _set_outline(actor: vtkActor2D, box: tuple[float, float, float, float]) -> None:
+    x0, y0, x1, y1 = box
+    points = np.array([(x0, y0, 0), (x1, y0, 0), (x1, y1, 0), (x0, y1, 0)], float)
+    actor.GetMapper().SetInputData(pv.PolyData(points, lines=[5, 0, 1, 2, 3, 0]))

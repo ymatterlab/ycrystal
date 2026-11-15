@@ -1,0 +1,18 @@
+{
+  "id": "white",
+  "name": "White",
+  "order": 1,
+  "description": "Plain white background for papers and slides.",
+  "background": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "transparent": false,
+  "cell_edge_color": [
+    0.15,
+    0.15,
+    0.15
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

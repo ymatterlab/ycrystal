@@ -36,9 +36,13 @@ It works without POV-Ray installed. Existing files are replaced; the dialog chec
 the `.pov` destination, but its companion `.ini` is replaced without another prompt.
 The directory must already exist.
 
-The `.pov` stores the orthographic camera, visible spheres, cell edges, textures,
-and lights in Cartesian Å. The `.ini` stores output size, PNG options, antialiasing,
-and the relative output name `NAME.png`. No include library is needed.
+The `.pov` stores the orthographic camera of the output frame, visible spheres,
+bonds, cell edges, the material declarations, and lights in Cartesian Å. Its header
+records the Ycrystal version, the POV-Ray version found at export time (or that none
+was found), and any standard include files the material needs; the built-in presets
+need none. The `.ini` stores output size, PNG options, antialiasing, alpha for a
+transparent background, and the relative output name `NAME.png`. It sets
+`Verbose=on`, so a manual render prints progress lines.
 
 For the tutorial's exported files, run from the scene directory:
 
@@ -53,25 +57,81 @@ also regenerate the matching camera vectors; changing only dimensions can stretc
 the exported view. GUI render jobs are prepared afresh and do not use edits made
 to previously exported files.
 
+## Output size and frame
+
+Set the image size in the **Scene ▸ Render** tab: **Width** and **Height** in pixels
+(16 to 8000), an **Aspect** preset (1:1, 4:3, 3:2, 16:10, 16:9, and portrait 3:4 and
+2:3) that sets the height from the width, and **Swap** for portrait/landscape. The
+toolbar shows the current size.
+
+A blue frame in the 3D view shows exactly the area of the image; the region outside
+it is dimmed. The frame is the largest rectangle with the output aspect ratio that
+fits inside the view with a small margin. Fit (F), Reset View, and the view-along
+buttons fit the structure into the frame. Changing the output size keeps the image
+centre and its visible height in Å; only the width follows the new aspect ratio.
+Resizing the window changes the frame on screen but not the image. Projects store the
+camera of the output image together with its size, so a project reopens with the same
+framing in a window of any shape.
+
+## Materials and backgrounds
+
+The **Scene ▸ Appearance** tab offers a small catalog (more presets and galleries are
+planned):
+
+| Material | Look |
+| --- | --- |
+| Matte | Diffuse, almost no highlight |
+| Satin (default) | Soft highlight; Ycrystal's finish before the catalog existed |
+| Glossy | Sharp highlight and a faint reflection |
+| Metallic | Element-coloured metal with tinted highlights and reflections |
+| Glass (tinted) | Transparent, tinted by the element colour, refractive index 1.45 |
+
+The material applies to every atom and bond; element colours are kept. **Backgrounds:**
+**White**, **Transparent (PNG alpha)** — the PNG gets an alpha channel and the live
+view shows light grey — and **Dark grey**, which also switches the cell edges to a light
+colour. Material and background changes are undoable and saved in projects. The 3D
+view approximates materials (opacity and highlights); refraction, reflection, and
+POV-Ray's lighting appear only in the preview and the render.
+
+## POV-Ray preview
+
+**Render ▸ Preview** (F5, or the **Preview** button) renders the framed view with
+POV-Ray at a small size — 480 pixels on the longer side, same aspect ratio and
+background as the output, without antialiasing — and shows it in the **POV-Ray
+preview** dock. It is a real POV-Ray image of the same scene, not an approximation.
+
+With **Update automatically** checked (the default; the choice is remembered), a new
+preview starts shortly after each change to the view, scene, appearance, or output size.
+Only one preview process runs at a time: a newer request cancels the running preview.
+Every change increases a scene revision number; a preview that finishes for an older
+revision is discarded and the dock says so. When the shown preview no longer matches
+the view, the dock marks it out of date. Preview problems (for example POV-Ray not
+found) appear in the dock, without a dialog.
+
 ## Render a PNG in the application
 
-Set the toolbar width and transparency, then choose **Render ▸ Render PNG…**
-(Ctrl+R) and a destination. The height follows the current viewport. Antialiasing
-is always on in the GUI.
+Choose **Render ▸ Render PNG…** (Ctrl+R) and a destination. The image has the output
+size from the Render tab and shows exactly the framed area. Antialiasing is always on
+in the GUI.
 
 After a synchronous version query (up to 15 seconds) and scene preparation,
-POV-Ray runs asynchronously through Qt's `QProcess`. The window stays responsive
-during that render. Only one render can run at a time. There is no cancel button
-yet; closing the window stops an active process after handling unsaved changes.
+POV-Ray runs asynchronously through Qt's `QProcess`. The window stays responsive and
+the status bar shows the progress in percent as POV-Ray reports it. Only one final
+render runs at a time (a preview may run alongside it). **Cancel Render** in the
+toolbar or the Render menu stops the final render, or a running preview when no final
+render is active. A cancelled render leaves the destination untouched and shows no
+error. A failed render shows an explanation; the next render starts normally. Closing
+the window stops active processes after handling unsaved changes.
 
 Each job uses a new system temporary directory named `ycrystal-job-*`, containing
 `scene.pov`, `scene.ini`, and, on success, `scene.png`. Python copies the image to
 the chosen destination via `DESTINATION.png.part`, then replaces the destination.
-The GUI removes the job directory after handling the result, including failures.
-The job files are not kept for editing; export a scene if you need them. A failed
-copy can leave the `.part` file behind.
+The GUI removes the job directory after handling the result, including failures and
+cancellations. The job files are not kept for editing; export a scene if you need
+them. A failed copy can leave the `.part` file behind.
 
-The finished PNG uses the same displayed atoms and framing. VTK's approximate
-lighting can differ from POV-Ray's key/fill lighting. Viewport orientation axes
-and selection highlights are omitted. Transparent background adds an alpha
-channel rather than a white background.
+The finished PNG uses the same displayed atoms, bonds, and framing as the preview and
+the frame in the live view. VTK's approximate lighting can differ from POV-Ray's
+key/fill lighting. Viewport orientation axes, the frame, and selection highlights are
+omitted. A transparent background adds an alpha channel; transparent materials let
+part of it through.

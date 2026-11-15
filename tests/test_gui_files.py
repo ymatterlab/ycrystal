@@ -110,7 +110,9 @@ def test_save_and_reopen_after_source_file_is_moved(window, qtbot, tmp_path):
     window.select({(0, (1, 1, 1)), (1, (0, 0, 0))})
     window.hide_selected()
     window.width_spin.setValue(900)
-    window.transparent_check.setChecked(True)
+    window.height_spin.setValue(500)
+    window.set_background("transparent")
+    window.set_material("glossy")
     assert window.is_modified()
     project_path = tmp_path / "out" / "my figure"
     assert window.save_as(project_path)
@@ -125,15 +127,20 @@ def test_save_and_reopen_after_source_file_is_moved(window, qtbot, tmp_path):
 
     other = MainWindow(perovskite_srtio3())
     qtbot.addWidget(other)
-    other.resize(900, 600)
+    other.resize(1180, 760)  # a differently shaped window: the output framing is kept
     other.show()
     qtbot.waitUntil(lambda: other._saved_camera is not None, timeout=5000)
     assert other.open_file(saved)
     np.testing.assert_array_equal(other.structure.positions, positions)
     assert other.scene_settings.hidden == hidden and other.geometry.hidden_count == 2
-    np.testing.assert_allclose(other.current_camera().position, camera.position, rtol=1e-12)
-    np.testing.assert_allclose(other.current_camera().view_up, camera.view_up, atol=1e-12)
-    assert other.width_spin.value() == 900 and other.transparent_check.isChecked()
+    reopened = other.current_camera()
+    np.testing.assert_allclose(reopened.position, camera.position, rtol=1e-12)
+    np.testing.assert_allclose(reopened.view_up, camera.view_up, atol=1e-12)
+    assert reopened.parallel_scale == pytest.approx(camera.parallel_scale, rel=1e-12)
+    assert (other.width_spin.value(), other.height_spin.value()) == (900, 500)
+    assert other.environment.transparent and other.environment.preset == "transparent"
+    assert other.scene_settings.material == "glossy"
+    assert other.appearance_panel.material_combo.currentData() == "glossy"
     assert other.project_path == saved and not other.is_modified()
     assert "fixed x y z" in (other.select({(0, (0, 0, 0))}) or other.selection_text())
     other.close()

@@ -80,6 +80,10 @@ class SceneSettings:
         the original cell. show_cell can disable all edges.
     bonds
         BondSettings controlling candidate distances, enabled pairs, and radius.
+    material
+        Id of the material preset applied to every atom and bond (see
+        [`ycrystal.presets`][ycrystal.presets]); ``"satin"`` is Ycrystal's original
+        finish. Resolved by the renderers, which reject unknown ids.
     hidden
         Displayed-atom IDs omitted from the view and from exported scenes. IDs that are
         not displayed under the current settings (for example boundary images while
@@ -104,6 +108,7 @@ class SceneSettings:
     # "unit" cell only. ``show_cell`` switches them off entirely.
     cell_mode: str = "all"
     bonds: BondSettings = field(default_factory=BondSettings)
+    material: str = "satin"
 
     def __post_init__(self) -> None:
         reps = tuple(int(r) for r in self.repetitions)
@@ -119,7 +124,7 @@ CELL_MODES = ("all", "outline", "unit")
 
 @dataclass(frozen=True)
 class Environment:
-    """Background colour and light intensities for exported scenes.
+    """Background and light intensities for the live view and exported scenes.
 
     Presentation state only. The POV-Ray writer places both lights relative to the
     camera, on the viewer's side of the scene: the key light at the upper left (it
@@ -129,8 +134,13 @@ class Environment:
     Attributes
     ----------
     background
-        Background colour as sRGB components between 0 and 1. Not used for renders
-        with a transparent background.
+        Background colour as sRGB components between 0 and 1. With `transparent`, it
+        is shown only in the live view.
+    transparent
+        Whether rendered PNGs get an alpha channel with a fully transparent background.
+    preset
+        Id of the environment preset this environment was made from (see
+        [`ycrystal.presets`][ycrystal.presets]); saved in projects.
     key_light
         Intensity of the key light (POV-Ray ``color rgb`` value); non-positive values
         omit the light.
@@ -141,6 +151,8 @@ class Environment:
     background: RGB = (1.0, 1.0, 1.0)  # sRGB
     key_light: float = 1.0
     fill_light: float = 0.35
+    transparent: bool = False
+    preset: str = "white"
 
 
 @dataclass(frozen=True, eq=False)
@@ -175,6 +187,8 @@ class DisplayGeometry:
         Displayed-atom row index pairs, shape (B, 2). Both endpoints must be shown.
     bond_radius
         Cylinder radius in Å; each bond is split and coloured by its endpoints.
+    material
+        Material preset id for atoms and bonds (from `SceneSettings.material`).
     hidden_count
         Number of atoms that the settings would display but that are hidden.
 
@@ -202,6 +216,7 @@ class DisplayGeometry:
     hidden_count: int = 0  # displayable atoms omitted because they are hidden
     bonds: np.ndarray = field(default_factory=lambda: np.zeros((0, 2), dtype=int))  # (B, 2)
     bond_radius: float = 0.12  # Å
+    material: str = "satin"
 
     def __post_init__(self) -> None:
         index = {atom_id: i for i, atom_id in enumerate(self.atom_ids)}
@@ -508,6 +523,7 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
         hidden_count=len(candidates) - len(shown),
         bonds=bonds,
         bond_radius=settings.bonds.radius,
+        material=settings.material,
     )
 
 
