@@ -10,10 +10,8 @@ from __future__ import annotations
 from dataclasses import replace
 
 from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
-    QColorDialog,
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
@@ -29,7 +27,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ycrystal.core.colors import color_label, format_color
 from ycrystal.core.scene import RGB, Environment, SceneSettings
+from ycrystal.gui.color_dialog import ColorDialog, color_values
 from ycrystal.gui.gallery import preset_icon
 from ycrystal.presets import (
     environment_from_preset,
@@ -46,7 +46,14 @@ BACKGROUND_MODE_NAMES = {"solid": "Solid colour", "gradient": "Vertical gradient
 
 
 class ColorButton(QPushButton):
-    """A button showing a colour; clicking it opens a colour dialog."""
+    """A button showing a colour; clicking it opens a colour dialog.
+
+    Its tooltip (and accessible name) states the colour in words, for example
+    "Colour of O: red (nearest named colour: red #FF0000)", so that colours can be
+    identified without relying on colour vision. The dialog is
+    [`ColorDialog`][ycrystal.gui.color_dialog.ColorDialog]: typed input in several
+    notations and colour names on hover.
+    """
 
     color_chosen = Signal(object)
     """A new colour was chosen, as an sRGB tuple between 0 and 1."""
@@ -55,7 +62,9 @@ class ColorButton(QPushButton):
         super().__init__(parent)
         self._title = title
         self._color: RGB = (1.0, 1.0, 1.0)
+        self._note = ""
         self.setFixedWidth(56)
+        self.setObjectName("colorButton")
         self.clicked.connect(self.choose)
         self.set_color(self._color)
 
@@ -66,15 +75,29 @@ class ColorButton(QPushButton):
     def set_color(self, color: RGB) -> None:
         """Show ``color`` without emitting a request."""
         self._color = (float(color[0]), float(color[1]), float(color[2]))
-        hex_color = QColor.fromRgbF(*self._color).name()
-        self.setStyleSheet(f"background-color: {hex_color}; border: 1px solid #777;")
-        self.setToolTip(hex_color)
+        hex_color = format_color(self._color, "hex")
+        # Scoped to this button: an unscoped style sheet would cascade to child widgets.
+        self.setStyleSheet(
+            f"QPushButton#colorButton {{ background-color: {hex_color}; border: 1px solid #777; }}"
+        )
+        description = f"{self._title}: {color_label(self._color)}"
+        tooltip = f"{description}\n{color_values(self._color)} · click to change"
+        if self._note:
+            tooltip += f"\n{self._note}"
+        self.setToolTip(tooltip)
+        self.setAccessibleName(f"{description}. {color_values(self._color)}")
+
+    def set_note(self, note: str) -> None:
+        """Add a remark to the tooltip, for example that a material hides the colour."""
+        self._note = note
+        self.set_color(self._color)
 
     def choose(self) -> None:
-        """Open a colour dialog and emit the chosen colour."""
-        chosen = QColorDialog.getColor(QColor.fromRgbF(*self._color), self, self._title)
-        if chosen.isValid():
-            self.color_chosen.emit((chosen.redF(), chosen.greenF(), chosen.blueF()))
+        """Open the colour dialog and emit the chosen colour (nothing if cancelled)."""
+        # Parented to the window, not the button, so it keeps the application's look.
+        chosen = ColorDialog.get_color(self._color, self.window(), self._title)
+        if chosen is not None and chosen != self._color:
+            self.color_chosen.emit(chosen)
 
 
 def _spin(
@@ -453,6 +476,13 @@ class AppearancePanel(QScrollArea):
             for element, color, overridden in element_colors:
                 button, reset, combo = self.element_widgets(element)
                 button.set_color(color)
+                material = get_material(overrides.get(element, settings.material))
+                button.set_note(
+                    ""
+                    if material.keeps_element_color
+                    else f"Not visible with the material {material.name}, which has its own "
+                    "colours; the colour is kept for other materials."
+                )
                 radius, radius_set = (element_radii or {}).get(element, (1.0, False))
                 spin = self.radius_spin(element)
                 spin.blockSignals(True)

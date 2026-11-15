@@ -3,6 +3,17 @@
 All notable changes to Ycrystal. Versions follow [semantic versioning](https://semver.org/);
 before 1.0 the Python interface may change between minor versions.
 
+## Unreleased
+
+- Colour dialog for element, background, and floor colours (FR-COLOR-01): spectrum, the
+  140 CSS named colours, and typed input as hex, RGB 0–255, RGB 0–1, HSV, HSL,
+  `rgb()/hsv()/hsl()`, or a colour name; all fields stay in sync; numbers are never
+  reinterpreted; invalid text cannot be accepted; keyboard operation and accessible
+  names.
+- Colour names for accessibility: resting the mouse on a colour names it in plain words
+  and gives the nearest CSS named colour (CIEDE2000); colour buttons name their colour
+  in tooltips and for screen readers (`ycrystal.core.colors`).
+
 ## 0.1.0 — first usable release (milestones M0–M6)
 
 Linux desktop application for reproducible crystal-structure figures rendered with

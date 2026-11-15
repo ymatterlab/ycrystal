@@ -18,6 +18,65 @@ column its sphere radius in Å, and the **Material** column its material. The **
 button returns an element to its default colour and radius (the covalent radius times
 the **Atom size** in the Structure tab).
 
+## Choosing colours
+
+Click a colour button (an element's **Colour**, or the background and floor colours)
+to open the colour dialog. Choose a colour in one of three ways:
+
+- **Spectrum**: hue from left to right, lightness from top (white) to bottom (black);
+  the **Saturation** slider below it makes the colours more vivid or greyer.
+- **Named colours**: the 140 CSS colours (silver, steel blue, tomato, …).
+- **Type a colour** in any notation; all fields update together:
+
+| Field | Range | Example (red) |
+| --- | --- | --- |
+| Hex | `#RRGGBB`, any case (also `#RGB`) | `#FF0000` |
+| RGB (0–255) | three integers 0–255 | `255 0 0` |
+| RGB (0–1) | three fractions, three decimals — the values stored in projects and POV-Ray scenes | `1.000 0.000 0.000` |
+| HSV | hue 0–359°, saturation 0–100 %, **value** 0–100 % | `0, 100, 100` |
+| HSL | hue 0–359°, saturation 0–100 %, **lightness** 0–100 % | `0, 100, 50` |
+| Name or any notation | a CSS name or any of the notations below | `red` |
+
+In the text field, `rgb(255, 0, 0)`, `rgb(100%, 0%, 0%)`, `hsv(0, 100%, 100%)`,
+`hsl(0, 100%, 50%)`, and three numbers are accepted. Numbers are never reinterpreted:
+integers are 0–255 (`1 0 0` is almost black), numbers written with a decimal point are
+fractions 0–1 (`1.0 0 0` is red), and HSV/HSL saturation, value, and lightness are
+always percent, with or without `%`. Names ignore case and spaces; "grey" and "gray",
+"aqua" (= cyan), and "fuchsia" (= magenta) are accepted. A field completes names as you
+type.
+
+Text that cannot be read is explained below the fields, leaves the colour unchanged,
+and disables **OK** until it is corrected; valid text that was typed but not yet
+confirmed with Enter is applied when you press OK. HSV and HSL show one decimal, so
+switching between notations does not drift (each 8-bit channel stays within one step).
+For a grey (no hue), the hue you typed is kept so that adding saturation continues from
+it. **OK** applies the colour as one undoable step; **Cancel** keeps the old one; the
+**↺** button in the element table returns to the default colour and radius.
+
+The dialog works without a mouse: Tab moves between the fields and the named-colour
+grid; in the grid, the arrow keys move and Enter or Space chooses. Every field has an
+accessible name (for example "HSL lightness in percent") for screen readers.
+
+**Colour names for everyone.** Rest the mouse on the spectrum or a named colour (or move
+the keyboard focus in the grid), and the dialog writes that colour in words with its
+exact values, for example
+*Under the mouse: brown (nearest named colour: chocolate #D2691E) — #C25200 — RGB (194,
+82, 0)*. The first part is a plain description from a small vocabulary (red, orange,
+yellow, green, cyan, blue, purple, magenta, pink, brown, olive, black, grey, white, with
+*dark*, *light*, or *greyish*); the second is the closest CSS named colour by perceived
+difference (CIEDE2000). It says *exactly the named colour …* only when the colour equals
+it at 8-bit precision, and *nearest named colour …* otherwise; the hex and RGB values are
+always the exact ones. Hovering only identifies a colour; clicking chooses it. The chosen
+colour is described the same way above the fields, named-colour tooltips read like
+*red — #FF0000 — RGB (255, 0, 0)*, and every colour button's tooltip and accessible name
+state its colour (*Colour of O: red (nearest named colour: red #FF0000)* with its
+values). This helps people with colour-vision deficiencies tell element colours apart;
+descriptions are approximate and supplement, not replace, the colours themselves.
+
+The colour of an element is its base colour: it does not change its radius, material, or
+opacity. Materials with their own colours (gold, chrome, marble, …) hide it; the colour
+button's tooltip then says so, and the colour returns when you choose another material.
+
 Materials are assigned at three levels. The most specific one wins:
 
 1. **Selected atoms** — click atoms (Ctrl+click for several), then

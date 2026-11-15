@@ -35,6 +35,25 @@
         - points_and_radii
         - bounding_sphere
 
+## Colours
+
+::: ycrystal.core.colors
+    options:
+      members:
+        - COLOR_FORMATS
+        - NAMED_COLORS
+        - parse_color
+        - format_color
+        - hex_to_rgb
+        - to_255
+        - to_hsv
+        - to_hsl
+        - to_lab
+        - delta_e
+        - nearest_named_color
+        - describe_color
+        - color_label
+
 ## Periodic bond rules
 
 ::: ycrystal.core.bonds
