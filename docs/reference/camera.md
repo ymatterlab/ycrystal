@@ -12,6 +12,7 @@
         - pixels_per_angstrom
         - orbit
         - roll
+        - rotate_about
         - pan
         - zoom
         - fitted

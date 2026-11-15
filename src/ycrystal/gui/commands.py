@@ -16,8 +16,9 @@ if TYPE_CHECKING:
 class SceneSettingsCommand(QUndoCommand):
     """Replace the display settings (hidden atoms, material, …) as one step.
 
-    The window's current settings, and its environment when ``environment`` is given,
-    are captured when the command is created. ``QUndoStack.push`` applies the new state
+    The window's current settings, and its environment and output size when
+    ``environment`` or ``output_size`` is given, are captured when the command is
+    created. ``QUndoStack.push`` applies the new state
     immediately; undo restores the captured one. Each step rebuilds the displayed
     geometry from the unchanged structure.
 
@@ -35,6 +36,9 @@ class SceneSettingsCommand(QUndoCommand):
     environment
         New environment (background) to apply together with the settings, as one
         step; ``None`` leaves the environment unchanged.
+    output_size
+        New output image ``(width, height)`` in pixels, applied in the same step;
+        ``None`` leaves it unchanged.
     """
 
     def __init__(
@@ -44,6 +48,7 @@ class SceneSettingsCommand(QUndoCommand):
         text: str,
         merge_key: str = "",
         environment: Environment | None = None,
+        output_size: tuple[int, int] | None = None,
     ) -> None:
         super().__init__(text)
         self._window = window
@@ -51,6 +56,8 @@ class SceneSettingsCommand(QUndoCommand):
         self._new = new
         self._old_environment = window.environment if environment is not None else None
         self._new_environment = environment
+        self._old_size = window.output_size() if output_size is not None else None
+        self._new_size = output_size
         self._merge_key = merge_key
 
     def id(self) -> int:  # noqa: A003 - Qt API name
@@ -62,16 +69,25 @@ class SceneSettingsCommand(QUndoCommand):
         if not isinstance(other, SceneSettingsCommand) or other._merge_key != self._merge_key:
             return False
         self._new = other._new
+        self.setText(other.text())  # the menu names the latest value
         if other._new_environment is not None:
             if self._old_environment is None:
                 self._old_environment = other._old_environment
             self._new_environment = other._new_environment
-        if self._new == self._old and self._new_environment == self._old_environment:
+        if other._new_size is not None:
+            if self._old_size is None:
+                self._old_size = other._old_size
+            self._new_size = other._new_size
+        if (
+            self._new == self._old
+            and self._new_environment == self._old_environment
+            and self._new_size == self._old_size
+        ):
             self.setObsolete(True)  # merged back to the start: drop the step
         return True
 
     def redo(self) -> None:
-        self._window.apply_scene_settings(self._new, self._new_environment)
+        self._window.apply_scene_settings(self._new, self._new_environment, self._new_size)
 
     def undo(self) -> None:
-        self._window.apply_scene_settings(self._old, self._old_environment)
+        self._window.apply_scene_settings(self._old, self._old_environment, self._old_size)

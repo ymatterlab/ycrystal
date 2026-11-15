@@ -28,12 +28,22 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - set_selection_material
         - clear_atom_materials
         - set_element_color
+        - set_radius_scale
+        - set_element_radius
+        - reset_element_appearance
         - set_background
         - set_environment
         - set_lighting
         - open_material_gallery
         - open_environment_gallery
+        - set_rotation_mode
+        - rotation_mode
+        - rotate_step
+        - current_style
+        - export_style
+        - import_style
         - set_output_size
+        - output_size
         - current_camera
         - current_render_settings
         - preview_settings
@@ -64,6 +74,7 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - key_pressed
         - set_scene
         - set_highlight
+        - pick
         - camera
         - set_camera
         - fit
@@ -74,6 +85,16 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - output_camera
         - set_output_camera
         - set_frame_visible
+        - supercell_drag_changed
+        - supercell_drag_finished
+        - set_supercell
+        - set_handles_visible
+        - handle_positions
+        - handle_at
+        - set_rotation_axis
+        - rotation_axis
+        - rotate_view
+        - cancel_interaction
         - frame_to_output
         - render_size
         - screenshot

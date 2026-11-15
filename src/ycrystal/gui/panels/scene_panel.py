@@ -51,6 +51,7 @@ class ScenePanel(QTabWidget):
     bond_tolerance_requested = Signal(float)
     bond_radius_requested = Signal(float)
     bond_pair_requested = Signal(tuple, bool)
+    radius_scale_requested = Signal(float)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -106,6 +107,18 @@ class ScenePanel(QTabWidget):
             lambda _i: self.cell_mode_requested.emit(self.cell_combo.currentData())
         )
         form.addRow("Cell edges", self.cell_combo)
+        self.size_spin = QDoubleSpinBox()
+        self.size_spin.setRange(0.05, 3.0)
+        self.size_spin.setSingleStep(0.05)
+        self.size_spin.setDecimals(2)
+        self.size_spin.setSuffix(" × covalent")
+        self.size_spin.setKeyboardTracking(False)
+        self.size_spin.setToolTip(
+            "Sphere radius as a multiple of the covalent radius; elements with their own "
+            "radius (Appearance tab) keep it"
+        )
+        self.size_spin.valueChanged.connect(self.radius_scale_requested.emit)
+        form.addRow("Atom size", self.size_spin)
         layout.addLayout(form)
 
         self.counts_label = QLabel()
@@ -183,6 +196,7 @@ class ScenePanel(QTabWidget):
             *self.rep_spins,
             self.boundary_check,
             self.cell_combo,
+            self.size_spin,
             self.bonds_check,
             self.tolerance_spin,
             self.radius_spin,
@@ -196,6 +210,7 @@ class ScenePanel(QTabWidget):
             self.boundary_check.setChecked(settings.boundary_images)
             mode = settings.cell_mode if settings.show_cell else "none"
             self.cell_combo.setCurrentIndex(self.cell_combo.findData(mode))
+            self.size_spin.setValue(settings.radius_scale)
             self.bonds_check.setChecked(settings.bonds.enabled)
             self.tolerance_spin.setValue(settings.bonds.tolerance)
             self.radius_spin.setValue(settings.bonds.radius)

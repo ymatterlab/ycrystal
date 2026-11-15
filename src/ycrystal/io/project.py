@@ -11,17 +11,17 @@ The top-level JSON object has the keys ``format`` (always ``"ycrystal-project"``
 ``environment``, ``camera``, and ``output``. Machine-specific settings such as the
 POV-Ray path are not stored in projects.
 
-Schema history: 1 — first version (M1); 2 — repetitions, cell mode, and bonds (M2);
-3 — material and background presets, explicit output size (M3); 4 — element and atom
+Schema history: 1 — first version (M1); 2 — repetitions, cell mode, and bonds (M2); 3 —
+material and background presets, explicit output size (M3); 4 — element and atom
 material overrides, element colours, and the full environment: background type, floor,
-lighting, and reflection panel (M4). Older files open with the M3 appearance: no
-overrides, plain background, no floor, and the "soft" lighting. Schema-1 files load
-with bonds disabled to preserve their original appearance. In every schema the saved
-camera describes the output image of ``output.width`` × ``output.height`` pixels
-(schemas 1 and 2 recorded the output size the camera was rendered at), so reopening
-reproduces the framing exactly, whatever the window size. Schema-1/2 files get the
-``"satin"`` material they were drawn with, and the ``"transparent"`` background preset
-if their output had a transparent background.
+lighting, and reflection panel (M4); 5 — element radii (M5). Older files open with the
+M3 appearance: no overrides, plain background, no floor, and the "soft" lighting.
+Schema-1 files load with bonds disabled to preserve their original appearance. In every
+schema the saved camera describes the output image of ``output.width`` ×
+``output.height`` pixels (schemas 1 and 2 recorded the output size the camera was
+rendered at), so reopening reproduces the framing exactly, whatever the window size.
+Schema-1/2 files get the ``"satin"`` material they were drawn with, and the
+``"transparent"`` background preset if their output had a transparent background.
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ from ycrystal.render.pov_writer import RenderSettings
 PROJECT_FORMAT = "ycrystal-project"
 """Value of the ``format`` key that identifies a project file."""
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 """Schema version written by this Ycrystal; newer versions are refused on load."""
 
 PROJECT_SUFFIX = ".ycrystal"
@@ -153,6 +153,9 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             "atom_materials": [
                 {"atom": source, "image": list(image), "material": material_id}
                 for (source, image), material_id in scene.atom_materials
+            ],
+            "element_radii": [
+                {"element": element, "radius": radius} for element, radius in scene.element_radii
             ],
             "element_colors": [
                 {"element": element, "color": list(color)}
@@ -306,6 +309,9 @@ def _scene_from(d: dict[str, Any], version: int = SCHEMA_VERSION) -> SceneSettin
         ),
         element_colors=tuple(
             (str(entry["element"]), _rgb(entry["color"])) for entry in d.get("element_colors", [])
+        ),
+        element_radii=tuple(
+            (str(entry["element"]), float(entry["radius"])) for entry in d.get("element_radii", [])
         ),
     )
 

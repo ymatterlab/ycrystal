@@ -109,6 +109,12 @@ class AppearancePanel(QScrollArea):
     element_color_requested = Signal(str, object)
     """Set (sRGB tuple) or remove (``None``) the colour override of an element."""
 
+    element_radius_requested = Signal(str, float)
+    """Set the sphere radius (Å) of an element."""
+
+    element_reset_requested = Signal(str)
+    """Remove the colour and radius overrides of an element."""
+
     selection_material_cleared = Signal()
     """Remove the material overrides of the selected atoms."""
 
@@ -155,14 +161,17 @@ class AppearancePanel(QScrollArea):
         gallery.clicked.connect(lambda: self.gallery_requested.emit("materials"))
         row.addWidget(gallery)
         form.addLayout(row)
-        self.element_table = QTableWidget(0, 4)
-        self.element_table.setHorizontalHeaderLabels(["Element", "Colour", "", "Material"])
+        self.element_table = QTableWidget(0, 5)
+        self.element_table.setHorizontalHeaderLabels(
+            ["Element", "Colour", "Radius", "", "Material"]
+        )
         self.element_table.verticalHeader().setVisible(False)
         header = self.element_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         self.element_table.setMinimumHeight(110)
         form.addWidget(self.element_table)
         self.selection_label = QLabel()
@@ -378,28 +387,36 @@ class AppearancePanel(QScrollArea):
                 lambda c, e=element: self.element_color_requested.emit(e, c)
             )
             table.setCellWidget(row, 1, button)
+            radius = _spin(0.02, 6.0, 0.05, 2)
+            radius.setToolTip(f"Sphere radius of {element} in Å")
+            radius.valueChanged.connect(
+                lambda v, e=element: self._emit(self.element_radius_requested, e, v)
+            )
+            table.setCellWidget(row, 2, radius)
             reset = QToolButton()
             reset.setText("↺")
-            reset.setToolTip(f"Use the default colour of {element}")
-            reset.clicked.connect(
-                lambda _c=False, e=element: self.element_color_requested.emit(e, None)
-            )
-            table.setCellWidget(row, 2, reset)
+            reset.setToolTip(f"Use the default colour and radius of {element}")
+            reset.clicked.connect(lambda _c=False, e=element: self.element_reset_requested.emit(e))
+            table.setCellWidget(row, 3, reset)
             combo = self._material_combo(with_default=True)
             combo.currentIndexChanged.connect(
                 lambda _i, e=element, c=combo: self._emit(
                     self.element_material_requested, e, c.currentData()
                 )
             )
-            table.setCellWidget(row, 3, combo)
+            table.setCellWidget(row, 4, combo)
         table.resizeRowsToContents()
 
     # ----- public -----------------------------------------------------------------------
     def element_widgets(self, element: str) -> tuple[ColorButton, QToolButton, QComboBox]:
-        """Return the colour button, colour reset button, and material menu of an element."""
+        """Return the colour button, reset button, and material menu of an element."""
         row = self._elements.index(element)
         table = self.element_table
-        return table.cellWidget(row, 1), table.cellWidget(row, 2), table.cellWidget(row, 3)
+        return table.cellWidget(row, 1), table.cellWidget(row, 3), table.cellWidget(row, 4)
+
+    def radius_spin(self, element: str) -> QDoubleSpinBox:
+        """Return the radius spin box (Å) of an element."""
+        return self.element_table.cellWidget(self._elements.index(element), 2)
 
     def sync(
         self,
@@ -407,6 +424,7 @@ class AppearancePanel(QScrollArea):
         environment: Environment,
         element_colors: list[tuple[str, RGB, bool]],
         selection_count: int,
+        element_radii: dict[str, tuple[float, bool]] | None = None,
     ) -> None:
         """Show the current appearance without emitting requests.
 
@@ -421,6 +439,8 @@ class AppearancePanel(QScrollArea):
             structure.
         selection_count
             Number of selected atoms.
+        element_radii
+            ``element → (radius in Å, radius is overridden)``.
         """
         self._syncing = True
         try:
@@ -433,7 +453,12 @@ class AppearancePanel(QScrollArea):
             for element, color, overridden in element_colors:
                 button, reset, combo = self.element_widgets(element)
                 button.set_color(color)
-                reset.setEnabled(overridden)
+                radius, radius_set = (element_radii or {}).get(element, (1.0, False))
+                spin = self.radius_spin(element)
+                spin.blockSignals(True)
+                spin.setValue(radius)
+                spin.blockSignals(False)
+                reset.setEnabled(overridden or radius_set)
                 combo.blockSignals(True)
                 combo.setCurrentIndex(max(combo.findData(overrides.get(element, "")), 0))
                 combo.setItemText(0, f"Default ({get_material(settings.material).name})")

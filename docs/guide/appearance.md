@@ -13,8 +13,10 @@ judge them.
 ## Choosing materials
 
 A material decides how a surface reacts to light. Colour and material are separate:
-the **Colour** column of the element table sets an element's colour, the **Material**
-column its material.
+the **Colour** column of the element table sets an element's colour, the **Radius**
+column its sphere radius in Å, and the **Material** column its material. The **↺**
+button returns an element to its default colour and radius (the covalent radius times
+the **Atom size** in the Structure tab).
 
 Materials are assigned at three levels. The most specific one wins:
 
@@ -150,8 +152,31 @@ transparent materials much slower to render, because POV-Ray traces shadow rays 
 the glass. While composing a glass figure, use *Soft* or *Bright* lighting or switch off
 *Update automatically* in the preview dock.
 
-## Reusing the look
+## Reusing the look: styles
 
-Materials, colours, the environment, and the lighting are saved in projects
-(`.ycrystal`, schema 4) and restored exactly when the project is reopened. Projects
+Materials, colours, radii, the environment, and the lighting are saved in projects
+(`.ycrystal`, schema 5) and restored exactly when the project is reopened. Projects
 saved by earlier versions open with their original appearance.
+
+To give another structure the same look, save a **style**: **File ▸ Export Style…**
+writes a `.ycstyle` file, and **File ▸ Import Style…** applies one to the open structure.
+The import dialog lets you choose the parts to apply:
+
+| Part | Contents |
+| --- | --- |
+| Materials, colours, and radii | Default material; material, colour, and radius of each element |
+| Display | Atom size, repetitions, boundary atoms, cell edges, bond length, radius, and pair rules |
+| Environment | Background, floor, lighting, transparency, and the cell-edge colour |
+| Output image size | Width and height in pixels |
+
+A style never changes the structure's coordinates, and it has no camera. The import is
+one undoable step. Settings that refer to something the new structure does not have are
+left out, and a message lists them:
+
+- Element settings (material, colour, radius) and bond-pair rules apply to the elements
+  the structure contains; those of other elements are left out.
+- Per-atom materials and hidden atoms refer to individual atoms of the original
+  structure. They are applied only if the new structure has the same number of atoms
+  with the same element at every position (for example the same structure from another
+  file, or relaxed); otherwise they are left out.
+- Repetitions that would display more than 20,000 atoms ask for confirmation first.

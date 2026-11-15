@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0–M3 complete and merged into `main` (M3 in PR #8); M4 complete on branch `feature/m4-materials-lighting`. Repository private; pre-commit.ci and the CI badge removed.
+Last updated: 15 November 2026. M0–M4 complete and merged into `main` (M4 in PR #10); M5 complete on branch `feature/m5-interactions-styles`. Repository private; pre-commit.ci and the CI badge removed.
 
 ## Milestones
 
@@ -10,8 +10,8 @@ Last updated: 15 November 2026. M0–M3 complete and merged into `main` (M3 in P
 | M1 | File import (POSCAR/CIF/QE `ibrav=0`) and save/reopen projects | **Complete** (see evidence) |
 | M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **Complete** (see evidence; drag handles are M5) |
 | M3 | Complete figure workflow: preview, output frame, cancellation, final PNG | **Complete** (see evidence) |
-| M4 | Material and environment galleries, assignment, lighting | **Complete** (see evidence; style reuse is M5) |
-| M5 | Supercell drag handles, reusable styles, undo coverage | Not started |
+| M4 | Material and environment galleries, assignment, lighting | **Complete** (see evidence) |
+| M5 | Supercell drag handles, axis-constrained rotation, reusable styles, undo coverage | **Complete** (see evidence) |
 | M6 | Installation path, launcher, user guide, release checks | Not started |
 
 ## M0 acceptance evidence
@@ -92,6 +92,44 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## M5 acceptance evidence
+
+Gate: dragging is reversible; style reuse preserves the new structure's scientific
+coordinates; project round trips retain all implemented settings. The plan splits M5
+into M5a (supercell handles), M5b (axis-constrained rotation), and M5c (styles and
+complete undo coverage).
+
+| Check | Result | How |
+| --- | --- | --- |
+| M5a: handles | a/b/c handles (red, green, blue) outside the projected block along each periodic lattice direction; hidden without a cell, for non-periodic axes, and for directions nearly along the line of sight; *View ▸ Supercell Handles* toggles them (remembered); never exported | `test_handle_drag_adds_cells_in_one_undo_step`, `test_handle_drag_clamps_cancels_and_hides`, `test_no_handles_without_cell`; screenshots in `artifacts/m5/` |
+| M5a: drag | Integer steps from the mouse movement projected on the lattice direction; orange outline of the new block and a label with cell and atom counts during the drag; no orbit while dragging; geometry built once on release; minimum one cell, maximum 20; Esc or right button cancels | same tests (preview `(3, 1, 1)` before release, camera unchanged during the drag, repetitions unchanged after Esc) |
+| M5a: reversible | One undo step per drag; undo/redo restore the repetitions; numeric controls follow; large expansions still ask for confirmation | `test_handle_drag_adds_cells_in_one_undo_step` |
+| M5b: rotation modes | *Rotate freely* (trackball, M0) or *about a, b, c, x, y, z*: left drag turns about the chosen axis through the view centre; the axis keeps its screen direction; a circular motion is used when the axis points at the viewer; clicks still select, Shift-drag still pans | `test_axis_rotation_keeps_the_axis_fixed`, `test_click_still_selects_in_axis_mode`; `Camera.rotate_about` checked against an explicit Rodrigues rotation (`test_rotate_about_axis_keeps_axis_fixed_on_screen`) |
+| M5b: exact steps | ⟲/⟳ (Ctrl+Left/Right) turn by 5–90° about the axis, or about the line of sight in free mode | `test_rotate_buttons_turn_by_the_step` |
+| M5c: styles | `.ycstyle` files (materials, colours, radii, display, environment, output size; no structure, no camera); parts selectable on import; one undo step | `tests/test_style.py`, `test_style_export_import_to_another_structure` |
+| M5c: transfer rules | Element-keyed settings and bond-pair rules transfer to elements the target contains; per-atom materials and hidden atoms only when the element sequence is identical; everything left out is explained in a message | `test_other_structure_gets_compatible_parts_and_explanations`, `test_same_structure_receives_everything` |
+| Coordinates preserved | Style import, handle drags, and rotation never change scientific positions | assertions in the style, interaction, and docs-example tests |
+| M5c: undo coverage | Every figure change is one undo step and undo restores the exact state: hiding, show all, boundary atoms, repetitions, cell mode, bonds (on/off, tolerance, radius, pairs), atom size, element radius, element colour, default/element/atom materials, clearing overrides, environment, lighting, output size; plus handle drags and style imports. Output size is now undoable (an M3 caveat); merged spin-box steps show the latest value | `test_every_presentation_change_is_undoable` (20 operations), `test_output_size_keeps_output_camera_and_marks_modified` |
+| Radii | Atom size (× covalent radius) in the Structure tab; per-element radius in Å in the Appearance tab; reset returns colour and radius together | `test_radius_controls_and_project_round_trip` |
+| Project round trips | Schema 5 adds element radii; overrides, colours, radii, environment, output size restored exactly; older schemas unchanged | `test_overrides_colours_radii_and_environment_round_trip`, `test_radius_controls_and_project_round_trip` |
+| Verification run | 218 non-rendering tests pass locally (strict mode, 62 rendering tests deselected); rendering tests were not rerun locally (M5 does not change the POV-Ray writer) to spare the laptop; CI runs the full suite | `pytest -m "not povray"`; doctests; `scripts/docs_examples.py`; `zensical build --clean --strict`; `pre-commit run --all-files` |
+
+### M5 caveats
+
+- Handles are 2D markers placed outside the projected block and clamped to the view;
+  with a strongly tilted cell a handle can sit far from its face. Directions nearly
+  along the line of sight have no handle until the view is rotated.
+- The view refits after a handle drag (as after numeric changes), so the block stays in
+  the frame.
+- Esc cancels a drag through the window's *Select None* shortcut; without a focused
+  window the viewport's own key handler does it.
+- Rotation modes and the step angle are navigation settings, not saved in projects and
+  not undoable (camera navigation stays outside the undo stack by design).
+- Styles transfer per-atom settings only for identical element sequences; there is no
+  matching of atoms between different structures.
+- Style files store the source's element sequence (one symbol per atom); for very large
+  structures the file grows accordingly.
 
 ## M4 acceptance evidence
 
@@ -544,6 +582,14 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
   (a `sky_sphere` would be one colour under orthographic projection) inside an empty
   `light_group`; the floor is tilted 20° towards the viewer; area lights have no jitter
   so renders are deterministic.
+- **Undo model (M5):** one command type carries scene settings plus optional
+  environment and output size; handle drags, style imports, and size changes are single
+  steps; merge keys combine spin-box edits. Camera navigation stays outside undo.
+- **Styles (M5):** the presentation part of the project format plus the source's element
+  sequence; a pure `apply_style` returns new settings and user notes.
+- **Handles and axis rotation (M5):** the viewport's input filter routes handle drags and
+  axis-mode drags away from VTK's trackball; handles are 2D overlays recomputed before
+  each render; repetitions are applied once on release.
 - **Thumbnails (M4):** genuine POV-Ray renders of fixed scenes, shipped as package data,
   with scene digests to detect stale images.
 - **Render lifecycle (M3):** `RenderProcess` (progress, cancellation, elapsed time,
@@ -553,6 +599,6 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 
 ## Next bounded action
 
-Review and merge the M4 branch. Next product work is M5: integer supercell drag
-handles with one-step undo (M5a), then style export/import for another structure and
-complete undo coverage (M5b), including how element and atom overrides transfer.
+Review and merge the M5 branch. Next is M6: clean-install verification with the
+documented instructions, a Linux Mint desktop launcher, the end-to-end release workflow,
+performance notes on stated hardware, and a release checklist.

@@ -13,6 +13,7 @@ from ycrystal.core.samples import perovskite_srtio3
 from ycrystal.core.scene import Environment, SceneSettings, build_geometry
 from ycrystal.io.project import Project, load_project, save_project
 from ycrystal.io.readers import read_structure
+from ycrystal.io.style import Style, apply_style, load_style, save_style
 from ycrystal.presets import environment_from_preset, environments, materials
 from ycrystal.render.pov_writer import RenderSettings, required_includes, write_scene_files
 
@@ -76,6 +77,20 @@ def main() -> None:
         text = pov.read_text()
         assert '#include "metals.inc"' in text and "// Floor:" in text
         assert required_includes(studio) == ("metals.inc", "textures.inc")
+
+        # Styles: reuse the look with another structure; coordinates are untouched.
+        style_path = save_style(
+            directory / "look.ycstyle",
+            Style.from_state(structure, styled, environment, (640, 400)),
+        )
+        mgb2_positions = imported.positions.copy()
+        result = apply_style(
+            load_style(style_path), imported, SceneSettings(), Environment(), (1200, 800)
+        )
+        assert result.scene.element_materials == ()  # no Ti in MgB2
+        assert result.environment.preset == "studio_white" and result.output_size == (640, 400)
+        assert any("Ti" in note for note in result.notes)
+        np.testing.assert_array_equal(imported.positions, mgb2_positions)
     print("Documentation examples passed (no display or renderer).")
 
 

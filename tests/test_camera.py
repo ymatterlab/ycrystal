@@ -145,3 +145,36 @@ def test_projection_matches_vtk_camera_matrices(seed):
     ndc = homogeneous[:, :3] / homogeneous[:, 3:4]
     vtk_pixels = np.column_stack([(ndc[:, 0] + 1) / 2 * width, (1 - (ndc[:, 1] + 1) / 2) * height])
     np.testing.assert_allclose(camera.project(points, width, height), vtk_pixels, atol=1e-9)
+
+
+def test_rotate_about_axis_keeps_axis_fixed_on_screen():
+    from ycrystal.core.camera import Camera
+
+    camera = Camera.looking_along((0.3, -1.0, -0.4), (0, 0, 1), parallel_scale=4.0).orbit(
+        azimuth=20, elevation=10
+    )
+    axis = np.array([0.2, 0.5, 1.0])
+    turned = camera.rotate_about(axis, 37.0)
+    before = np.array(camera.basis()) @ (axis / np.linalg.norm(axis))
+    after = np.array(turned.basis()) @ (axis / np.linalg.norm(axis))
+    np.testing.assert_allclose(after, before, atol=1e-12)  # the axis does not move on screen
+    assert turned.distance == pytest.approx(camera.distance)
+    assert turned.parallel_scale == camera.parallel_scale
+    assert turned.focal_point == camera.focal_point
+    # The scene appears rotated by +37°: each point shows up where its rotated image
+    # appeared before.
+    point = np.array([[1.3, -0.4, 0.8]])
+    k = axis / np.linalg.norm(axis)
+    theta = np.radians(37.0)
+    rotated = (
+        point * np.cos(theta)
+        + np.cross(k, point) * np.sin(theta)
+        + np.outer(point @ k, k) * (1 - np.cos(theta))
+    )
+    np.testing.assert_allclose(
+        turned.project(point, 400, 300), camera.project(rotated, 400, 300), atol=1e-9
+    )
+    back = turned.rotate_about(axis, -37.0)
+    np.testing.assert_allclose(back.position, camera.position, atol=1e-9)
+    with pytest.raises(ValueError):
+        camera.rotate_about((0, 0, 0), 10)

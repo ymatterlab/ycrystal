@@ -21,6 +21,8 @@
         - with_element_material
         - with_atom_materials
         - with_element_color
+        - with_element_radius
+        - radius_for
         - material_ids
 
 ::: ycrystal.core.scene.Environment.live_background

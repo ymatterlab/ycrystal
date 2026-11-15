@@ -6,7 +6,7 @@ the in-app summary.
 
 | Input | Action |
 | --- | --- |
-| Left drag | Orbit about the view centre |
+| Left drag | Orbit about the view centre (or turn about the chosen axis, see below) |
 | Middle drag or Shift + left drag | Pan |
 | Wheel or right drag | Zoom |
 | F / toolbar Fit | Fit the displayed geometry, preserving orientation |
@@ -16,6 +16,9 @@ the in-app summary.
 | Esc | Clear selection |
 | Delete or Backspace | Hide selected displayed atoms |
 | Ctrl+M | Material for the selected atoms (Edit ▸ Material for Selection…) |
+| Drag an **a**, **b**, or **c** handle | Add or remove whole cells along that axis |
+| Esc or right button during a handle drag | Cancel the drag |
+| Ctrl+Left / Ctrl+Right | Turn by the step angle about the rotation axis |
 | Ctrl+Z | Undo a display-setting change |
 | Ctrl+Shift+Z or Ctrl+Y | Redo a display-setting change |
 | Ctrl+O | Open a structure or project |
@@ -42,12 +45,15 @@ images of the same atom stay visible. **View ▸ Show All Atoms** restores all h
 IDs. Hidden IDs survive toggling boundary images off and on. Selection highlights
 are viewport overlays and do not appear in the figure.
 
-Undo/redo covers hiding, Show All Atoms, boundary images, repetitions, cell-edge
-modes, bond settings, materials (default, element, and atom), element colours,
-environments, backgrounds, floors, and lighting. Consecutive tolerance/radius and
-light/floor spin-box adjustments merge into one step. Camera navigation,
-output settings, file opens, and saves are not undoable. Opening a new file clears
-the undo history. A changed camera or output setting still marks the project modified.
+Undo/redo covers every change to the figure: hiding, Show All Atoms, boundary images,
+repetitions (including handle drags), cell-edge modes, bond settings, atom size and
+element radii, materials (default, element, and atom), element colours, environments,
+backgrounds, floors, lighting, the output size, and style imports. A handle drag or a
+style import is one step; consecutive spin-box adjustments of the same value merge into
+one step. Camera navigation (orbit, pan, zoom, rotation, view directions) is not on the
+undo stack; **View ▸ Reset View** returns to the default orientation. File opens and
+saves are not undoable; opening a new file clears the undo history. A changed camera
+still marks the project modified.
 
 ## Output framing
 
@@ -71,7 +77,22 @@ If closed, reopen it from
 use **+ all** / **− all**, or reset with **1 × 1 × 1**. Typed counts apply on Enter
 or focus change. The view refits after a repetition change. Expansions above 20,000
 displayable atoms ask for confirmation before building geometry. Non-periodic axes
-are not repeated. Hidden IDs persist across expansion and shrinking.
+are not repeated. Hidden IDs persist across expansion and shrinking. **Atom size** sets
+the sphere radius as a multiple of the covalent radius (per-element radii are in the
+Appearance tab).
+
+### Supercell handles
+
+Coloured **a** (red), **b** (green), and **c** (blue) handles sit outside the repeated
+block, on the line through the centre of its far face along each lattice direction.
+Drag a handle outward to add cells along that axis, inward to remove them (at least one
+cell remains). While you drag, an orange outline shows the new block and a label gives
+the cell counts and the number of atoms; orbiting is disabled. The geometry is rebuilt
+when you release the button, as one undoable step; Esc or the right button cancels the
+drag. Handles are hidden for non-periodic axes, for structures without a cell, and for
+directions that point almost at the viewer (rotate the view to reach them).
+**View ▸ Supercell Handles** switches them off. Handles exist only in the live view; they
+never appear in exports or renders.
 
 **Cell edges** offers **All unit cells**, **Outline of the repeated block**,
 **Original cell only**, or **None**. The boundary option applies to the repeated block.
@@ -88,3 +109,20 @@ The **View along** toolbar offers **a, b, c** and **x, y, z**. The selected posi
 axis points toward the viewer; hold **Shift** when clicking to reverse it. For skewed
 cells, lattice directions differ from Cartesian directions. These actions fit the view
 and affect the camera only; they are outside the display-setting undo stack.
+
+## Rotation modes
+
+The **Rotate** menu in the View along toolbar chooses how a left drag rotates:
+
+- **freely** (default): trackball rotation in all directions.
+- **about a, b, c** (lattice vectors) or **about x, y, z** (Cartesian axes): the
+  rotation is restricted to that axis through the view centre. The axis keeps its
+  direction on screen while the structure turns around it. Drag across the axis as it
+  appears on screen; when the axis points at you, move the mouse in a circle around the
+  view centre instead.
+
+The **⟲** and **⟳** buttons (Ctrl+Left, Ctrl+Right) turn by the angle chosen next to
+them (5° to 90°) about the rotation axis, or about the line of sight in free mode, for
+exact orientations. Clicks still select atoms, and Shift + left drag still pans. Rotation
+changes only the view: coordinates are unchanged, and the mode is not saved in projects.
+Lattice axes are unavailable for structures without a cell.

@@ -1,4 +1,4 @@
-# Readers and projects
+# Readers, projects, and styles
 
 See the [user-facing format restrictions](../FORMATS.md) before importing data.
 
@@ -23,3 +23,19 @@ See the [user-facing format restrictions](../FORMATS.md) before importing data.
         - project_from_dict
         - save_project
         - load_project
+
+## Styles
+
+::: ycrystal.io.style
+    options:
+      members:
+        - STYLE_PARTS
+        - STYLE_SUFFIX
+        - Style
+        - StyleResult
+        - StyleError
+        - apply_style
+        - style_to_dict
+        - style_from_dict
+        - save_style
+        - load_style

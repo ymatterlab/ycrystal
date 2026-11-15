@@ -28,9 +28,9 @@ that every scene or output directory will work.
 
 ## Current limitations and roadmap
 
-- No atom editing or structure-format export. Display repetitions and periodic bonds
-  are available, but interactive supercell drag handles remain planned. The comparison
-  module's `supercell` helper transforms scientific data for developer comparisons.
+- No atom editing or structure-format export. Display repetitions (numeric or with the
+  supercell handles) and periodic bonds change only the display. The comparison module's
+  `supercell` helper transforms scientific data for developer comparisons.
 - Materials and environments come from the built-in catalog; user include files,
   image backgrounds, and editable material parameters (for example a custom refractive
   index) are not supported. The live view approximates materials, floors, and skies.
@@ -40,8 +40,10 @@ that every scene or output directory will work.
   (`sudo apt install povray-includes`); a missing file is reported on export and render.
 - The current reader accepts ordered structures only: partial/mixed CIF occupancy,
   overlapping sites, QE `ibrav != 0`, and QE `crystal_sg` are rejected.
-- Camera navigation and output size are outside undo/redo (they still mark the project
-  modified).
+- Camera navigation is outside undo/redo (it still marks the project modified); use
+  **View ▸ Reset View** or the view directions. Rotation modes are not saved in projects.
+- Styles transfer per-atom settings only between structures with the same atoms in the
+  same order.
 - Linux Mint 22.1 / Ubuntu 24.04, system Python 3.12, X11, and POV-Ray 3.7 are the
   integration baseline. Other platforms, Wayland, and POV-Ray 3.8 remain unverified.
 - Python interfaces are evolving and carry no stable API guarantee yet.

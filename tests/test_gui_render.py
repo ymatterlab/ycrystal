@@ -79,9 +79,15 @@ def test_output_size_keeps_output_camera_and_marks_modified(window):
     assert (window.width_spin.value(), window.height_spin.value()) == (1200, 1200)
     assert window.viewport.output_aspect() == pytest.approx(1.0)
     assert window.current_camera().parallel_scale == pytest.approx(camera.parallel_scale)
-    assert window.is_modified() and window.undo_stack.count() == 0
+    assert window.is_modified() and window.undo_stack.count() == 1  # output size is undoable
     window.render_panel.swap_button.click()
     window.set_output_size(640, 480)
+    assert window.undo_stack.count() == 1  # consecutive size changes merge into one step
+    window.undo_action.trigger()
+    assert window.output_size() == (1200, 800) and not window.is_modified()
+    assert window.viewport.output_aspect() == pytest.approx(1.5)
+    window.redo_action.trigger()
+    assert window.output_size() == (640, 480)
     assert window.output_label.text().strip() == "640 × 480 px"
     assert window.preview_settings().width == 480 and window.preview_settings().height == 360
 
