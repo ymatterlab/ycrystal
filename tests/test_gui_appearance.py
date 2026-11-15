@@ -6,7 +6,7 @@ from ycrystal.core.samples import perovskite_srtio3
 from ycrystal.gui.gallery import FAVOURITES_KEY
 from ycrystal.gui.main_window import SETTINGS_POVRAY, MainWindow
 from ycrystal.io.project import load_project
-from ycrystal.presets import environment_from_preset, get_lighting, materials
+from ycrystal.presets import custom_materials, environment_from_preset, get_lighting, materials
 from ycrystal.render.imagecheck import load_rgba
 
 pytestmark = pytest.mark.gui
@@ -37,7 +37,8 @@ def materials_of(window, element):
 # ----- galleries -----------------------------------------------------------------------
 def test_material_gallery_search_categories_and_favourites(window):
     gallery = window.open_material_gallery()
-    assert gallery.isVisible() and len(gallery.visible_ids()) == len(materials())
+    shown = len(materials()) + len(custom_materials())  # custom variants too (FR-MATERIAL-01)
+    assert gallery.isVisible() and len(gallery.visible_ids()) == shown
     assert gallery.current_id() == "satin"  # the material in use is highlighted
     gallery.search_edit.setText("T_Gold")  # native identifier
     assert gallery.visible_ids() == ["gold"]

@@ -46,6 +46,13 @@ def forget_custom():
     presets._LISTED.clear()
 
 
+@pytest.fixture(autouse=True)
+def isolated_registry():
+    """Keep variants registered here out of other test modules."""
+    yield
+    forget_custom()
+
+
 # ----- definitions ----------------------------------------------------------------------------
 def test_untouched_variants_equal_the_built_in_recipes():
     assert set(SCHEMAS) == {
