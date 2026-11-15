@@ -1,5 +1,9 @@
 # ycrystal
 
+[![CI](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml?query=branch%3Amain)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Status: early development](https://img.shields.io/badge/status-early%20development-orange.svg)](docs/PROGRESS.md)
+
 Ycrystal is a Linux desktop application (PySide6 + VTK) for preparing reproducible
 crystal-structure figures and rendering them with [POV-Ray](https://www.povray.org/).
 
@@ -68,10 +72,16 @@ that do not set `angle`, which includes Ycrystal's; `--check-renderer` detects t
 ## Checks
 
 ```bash
-.venv/bin/ruff check src tests scripts
+.venv/bin/pre-commit install                # once: run the hooks on every commit
+.venv/bin/pre-commit run --all-files        # Ruff lint/format and file checks
 .venv/bin/python -m pytest -q -rs           # GUI tests need an X11 display
 .venv/bin/python scripts/m0_evidence.py     # screenshots, render, and alignment report
 ```
+
+CI runs the same hooks and the full test suite on Ubuntu 24.04 with Python 3.12, a
+virtual X display, and POV-Ray 3.7; development and hands-on checks use Linux Mint 22.1.
+Other operating systems and Python versions are not tested yet. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
 
 ## License
 

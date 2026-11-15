@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0 and M1 complete; part of M2 done. Branch `feature/m1-imports-projects` (M0 merged into `main`).
+Last updated: 15 November 2026. M0 and M1 complete (merged into `main`); part of M2 done. Repository-tooling maintenance on branch `chore/repo-tooling` (no product milestone change).
 
 ## Milestones
 
@@ -107,6 +107,31 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 | Undo/redo | Pass | Ctrl+Z / Ctrl+Shift+Z (Ctrl+Y) for hide, Show All Atoms, and the boundary toggle; hidden IDs survive toggling |
 | Automated suite | 66 passed, 0 skipped | `pytest -q -rs` with `/usr/bin/povray` |
 
+## Maintenance: repository tooling (15 November 2026)
+
+No product behaviour changed and no milestone status changed. Inspired by quacc's setup,
+with deliberate differences: safe Ruff fixes only (no `--unsafe-fixes`), monthly
+updates with at most three open pull requests, and no automatic merging.
+
+| Item | Result | How |
+| --- | --- | --- |
+| `.pre-commit-config.yaml` | Clean on all tracked files | ruff-check `--fix` and ruff-format v0.17.5; pre-commit-hooks v6.0.0 (trailing whitespace, end of file, check-yaml, large files > 250 KB with `--enforce-all`); local `ruff-version-sync` hook; pre-commit.ci autoupdate monthly. Fixtures exempt from whitespace fixers |
+| Ruff version sync | Pass | Hook rev v0.17.5 = `ruff==0.17.5` in constraints.txt; the sync hook exits 1 on a mismatch in either direction (checked) |
+| Mechanical formatting | 25 files reformatted, separate commit | `ruff format` output only; syntax trees identical before and after (checked with `ast`); 127 tests pass |
+| Dev dependency | `pre-commit>=4` in the dev extra | constraints.txt: `pre-commit==4.7.0` and its 8 dependencies added; all existing pins unchanged |
+| CI | Valid; not yet run on GitHub | New lightweight `pre-commit` job (no Qt/VTK/POV-Ray). `test` job keeps Ubuntu 24.04 / Python 3.12 / Xvfb / POV-Ray 3.7 and adds `YCRYSTAL_REQUIRE_INTEGRATION=1`. Read-only permissions, superseded PR runs cancelled, timeouts, pip and hook caching; push trigger limited to `main` (PRs tested once). Actions moved to checkout v7, setup-python v7, cache v6 after the last `main` run warned that the Node 20 versions are deprecated. `actionlint` 1.7.12 and the GitHub-workflow schema: no problems |
+| No silent skips | Pass | With `YCRYSTAL_REQUIRE_INTEGRATION=1`: no display → usage error (exit 4); no POV-Ray → 6 rendering tests error; everything present → 127 passed. Without it: 25 GUI tests / 6 rendering tests skip as before |
+| Dependabot | Valid; not yet run | pip and github-actions, monthly, minor+patch grouped, majors separate, ≤ 3 open PRs each, Ruff ignored (owned by the hook). pip covers `pyproject.toml` and `constraints.txt` (Dependabot reads any requirements-style root `*.txt`; confirmed in dependabot-core and the docs). `increase-if-necessary` bumps exact pins without raising `pyproject.toml` lower bounds. Dependabot schema: valid |
+| Constraints regeneration procedure | Pass | Documented commands rehearsed in a fresh system-Python venv: install, 127 tests in strict mode, freeze identical to the current pins |
+| README badges | Added | CI status (main), MIT license, early development; all three URLs resolve. No pre-commit.ci badge: not activated (badge reports "unknown") |
+| Contributor guidance | Added | `CONTRIBUTING.md`, `.github/pull_request_template.md` |
+
+Owner setup still needed (configuration is committed, services are not activated):
+enable pre-commit.ci for the repository, check Dependabot settings (version updates,
+alerts, security updates), and optionally require the `pre-commit` and `tests` checks
+on `main`. The new workflow, Dependabot, and pre-commit.ci have not run yet; local
+success does not prove them.
+
 ## Commands
 
 ```bash
@@ -119,8 +144,8 @@ VIRTUAL_ENV=$PWD/.venv uv pip install -e ".[dev]" -c constraints.txt
 
 # checks (POV-Ray found on PATH; override with --povray or $YCRYSTAL_POVRAY)
 .venv/bin/ycrystal --check-renderer
-.venv/bin/ruff check src tests scripts
-.venv/bin/python -m pytest -q -rs
+.venv/bin/pre-commit run --all-files       # Ruff lint/format, file checks, Ruff sync
+YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent skips
 .venv/bin/python scripts/m0_evidence.py    # writes artifacts/m0/
 ```
 

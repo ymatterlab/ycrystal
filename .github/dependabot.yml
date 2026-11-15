@@ -1,0 +1,40 @@
+# Dependabot version updates: monthly, few pull requests, no automatic merging.
+#
+# pip: Dependabot reads pyproject.toml (PEP 621) and every requirements-style *.txt in
+# the repository root, which includes constraints.txt, the integration-tested pins that
+# CI installs. "increase-if-necessary" bumps the exact pins in constraints.txt but
+# leaves pyproject.toml lower bounds (e.g. numpy>=1.26) unchanged while they still
+# allow the new release, so minimum supported versions are not raised just to update.
+# Dependabot does not re-resolve the whole environment; if a pin update conflicts or
+# fails CI, regenerate constraints.txt manually (CONTRIBUTING.md).
+#
+# Ruff is excluded here: its version is owned by the pre-commit hook (updated monthly
+# by pre-commit.ci) and must match ruff== in constraints.txt (checked by a hook).
+# Security updates are separate from this file (repository settings).
+
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    versioning-strategy: increase-if-necessary
+    groups:
+      python-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: ruff
+    commit-message:
+      prefix: "deps"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    groups:
+      actions-minor-and-patch:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: "ci"
