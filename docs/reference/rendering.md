@@ -44,6 +44,13 @@
         - linked_size
         - preset_size
         - swapped
+        - PREVIEW_PRESETS
+        - DEFAULT_PREVIEW
+        - MIN_PREVIEW_PIXELS
+        - MAX_PREVIEW_PIXELS
+        - PreviewSize
+        - preview_size
+        - preview_preset_width
 
 ::: ycrystal.render.povray
     options:

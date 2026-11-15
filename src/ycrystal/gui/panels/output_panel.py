@@ -275,7 +275,19 @@ class RenderPanel(QWidget):
 
 
 class PreviewPanel(QWidget):
-    """Shows the latest POV-Ray preview and its state."""
+    """Shows the latest POV-Ray preview, its state, and the preview resolution choice.
+
+    The resolution selector offers the presets of
+    [`PREVIEW_PRESETS`][ycrystal.core.aspect.PREVIEW_PRESETS] and a custom width; the
+    height always follows the output's aspect ratio. Like the other panels it only emits
+    [`resolution_requested`][ycrystal.gui.panels.output_panel.PreviewPanel.resolution_requested];
+    the main window applies the choice and calls
+    [`sync_resolution`][ycrystal.gui.panels.output_panel.PreviewPanel.sync_resolution].
+    """
+
+    resolution_requested = Signal(str, int)
+    """A resolution choice: (``"small"``, ``"medium"``, ``"large"``, or ``"custom"``,
+    requested preview width in pixels)."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -289,9 +301,54 @@ class PreviewPanel(QWidget):
         self.progress.setRange(0, 0)
         self.progress.setVisible(False)
         layout.addWidget(self.progress)
-        self.status_label = QLabel()
-        self.status_label.setWordWrap(True)
+        self.status_label = _wrapping_label()
         layout.addWidget(self.status_label)
+
+        resolution_tip = (
+            "Width of the POV-Ray preview in pixels; the height follows the output's "
+            "aspect ratio. Higher resolutions show more detail but take longer to render. "
+            "The final PNG size is set in the Render panel and does not change."
+        )
+        size_row = QHBoxLayout()
+        resolution_label = QLabel("Resolution")
+        self.resolution_combo = QComboBox()
+        for key, label, width in aspect.PREVIEW_PRESETS:
+            self.resolution_combo.addItem(label, key)
+            index = self.resolution_combo.count() - 1
+            self.resolution_combo.setItemData(
+                index, f"{width} px wide", Qt.ItemDataRole.ToolTipRole
+            )
+        self.resolution_combo.addItem("Custom", "custom")
+        self.resolution_combo.setItemData(
+            self.resolution_combo.count() - 1,
+            "Enter a width in pixels",
+            Qt.ItemDataRole.ToolTipRole,
+        )
+        self.resolution_combo.setToolTip(resolution_tip)
+        self.resolution_combo.setAccessibleName("Preview resolution")
+        self.resolution_combo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
+        self.resolution_combo.setMinimumContentsLength(6)
+        resolution_label.setBuddy(self.resolution_combo)
+        self.width_spin = QSpinBox()
+        self.width_spin.setRange(aspect.MIN_PREVIEW_PIXELS, aspect.MAX_PREVIEW_PIXELS)
+        self.width_spin.setSingleStep(40)
+        self.width_spin.setSuffix(" px")
+        self.width_spin.setKeyboardTracking(False)  # typing 1200 must not render 1, 12, 120
+        self.width_spin.setAccessibleName("Custom preview width in pixels")
+        self.width_spin.setToolTip(
+            f"Custom preview width ({aspect.MIN_PREVIEW_PIXELS}–{aspect.MAX_PREVIEW_PIXELS} "
+            "px; choose Custom to edit). Higher resolutions take longer to render."
+        )
+        size_row.addWidget(resolution_label)
+        size_row.addWidget(self.resolution_combo, 1)
+        size_row.addWidget(self.width_spin)
+        layout.addLayout(size_row)
+        self.size_label = _wrapping_label()
+        self.size_label.setToolTip(resolution_tip)
+        layout.addWidget(self.size_label)
+
         row = QHBoxLayout()
         self.auto_check = QCheckBox("Update automatically")
         self.auto_check.setToolTip(
@@ -302,7 +359,10 @@ class PreviewPanel(QWidget):
         row.addWidget(self.preview_button)
         layout.addLayout(row)
         self._pixmap: QPixmap | None = None
+        self._custom_width = aspect.preview_preset_width(aspect.DEFAULT_PREVIEW)
         self.state = "empty"
+        self.resolution_combo.currentIndexChanged.connect(self._on_resolution_chosen)
+        self.width_spin.valueChanged.connect(self._on_width_edited)
 
     def set_action(self, action: QAction) -> None:
         """Use ``action`` for the panel's Preview button."""
@@ -330,6 +390,54 @@ class PreviewPanel(QWidget):
         """Return whether a preview image is shown."""
         return self._pixmap is not None
 
+    def sync_resolution(
+        self,
+        mode: str,
+        custom_width: int,
+        size: aspect.PreviewSize,
+        output: tuple[int, int],
+    ) -> None:
+        """Show the applied resolution choice without emitting requests.
+
+        Parameters
+        ----------
+        mode
+            ``"small"``, ``"medium"``, ``"large"``, or ``"custom"``.
+        custom_width
+            The remembered custom width (offered when Custom is chosen).
+        size
+            The preview size that results for the current output.
+        output
+            Output image ``(width, height)`` in pixels.
+        """
+        self._custom_width = int(custom_width)
+        with QSignalBlocker(self.resolution_combo), QSignalBlocker(self.width_spin):
+            self.resolution_combo.setCurrentIndex(self.resolution_combo.findData(mode))
+            self.width_spin.setValue(size.requested)
+            self.width_spin.setEnabled(mode == "custom")
+        text = f"Preview {size.width} × {size.height} px · final PNG {output[0]} × {output[1]} px"
+        note = {
+            "output": "never larger than the final image",
+            "maximum": f"height limited to {aspect.MAX_PREVIEW_PIXELS} px",
+            "minimum": f"each side at least {aspect.MIN_PREVIEW_PIXELS} px",
+        }.get(size.limit or "")
+        if note:
+            text += f" ({note})"
+        self.size_label.setText(text)
+        self.size_label.setAccessibleName(text)
+
+    def _on_resolution_chosen(self, index: int) -> None:
+        mode = self.resolution_combo.itemData(index)
+        if mode == "custom":
+            self.width_spin.setEnabled(True)
+            self.resolution_requested.emit(mode, self._custom_width)
+        else:
+            self.resolution_requested.emit(mode, aspect.preview_preset_width(mode))
+
+    def _on_width_edited(self, value: int) -> None:
+        if self.resolution_combo.currentData() == "custom":
+            self.resolution_requested.emit("custom", value)
+
     def resizeEvent(self, event) -> None:  # noqa: N802, ANN001
         super().resizeEvent(event)
         self._rescale()
@@ -345,3 +453,17 @@ class PreviewPanel(QWidget):
                 Qt.TransformationMode.SmoothTransformation,
             )
         )
+
+
+def _wrapping_label() -> QLabel:
+    """Return a word-wrapped label that takes the panel's width instead of asking for more.
+
+    Longer status texts therefore wrap rather than widen the dock (and shrink the 3D
+    view).
+    """
+    label = QLabel()
+    label.setWordWrap(True)
+    policy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+    policy.setHeightForWidth(True)
+    label.setSizePolicy(policy)
+    return label

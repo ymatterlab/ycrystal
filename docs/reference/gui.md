@@ -56,11 +56,16 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - remove_measurements
         - clear_measurements
         - preview_settings
+        - preview_size
+        - preview_resolution
+        - set_preview_resolution
         - request_preview
         - cancel_render
         - export_pov
         - render_png
         - check_renderer
+
+::: ycrystal.gui.main_window.PreviewRequest
 
 ::: ycrystal.gui.color_dialog.ColorDialog
     options:

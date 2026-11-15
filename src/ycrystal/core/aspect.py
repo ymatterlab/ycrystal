@@ -18,11 +18,23 @@ Examples
 (2400, 1920)
 >>> swapped((2400, 1600), ratio)
 ((1600, 2400), 0.6666666666666666)
+
+The POV-Ray preview has its own size (FR-PREVIEW-01): a chosen width, and the height
+that keeps the output's shape.
+
+>>> from ycrystal.core.aspect import preview_size
+>>> [preview_size((2400, 1600), width)[:2] for width in (480, 800, 1200)]
+[(480, 320), (800, 533), (1200, 800)]
+>>> preview_size((1600, 2400), 480)[:2]
+(480, 720)
+>>> preview_size((640, 480), 1200)
+PreviewSize(width=640, height=480, requested=1200, limit='output')
 """
 
 from __future__ import annotations
 
 import math
+from typing import NamedTuple
 
 MIN_OUTPUT_PIXELS = 16
 """Smallest width or height of an output image, in pixels."""
@@ -133,3 +145,114 @@ def swapped(size: Size, ratio: float) -> tuple[Size, float]:
     """Return the exchanged size and the inverted target ratio (``1 / ratio``)."""
     width, height = size
     return (height, width), 1.0 / ratio
+
+
+PREVIEW_PRESETS: tuple[tuple[str, str, int], ...] = (
+    ("small", "Small", 480),
+    ("medium", "Medium", 800),
+    ("large", "Large", 1200),
+)
+"""Preview resolution presets: ``(key, label, width in pixels)``; the fourth choice is
+``"custom"``, a width the user enters."""
+
+DEFAULT_PREVIEW = "small"
+"""Preset used until the user chooses one (480 px wide, the size of earlier versions
+for landscape outputs)."""
+
+MIN_PREVIEW_PIXELS = 16
+"""Smallest preview width or height, in pixels (as for the output)."""
+
+MAX_PREVIEW_PIXELS = 4000
+"""Largest preview width that can be requested, and largest preview height, in pixels."""
+
+
+class PreviewSize(NamedTuple):
+    """Size of a POV-Ray preview.
+
+    Returned by [`preview_size`][ycrystal.core.aspect.preview_size].
+
+    Attributes
+    ----------
+    width, height
+        Pixels POV-Ray renders.
+    requested
+        The width that was asked for.
+    limit
+        Why the size differs from the request: ``None`` (it does not), ``"output"``
+        (never larger than the output image), ``"maximum"`` (the height would exceed
+        `MAX_PREVIEW_PIXELS`), or ``"minimum"`` (a side would be under
+        `MIN_PREVIEW_PIXELS`).
+    """
+
+    width: int
+    height: int
+    requested: int
+    limit: str | None = None
+
+
+def preview_size(output: Size, requested_width: int) -> PreviewSize:
+    """Return the preview size for a requested width and the output image's shape.
+
+    The height is ``round(width × output height / output width)``, half up, so the
+    preview shows the same frame as the final image (rounding moves its edges by less
+    than half a preview pixel). The result is never larger than the output. A portrait
+    output whose height would exceed `MAX_PREVIEW_PIXELS` is scaled down to that height,
+    and an extreme shape whose short side would be under `MIN_PREVIEW_PIXELS` is scaled
+    up to it (at most to the output size), so the shape is never distorted.
+
+    Parameters
+    ----------
+    output
+        Output image ``(width, height)`` in pixels.
+    requested_width
+        Preview width in pixels, `MIN_PREVIEW_PIXELS` to `MAX_PREVIEW_PIXELS`.
+
+    Returns
+    -------
+    PreviewSize
+        Width, height, the request, and the reason for any limit.
+
+    Raises
+    ------
+    ValueError
+        If `requested_width` is outside the limits or the output size is not positive.
+    """
+    out_w, out_h = (int(v) for v in output)
+    requested = int(requested_width)
+    if out_w < 1 or out_h < 1:
+        raise ValueError("the output size must be positive")
+    if not MIN_PREVIEW_PIXELS <= requested <= MAX_PREVIEW_PIXELS:
+        raise ValueError(
+            f"The preview width must be between {MIN_PREVIEW_PIXELS} and {MAX_PREVIEW_PIXELS} px."
+        )
+    limit = None
+    if requested >= out_w:
+        width, height = out_w, out_h
+        limit = "output" if requested > out_w else None
+    else:
+        width, height = requested, round_pixels(requested * out_h / out_w)
+    if height > MAX_PREVIEW_PIXELS:
+        width, height = round_pixels(MAX_PREVIEW_PIXELS * out_w / out_h), MAX_PREVIEW_PIXELS
+        limit = "maximum"
+    if min(width, height) < MIN_PREVIEW_PIXELS:
+        side = min(MIN_PREVIEW_PIXELS, out_w, out_h)
+        if out_w <= out_h:
+            width, height = side, min(out_h, round_pixels(side * out_h / out_w))
+        else:
+            width, height = min(out_w, round_pixels(side * out_w / out_h)), side
+        limit = "minimum"
+    return PreviewSize(width, height, requested, limit)
+
+
+def preview_preset_width(key: str) -> int:
+    """Return the width of the preview preset ``key`` (``"small"``, ``"medium"``, ``"large"``).
+
+    Raises
+    ------
+    KeyError
+        For an unknown key (including ``"custom"``, which has no fixed width).
+    """
+    for preset, _label, width in PREVIEW_PRESETS:
+        if preset == key:
+            return width
+    raise KeyError(key)
