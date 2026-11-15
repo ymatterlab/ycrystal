@@ -45,6 +45,31 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the ``ycrystal`` command.
+
+    Parameters
+    ----------
+    argv
+        Command-line arguments without the program name; ``None`` uses ``sys.argv``.
+
+    Returns
+    -------
+    int
+        Exit status: for ``--check-renderer``, 0 if the renderer passed and 1
+        otherwise; else the status of the Qt event loop when the window closes.
+
+    Notes
+    -----
+    ``--check-renderer`` runs
+    [`run_self_test`][ycrystal.render.selftest.run_self_test] with the ``--povray``
+    path (if given), prints ``PASS: …`` or ``FAIL: …``, and exits without creating a
+    ``QApplication``. It does not read the executable chosen in the GUI.
+
+    Otherwise a window opens with the ``--sample`` structure. A ``FILE`` argument is
+    opened once the event loop runs; if it cannot be read, a message appears and the
+    sample stays open. Settings are stored for the organization "Y-Matter Lab" and the
+    application "Ycrystal" (``~/.config/Y-Matter Lab/Ycrystal.conf`` on Linux).
+    """
     args = _parser().parse_args(argv)
 
     if args.check_renderer:

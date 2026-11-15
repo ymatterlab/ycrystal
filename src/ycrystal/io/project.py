@@ -6,11 +6,13 @@ its import provenance, the display settings (including hidden atoms), environmen
 camera, and output settings. Floats are written with Python's shortest round-trip
 representation, so reopening reproduces every coordinate exactly.
 
-Schema history:
-1 — first version (M1).
-2 — scene repetitions, cell-edge mode, and bond settings (M2). Schema-1 files are read
-    with bonds off, because schema-1 Ycrystal did not draw bonds; the reopened figure
-    therefore looks as it did when it was saved.
+The top-level JSON object has the keys ``format`` (always ``"ycrystal-project"``),
+``schema_version``, ``generator``, ``saved_at``, ``structure``, ``scene``,
+``environment``, ``camera``, and ``output``. Machine-specific settings such as the
+POV-Ray path are not stored in projects.
+
+Schema history: 1 — first version (M1); 2 — repetitions, cell mode, and bonds (M2).
+Schema-1 files load with bonds disabled to preserve their original appearance.
 """
 
 from __future__ import annotations
@@ -35,16 +37,49 @@ from ycrystal.core.structure import Structure
 from ycrystal.render.pov_writer import RenderSettings
 
 PROJECT_FORMAT = "ycrystal-project"
+"""Value of the ``format`` key that identifies a project file."""
+
 SCHEMA_VERSION = 2
+"""Schema version written by this Ycrystal; newer versions are refused on load."""
+
 PROJECT_SUFFIX = ".ycrystal"
+"""File-name suffix of project files."""
 
 
 class ProjectError(Exception):
-    """A project file cannot be read; ``str(error)`` is a message for the user."""
+    """A project file cannot be read; ``str(error)`` is a message for the user.
+
+    The message starts with the file name when raised by
+    [`load_project`][ycrystal.io.project.load_project].
+    """
 
 
 @dataclass
 class Project:
+    """Everything a project file stores, independent of any window.
+
+    Attributes
+    ----------
+    structure
+        The scientific structure, stored in full.
+    scene
+        Display settings, including hidden atoms and the boundary policy.
+    environment
+        Background colour and light intensities.
+    camera
+        Saved view, or ``None`` to use the default view when the project is opened.
+    output
+        Output image settings. The GUI restores only the width and the transparency
+        setting from it; the height follows the window's aspect ratio when the project
+        is opened, and antialiasing is always on.
+
+    Notes
+    -----
+    This container is mutable. Its scene, environment, camera, and output objects
+    are frozen dataclasses. Structure arrays are read-only, but structure metadata
+    remains mutable.
+    """
+
     structure: Structure
     scene: SceneSettings = field(default_factory=SceneSettings)
     environment: Environment = field(default_factory=Environment)
@@ -54,6 +89,23 @@ class Project:
 
 # ----- serialisation ----------------------------------------------------------------------
 def project_to_dict(project: Project) -> dict[str, Any]:
+    """Convert a project to a JSON-compatible dictionary (current schema).
+
+    Parameters
+    ----------
+    project
+        Project to convert; it is not modified.
+
+    Returns
+    -------
+    dict
+        The project document, with ``saved_at`` set to the current UTC time and
+        ``generator`` naming this Ycrystal version. Metadata values are made
+        JSON-compatible: NumPy arrays and scalars become lists and numbers, plain
+        Python non-finite floats become ``None``, and other objects become strings.
+        Values produced by NumPy conversion are not recursively sanitized, so
+        non-finite NumPy values can remain. Hidden atoms are sorted.
+    """
     s = project.structure
     scene = project.scene
     return {
@@ -110,6 +162,29 @@ def project_to_dict(project: Project) -> dict[str, Any]:
 
 
 def project_from_dict(data: Any) -> Project:
+    """Validate a project document and convert it to a [`Project`][ycrystal.io.project.Project].
+
+    Parameters
+    ----------
+    data
+        Parsed JSON document.
+
+    Returns
+    -------
+    Project
+        The project. Missing ``scene``, ``environment``, or ``output`` sections, and
+        missing keys within them, take default values; a missing ``camera`` gives
+        ``None``. Unknown keys are ignored. Schema-1 projects default to bonds off;
+        schema-2 projects use current bond defaults when the section is absent.
+
+    Raises
+    ------
+    ProjectError
+        If the document is not a Ycrystal project, has no valid schema version, was
+        written with a newer schema, or is damaged or incomplete (for example missing
+        structure entries, element symbols that contradict the atomic numbers, or
+        invalid camera values).
+    """
     if not isinstance(data, dict) or data.get("format") != PROJECT_FORMAT:
         raise ProjectError("This is not a Ycrystal project file.")
     version = data.get("schema_version")
@@ -241,7 +316,32 @@ def _jsonable(value: Any) -> Any:
 
 # ----- files ----------------------------------------------------------------------------------
 def save_project(path: str | Path, project: Project) -> Path:
-    """Write the project atomically (temporary file + rename)."""
+    """Write a project file atomically.
+
+    The JSON text is written to a temporary file ``.ycrystal-*.tmp`` in the target
+    directory, which then replaces `path` with a single rename. An existing file at
+    `path` is overwritten without asking; if writing fails, it is left unchanged.
+
+    Parameters
+    ----------
+    path
+        Destination, used as given: no suffix is added. Missing parent directories are
+        created.
+    project
+        Project to save.
+
+    Returns
+    -------
+    pathlib.Path
+        `path` as a ``Path``.
+
+    Raises
+    ------
+    OSError
+        If the directory or file cannot be written; the temporary file is removed.
+    ValueError
+        If a value cannot be written as JSON, for example a non-finite coordinate.
+    """
     path = Path(path)
     text = (
         json.dumps(project_to_dict(project), indent=1, ensure_ascii=False, allow_nan=False) + "\n"
@@ -259,6 +359,37 @@ def save_project(path: str | Path, project: Project) -> Path:
 
 
 def load_project(path: str | Path) -> Project:
+    """Read a project file.
+
+    Parameters
+    ----------
+    path
+        Project file (UTF-8 JSON). The original structure file is not needed.
+
+    Returns
+    -------
+    Project
+        The restored project; coordinates are identical to the saved ones.
+
+    Raises
+    ------
+    ProjectError
+        If the file cannot be read, is not UTF-8 text or valid JSON (the message gives
+        the line), or fails the checks of
+        [`project_from_dict`][ycrystal.io.project.project_from_dict].
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> from ycrystal.core.samples import perovskite_srtio3
+    >>> from ycrystal.io.project import Project, load_project, save_project
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     path = save_project(Path(tmp) / "SrTiO3.ycrystal", Project(perovskite_srtio3()))
+    ...     reopened = load_project(path)
+    >>> reopened.structure.composition(), reopened.camera is None
+    ('SrTiO3', True)
+    """
     path = Path(path)
     try:
         text = path.read_text(encoding="utf-8")

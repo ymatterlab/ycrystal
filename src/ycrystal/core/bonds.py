@@ -30,11 +30,33 @@ MIN_BOND_LENGTH = 0.1  # Å; closer atoms are overlapping, not bonded
 
 
 def pair_key(a: str, b: str) -> Pair:
+    """Return the two element symbols in alphabetical order for a pair key."""
     return (a, b) if a <= b else (b, a)
 
 
 @dataclass(frozen=True)
 class BondSettings:
+    """Rules and appearance of periodic bonds (presentation state only).
+
+    Attributes
+    ----------
+    enabled
+        Whether scene construction draws bonds. Candidate search itself ignores this flag.
+    tolerance
+        Maximum bond length as a multiple of the sum of ASE covalent radii; default 1.10.
+        Accepted range is 0.5 to 2.0; the GUI exposes 0.80 to 1.50.
+    radius
+        Positive cylinder radius in Å; the GUI exposes 0.02 to 0.50 Å.
+    overrides
+        Frozen set of (element A, element B, enabled) overrides. Sort symbols
+        alphabetically; unspecified pairs use the default metal/non-metal rule.
+
+    Raises
+    ------
+    ValueError
+        If tolerance is outside 0.5 to 2.0 or radius is non-positive.
+    """
+
     enabled: bool = True
     tolerance: float = 1.10  # × sum of covalent radii
     radius: float = 0.12  # Å, drawn cylinder radius
@@ -49,12 +71,17 @@ class BondSettings:
             raise ValueError("bond radius must be positive")
 
     def pair_enabled(self, pair: Pair, elements: frozenset[str]) -> bool:
+        """Return whether an alphabetically sorted pair is enabled for these elements.
+
+        Explicit overrides take precedence over the default composition-dependent rule.
+        """
         for a, b, enabled in self.overrides:
             if (a, b) == pair:
                 return enabled
         return default_pair_enabled(pair, elements)
 
     def with_pair(self, pair: Pair, enabled: bool) -> BondSettings:
+        """Return new settings overriding one alphabetically sorted element pair."""
         kept = {o for o in self.overrides if (o[0], o[1]) != pair}
         return BondSettings(
             self.enabled,
@@ -74,7 +101,27 @@ def default_pair_enabled(pair: Pair, elements: frozenset[str]) -> bool:
 
 @dataclass(frozen=True, eq=False)
 class PeriodicBonds:
-    """All candidate bonds in the original cell, one entry per bond."""
+    """Candidate bonds in the original cell, including disabled pairs.
+
+    Attributes
+    ----------
+    i, j
+        Source atom index arrays, each shape (K,), in input order numbering.
+    shifts
+        Integer image offsets for atom j, shape (K, 3). Its endpoint is
+        structure.positions[j] + shifts @ structure.cell.
+    lengths
+        Bond lengths in Å, shape (K,).
+    pairs
+        Alphabetically sorted element pair for each candidate.
+    enabled
+        Pair-rule decisions, shape (K,), independent of the global enabled setting.
+
+    Notes
+    -----
+    Arrays are not copied or made read-only by the constructor. Search results are
+    sorted by i, j, and shift; reverse duplicates are omitted.
+    """
 
     i: np.ndarray  # (K,) source atom indices
     j: np.ndarray  # (K,)
@@ -89,6 +136,20 @@ class PeriodicBonds:
 
 @dataclass(frozen=True)
 class PairSummary:
+    """Candidate counts and length range for one element pair in the original cell.
+
+    Attributes
+    ----------
+    pair
+        Alphabetically sorted element symbols.
+    count
+        Candidate bonds per original cell, including disabled candidates.
+    min_length, max_length
+        Shortest and longest candidate lengths in Å.
+    enabled
+        Whether this pair is enabled by its override or default rule.
+    """
+
     pair: Pair
     count: int  # bonds per original cell
     min_length: float
@@ -97,6 +158,30 @@ class PairSummary:
 
 
 def periodic_bonds(structure: Structure, settings: BondSettings) -> PeriodicBonds:
+    """Search the original structure for unique periodic bond candidates.
+
+    Parameters
+    ----------
+    structure
+        Scientific data, read without mutation. Periodicity follows its pbc flags;
+        a structure without a cell is treated as non-periodic.
+    settings
+        Distance threshold and element-pair overrides. The global enabled flag and
+        drawn radius do not affect the candidate search.
+
+    Returns
+    -------
+    PeriodicBonds
+        Candidates with lengths from 0.1 Å through tolerance times the sum of
+        covalent radii, inclusive after the neighbour-list search. Disabled pairs
+        remain in the result so the GUI can list and enable them.
+
+    Notes
+    -----
+    ASE's lattice-aware neighbour list supports skewed cells. Keep i < j, or i == j
+    with a lexicographically positive image shift, to omit reverse duplicates.
+    This is a geometric display rule, not a chemical bond-order calculation.
+    """
     from ase.neighborlist import neighbor_list
 
     n = len(structure)
@@ -134,6 +219,7 @@ def periodic_bonds(structure: Structure, settings: BondSettings) -> PeriodicBond
 
 
 def summarize_pairs(bonds: PeriodicBonds) -> list[PairSummary]:
+    """Return alphabetically sorted pair counts and length ranges from candidate bonds."""
     table: dict[Pair, list[float]] = {}
     enabled: dict[Pair, bool] = {}
     for pair, length, on in zip(bonds.pairs, bonds.lengths, bonds.enabled, strict=True):

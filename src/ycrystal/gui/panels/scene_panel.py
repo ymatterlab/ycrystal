@@ -1,7 +1,7 @@
 """Scene panel: repetitions, boundary atoms, cell edges, and bonds.
 
 The panel only emits requests; the main window turns them into undoable commands and
-calls :meth:`ScenePanel.sync` with the resulting state. Widgets are updated with their
+calls ScenePanel.sync with the resulting state. Widgets are updated with their
 signals blocked, so syncing never issues new requests.
 """
 
@@ -38,6 +38,12 @@ NO_CELL = "None"
 
 
 class ScenePanel(QTabWidget):
+    """Structure and Bonds tabs emitting requests for undoable scene changes.
+
+    The window owns state and applies requests. sync refreshes controls with signals
+    blocked, including repetition counts, cell mode, bond rules, and displayed counts.
+    """
+
     repetitions_requested = Signal(tuple)
     boundary_requested = Signal(bool)
     cell_mode_requested = Signal(str)  # a CELL_MODES value or "none"
@@ -227,4 +233,5 @@ def _pair_item(summary: PairSummary) -> QListWidgetItem:
 
 
 def pair_label(pair: Pair) -> str:
+    """Return the two element symbols joined by an en dash for display."""
     return f"{pair[0]}–{pair[1]}"

@@ -39,7 +39,8 @@ Supported:
 
 Not supported (the file is rejected with an explanation):
 
-- Partially occupied or mixed sites (`_atom_site_occupancy` below 1).
+- Partially occupied or mixed sites (numeric `_atom_site_occupancy` below
+  `1 - 1e-3`; near-unit values within this tolerance are retained).
 - Distinct sites at the same position.
 
 Ycrystal draws ordered structures only and never shows a disordered structure as if it
@@ -76,7 +77,8 @@ does not need pseudopotential files.
 - the complete structure (cell, positions, elements, labels, occupancies, movable flags),
 - where it came from (original path and name, format, SHA-256 checksum, data block,
   element mapping, import time, reader version),
-- display settings (boundary atoms, hidden atoms), background and lights,
+- display settings (repetitions, cell edges, boundary atoms, hidden atoms, bond rules),
+  background and lights,
 - the camera and the output width / transparency.
 
 A project reopens without the original structure file and reproduces the coordinates
@@ -86,3 +88,6 @@ asks whether to save, discard, or cancel.
 Known limitation: the rendered image takes its aspect ratio from the current window, so
 a project reopened in a differently shaped window keeps the camera but frames a
 different width. An explicit output frame is planned with the preview workflow.
+
+Current project schema is 2. Schema-1 projects remain readable and load with bonds
+switched off to preserve figures created before M2. Newer schemas are rejected.

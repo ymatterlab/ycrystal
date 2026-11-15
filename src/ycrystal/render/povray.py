@@ -9,23 +9,52 @@ import subprocess
 from pathlib import Path
 
 POVRAY_ENV = "YCRYSTAL_POVRAY"
+"""Environment variable that names the POV-Ray executable."""
 
 INSTALL_HINT = (
     "Install POV-Ray (Linux Mint: sudo apt install povray), choose the executable with "
     "Render > Set POV-Ray Executable…, or set the environment variable "
     f"{POVRAY_ENV}=/path/to/povray. Viewing and exporting .pov/.ini files work without it."
 )
+"""Setup guidance appended to every "not found" message."""
 
 
 class PovrayNotFoundError(RuntimeError):
-    """No usable POV-Ray executable was found."""
+    """No usable POV-Ray executable was found.
+
+    ``str(error)`` names the place that was checked and includes setup guidance.
+    """
 
 
 def find_povray(configured: str | os.PathLike[str] | None = None) -> str:
-    """Return the POV-Ray executable path.
+    """Return the POV-Ray executable to use.
 
-    Precedence: ``configured`` (e.g. the GUI setting), then ``$YCRYSTAL_POVRAY``, then
-    ``povray`` on ``PATH``. Raises :class:`PovrayNotFoundError` with guidance.
+    The first source that is set decides, in this order: `configured`, the
+    environment variable ``YCRYSTAL_POVRAY`` (ignored if empty), then ``povray`` on
+    ``PATH``.
+
+    Parameters
+    ----------
+    configured
+        Explicit executable, for example the GUI setting (*Render ▸ Set POV-Ray
+        Executable…*) or ``ycrystal --check-renderer --povray PATH``. ``~`` is expanded.
+
+    Returns
+    -------
+    str
+        Path of an existing executable file. Whether it is a working POV-Ray is not
+        checked; use [`run_self_test`][ycrystal.render.selftest.run_self_test].
+
+    Raises
+    ------
+    PovrayNotFoundError
+        If the deciding source names a missing or non-executable file, or if no
+        source is set and ``povray`` is not on ``PATH``.
+
+    Notes
+    -----
+    A configured or environment path that is invalid raises immediately; the search
+    does not fall back to the next source. Nothing is executed.
     """
     for source, candidate in (
         ("the configured POV-Ray path", configured),
@@ -46,7 +75,23 @@ def find_povray(configured: str | os.PathLike[str] | None = None) -> str:
 
 
 def povray_version(executable: str, timeout: float = 15.0) -> str | None:
-    """Return the version string reported by ``povray --version`` (e.g. ``3.7.0.10``)."""
+    """Return the version that ``povray --version`` reports.
+
+    Runs the executable synchronously.
+
+    Parameters
+    ----------
+    executable
+        POV-Ray executable.
+    timeout
+        Seconds to wait for the process.
+
+    Returns
+    -------
+    str or None
+        Version string such as ``"3.7.0.10"``; ``None`` if the program cannot be run,
+        times out, or prints no recognizable version.
+    """
     try:
         result = subprocess.run(
             [executable, "--version"],
@@ -86,7 +131,22 @@ _KNOWN_FAILURES: tuple[tuple[re.Pattern[str], str], ...] = (
 
 
 def explain_failure(returncode: int | None, log: str) -> str:
-    """Turn POV-Ray's exit status and output into a readable message."""
+    """Turn POV-Ray's exit status and output into a readable message.
+
+    Parameters
+    ----------
+    returncode
+        Exit status, or ``None`` if the process was stopped or crashed.
+    log
+        POV-Ray's output.
+
+    Returns
+    -------
+    str
+        An explanation for known problems (a miscompiled build that rejects cameras
+        without ``angle``, I/O restrictions, a missing include file); otherwise the
+        exit status and the last 12 lines of output.
+    """
     for pattern, message in _KNOWN_FAILURES:
         if pattern.search(log):
             return message

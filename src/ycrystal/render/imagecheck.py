@@ -15,12 +15,32 @@ import numpy as np
 
 @dataclass(frozen=True)
 class Blob:
+    """A connected opaque region of an image, usually one rendered sphere.
+
+    Attributes
+    ----------
+    centroid
+        Centre of the region in continuous pixel coordinates ``(x, y)``, top-left
+        origin, pixel centres at half-integers.
+    area
+        Number of pixels.
+    mean_rgb
+        Mean colour, components between 0 and 1.
+    """
+
     centroid: tuple[float, float]  # continuous pixel coordinates (x, y), top-left origin
     area: int
     mean_rgb: tuple[float, float, float]
 
 
 def load_rgba(path: Path) -> np.ndarray:
+    """Read an image file as an RGBA array.
+
+    Returns
+    -------
+    numpy.ndarray
+        ``uint8`` array of shape ``(height, width, 4)``; row 0 is the top of the image.
+    """
     from PIL import Image
 
     with Image.open(path) as image:
@@ -28,7 +48,22 @@ def load_rgba(path: Path) -> np.ndarray:
 
 
 def find_blobs(rgba: np.ndarray, alpha_threshold: int = 128, min_area: int = 12) -> list[Blob]:
-    """Connected (4-neighbour) opaque regions of an RGBA image."""
+    """Find the connected opaque regions of an RGBA image.
+
+    Parameters
+    ----------
+    rgba
+        Image array of shape ``(height, width, 4)``.
+    alpha_threshold
+        Pixels with at least this alpha value count as opaque.
+    min_area
+        Regions with fewer pixels are ignored.
+
+    Returns
+    -------
+    list of Blob
+        Regions of 4-connected opaque pixels.
+    """
     mask = rgba[..., 3] >= alpha_threshold
     seen = np.zeros_like(mask)
     height, width = mask.shape
@@ -64,6 +99,24 @@ def find_blobs(rgba: np.ndarray, alpha_threshold: int = 128, min_area: int = 12)
 
 @dataclass(frozen=True)
 class Match:
+    """Comparison of one predicted sphere position with the nearest blob.
+
+    Attributes
+    ----------
+    expected
+        Predicted pixel position ``(x, y)``.
+    found
+        Centroid of the nearest blob, or ``None`` if the image has no blobs.
+    error_px
+        Distance in pixels between `expected` and `found`; infinite without blobs.
+    expected_rgb
+        Expected colour, components between 0 and 1.
+    found_rgb
+        Mean colour of the nearest blob.
+    hue_ok
+        Whether both colours have the same dominant channel (red, green, or blue).
+    """
+
     expected: tuple[float, float]
     found: tuple[float, float] | None
     error_px: float
@@ -79,7 +132,22 @@ def _dominant_channel(rgb: tuple[float, float, float] | np.ndarray) -> int:
 def match_spheres(
     expected_xy: np.ndarray, expected_rgb: np.ndarray, blobs: list[Blob]
 ) -> list[Match]:
-    """Match each expected projection to the nearest blob and compare colour channels."""
+    """Match each predicted sphere position to the nearest blob.
+
+    Parameters
+    ----------
+    expected_xy
+        Predicted pixel positions, shape ``(K, 2)``.
+    expected_rgb
+        Expected colours, shape ``(K, 3)``.
+    blobs
+        Blobs found in the image; one blob may match several predictions.
+
+    Returns
+    -------
+    list of Match
+        One match per prediction, in the same order.
+    """
     matches: list[Match] = []
     for xy, rgb in zip(np.asarray(expected_xy), np.asarray(expected_rgb), strict=True):
         if not blobs:

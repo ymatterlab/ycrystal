@@ -1,0 +1,67 @@
+[project]
+site_name = "Ycrystal"
+site_description = "Reproducible crystal-structure figures rendered with POV-Ray"
+repo_url = "https://github.com/ymatterlab/ycrystal"
+docs_dir = "docs"
+site_dir = "site"
+use_directory_urls = false
+
+nav = [
+    { "Home" = "index.md" },
+    { "User guide" = [
+        { "Install and launch" = "guide/install.md" },
+        { "Your first crystal figure" = "guide/first-figure.md" },
+        { "Controls and display" = "guide/controls.md" },
+        { "Structure files and projects" = "FORMATS.md" },
+        { "Export and rendering" = "guide/rendering.md" },
+        { "Troubleshooting and limitations" = "guide/troubleshooting.md" },
+    ] },
+    { "Developer guide" = [
+        { "Architecture" = "development/architecture.md" },
+        { "Documentation workflow" = "development/documentation.md" },
+        { "Python examples" = "development/examples.md" },
+    ] },
+    { "API reference" = [
+        "reference/index.md",
+        "reference/structure.md",
+        "reference/scene.md",
+        "reference/camera.md",
+        "reference/io.md",
+        "reference/rendering.md",
+        "reference/gui.md",
+    ] },
+    { "Progress and roadmap" = "PROGRESS.md" },
+]
+
+[project.validation]
+invalid_links = true
+invalid_link_anchors = true
+unresolved_references = true
+
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.toc]
+permalink = true
+[project.markdown_extensions.pymdownx.highlight]
+[project.markdown_extensions.pymdownx.superfences]
+
+[project.plugins.mkdocstrings]
+default_handler = "python"
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["src"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+allow_inspection = false
+docstring_style = "numpy"
+scoped_crossrefs = true
+relative_crossrefs = true
+members = false
+inherited_members = false
+show_root_heading = true
+show_root_full_path = false
+show_source = false
+show_signature_annotations = true
+separate_signature = true
+merge_init_into_class = true
+docstring_section_style = "list"

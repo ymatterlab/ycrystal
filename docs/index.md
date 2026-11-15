@@ -1,0 +1,31 @@
+# Ycrystal
+
+Ycrystal is a Linux desktop application for composing crystal-structure figures and
+rendering the current view with [POV-Ray](https://www.povray.org/). The live interface
+uses PySide6 and VTK; the exported scene keeps the same orthographic camera and
+displayed atoms.
+
+**Early development.** You can open POSCAR/CONTCAR, CIF, and Quantum ESPRESSO
+`ibrav = 0` inputs, save self-contained `.ycrystal` projects, navigate, select and hide
+individual displayed atoms, export scenes, and render PNGs. Supercell repetitions,
+periodic bonds, cell-edge modes, and view-direction controls
+are available. Material galleries and the full preview workflow remain planned.
+
+- [Install and launch](guide/install.md) on Linux Mint.
+- Follow [Your first crystal figure](guide/first-figure.md) using the built-in SrTiO3 sample.
+- Find [controls](guide/controls.md), [supported formats](FORMATS.md), and
+  [rendering instructions](guide/rendering.md).
+- Read the [architecture](development/architecture.md), try the
+  [Python examples](development/examples.md), or consult the [API reference](reference/index.md).
+- See [troubleshooting and limitations](guide/troubleshooting.md) and the
+  [progress record and roadmap](PROGRESS.md) for the current scope and evidence.
+
+![POV-Ray rendering of the synthetic cubic SrTiO3 sample, including boundary atoms](assets/perovskite.png)
+
+This is an actual 640 × 400 POV-Ray render, generated from Ycrystal's shared scene
+and default camera. The live viewport uses approximate lighting and also shows
+orientation axes. [Regenerate the image](development/documentation.md#visual-assets).
+
+The Python interfaces are evolving developer functionality. They do not currently
+carry a stable public API guarantee. This site is built locally from the repository;
+publication is a separate setup step.

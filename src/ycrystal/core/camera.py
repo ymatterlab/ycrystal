@@ -1,15 +1,20 @@
 """Renderer-independent orthographic camera.
 
-Conventions (shared by the VTK viewport and the POV-Ray writer):
+The VTK viewport, atom picking, and the POV-Ray writer share these conventions:
 
-* World coordinates are right-handed Cartesian ångström.
-* ``direction`` d = normalize(focal_point - position) is the viewing direction.
-* Screen right r = normalize(d x view_up); screen up u = r x d. These match VTK's
-  camera; (r, u, -d) is a right-handed basis.
-* ``parallel_scale`` is half of the visible height in ångström (VTK's definition).
-  The visible width follows from the output aspect ratio: 2 * parallel_scale * W / H.
-* Pixel coordinates are continuous, origin at the top-left image corner, x to the
-  right and y downward; the centre of pixel (i, j) is (i + 0.5, j + 0.5).
+* World coordinates are right-handed Cartesian coordinates in ångström (Å), the same
+  coordinates as the structure. Angles are in degrees.
+* The viewing direction is ``d = normalize(focal_point - position)``.
+* Screen right is ``r = normalize(d × view_up)`` and screen up is ``u = r × d``, as in
+  VTK. ``(r, u, -d)`` is a right-handed basis: x to the right, y up, z toward the
+  viewer.
+* ``parallel_scale`` is half of the visible height in Å (VTK's definition). The visible
+  width follows from the output aspect ratio: ``2 * parallel_scale * W / H`` for an image
+  of ``W`` × ``H`` pixels, so a wider image shows more of the scene at the same scale
+  and is never stretched.
+* Pixel coordinates are continuous, with the origin at the top-left image corner, x to
+  the right, and y downward; the centre of pixel ``(i, j)`` is ``(i + 0.5, j + 0.5)``.
+  The focal point projects to the image centre.
 """
 
 from __future__ import annotations
@@ -21,6 +26,7 @@ from typing import Any
 import numpy as np
 
 Vec3 = tuple[float, float, float]
+"""A 3-vector stored as a tuple of three floats."""
 
 
 def _vec(value: Any) -> Vec3:
@@ -43,6 +49,60 @@ def _rotate(vector: np.ndarray, axis: np.ndarray, angle_deg: float) -> np.ndarra
 
 @dataclass(frozen=True)
 class Camera:
+    """Orthographic camera shared by the viewport, picking, and the POV-Ray writer.
+
+    Instances are immutable; the navigation methods return new cameras. Vector
+    arguments may be any array-like with three elements and are stored as tuples of
+    floats.
+
+    Attributes
+    ----------
+    position
+        Eye position in Å. Under orthographic projection only the direction from
+        `position` to `focal_point` affects the image; the distance matters only for
+        clipping in the live view.
+    focal_point
+        Point in Å that appears at the image centre.
+    view_up
+        Approximate screen-up direction. It need not be normalized or perpendicular to
+        the viewing direction: [`basis`][ycrystal.core.camera.Camera.basis] uses its
+        component perpendicular to the viewing direction.
+    parallel_scale
+        Half of the visible image height in Å. Larger values show more of the scene.
+    projection
+        Always ``"orthographic"``; perspective projection is not implemented.
+
+    Raises
+    ------
+    ValueError
+        If a vector is not finite, `parallel_scale` is not a positive finite number,
+        `position` and `focal_point` are less than 1e-9 Å apart, `view_up` is zero or
+        parallel to the viewing direction, or `projection` is not ``"orthographic"``.
+
+    See Also
+    --------
+    - [`StructureViewport.camera`][ycrystal.viewport.qt_viewport.StructureViewport.camera]:
+      the camera of the live view.
+    - [`scene_to_pov`][ycrystal.render.pov_writer.scene_to_pov]: writes the camera
+      as an explicit POV-Ray camera.
+
+    Examples
+    --------
+    A camera on the +z axis looking at the origin, with +y up, so that screen right
+    is +x:
+
+    >>> from ycrystal.core.camera import Camera
+    >>> camera = Camera(
+    ...     position=(0, 0, 10), focal_point=(0, 0, 0), view_up=(0, 1, 0), parallel_scale=5.0
+    ... )
+    >>> camera.visible_size(400, 200)  # width and height in Å of a 400 x 200 px image
+    (20.0, 10.0)
+    >>> camera.project([(0, 0, 0), (1, 0, 0), (0, 1, 0)], 400, 200)
+    array([[200., 100.],
+           [220., 100.],
+           [200.,  80.]])
+    """
+
     position: Vec3
     focal_point: Vec3
     view_up: Vec3
@@ -70,10 +130,27 @@ class Camera:
     # ----- basis and projection -------------------------------------------------
     @property
     def distance(self) -> float:
+        """Distance from `position` to `focal_point` in Å."""
         return float(np.linalg.norm(np.subtract(self.focal_point, self.position)))
 
     def basis(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Return orthonormal (right, up, direction) vectors."""
+        """Return the orthonormal screen basis.
+
+        Returns
+        -------
+        right : numpy.ndarray
+            Unit screen-right vector ``normalize(direction × view_up)``, shape ``(3,)``.
+        up : numpy.ndarray
+            Unit screen-up vector ``right × direction``, shape ``(3,)``.
+        direction : numpy.ndarray
+            Unit viewing direction from `position` toward `focal_point`, shape
+            ``(3,)``.
+
+        Notes
+        -----
+        ``(right, up, -direction)`` is right-handed. New arrays are returned on every
+        call.
+        """
         d = np.subtract(self.focal_point, self.position)
         d = d / np.linalg.norm(d)
         r = np.cross(d, self.view_up)
@@ -82,12 +159,52 @@ class Camera:
         return r, u, d
 
     def visible_size(self, width: int, height: int) -> tuple[float, float]:
-        """Visible (width, height) in ångström for an image of ``width`` x ``height`` px."""
+        """Return the visible width and height in Å for an image size in pixels.
+
+        Parameters
+        ----------
+        width
+            Image width in pixels.
+        height
+            Image height in pixels.
+
+        Returns
+        -------
+        tuple of float
+            ``(2 * parallel_scale * width / height, 2 * parallel_scale)``.
+
+        Raises
+        ------
+        ValueError
+            If `width` or `height` is not positive.
+        """
         _check_size(width, height)
         return 2.0 * self.parallel_scale * width / height, 2.0 * self.parallel_scale
 
     def project(self, points: Any, width: int, height: int) -> np.ndarray:
-        """Project world points to continuous pixel coordinates (top-left origin)."""
+        """Project world points to continuous pixel coordinates.
+
+        Parameters
+        ----------
+        points
+            Points in Å; any array-like that reshapes to ``(K, 3)``.
+        width
+            Image width in pixels.
+        height
+            Image height in pixels.
+
+        Returns
+        -------
+        numpy.ndarray
+            Pixel coordinates ``(x, y)``, shape ``(K, 2)``, with the origin at the
+            top-left image corner, x to the right, and y downward. Depth is ignored:
+            points outside the image or behind the eye are projected as well.
+
+        Raises
+        ------
+        ValueError
+            If `width` or `height` is not positive.
+        """
         _check_size(width, height)
         pts = np.asarray(points, dtype=float).reshape(-1, 3)
         r, u, _ = self.basis()
@@ -98,14 +215,36 @@ class Camera:
         return np.column_stack([x, y])
 
     def pixels_per_angstrom(self, height: int) -> float:
+        """Return the image scale in pixels per Å for an image `height` pixels high.
+
+        Pixels are square, so the same scale applies horizontally.
+        """
         return height / (2.0 * self.parallel_scale)
 
     # ----- pure navigation helpers (used by scripted views and checks) ----------
     def orbit(self, azimuth: float = 0.0, elevation: float = 0.0) -> Camera:
-        """Rotate the position about the focal point.
+        """Rotate the eye about the focal point.
 
-        ``azimuth`` turns about the screen-up axis, ``elevation`` about the screen-right
-        axis (degrees), like VTK's Azimuth/Elevation.
+        Parameters
+        ----------
+        azimuth
+            Rotation in degrees about the screen-up axis through the focal point.
+            Positive values move the eye toward screen right.
+        elevation
+            Rotation in degrees about the (already turned) screen-right axis. Positive
+            values move the eye toward screen up.
+
+        Returns
+        -------
+        Camera
+            A camera with the same focal point, distance, and `parallel_scale`, and a
+            rotated `view_up`.
+
+        Notes
+        -----
+        The axes and signs match ``vtkCamera.Azimuth`` followed by
+        ``vtkCamera.Elevation`` applied to a camera whose view-up vector is
+        orthogonal to the viewing direction; the tests compare both.
         """
         r, u, _ = self.basis()
         focal = np.asarray(self.focal_point)
@@ -118,11 +257,37 @@ class Camera:
         return self._replace(position=focal + offset, view_up=up)
 
     def roll(self, angle: float) -> Camera:
+        """Rotate the view about the viewing direction.
+
+        Parameters
+        ----------
+        angle
+            Rotation in degrees. Positive values tilt the up vector toward screen
+            right, so the image turns counter-clockwise.
+
+        Returns
+        -------
+        Camera
+            A camera with the same position, focal point, and `parallel_scale`.
+        """
         _, u, d = self.basis()
         return self._replace(view_up=_rotate(u, d, angle))
 
     def pan(self, dx: float, dy: float) -> Camera:
-        """Move position and focal point by (dx, dy) ångström in the screen plane."""
+        """Move the eye and the focal point within the screen plane.
+
+        Parameters
+        ----------
+        dx
+            Shift in Å along screen right.
+        dy
+            Shift in Å along screen up.
+
+        Returns
+        -------
+        Camera
+            The shifted camera. The scene appears to move the opposite way.
+        """
         r, u, _ = self.basis()
         shift = dx * r + dy * u
         return self._replace(
@@ -131,14 +296,56 @@ class Camera:
         )
 
     def zoom(self, factor: float) -> Camera:
+        """Return a camera that magnifies the image by `factor`.
+
+        Parameters
+        ----------
+        factor
+            Magnification; values above 1 zoom in. The new `parallel_scale` is
+            ``parallel_scale / factor``.
+
+        Returns
+        -------
+        Camera
+            The zoomed camera.
+
+        Raises
+        ------
+        ValueError
+            If `factor` is not positive.
+        """
         if factor <= 0:
             raise ValueError("zoom factor must be positive")
         return self._replace(parallel_scale=self.parallel_scale / factor)
 
     def fitted(self, points: Any, radii: Any, aspect: float, margin: float = 0.06) -> Camera:
-        """Keep the orientation; centre and scale so every sphere is visible.
+        """Centre and scale the view on spheres, keeping the orientation.
 
-        ``aspect`` is the output width / height.
+        Parameters
+        ----------
+        points
+            Sphere centres in Å; any array-like that reshapes to ``(K, 3)``.
+        radii
+            Sphere radii in Å: one value for all spheres or one per sphere.
+        aspect
+            Output width divided by output height.
+        margin
+            Extra space as a fraction of the fitted half-height; 0.06 adds 6 %.
+
+        Returns
+        -------
+        Camera
+            A camera with the same viewing direction and up vector. The focal point
+            moves within the screen plane to the centre of the projected spheres, and
+            `parallel_scale` is the smallest value that shows all of them at this
+            aspect ratio, enlarged by `margin`. The eye is moved back if necessary so
+            that it lies in front of every sphere. If `points` is empty, this camera
+            is returned unchanged.
+
+        Raises
+        ------
+        ValueError
+            If `aspect` is not positive.
         """
         if aspect <= 0:
             raise ValueError("aspect must be positive")
@@ -175,6 +382,32 @@ class Camera:
         distance: float = 50.0,
         parallel_scale: float = 10.0,
     ) -> Camera:
+        """Create a camera that looks along a direction at a focal point.
+
+        Parameters
+        ----------
+        direction
+            Viewing direction; normalized internally.
+        view_up
+            Approximate screen-up direction; must not be parallel to `direction`.
+        focal_point
+            Point in Å at the image centre.
+        distance
+            Distance in Å from the eye to the focal point.
+        parallel_scale
+            Half of the visible height in Å.
+
+        Returns
+        -------
+        Camera
+            The new camera, with its eye at ``focal_point - distance * direction``.
+
+        Raises
+        ------
+        ValueError
+            If the resulting camera is invalid, for example because `view_up` is
+            parallel to `direction`.
+        """
         d = np.asarray(direction, dtype=float)
         d = d / np.linalg.norm(d)
         focal = np.asarray(focal_point, dtype=float)
@@ -187,6 +420,14 @@ class Camera:
 
     # ----- serialisation ----------------------------------------------------------
     def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-compatible dictionary, as stored in project files.
+
+        Returns
+        -------
+        dict
+            Keys ``projection``, ``position``, ``focal_point``, ``view_up`` (lists of
+            three floats), and ``parallel_scale``.
+        """
         return {
             "projection": self.projection,
             "position": list(self.position),
@@ -197,6 +438,26 @@ class Camera:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Camera:
+        """Create a camera from the output of [`to_dict`][ycrystal.core.camera.Camera.to_dict].
+
+        Parameters
+        ----------
+        data
+            Dictionary with ``position``, ``focal_point``, ``view_up``, and
+            ``parallel_scale``; ``projection`` is optional.
+
+        Returns
+        -------
+        Camera
+            The validated camera.
+
+        Raises
+        ------
+        KeyError
+            If a required key is missing.
+        ValueError
+            If a value is invalid (see [`Camera`][ycrystal.core.camera.Camera]).
+        """
         return cls(
             position=data["position"],
             focal_point=data["focal_point"],
@@ -217,7 +478,26 @@ class Camera:
 
 
 def default_camera(points: Any, radii: Any, aspect: float) -> Camera:
-    """A slightly off-axis view (c axis up) that fits the given spheres."""
+    """Return the initial view, fitted to the given spheres.
+
+    The view looks along ``(-0.42, 1.0, -0.38)``, slightly from above, with Cartesian
+    +z as the up direction. This puts the c axis up only when c points along z, as for
+    orthogonal and hexagonal cells read from CIF files (a along x, b in the xy plane).
+
+    Parameters
+    ----------
+    points
+        Sphere centres in Å, shape ``(K, 3)``.
+    radii
+        Sphere radii in Å: one value or one per sphere.
+    aspect
+        Output width divided by output height.
+
+    Returns
+    -------
+    Camera
+        The fitted camera (see [`Camera.fitted`][ycrystal.core.camera.Camera.fitted]).
+    """
     camera = Camera.looking_along(direction=(-0.42, 1.0, -0.38), view_up=(0.0, 0.0, 1.0))
     return camera.fitted(points, radii, aspect)
 

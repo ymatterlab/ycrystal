@@ -19,10 +19,29 @@ from ycrystal.render.pov_writer import RenderSettings
 from ycrystal.render.povray import find_povray, povray_version
 
 TOLERANCE_PX = 1.0
+"""Largest accepted distance in pixels between rendered and predicted sphere centres."""
 
 
 @dataclass
 class SelfTestResult:
+    """Outcome of [`run_self_test`][ycrystal.render.selftest.run_self_test].
+
+    Attributes
+    ----------
+    ok
+        Whether the renderer passed.
+    executable
+        Executable that was tested; ``None`` if none was found.
+    version
+        Version reported by the executable, if any.
+    message
+        Readable verdict, printed by ``ycrystal --check-renderer``.
+    max_error_px
+        Largest centre error in pixels, if the image could be measured.
+    matches
+        Per-sphere measurements, if the image could be measured.
+    """
+
     ok: bool
     executable: str | None
     version: str | None
@@ -32,6 +51,7 @@ class SelfTestResult:
 
 
 def self_test_geometry() -> DisplayGeometry:
+    """Return three spheres with distinct dominant colour channels (red, green, blue)."""
     positions = np.array([[2.0, 0.5, -0.3], [-1.6, 1.2, 0.8], [0.3, -1.7, 0.2]])
     colors = np.array([[0.9, 0.1, 0.1], [0.1, 0.8, 0.1], [0.1, 0.2, 0.9]])
     return DisplayGeometry(
@@ -47,11 +67,47 @@ def self_test_geometry() -> DisplayGeometry:
 
 
 def self_test_camera() -> Camera:
+    """Return a rotated, rolled, and panned camera for the self-test scene."""
     camera = Camera.looking_along((0.3, -1.0, -0.2), (0.0, 0.0, 1.0), parallel_scale=3.0)
     return camera.orbit(azimuth=37.0, elevation=24.0).roll(17.0).pan(0.4, -0.3)
 
 
 def run_self_test(configured: str | None = None, timeout: float = 60.0) -> SelfTestResult:
+    """Check that a POV-Ray executable reproduces Ycrystal's camera.
+
+    Finds the executable like [`find_povray`][ycrystal.render.povray.find_povray],
+    asks for its version, and renders a 120 × 80 pixel image with a transparent
+    background in a temporary job directory. The image passes if it has the requested
+    size and each sphere is within
+    [`TOLERANCE_PX`][ycrystal.render.selftest.TOLERANCE_PX] of its predicted pixel
+    position, with the expected dominant colour channel (which detects mirroring).
+
+    Parameters
+    ----------
+    configured
+        Executable to test first; see `find_povray`. The GUI passes its stored setting;
+        ``ycrystal --check-renderer`` passes ``--povray``.
+    timeout
+        Seconds allowed for the render.
+
+    Returns
+    -------
+    SelfTestResult
+        The verdict. A missing or failing renderer gives ``ok=False`` with an
+        explanation.
+
+    Raises
+    ------
+    OSError
+        If the temporary job cannot be prepared or its image cannot be read.
+        Other image-decoding or measurement errors may also propagate.
+
+    Notes
+    -----
+    Runs synchronously: the caller waits for the version query (up to 15 s) and the
+    render (up to `timeout`). Once preparation succeeds, the job directory is
+    removed in ``finally``, including on image-reading or measurement failures.
+    """
     try:
         executable = find_povray(configured)
     except Exception as exc:  # PovrayNotFoundError

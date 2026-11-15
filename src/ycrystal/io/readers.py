@@ -1,4 +1,4 @@
-"""Read POSCAR/CONTCAR, CIF, and Quantum ESPRESSO pw.x input into a :class:`Structure`.
+"""Read POSCAR/CONTCAR, CIF, and Quantum ESPRESSO pw.x input into a Structure.
 
 ASE does the parsing; this module adds format detection, provenance, and the checks
 that keep Ycrystal from drawing something different from what the file means:
@@ -11,9 +11,17 @@ that keep Ycrystal from drawing something different from what the file means:
   ``crystal_sg`` positions are rejected. Species labels are kept separately from
   elements; labels that do not name an element unambiguously need a mapping.
 
-Interactive questions are raised as exceptions (:class:`FormatChoiceRequired`,
-:class:`BlockChoiceRequired`, :class:`ElementMappingRequired`) so that the GUI can
-ask and call again with the answer.
+Interactive questions are raised as exceptions
+([`FormatChoiceRequired`][ycrystal.io.readers.FormatChoiceRequired],
+[`BlockChoiceRequired`][ycrystal.io.readers.BlockChoiceRequired],
+[`ElementMappingRequired`][ycrystal.io.readers.ElementMappingRequired]) so that the GUI
+can ask and call again with the answer. The readers never modify the input file and
+never open a window.
+
+All readers return Cartesian positions in Å with periodic boundary conditions along a,
+b, and c. POSCAR and QE cells keep the lattice vectors as written in the file
+(converted to Å); CIF cells are built from the cell parameters with a along x and b in
+the xy plane.
 """
 
 from __future__ import annotations
@@ -38,7 +46,10 @@ FORMAT_NAMES: dict[str, str] = {
     "cif": "CIF",
     "qe": "Quantum ESPRESSO pw.x input",
 }
+"""Display name of each format key accepted by ``ycrystal --format``."""
+
 STRUCTURE_FORMATS = ("poscar", "cif", "qe")
+"""Format keys that [`read_structure`][ycrystal.io.readers.read_structure] accepts."""
 
 #: Shown in Help ▸ Supported File Formats and mirrored in docs/FORMATS.md.
 SUPPORT_SUMMARY = """\
@@ -65,27 +76,76 @@ one file; it does not need the original structure file.
 
 # ----- errors and questions ---------------------------------------------------------------
 class StructureImportError(Exception):
-    """A file could not be read; ``str(error)`` is a message for the user."""
+    """A file could not be read; ``str(error)`` is a message for the user.
+
+    Base class of every error and question raised by the readers, so
+    ``except StructureImportError`` also catches an unanswered question.
+    """
 
 
 class UnsupportedStructureError(StructureImportError):
-    """The file is valid but uses a construct Ycrystal does not support."""
+    """The file is valid but uses a construct Ycrystal does not support.
+
+    Raised for CIF partial occupancy or overlapping sites and for QE input with
+    ``ibrav`` other than 0 or ``crystal_sg`` positions. The message names the
+    construct and suggests an alternative.
+    """
 
 
 class FormatChoiceRequired(StructureImportError):
+    """The format cannot be determined from the file name and content.
+
+    Answer by calling [`read_structure`][ycrystal.io.readers.read_structure] again with
+    ``fmt`` set to one of `candidates`.
+
+    Attributes
+    ----------
+    candidates
+        Format keys whose content signature matched; all structure formats if none did.
+    """
+
     def __init__(self, path: Path, candidates: list[str]) -> None:
         self.candidates = candidates or list(STRUCTURE_FORMATS)
         super().__init__(f"Cannot tell which format {path.name} is in.")
 
 
 class BlockChoiceRequired(StructureImportError):
+    """A CIF file contains several structures and no data block was chosen.
+
+    Answer by calling [`read_structure`][ycrystal.io.readers.read_structure] again with
+    ``block`` set to one of `blocks`.
+
+    Attributes
+    ----------
+    blocks
+        Names of the data blocks that contain a cell and atomic positions, in file
+        order.
+    """
+
     def __init__(self, blocks: list[str]) -> None:
         self.blocks = blocks
         super().__init__(f"The CIF contains {len(blocks)} structures; choose a data block.")
 
 
 class ElementMappingRequired(StructureImportError):
-    """Element identities must be given for ``keys`` (species labels or species slots)."""
+    """Element identities must be given for some species.
+
+    Raised for VASP 4 files, which have no element line, and for QE species labels that
+    do not name an element unambiguously. Answer by calling
+    [`read_structure`][ycrystal.io.readers.read_structure] again with
+    ``element_map={key: symbol, ...}`` for every key.
+
+    Attributes
+    ----------
+    keys
+        Species to map: ``"species 1"``, ``"species 2"``, ... in the order of the VASP 4
+        atom counts, or QE species labels such as ``"Cb"``.
+    suggestions
+        A proposed element symbol per key, or ``None``. For VASP 4 files, symbols are
+        proposed only when the comment line lists exactly element symbols.
+    details
+        A short description per key, such as ``"4 atoms"``.
+    """
 
     def __init__(
         self, message: str, keys: list[str], suggestions: list[str | None], details: list[str]
@@ -98,6 +158,21 @@ class ElementMappingRequired(StructureImportError):
 
 # ----- format detection ---------------------------------------------------------------------
 def guess_format_from_name(path: Path) -> str | None:
+    """Return the format suggested by a file name, or ``None``.
+
+    Parameters
+    ----------
+    path
+        File path; only the name is used, and the comparison ignores case.
+
+    Returns
+    -------
+    str or None
+        ``"project"`` for ``.ycrystal``; ``"cif"`` for ``.cif`` and ``.mcif``;
+        ``"poscar"`` for names starting with ``POSCAR`` or ``CONTCAR`` and for
+        ``.vasp``, ``.poscar``, and ``.contcar``; ``"qe"`` for ``.in`` and ``.pwi`` and
+        for names ending in ``pw.in`` or ``pwscf.in``.
+    """
     name = path.name.lower()
     suffix = path.suffix.lower()
     if suffix == ".ycrystal":
@@ -112,6 +187,22 @@ def guess_format_from_name(path: Path) -> str | None:
 
 
 def formats_matching_content(text: str) -> list[str]:
+    """Return the formats whose characteristic content appears in a text.
+
+    Parameters
+    ----------
+    text
+        File content.
+
+    Returns
+    -------
+    list of str
+        Matching format keys, in the order ``project``, ``cif``, ``qe``, ``poscar``. A
+        project is a JSON object naming ``"ycrystal-project"`` near the start; a CIF has
+        a ``data_`` line and ``_cell_length_a``; QE input has ``&SYSTEM`` and an
+        ``ATOMIC_POSITIONS`` card; a POSCAR has the expected line layout (scale factor,
+        three lattice vectors, atom counts).
+    """
     found = []
     head = text[:4000]
     if head.lstrip().startswith("{") and '"ycrystal-project"' in head:
@@ -128,7 +219,32 @@ def formats_matching_content(text: str) -> list[str]:
 
 
 def detect_format(path: Path, text: str | None = None) -> str:
-    """Format from the file name and content; raises :class:`FormatChoiceRequired`."""
+    """Determine the format of a file from its name and content.
+
+    The name decides when the content confirms it or matches no format; otherwise a
+    single content match decides.
+
+    Parameters
+    ----------
+    path
+        File to inspect.
+    text
+        File content; read from `path` (as UTF-8, with replacement characters) if
+        ``None``.
+
+    Returns
+    -------
+    str
+        A key of [`FORMAT_NAMES`][ycrystal.io.readers.FORMAT_NAMES], including
+        ``"project"``.
+
+    Raises
+    ------
+    FormatChoiceRequired
+        If the name and content do not identify one format.
+    StructureImportError
+        If `text` is ``None`` and the file cannot be read.
+    """
     path = Path(path)
     if text is None:
         text = _read_text(path)
@@ -174,7 +290,57 @@ def read_structure(
     block: str | None = None,
     element_map: dict[str, str] | None = None,
 ) -> Structure:
-    """Read a structure file. ``fmt`` overrides detection ("poscar", "cif", "qe")."""
+    """Read a POSCAR/CONTCAR, CIF, or Quantum ESPRESSO input file.
+
+    Parameters
+    ----------
+    path
+        Structure file. It is read once as bytes and never modified.
+    fmt
+        ``"poscar"``, ``"cif"``, or ``"qe"`` to skip detection; ``None`` detects the
+        format with [`detect_format`][ycrystal.io.readers.detect_format].
+    block
+        CIF data block to read; required when a CIF file contains several structures.
+    element_map
+        Element symbol for each species key of an earlier
+        [`ElementMappingRequired`][ycrystal.io.readers.ElementMappingRequired].
+
+    Returns
+    -------
+    Structure
+        The structure in Cartesian Å, periodic along a, b, and c. Its
+        ``metadata["source"]`` holds the provenance: ``path`` (absolute), ``name``,
+        ``format``, ``sha256`` and ``size_bytes`` of the file, ``imported_at`` (UTC,
+        ISO 8601), ``reader`` (the ASE version), and ``element_map`` if one was given.
+        Format-specific entries are ``comment`` and ``vasp_version`` (POSCAR), ``block``
+        and, if known, ``spacegroup`` (CIF), and ``qe_species`` (QE label to element).
+
+    Raises
+    ------
+    FormatChoiceRequired
+        If `fmt` is ``None`` and the format cannot be detected.
+    BlockChoiceRequired
+        If a CIF file has several structures and `block` is ``None``.
+    ElementMappingRequired
+        If elements are needed for VASP 4 species or ambiguous QE labels.
+    UnsupportedStructureError
+        If the file uses a construct that Ycrystal does not draw (see the module
+        description).
+    StructureImportError
+        If the file cannot be read, is a project file, is malformed, or contains no
+        atoms. ``str(error)`` explains the problem.
+
+    Examples
+    --------
+    Paths are relative to a source checkout:
+
+    >>> from ycrystal.io.readers import read_structure
+    >>> mgb2 = read_structure("tests/fixtures/MgB2.cif")
+    >>> mgb2.composition(), mgb2.labels
+    ('MgB2', ('Mg1', 'B1', 'B1'))
+    >>> mgb2.metadata["source"]["spacegroup"]
+    {'number': 191, 'symbol': 'P 6/m m m'}
+    """
     path = Path(path)
     try:
         data = path.read_bytes()
@@ -385,10 +551,25 @@ def _read_cif(
 
 # ----- Quantum ESPRESSO pw.x input --------------------------------------------------------------
 def element_from_label(label: str) -> str | None:
-    """Element named unambiguously by a QE species label, else None.
+    """Return the element named unambiguously by a QE species label.
 
-    Accepted: an element symbol, optionally followed by a digit, '_', '-', '+' or '.'
-    and anything (``Fe``, ``fe1``, ``Fe_up``, ``O-2``). ``Cb`` or ``Feup`` are ambiguous.
+    Parameters
+    ----------
+    label
+        Species label from ``ATOMIC_SPECIES``.
+
+    Returns
+    -------
+    str or None
+        The element symbol if the label is an element symbol (any case), optionally
+        followed by a digit, ``_``, ``-``, ``+``, or ``.`` and anything after it;
+        otherwise ``None``. ``Cb`` and ``Feup`` are ambiguous and give ``None``.
+
+    Examples
+    --------
+    >>> from ycrystal.io.readers import element_from_label
+    >>> element_from_label("Fe_up"), element_from_label("O-2"), element_from_label("Cb")
+    ('Fe', 'O', None)
     """
     match = re.match(r"^([A-Za-z]+)(?:[0-9_\-+.].*)?$", label.strip())
     if not match:

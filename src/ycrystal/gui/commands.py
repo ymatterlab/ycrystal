@@ -14,10 +14,24 @@ if TYPE_CHECKING:
 
 
 class SceneSettingsCommand(QUndoCommand):
-    """Replace the display settings (hidden atoms, repetitions, bonds, …) as one step.
+    """Replace the display settings (hidden atoms, boundary policy, …) as one step.
 
-    Commands with the same non-empty ``merge_key`` that follow each other (for example
-    repeated steps of the bond-tolerance spin box) merge into a single undo step.
+    The window's current settings are captured when the command is created.
+    ``QUndoStack.push`` applies the new settings immediately; undo restores the
+    captured ones. Each step rebuilds the displayed geometry from the unchanged
+    structure.
+
+    Parameters
+    ----------
+    window
+        Window whose settings are replaced.
+    new
+        Settings to apply.
+    text
+        Name shown in the Edit menu, for example ``"Hide 2 Atoms"``.
+    merge_key
+        Consecutive commands with the same non-empty key merge into one undo step.
+        Returning to the initial settings marks the merged command obsolete.
     """
 
     def __init__(

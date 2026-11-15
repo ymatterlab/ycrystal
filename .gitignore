@@ -27,3 +27,8 @@ htmlcov/
 
 # Locally generated evidence, renders, and render caches
 /artifacts/
+
+# Local documentation environment, generated HTML, and Zensical cache
+.venv-docs/
+/site/
+/.cache/

@@ -31,6 +31,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.6", "pre-commit>=4"]
+# Documentation site (Zensical + mkdocstrings); static analysis only, no Qt/VTK needed.
+docs = ["zensical>=0.1.1", "mkdocstrings-python>=2.0.11"]
 
 [project.urls]
 Repository = "https://github.com/ymatterlab/ycrystal"
@@ -57,4 +59,22 @@ line-length = 100
 src = ["src", "tests", "scripts"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP"]
+# D: enable docstring checks explicitly; NumPy disables conflicting layout rules.
+select = ["E", "F", "W", "I", "B", "UP", "D"]
+# D105: magic methods (__len__, __contains__) are self-explanatory.
+ignore = ["D105"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+# Tests and helper scripts: no docstrings demanded for each function or class.
+"tests/**" = ["D"]
+"scripts/**" = ["D101", "D102", "D103"]
+# Qt overrides (showEvent, closeEvent, undo/redo) and dialog helpers in the interface
+# layer need no method docstrings; public classes and functions still do.
+"src/ycrystal/gui/**" = ["D102"]
+
+[tool.ruff.format]
+# Format code in docstring examples like other code.
+docstring-code-format = true

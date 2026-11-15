@@ -44,6 +44,25 @@ jobs:
       - name: Run hooks on all files
         run: pre-commit run --all-files --show-diff-on-failure --color=always
 
+  docs:
+    name: docs (static API reference and strict links)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Install documentation tools only (no application dependencies)
+        run: python -m pip install -r docs/requirements.txt
+
+      - name: Build with strict reference and link validation
+        run: zensical build --clean --strict
+
   test:
     # Integration baseline: Ubuntu 24.04, Python 3.12, real Qt/VTK under Xvfb, and the
     # distribution's POV-Ray 3.7. YCRYSTAL_REQUIRE_INTEGRATION makes a missing display or
@@ -78,6 +97,11 @@ jobs:
 
       - name: Renderer check
         run: ycrystal --check-renderer --povray /usr/bin/povray
+
+      - name: Display-independent documentation examples
+        run: |
+          python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py
+          python scripts/docs_examples.py
 
       - name: Tests (GUI under Xvfb)
         run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -rs
