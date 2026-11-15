@@ -57,6 +57,8 @@ run the same pinned hooks, so they agree.
   `YCRYSTAL_REQUIRE_INTEGRATION=1`, which turns a missing display or renderer into an
   error; set it yourself to make sure nothing was skipped.
 - `scripts/m0_evidence.py` regenerates screenshots and alignment measurements.
+- `scripts/benchmark_scene.py` measures display cost for growing supercells; rerun it
+  when changing the viewport, and record the hardware with the numbers.
 
 ## Generated files
 

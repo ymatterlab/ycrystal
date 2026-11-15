@@ -26,9 +26,9 @@ the in-app summary.
 
 **View ▸ Show Boundary Atoms** is on by default. Atoms are wrapped along periodic
 cell directions and repeated on equivalent faces, edges, and corners. A corner atom
-can appear eight times. Turning the option off shows each input atom once at its
-original position. It does not generate a supercell or change the atom count in the
-scientific structure.
+can appear eight times. Turning the option off shows each input atom once per repeated cell at its
+original position plus the cell translation. Repetition controls expand the display from the original structure without changing
+the scientific atom count.
 
 Each ball has its own identity: the source atom (0-based internally, 1-based in the
 status bar) and an integer image offset `(na, nb, nc)`. The offset is relative to the
@@ -40,7 +40,8 @@ images of the same atom stay visible. **View ▸ Show All Atoms** restores all h
 IDs. Hidden IDs survive toggling boundary images off and on. Selection highlights
 are viewport overlays and do not appear in the figure.
 
-Undo/redo covers hiding, Show All Atoms, and the boundary toggle. Camera navigation,
+Undo/redo covers hiding, Show All Atoms, boundary images, repetitions, cell-edge
+modes, and bond settings. Consecutive tolerance/radius adjustments merge into one step. Camera navigation,
 output settings, file opens, and saves are not undoable. Opening a new file clears
 the undo history. A changed camera or output setting still marks the project modified.
 
@@ -55,3 +56,28 @@ The structure's coordinates, occupancies, and movable flags are scientific data.
 Camera, radii, colours, boundary images, hiding, background, and lighting are
 presentation state. The GUI currently exposes only some of those settings; it has
 no atom editor, material gallery, or light editor.
+
+## Supercells, bonds, and directions
+
+The **Scene** dock has **Structure** and **Bonds** tabs. If closed, reopen it from
+**View ▸ Scene**. Under Structure, set repetitions along a, b, c (1 to 20),
+use **+ all** / **− all**, or reset with **1 × 1 × 1**. Typed counts apply on Enter
+or focus change. The view refits after a repetition change. Expansions above 20,000
+displayable atoms ask for confirmation before building geometry. Non-periodic axes
+are not repeated. Hidden IDs persist across expansion and shrinking.
+
+**Cell edges** offers **All unit cells**, **Outline of the repeated block**,
+**Original cell only**, or **None**. The boundary option applies to the repeated block.
+
+Under Bonds, **Show bonds** controls visibility. **Max. length** ranges from 0.80
+through 1.50 times the sum of covalent radii; **Radius** ranges from 0.02 through
+0.50 Å. Element-pair checkboxes override the default rule: metal–metal pairs start
+off in compounds containing non-metals. The pair list reports candidates and length
+ranges **per original cell**, not the number drawn in the repeated block. A bond
+appears only when both endpoint atoms are displayed; hiding an atom removes its bonds.
+These are geometric contacts, not calculated chemical bond orders.
+
+The **View along** toolbar offers **a, b, c** and **x, y, z**. The selected positive
+axis points toward the viewer; hold **Shift** when clicking to reverse it. For skewed
+cells, lattice directions differ from Cartesian directions. These actions fit the view
+and affect the camera only; they are outside the display-setting undo stack.

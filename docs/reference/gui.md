@@ -15,6 +15,13 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - hide_selected
         - show_all_atoms
         - set_boundary_images
+        - set_repetitions
+        - set_cell_mode
+        - set_bonds_enabled
+        - set_bond_tolerance
+        - set_bond_radius
+        - set_bond_pair
+        - view_along
         - current_camera
         - current_render_settings
         - export_pov

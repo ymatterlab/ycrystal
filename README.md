@@ -10,7 +10,8 @@ crystal-structure figures and rendering them with [POV-Ray](https://www.povray.o
 **Early development.** Open POSCAR/CONTCAR, CIF, and Quantum ESPRESSO (`ibrav = 0`)
 inputs, save/reopen `.ycrystal` projects, orbit/pan/zoom, select and hide individual
 displayed atoms, and export or render the current orthographic view. Supercell
-controls, bonds, material galleries, and the full preview workflow are planned.
+repetitions, periodic bonds, cell-edge modes, and lattice/Cartesian view directions
+are available. Material galleries and the full preview workflow are planned.
 Python interfaces are evolving developer functionality, without a stable API guarantee.
 
 ## Install and run

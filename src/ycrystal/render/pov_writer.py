@@ -131,7 +131,8 @@ def scene_to_pov(
     with non-positive intensity is omitted. Each element gets one texture (pigment
     from its first displayed colour, a shared finish). Each atom is a ``sphere`` with
     a comment giving its 1-based source atom number, element, and image offset; a comment states how
-    many atoms are hidden. Cell edges are cylinders with spheres at the corners, marked
+    many atoms are hidden. Bonds are two half cylinders coloured like their endpoint
+    atoms, using geometry.bond_radius. Cell edges are cylinders with spheres at the corners, marked
     ``no_shadow``.
 
     The header records the generation time (UTC), so two exports of the same scene
@@ -220,20 +221,33 @@ def scene_to_pov(
             f"sphere {{ {_v(pos)}, {_f(float(rad))} texture {{ {_identifier(element)} }} }}"
             f"  // atom #{source + 1} {element} image {image}"
         )
+    if len(geometry.bonds):
+        add("")
+        add(f"// Bonds ({len(geometry.bonds)}): each half takes the texture of its atom.")
+        r_bond = _f(geometry.bond_radius)
+        for a, b in geometry.bonds:
+            start, end = geometry.positions[a], geometry.positions[b]
+            tex_a = _identifier(geometry.elements[a])
+            tex_b = _identifier(geometry.elements[b])
+            if tex_a == tex_b:
+                add(f"cylinder {{ {_v(start)}, {_v(end)}, {r_bond} texture {{ {tex_a} }} }}")
+            else:
+                mid = 0.5 * (start + end)
+                add(f"cylinder {{ {_v(start)}, {_v(mid)}, {r_bond} texture {{ {tex_a} }} }}")
+                add(f"cylinder {{ {_v(mid)}, {_v(end)}, {r_bond} texture {{ {tex_b} }} }}")
     if len(geometry.cell_edges):
         add("")
-        add("// Unit-cell edges (no_shadow: edges do not darken atoms).")
+        add("// Cell edges (no_shadow: edges do not darken atoms).")
         r_edge = _f(geometry.cell_edge_radius)
-        corners: list[np.ndarray] = []
+        corners: dict[tuple[float, ...], np.ndarray] = {}
         for start, end in geometry.cell_edges:
             add(
                 f"cylinder {{ {_v(start)}, {_v(end)}, {r_edge} texture {{ Ycr_Texture_Cell }} "
                 "no_shadow }"
             )
             for point in (start, end):
-                if not any(np.allclose(point, c) for c in corners):
-                    corners.append(point)
-        for corner in corners:
+                corners.setdefault(tuple(np.round(point, 6)), point)
+        for corner in corners.values():
             add(f"sphere {{ {_v(corner)}, {r_edge} texture {{ Ycr_Texture_Cell }} no_shadow }}")
     add("")
     return "\n".join(lines)

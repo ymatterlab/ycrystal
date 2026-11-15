@@ -27,9 +27,9 @@ that every scene or output directory will work.
 
 ## Current limitations and roadmap
 
-- No GUI supercell repetitions, bonds, view-direction buttons, atom editing, or
-  structure-format export. The comparison module's `supercell` helper is developer
-  functionality, not a GUI feature.
+- No atom editing or structure-format export. Display repetitions and periodic bonds
+  are available, but interactive supercell drag handles remain planned. The comparison
+  module's `supercell` helper transforms scientific data for developer comparisons.
 - No preview/output-aspect frame, render cancellation button, material or environment
   galleries, or light controls.
 - The current reader accepts ordered structures only: partial/mixed CIF occupancy,

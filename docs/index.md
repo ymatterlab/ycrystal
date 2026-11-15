@@ -7,8 +7,9 @@ displayed atoms.
 
 **Early development.** You can open POSCAR/CONTCAR, CIF, and Quantum ESPRESSO
 `ibrav = 0` inputs, save self-contained `.ycrystal` projects, navigate, select and hide
-individual displayed atoms, export scenes, and render PNGs. Supercell controls, bonds,
-material galleries, and the full preview workflow remain planned.
+individual displayed atoms, export scenes, and render PNGs. Supercell repetitions,
+periodic bonds, cell-edge modes, and view-direction controls
+are available. Material galleries and the full preview workflow remain planned.
 
 - [Install and launch](guide/install.md) on Linux Mint.
 - Follow [Your first crystal figure](guide/first-figure.md) using the built-in SrTiO3 sample.

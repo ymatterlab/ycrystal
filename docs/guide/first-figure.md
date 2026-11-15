@@ -13,17 +13,17 @@ root. The built-in sample works without importing a file.
     .venv/bin/ycrystal --sample perovskite
     ```
 
-2. The window shows SrTiO3 and reports **15 atoms shown**, with repetitions
-   **1 × 1 × 1**. Eight Sr corner balls and six O face balls are periodic images of
-   the 5 input atoms; the Ti ball is at the centre. The repetitions text is an
-   indicator, not a supercell control.
+2. The window shows SrTiO3 and reports **15 atoms** and **30 bonds shown**, with
+   **1 × 1 × 1 cells**. The default view also draws bonds. Eight Sr corner balls and six O face balls are periodic images of
+   the 5 input atoms; the Ti ball is at the centre. Use the **Scene ▸ Structure** tab to change repetitions; leave them at
+   **1 × 1 × 1** for this tutorial.
 3. Drag with the left mouse button to orbit. Shift + left drag pans; the wheel
    zooms. Press **F** over the 3D view to fit everything while keeping the current
    orientation. **View ▸ Reset View** restores the initial orientation and fits it.
 4. Click a visible corner ball without dragging. It gets an orange highlight and
    the status bar reports the element, source atom number, image offset, and
    fractional/Cartesian coordinates. Press **Delete**: just that ball disappears and
-   the status shows **14 atoms shown · 1 hidden**. Press **Ctrl+Z** to restore it.
+   the status shows **14 atoms** with **1 hidden** (the status also includes bond and cell counts). Press **Ctrl+Z** to restore it.
    Press **Esc** to clear the selection. Hiding changes the figure, not the structure.
 
 ## Save the project and export the scene

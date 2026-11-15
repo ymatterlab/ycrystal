@@ -7,7 +7,7 @@ extending them.
 | Layer | Responsibility and dependency direction |
 | --- | --- |
 | `core/structure.py` | Scientific cell, positions, elements, labels, occupancy, movable flags, provenance. Lattice rows and positions are Cartesian Å. Array inputs are copied and stored read-only; metadata remains mutable. |
-| `core/scene.py` | `SceneSettings` and `Environment` describe presentation. `build_geometry` resolves boundary images, hidden IDs, radii, colours, and cell edges into the shared `DisplayGeometry`. No Qt or VTK. |
+| `core/scene.py` | `SceneSettings` and `Environment` describe presentation. `build_geometry` resolves repetitions, boundary images, hidden IDs, periodic bonds, radii, colours, and cell edges into the shared `DisplayGeometry`. No Qt or VTK. |
 | `core/camera.py`, `core/picking.py` | Immutable orthographic camera and analytic picking. Projection uses top-left continuous pixel coordinates. Navigation returns new cameras. No GUI dependency. |
 | `io/readers.py`, `io/project.py` | File detection, ASE-backed readers, provenance, and versioned JSON projects. Questions are exceptions that the caller can answer and retry; no GUI dependency. |
 | `gui/main_window.py`, `gui/commands.py` | Qt actions, dialogs, project state, selection, and display-setting undo stack. Coordinates are never edited by navigation or hiding. |
@@ -33,7 +33,8 @@ projection. VTK uses its own lighting; axes and selection are overlays only.
 
 Projects embed the structure and provenance, plus camera and presentation state.
 They do not store the machine's renderer path or last-used directory; those belong
-to `QSettings`. The GUI restores output width and transparency and calculates height
+to `QSettings`. The schema-2 project stores repetitions, cell mode, and bond rules. Schema-1 projects
+load with bonds off to preserve their appearance. The GUI restores width and transparency and calculates height
 from the current viewport, even though the project file stores all render settings.
 
 ## Extension points
@@ -47,9 +48,9 @@ from the current viewport, even though the project file stores all render settin
 - Extend rendering options in `render/pov_writer.py` and their scene/output models;
   extend job lifecycle in `render/jobs.py` / `render/process.py`. Keep GUI orchestration
   in the interface. A future output frame must establish a shared aspect contract.
-- Introduce future scientific editing/supercell operations explicitly in the data
-  layer, with appropriate provenance and undo behavior. Boundary images are only
-  display state. `core.compare.supercell` currently exists for reader comparisons
+- Keep scientific editing separate from the existing display repetitions and bonds.
+  Display expansion always starts from the original structure, and is undoable.
+  Future scientific editing needs explicit data-layer operations and provenance. `core.compare.supercell` currently exists for reader comparisons
   and discards labels, flags, and metadata.
 
 Read the [curated reference](../reference/index.md) and

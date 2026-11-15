@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tempfile
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -20,6 +21,10 @@ def main() -> None:
     original = structure.positions.copy()
     geometry = build_geometry(structure)
     assert (len(structure), len(geometry)) == (5, 15)
+    expanded = build_geometry(structure, SceneSettings(repetitions=(2, 2, 2)))
+    assert (len(expanded), len(expanded.bonds)) == (71, 192)
+    no_bonds = replace(SceneSettings().bonds, enabled=False)
+    assert len(build_geometry(structure, SceneSettings(bonds=no_bonds)).bonds) == 0
     corner = (0, (1, 1, 1))
     scene = SceneSettings(hidden=frozenset({corner}))
     hidden = build_geometry(structure, scene)

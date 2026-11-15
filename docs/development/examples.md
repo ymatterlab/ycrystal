@@ -21,6 +21,14 @@ This is a short interactive example from the scene reference:
 (14, 1, None)
 ```
 
+Display repetitions and periodic bonds are available through the same model:
+
+```pycon
+>>> expanded = build_geometry(structure, SceneSettings(repetitions=(2, 2, 2)))
+>>> len(expanded), len(expanded.bonds)
+(71, 192)
+```
+
 Scientific coordinates are unchanged. The arrays produced by `build_geometry` are
 read-only, and the image offset is relative to input positions rather than wrapped
 positions. See [scene and geometry](../reference/scene.md).

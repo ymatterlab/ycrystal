@@ -131,7 +131,7 @@ def supercell(structure: Structure, matrix: np.ndarray) -> Structure:
     Notes
     -----
     This is a comparison helper. It is unrelated to displaying supercell repetitions,
-    which Ycrystal does not implement yet.
+    which are handled separately by SceneSettings and build_geometry.
     """
     from ase.build import make_supercell
 

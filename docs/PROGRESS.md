@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0 and M1 complete (merged into `main`); the owner reports M2 completed on a separate branch. This documentation checkout contains the earlier partial M2 implementation. Documentation increment on branch `docs/docstrings`, building on repository-tooling maintenance (no product milestone change).
+Last updated: 15 November 2026. M0, M1, and M2 complete (M2 merged in PR #5, commit `49b50ec`); repository tooling merged into `main`.
 
 ## Milestones
 
@@ -8,7 +8,7 @@ Last updated: 15 November 2026. M0 and M1 complete (merged into `main`); the own
 | --- | --- | --- |
 | M0 | Desktop/render feasibility: Qt window, embedded VTK view, camera model, first POV-Ray render matching the view | **Complete** (see evidence and caveats) |
 | M1 | File import (POSCAR/CIF/QE `ibrav=0`) and save/reopen projects | **Complete** (see evidence) |
-| M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **Completed on a separate branch**, as reported by the owner; not integrated or independently verified in this documentation checkout, which contains boundary images, click selection, hiding, and undo/redo |
+| M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **Complete** (see evidence; drag handles are M5) |
 | M3 | Complete figure workflow: preview, output frame, cancellation, final PNG | Not started |
 | M4 | Material and environment galleries | Not started |
 | M5 | Supercell drag handles, reusable styles, undo coverage | Not started |
@@ -76,7 +76,7 @@ interface and the guide.
 | Failed open keeps the current scene | Pass | Structure, geometry, and camera unchanged after each rejected file and after a damaged project (`test_gui_files.py`) |
 | Project round trip | Pass | Exact equality of cell, positions, numbers, occupancy, labels, movable flags, metadata, display settings, hidden atoms, environment, camera, output |
 | Reopen after the source file is moved | Pass | Source directory deleted; the project reopens in a new window with identical coordinates, hidden atoms, camera, and output settings (`test_project.py`, `test_gui_files.py`) |
-| Versioning and damage | Pass | Newer schema refused with an update message; invalid JSON (with line), wrong format, missing schema, missing required structure entries, inconsistent symbols, wrong array lengths reported clearly; atomic save leaves no temporary files |
+| Versioning and damage | Pass | Newer schema refused with an update message; invalid JSON (with line), wrong format, missing schema, missing sections, inconsistent symbols, wrong array lengths reported clearly; atomic save leaves no temporary files |
 | Unsaved changes | Pass | Title shows `*` for camera, display-setting, or output changes (undo back to the saved state clears it); close and open ask Save / Discard / Cancel; Cancel (or a cancelled Save dialog) keeps the window and scene |
 | Documented limitations | Pass | *Help ▸ Supported File Formats* and `docs/FORMATS.md` |
 | Automated suite | 127 passed, 0 skipped | `pytest -q -rs` with `/usr/bin/povray`; `ruff check` clean |
@@ -94,7 +94,61 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
-## M2 increment: boundary atoms, selection, hiding (requested ahead of M1)
+## M2 acceptance evidence
+
+Gate: triclinic and hexagonal examples preserve correct geometry, stable selection, and
+original coordinates; expected bond/image counts; reversible repetition changes;
+navigation does not modify coordinates. The first increment (boundary atoms,
+selection, hiding, undo) is listed in the next section.
+
+| Check | Result | How |
+| --- | --- | --- |
+| Orthogonal SrTiO3, n × n × n (n = 1–3) | Pass | (n+1)³ Sr, n³ Ti, 3n²(n+1) O; 6n³ Ti–O and 12n²(n+1) Sr–O bonds; equal to a brute-force distance search over the displayed atoms; no duplicate bonds (`test_supercells_bonds.py`) |
+| Hexagonal MgB2, n × n × m | Pass | (n+1)²(m+1) Mg, 2n²m B; (3n² − 2n)·m B–B bonds (honeycomb); brute force agrees |
+| Diamond Si (conventional cell) | Pass | (n+1)³ + 3n²(n+1) + 4n³ atoms (18 at 1×1×1, as VESTA); 16n³ bonds, all 2.3517 Å |
+| Triclinic cell | Pass | 5n³ atoms at general positions; displayed bonds equal brute force for 1×1×1, 2×3×1, 2×2×2; periodic bonds unique (no reverse pairs) and complete against a search over neighbouring cells |
+| Stable IDs, reversibility, coordinates | Pass | Every atom of 1×1×1 has the same ID and position at 3×3×3; 1 → 3 → 1 reproduces IDs, positions, and bonds exactly; hidden IDs persist across repetition changes; structure arrays unchanged |
+| Non-periodic axes and molecules | Pass | No repetition along non-periodic axes; a molecule shows O–H bonds only |
+| Cell edges | Pass | All unit cells (grid lines), outline of the block, or the original cell; counts checked (e.g. 27 grid lines at 2×2×2) |
+| Repetition controls | Pass | Spin boxes a/b/c (1–20), "− all", "+ all", "1 × 1 × 1"; each change one undo step; the panel follows undo/redo; the view is refitted to the new block; selection kept by ID (`test_gui_scene.py`) |
+| Large-expansion warning | Pass | Above 20,000 displayed atoms Ycrystal asks before applying (estimate computed without building geometry); declining leaves everything unchanged |
+| Bonds panel | Pass | Show/hide, tolerance (× sum of covalent radii; consecutive edits merge into one undo step), radius, per-element-pair switches with per-cell counts and lengths |
+| View directions | Pass | a, b, c, x, y, z (Shift: opposite side); the axis points at the viewer with the next axis up (e.g. down c: a right, b up); triclinic directions follow the lattice vectors; result framed |
+| POV-Ray export | Pass | Bonds as half cylinders textured like their atoms; grid edges; render matches the live view (`artifacts/m2/`) |
+| Projects | Pass | Schema 2 stores repetitions, cell mode, and bond settings; schema-1 projects open with bonds off, exactly as saved |
+| Automated suite | 162 passed, 0 skipped | `pytest -q -rs`; `pre-commit run --all-files` clean |
+
+Display benchmark (`scripts/benchmark_scene.py`, SrTiO3, Intel Meteor Lake integrated
+graphics, Mesa 25.2.8, 1100 × 700 viewport, 8× MSAA). "Drag step" is a synthetic
+left-button drag through VTK's interactor with every step repainted before the next.
+
+| Cells | Atoms | Bonds | Build (s) | Load (s) | Drag step (ms) | Live detail |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2³ | 71 | 192 | 0.02* | 0.16 | 38 | 40×28 spheres |
+| 6³ | 1,315 | 4,320 | 0.03 | 0.09 | 72 | 40×28 |
+| 10³ | 5,631 | 19,200 | 0.07 | 0.22 | 84 | 24×16 |
+| 14³ | 14,939 | 51,744 | 0.17 | 0.41 | 88 | 16×10 |
+| 16³ | 22,065 | 76,800 | 0.26 | 0.50 | 105 | 16×10 |
+| 20³ | 42,461 | 148,800 | 0.59 | 0.82 | 150 | 16×10 |
+
+\* first call 0.49 s (one-time import of ASE's neighbour list). The live view lowers
+sphere and bond tessellation above 2,000 and 8,000 atoms (POV-Ray always renders exact
+spheres); without this, 14³ took 232 ms per step and 20³ 640 ms. The soft limit of
+20,000 atoms keeps a drag step near 100 ms or less on this hardware.
+
+### M2 caveats
+
+- The default bond rule (1.1 × sum of covalent radii, metal–metal off in compounds)
+  also bonds Sr–O in perovskites; switch the pair off in the Bonds panel if not wanted.
+- Bonds are drawn only between displayed atoms (no bonds to atoms beyond the boundary).
+- Each synthetic drag step costs at least ~38 ms even for tiny scenes; most of it is
+  spent in Qt while PyVistaQt's `QOpenGLWidget` presents the frame. It predates M2 and
+  is not investigated further here; VTK's own `QVTKRenderWindowInteractor` is the
+  documented fallback if real interaction proves sluggish.
+- Supercell drag handles (M5), reciprocal-axis view directions, and lighting (M4,
+  POV-Ray currently casts hard shadows) are not part of M2.
+
+## M2 first increment: boundary atoms, selection, hiding (requested ahead of M1)
 
 | Check | Result | How |
 | --- | --- | --- |
@@ -135,12 +189,12 @@ success does not prove them.
 ## Documentation increment (15 November 2026)
 
 No runtime behavior, public signatures, or product milestone status changed. The
-user guide supports the existing M0/M1 and partial M2 features; this does not complete M6.
+user guide now supports M0–M2 features; this does not complete M6.
 
-The owner subsequently confirmed that M2 was completed in separate work on another
-branch. The guides describe the implementation inspected in this checkout; their
-limitations are not a claim that the separate M2 work remains undone. Reconcile the
-guides with that implementation when integrating the branches.
+M2 was subsequently merged into main in PR #5 (`49b50ec`). This branch now includes
+that merge and documents its repetitions, periodic bonds, cell modes, view directions,
+and schema-2 projects. Historical checks below describe the initial increment;
+updated integration verification is recorded separately.
 
 ### Audit of the interrupted work
 
@@ -236,6 +290,34 @@ is in [the user guide](guide/first-figure.md).
   canonical URL/base path, and deployed navigation/asset checks remain separate;
   [publication notes](development/documentation.md#publication) describe the steps.
 
+## Integration with merged M2 (15 November 2026)
+
+Fetched `origin/main` at `49b50ec` (M2 merged in PR #5) and merged it into
+`docs/docstrings`. Resolved overlapping documentation/source files while preserving
+M2 runtime code. Every `src/` syntax tree matches `origin/main` after stripping
+string documentation. No application behavior or public signatures changed relative
+to the merged M2 implementation.
+
+Updated the user guide, first-figure labels, architecture, project-format guide,
+curated references, and docstrings for display repetitions, cell-edge modes, periodic
+bonds, view directions, undo merging, and schema-2 projects. Added NumPy docstrings
+for the new bond models/search and scene-panel interfaces; no lint rules weakened.
+The example script now checks 2 × 2 × 2 SrTiO3 (71 atoms, 192 bonds), and the tracked
+640 × 400 image was regenerated with the current default bond display.
+
+Verification on the integrated tree:
+
+- Full strict application suite with X11/Qt/VTK and POV-Ray: **162 passed, 0 skipped**
+  in 30.24 s (`/tmp/ycrystal-m2-docs-tests.log`).
+- Clean strict docs-only build: no issues. Source doctests and
+  `scripts/docs_examples.py`: passed. Asset regeneration: passed.
+- First-figure rehearsal on the actual Qt/VTK widgets: passed selection, hide/undo,
+  save/reopen, scene export, and PNG render (640 × 509 at the new dock layout).
+  Renderer check: passed within 0.14 px. Outputs remain in `artifacts/docs/tutorial/`.
+- Ruff and existing pre-commit checks: passed on the integrated tree.
+- Earlier M2-separate-branch statements in the initial audit are historical;
+  M0–M2 are now merged. M3 remains next; documentation hosting is still separate.
+
 ## Commands
 
 ```bash
@@ -306,7 +388,20 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 - **Picking** uses an analytic ray–sphere intersection with the shared camera model
   (`core/picking.py`), not VTK pickers; a click is a left press/release that moves at
   most 3 px. The selection highlight is a translucent shell drawn only in the live view.
-- **Undo/redo:** `QUndoStack` with one command type that swaps `SceneSettings`.
+- **Undo/redo:** `QUndoStack` with one command type that swaps `SceneSettings`;
+  commands with the same merge key (bond tolerance, bond radius) merge when consecutive.
+- **Supercells (M2):** repetitions live in `SceneSettings` and are always expanded from
+  the original structure; boundary images are added on the faces of the repeated block.
+  Image offsets stay relative to input positions, so IDs, selection, and hidden atoms
+  are stable across repetition changes.
+- **Bonds (M2):** `core/bonds.py` searches the original cell once with ASE's
+  neighbour list (any cell shape) and stores `(i, j, integer shift)` without reverse
+  duplicates; `build_geometry` maps them onto displayed images and gives both renderers
+  explicit endpoint index pairs. Rule and per-pair overrides are in `BondSettings`.
+- **Live-view level of detail (M2):** sphere/bond tessellation drops at 2,000 and 8,000
+  displayed atoms; bonds use the same GPU instancing (`vtkGlyph3DMapper`) as atoms.
+- **Scene panel (M2):** `gui/panels/scene_panel.py` emits requests only; the window turns
+  them into undoable commands and syncs the panel with signals blocked.
 - **Import (M1):** ASE parses; `io/readers.py` adds detection, provenance (path, name,
   format, SHA-256, size, time, reader version, block, element mapping), and checks.
   Questions (format, data block, element mapping) are exceptions that the GUI answers
@@ -315,7 +410,7 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
   upper-case key in a lower-cased namelist) and resolves labels permissively.
 - **Comparison:** `core/compare.py` compares lattice matrices directly and matches atoms
   by element and fractional position modulo lattice translations.
-- **Projects:** `io/project.py`, JSON schema 1, written atomically; numbers are
+- **Projects:** `io/project.py`, JSON schema 2 (schema 1 remains readable), written atomically; numbers are
   canonical, symbols are stored for readability and checked on load. Machine-specific
   settings (POV-Ray path, last directory) stay in QSettings, not in projects.
 - **Camera notifications:** the viewport now listens to the VTK camera's
@@ -324,7 +419,6 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 
 ## Next bounded action
 
-M1 is already merged, and the owner reports M2 completed on another branch. Integrate
-that work and update the guides and reference against its actual implementation and
-acceptance evidence. Documentation publication and the outstanding owner-service
-setup are separate maintenance actions.
+M2 is merged. Next product work is M3: output-aspect frame, low-resolution POV-Ray
+preview, final render with cancellation and stale-result suppression, and a small
+alpha catalog of materials and backgrounds.
