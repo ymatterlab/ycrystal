@@ -1,6 +1,6 @@
 # Release procedure and checklist
 
-How a Ycrystal release is prepared, and the checklist of version 0.1.0. Publication
+How a Ycrystal release is prepared, and the checklists of versions 0.2.0 and 0.1.0. Publication
 (tag, GitHub release, making the repository public) is the maintainer's decision and
 is not part of this procedure.
 
@@ -39,6 +39,27 @@ is not part of this procedure.
     `constraints.txt`, the examples, the test fixtures, and the notices.
 5. Record the results in `docs/PROGRESS.md` and in the checklist below, marking each
    item passed, failed, or unverified.
+
+## Checklist for 0.2.0
+
+Status on 15 November 2026, same reference machine as 0.1.0. 0.2.0 adds three features
+(FR-COLOR-01, FR-RENDER-01, FR-LIGHT-01) and no dependencies; the format, renderer, and
+platform support is unchanged, so the 0.1.0 items below that concern installation,
+licences, and the desktop launcher were not repeated.
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Version | Passed | `__version__ = "0.2.0"`; `ycrystal --version` prints `ycrystal 0.2.0`; changelog section 0.2.0 |
+| Tests without POV-Ray | Passed | `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not povray"`: 346 passed |
+| POV-Ray tests | Passed (subset) | `test_release.py` (workflow, command line, examples) and the GUI render tests passed; the preset render tests (`test_presets.py`) were not rerun because every exported scene is byte-identical to 0.1.0 |
+| Exported scenes compatible | Passed | 672 scenes (all lighting and environment presets, four cameras, four geometries, two sizes) written by 0.1.0 and 0.2.0 differ only in the header line with the version and time |
+| Projects compatible | Passed | Schema 5 unchanged; 0.1.0 projects open (aspect lock defaults to locked); `test_project.py` |
+| Renderer check | Passed | `ycrystal --check-renderer`: `PASS … within 0.14 px` |
+| Documentation | Passed | `zensical build --clean --strict`: no issues; user guide covers the three features |
+| Artifacts | Passed | `uv build`: sdist and wheel `ycrystal-0.2.0` (the wheel contains the new modules and presets) |
+| Clean install from a fresh clone, wheel install in a fresh environment | Not repeated | Unchanged packaging; done for 0.1.0 |
+| Hands-on use of the new features by a person | Unverified | Scripted GUI checks only |
+| Tag `v0.2.0` | See `docs/PROGRESS.md` | Maintainer's decision; GitHub release not created |
 
 ## Checklist for 0.1.0
 

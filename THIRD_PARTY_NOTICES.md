@@ -4,7 +4,8 @@ Ycrystal is distributed under the MIT License (see `LICENSE`). It does not bundl
 third-party code: the Python packages below are installed separately by `pip` from
 PyPI (versions as tested, pinned in `constraints.txt`), and POV-Ray is a separate
 program installed from the distribution. This file summarises their licences for the
-0.1.0 release review; consult each project for the authoritative terms.
+0.1.0 release review (0.2.0 adds no dependencies); consult each project for the
+authoritative terms.
 
 ## Python runtime dependencies (installed with `pip install .`)
 

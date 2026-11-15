@@ -3,31 +3,51 @@
 All notable changes to Ycrystal. Versions follow [semantic versioning](https://semver.org/);
 before 1.0 the Python interface may change between minor versions.
 
-## Unreleased
+## 0.2.0 — lighting, colours, and output size (15 November 2026)
 
-- Lighting Setup and live lighting (FR-LIGHT-01): **Lighting Setup…** opens a 3D
-  overview of the key and fill lights, the output camera and frame, the focal point and
-  geometry centre, the azimuth/elevation guides, the area-light diameter, and the
-  reflection panel, with its own camera. Dragging the key-light handles sets azimuth and
-  elevation (one undo step; Esc cancels). The live view now uses the key and fill lights
-  at their real positions and intensities instead of VTK's default light kit. One shared
-  helper (`ycrystal.core.lighting.resolve_lighting`) resolves the lights for POV-Ray and
-  both views; exported scenes are unchanged.
+The first release after 0.1.0. Projects, styles, and exported scenes stay compatible:
+0.1.0 projects open unchanged (project schema 5), and scenes exported with the same
+settings are identical apart from the header line with the version and time. No new
+dependencies.
 
-- Lock aspect ratio (FR-RENDER-01): a padlock button beside Width and Height in the
-  Render panel. Locked (default), editing one dimension computes the other from a kept
-  target ratio without cumulative drift; unlocked, they are independent. Presets and
-  Swap respect the lock; edits that would exceed 16–8000 px are refused with an
-  explanation; the lock state is saved in projects (older projects open locked).
+### Highlights
+- **See and drag the lights (FR-LIGHT-01).** **Lighting Setup…** (Appearance tab or
+  View menu) opens a 3D overview of the key and fill lights, the output camera and
+  frame, the focal point *F* and geometry centre *C*, the azimuth and elevation guides,
+  the area-light diameter, and the reflection panel. It has its own camera, so looking
+  around never changes the image. Drag the key light to set its azimuth and elevation:
+  the live view and the spin boxes follow, releasing makes one undo step, Esc cancels.
+- **Live view lit like the render (FR-LIGHT-01).** The live view now uses the key and
+  fill lights at their real positions and intensities instead of VTK's fixed light
+  kit, so the shading direction matches the POV-Ray image (shadows, area-light
+  softness, reflections, and the reflection panel still need the POV-Ray preview).
+- **Lock aspect ratio (FR-RENDER-01).** A padlock beside Width and Height keeps the
+  output shape while the resolution changes, without rounding drift; presets and Swap
+  respect it, impossible sizes are refused with an explanation, and projects remember
+  the state (0.1.0 projects open locked).
+- **Colour dialog and colour names (FR-COLOR-01).** Choose element, background, and
+  floor colours from a spectrum, the 140 CSS named colours, or typed hex, RGB 0–255,
+  RGB 0–1, HSV, HSL, `rgb()/hsv()/hsl()`, or a name. Resting the mouse on a colour names
+  it in plain words with the nearest CSS colour, which helps with colour-vision
+  deficiencies; colour buttons announce their colour to screen readers.
 
-- Colour dialog for element, background, and floor colours (FR-COLOR-01): spectrum, the
-  140 CSS named colours, and typed input as hex, RGB 0–255, RGB 0–1, HSV, HSL,
-  `rgb()/hsv()/hsl()`, or a colour name; all fields stay in sync; numbers are never
-  reinterpreted; invalid text cannot be accepted; keyboard operation and accessible
-  names.
-- Colour names for accessibility: resting the mouse on a colour names it in plain words
-  and gives the nearest CSS named colour (CIEDE2000); colour buttons name their colour
-  in tooltips and for screen readers (`ycrystal.core.colors`).
+### Details
+- Lighting: one shared helper (`ycrystal.core.lighting.resolve_lighting`) resolves the
+  camera-relative light values into world positions for the POV-Ray writer, the live
+  view, and the overview. The user guide now explains the conventions: azimuth 0 points
+  from *F* toward the camera, positive to the right of the image; elevation is above
+  the image's horizontal; both lights sit 4 *R* + |*C* − *F*| + 10 Å from *F*; Light
+  size is the area light's diameter in multiples of the scene radius *R*.
+- Output size: locked edits keep the edited value and compute the other from a stored
+  target ratio (half-up rounding); limits 16–8000 px; each edit, preset, or Swap is one
+  undo step that also restores the ratio. Projects store the lock as two optional keys.
+  A size change now triggers exactly one scene update (it used to trigger two or
+  three).
+- Colours: all fields stay in sync, numbers are never reinterpreted, invalid text
+  cannot be accepted, and the dialog works from the keyboard
+  (`ycrystal.core.colors`).
+- Development: new tests for each feature; CI runs the new doctests; a keyboard test no
+  longer depends on window focus under Xvfb.
 
 ## 0.1.0 — first usable release (milestones M0–M6)
 

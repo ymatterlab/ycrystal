@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0–M6 complete and merged into `main`; version 0.1.0 tagged (`v0.1.0`). Post-0.1.0: FR-COLOR-01 (PR #13) and FR-RENDER-01 (PR #14) merged; FR-LIGHT-01 implemented on local branch `feature/lighting-editor`, uncommitted, for review. Repository private.
+Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (branch `feature/lighting-editor`, submitted as a pull request); see the [0.2.0 checklist](development/release.md#checklist-for-020). Repository private.
 
 ## Milestones
 
@@ -95,8 +95,8 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 
 ## FR-LIGHT-01: Lighting Setup window and live lighting (post-0.1.0, 15 November 2026)
 
-New development after the 0.1.0 baseline (not part of M0–M6); local branch
-`feature/lighting-editor`, **uncommitted, for review**. Three increments: (A) one shared
+New development after the 0.1.0 baseline (not part of M0–M6), released in 0.2.0;
+branch `feature/lighting-editor`, submitted as a pull request. Three increments: (A) one shared
 helper resolves the lights, (B) a Lighting Setup window shows them in 3D with draggable
 key-light handles, (C) the live view uses the resolved key and fill lights instead of
 VTK's default light kit.
@@ -746,6 +746,6 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 
 ## Next bounded action
 
-Review FR-LIGHT-01 on `feature/lighting-editor` (uncommitted), including a hands-on run
-of the Lighting Setup window; the hands-on checks of FR-COLOR-01 and FR-RENDER-01 are
-also still open.
+Hands-on checks of the 0.2.0 features (Lighting Setup window, aspect lock, colour
+dialog) by a person; the maintainer decides whether to publish a GitHub release for
+`v0.2.0`.

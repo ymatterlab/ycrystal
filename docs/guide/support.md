@@ -1,6 +1,6 @@
 # Supported formats, renderers, and platforms
 
-Status for Ycrystal 0.1.0. *Verified* means tested on the stated system (automatically
+Status for Ycrystal 0.2.0 (unchanged since 0.1.0). *Verified* means tested on the stated system (automatically
 or by hand); *unverified* means not tested, not that it fails.
 
 ## Input and output files

@@ -40,7 +40,7 @@ repository is private, clone it with `gh repo clone ymatterlab/ycrystal` or over
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png  # no window
 ```
 
-Version 0.1.0; see the [changelog](CHANGELOG.md), the
+Version 0.2.0; see the [changelog](CHANGELOG.md), the
 [support matrix](docs/guide/support.md), and the [third-party notices](THIRD_PARTY_NOTICES.md).
 
 ## Guides and reference
