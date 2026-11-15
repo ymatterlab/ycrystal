@@ -126,7 +126,8 @@ render in 11.2 s showing refraction through the glass.
 - Previews use full quality without antialiasing; glass, metallic reflection, and large
   supercells make them slower (seconds). Automatic previews are on by default and can be
   switched off in the preview dock (the choice is remembered).
-- POV-Ray reports progress about once per second; short renders show only 100 %.
+- POV-Ray reports progress about once per second; short renders show only 100 %. A
+  successful render always ends at 100 % (added after a CI run whose last report was 99 %).
 - Cancel kills the POV-Ray process; nothing partial is kept.
 - The frame margin (4 %) is fixed. Output size is not undoable.
 - One material for all atoms and bonds; per-element/per-atom assignment, galleries with

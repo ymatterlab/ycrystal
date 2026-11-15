@@ -45,7 +45,11 @@ class RenderProcess(QObject):
     """
 
     progress = Signal(int)
-    """Emitted with the render progress in percent whenever POV-Ray reports it."""
+    """Emitted with the render progress in percent whenever POV-Ray reports it.
+
+    POV-Ray reports at intervals, so a successful render ends with an extra 100 if its
+    last report was lower.
+    """
 
     def __init__(self, job: RenderJob, executable: str, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -55,6 +59,7 @@ class RenderProcess(QObject):
         self._done = False
         self._cancelled = False
         self._started_at = 0.0
+        self._last_percent = -1
         self._process = QProcess(self)
         self._process.setProgram(executable)
         self._process.setArguments(job.arguments())
@@ -94,6 +99,7 @@ class RenderProcess(QObject):
             self._log.append(text)
             percent = parse_progress(text)
             if percent is not None:
+                self._last_percent = percent
                 self.progress.emit(percent)
 
     def _on_finished(self, exit_code: int, exit_status: QProcess.ExitStatus) -> None:
@@ -110,6 +116,8 @@ class RenderProcess(QObject):
             result = replace(
                 finish_job(self.job, None if crashed else exit_code, log), elapsed=elapsed
             )
+            if result.ok and self._last_percent < 100:
+                self.progress.emit(100)  # the last interval report may predate completion
         self.finished.emit(result)
 
     def _on_error(self, error: QProcess.ProcessError) -> None:
