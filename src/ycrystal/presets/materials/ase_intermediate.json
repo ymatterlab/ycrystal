@@ -1,0 +1,22 @@
+{
+  "id": "ase_intermediate",
+  "name": "Intermediate (ASE)",
+  "order": 10,
+  "category": "finish",
+  "kind": "finish",
+  "description": "ASE's 'intermediate' style: flat and bright, a small dull highlight.",
+  "pov": {
+    "finish": "ambient 0.4 diffuse 0.6 specular 0.1 roughness 0.04"
+  },
+  "native": [],
+  "includes": [],
+  "live": {
+    "ambient": 0.35,
+    "diffuse": 0.65,
+    "specular": 0.1,
+    "specular_power": 20,
+    "opacity": 1.0
+  },
+  "min_povray": "3.7",
+  "provenance": "Finish values from ASE's ase.io.pov material style 'intermediate' (ASE, LGPL-2.1-or-later); applied to Ycrystal's sRGB colours"
+}

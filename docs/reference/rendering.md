@@ -4,6 +4,8 @@
     options:
       members:
         - RenderSettings
+        - FLOOR_TILT_DEG
+        - required_includes
         - scene_to_pov
         - render_ini
         - write_scene_files
@@ -15,6 +17,9 @@
         - find_povray
         - povray_version
         - explain_failure
+        - INCLUDE_FALLBACK_DIRS
+        - include_directories
+        - missing_includes
 
 ::: ycrystal.render.jobs
     options:

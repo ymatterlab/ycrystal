@@ -7,11 +7,23 @@
         - RGB
         - SceneSettings
         - Environment
+        - BACKGROUND_MODES
         - element_color
         - count_displayed_atoms
         - cell_edge_segments
         - displayed_atoms
         - build_geometry
+
+::: ycrystal.core.scene.SceneSettings
+    options:
+      members:
+        - material_for
+        - with_element_material
+        - with_atom_materials
+        - with_element_color
+        - material_ids
+
+::: ycrystal.core.scene.Environment.live_background
 
 ::: ycrystal.core.scene.DisplayGeometry
     options:

@@ -1,0 +1,29 @@
+{
+  "id": "gradient_grey",
+  "name": "White to grey gradient",
+  "order": 6,
+  "category": "gradient",
+  "description": "Vertical gradient from white at the top to light grey at the bottom.",
+  "background": {
+    "mode": "gradient",
+    "color": [
+      1,
+      1,
+      1
+    ],
+    "bottom": [
+      0.72,
+      0.72,
+      0.74
+    ]
+  },
+  "transparent": false,
+  "lighting": "soft",
+  "reflector": false,
+  "cell_edge_color": [
+    0.15,
+    0.15,
+    0.15
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

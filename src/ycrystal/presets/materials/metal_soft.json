@@ -1,0 +1,26 @@
+{
+  "id": "metal_soft",
+  "name": "Soft metal (F_MetalB)",
+  "order": 13,
+  "category": "metal",
+  "kind": "finish",
+  "description": "Element colour with POV-Ray's fairly soft, dull metal finish F_MetalB.",
+  "pov": {
+    "finish": "F_MetalB"
+  },
+  "native": [
+    "F_MetalB"
+  ],
+  "includes": [
+    "metals.inc"
+  ],
+  "live": {
+    "ambient": 0.2,
+    "diffuse": 0.5,
+    "specular": 0.7,
+    "specular_power": 40,
+    "opacity": 1.0
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier F_MetalB from the standard include file metals.inc; referenced by name, not copied"
+}

@@ -13,8 +13,8 @@ from ycrystal.core.samples import perovskite_srtio3
 from ycrystal.core.scene import Environment, SceneSettings, build_geometry
 from ycrystal.io.project import Project, load_project, save_project
 from ycrystal.io.readers import read_structure
-from ycrystal.presets import environment_from_preset, materials
-from ycrystal.render.pov_writer import RenderSettings, write_scene_files
+from ycrystal.presets import environment_from_preset, environments, materials
+from ycrystal.render.pov_writer import RenderSettings, required_includes, write_scene_files
 
 
 def main() -> None:
@@ -56,13 +56,26 @@ def main() -> None:
         assert "(1 atoms hidden in Ycrystal are not written.)" in pov.read_text()
         assert 'Output_File_Name="SrTiO3.png"' in ini.read_text()
 
-        # Presets: a glass material on a transparent background (M3 alpha catalog).
+        # Presets: a glass material on a transparent background.
         glass = build_geometry(structure, replace(scene, material="glass"))
         clear = environment_from_preset("transparent")
         pov, ini, _ = write_scene_files(directory, "glass", glass, camera, clear, settings)
         assert "interior { ior 1.45 }" in pov.read_text() and clear.transparent
         assert "Output_Alpha=on" in ini.read_text()
-        assert [m.id for m in materials()] == ["matte", "satin", "glossy", "metallic", "glass"]
+        assert len(materials()) >= 20 and len(environments()) >= 12
+
+        # Overrides: gold Ti (element), one chrome Sr corner (atom), in a white studio.
+        styled = scene.with_element_material("Ti", "gold").with_atom_materials(
+            [(0, (0, 0, 0))], "chrome"
+        )
+        studio = build_geometry(structure, styled)
+        assert studio.materials[studio.index_of((0, (0, 0, 0)))] == "chrome"
+        assert set(studio.materials) == {"satin", "gold", "chrome"}
+        environment = environment_from_preset("studio_white")
+        pov, _, _ = write_scene_files(directory, "studio", studio, camera, environment, settings)
+        text = pov.read_text()
+        assert '#include "metals.inc"' in text and "// Floor:" in text
+        assert required_includes(studio) == ("metals.inc", "textures.inc")
     print("Documentation examples passed (no display or renderer).")
 
 

@@ -1,16 +1,17 @@
 {
   "id": "glass",
   "name": "Glass (tinted)",
-  "order": 5,
+  "order": 21,
   "category": "transparent",
-  "description": "Transparent, tinted by the element colour, with refraction (IOR 1.45).",
   "kind": "material",
-  "keeps_element_color": true,
+  "description": "Transparent, tinted by the element colour, with refraction (IOR 1.45).",
   "pov": {
     "finish": "ambient 0.02 diffuse 0.1 specular 0.9 roughness 0.002 reflection 0.08",
     "filter": 0.8,
     "interior": "ior 1.45"
   },
+  "native": [],
+  "includes": [],
   "live": {
     "ambient": 0.1,
     "diffuse": 0.6,
@@ -18,7 +19,6 @@
     "specular_power": 90,
     "opacity": 0.4
   },
-  "includes": [],
   "min_povray": "3.7",
   "provenance": "Ycrystal recipe (MIT)"
 }

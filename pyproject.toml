@@ -47,8 +47,15 @@ version = { attr = "ycrystal.__version__" }
 where = ["src"]
 
 [tool.setuptools.package-data]
-# Preset manifests (materials, environments) ship with the package.
-"ycrystal.presets" = ["materials/*.json", "environments/*.json"]
+# Preset manifests and their POV-Ray thumbnails ship with the package.
+"ycrystal.presets" = [
+    "materials/*.json",
+    "environments/*.json",
+    "lighting.json",
+    "thumbnails/index.json",
+    "thumbnails/materials/*.png",
+    "thumbnails/environments/*.png",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

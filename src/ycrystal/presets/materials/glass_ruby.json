@@ -1,0 +1,31 @@
+{
+  "id": "glass_ruby",
+  "name": "Ruby glass (M_Ruby_Glass)",
+  "order": 25,
+  "category": "transparent",
+  "kind": "material",
+  "description": "POV-Ray's ruby-red glass material M_Ruby_Glass.",
+  "pov": {
+    "material": "M_Ruby_Glass"
+  },
+  "native": [
+    "M_Ruby_Glass"
+  ],
+  "includes": [
+    "textures.inc"
+  ],
+  "live": {
+    "ambient": 0.1,
+    "diffuse": 0.5,
+    "specular": 1.0,
+    "specular_power": 120,
+    "opacity": 0.5,
+    "color": [
+      0.85,
+      0.15,
+      0.22
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier M_Ruby_Glass from the standard include file textures.inc; referenced by name, not copied"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "ase_jmol",
+  "name": "Jmol style (ASE)",
+  "order": 7,
+  "category": "finish",
+  "kind": "finish",
+  "description": "ASE's 'jmol' style: bright with a crisp metallic-tinted highlight.",
+  "pov": {
+    "finish": "ambient 0.4 diffuse 0.6 specular 1 roughness 0.001 metallic"
+  },
+  "native": [],
+  "includes": [],
+  "live": {
+    "ambient": 0.35,
+    "diffuse": 0.6,
+    "specular": 0.9,
+    "specular_power": 120,
+    "opacity": 1.0
+  },
+  "min_povray": "3.7",
+  "provenance": "Finish values from ASE's ase.io.pov material style 'jmol' (ASE, LGPL-2.1-or-later); applied to Ycrystal's sRGB colours"
+}

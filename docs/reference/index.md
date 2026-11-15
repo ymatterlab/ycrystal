@@ -9,7 +9,7 @@ API guarantee yet. Source analysis is static and does not initialize the applica
 - [Camera and picking](camera.md): orthographic basis, projection, navigation, analytic picking.
 - [Readers and projects](io.md): supported imports, caller questions, versioned project files.
 - [POV export and render jobs](rendering.md): text output, discovery, result objects, lifecycle.
-- [Material and environment presets](presets.md): the material/background catalog and its manifests.
+- [Material, environment, and lighting presets](presets.md): catalogs, manifests, thumbnails.
 - [GUI adapters](gui.md): selected window/viewport interfaces and asynchronous rendering.
 
 For practical examples and prerequisites, see [Python examples](../development/examples.md).

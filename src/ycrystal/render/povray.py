@@ -124,10 +124,64 @@ _KNOWN_FAILURES: tuple[tuple[re.Pattern[str], str], ...] = (
     ),
     (
         re.compile(r"Cannot open include file|Cannot find file", re.IGNORECASE),
-        "POV-Ray could not find a required include file. Check the POV-Ray include "
-        "library path (Library_Path) of this installation.",
+        "POV-Ray could not find a required include file{name}. Materials that use native "
+        "POV-Ray identifiers need the standard include files: on Linux Mint/Ubuntu install "
+        "them with 'sudo apt install povray-includes', or check the include library path "
+        "(Library_Path) of this installation.",
     ),
 )
+
+_INCLUDE_NAME = re.compile(r"(?:Cannot open include file|Cannot find file)\s+'?\"?([\w.\-]+)")
+
+INCLUDE_FALLBACK_DIRS = (
+    Path("/usr/share/povray-3.7/include"),
+    Path("/usr/local/share/povray-3.7/include"),
+)
+"""Standard include directories searched in addition to ``Library_Path`` entries."""
+
+
+def include_directories() -> list[Path]:
+    """Return the directories where POV-Ray looks for standard include files.
+
+    Reads the ``Library_Path`` entries of the system and user ``povray.ini`` files
+    (``/etc/povray/3.7/povray.ini``, ``~/.povray/3.7/povray.ini``) and adds
+    [`INCLUDE_FALLBACK_DIRS`][ycrystal.render.povray.INCLUDE_FALLBACK_DIRS]. Only
+    existing directories are returned, without duplicates.
+    """
+    candidates: list[Path] = []
+    for ini in (Path("/etc/povray/3.7/povray.ini"), Path.home() / ".povray/3.7/povray.ini"):
+        try:
+            text = ini.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for line in text.splitlines():
+            match = re.match(r"\s*Library_Path\s*=\s*\"?([^\";]+)\"?", line, re.IGNORECASE)
+            if match:
+                candidates.append(Path(os.path.expanduser(match.group(1).strip())))
+    candidates.extend(INCLUDE_FALLBACK_DIRS)
+    result: list[Path] = []
+    for directory in candidates:
+        if directory.is_dir() and directory not in result:
+            result.append(directory)
+    return result
+
+
+def missing_includes(names: tuple[str, ...] | list[str]) -> list[str]:
+    """Return the include files of ``names`` that none of the include directories has.
+
+    Parameters
+    ----------
+    names
+        Include file names, for example from
+        [`required_includes`][ycrystal.render.pov_writer.required_includes].
+
+    Returns
+    -------
+    list of str
+        The missing names, in the given order; empty when all are found.
+    """
+    directories = include_directories()
+    return [name for name in names if not any((d / name).is_file() for d in directories)]
 
 
 def explain_failure(returncode: int | None, log: str) -> str:
@@ -149,6 +203,9 @@ def explain_failure(returncode: int | None, log: str) -> str:
     """
     for pattern, message in _KNOWN_FAILURES:
         if pattern.search(log):
+            if "{name}" in message:
+                found = _INCLUDE_NAME.search(log)
+                message = message.format(name=f" ({found.group(1).rstrip('.')})" if found else "")
             return message
     tail = "\n".join(line for line in log.strip().splitlines()[-12:])
     status = "was stopped" if returncode is None else f"exited with code {returncode}"

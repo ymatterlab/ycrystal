@@ -189,7 +189,7 @@ def test_schema1_project_opens_unchanged_without_bonds(tmp_path):
     assert len(build_geometry(project.structure, project.scene).bonds) == 0
 
 
-def test_schema3_material_background_and_output(tmp_path):
+def test_material_background_and_output_round_trip(tmp_path):
     from ycrystal.presets import environment_from_preset
 
     scene = SceneSettings(material="glass")
@@ -225,6 +225,91 @@ def test_schema2_transparent_output_becomes_transparent_preset(tmp_path):
 def test_unknown_presets_are_refused(tmp_path, section, key):
     data = project_to_dict(Project(read_structure(FIXTURES / "MgB2.cif")))
     data[section][key] = "unobtainium"
+    path = tmp_path / "future.ycrystal"
+    path.write_text(json.dumps(data))
+    with pytest.raises(ProjectError, match="unobtainium.*Update Ycrystal"):
+        load_project(path)
+
+
+def test_schema4_overrides_colours_and_environment_round_trip(tmp_path):
+    from ycrystal.presets import apply_lighting, environment_from_preset
+
+    structure = read_structure(FIXTURES / "MgB2.cif")
+    scene = (
+        SceneSettings(material="ceramic", repetitions=(2, 2, 1))
+        .with_element_material("B", "gold")
+        .with_atom_materials([(0, (1, 0, 0)), (1, (0, 0, 0))], "glass_frosted")
+        .with_element_color("Mg", (0.1, 0.8, 0.3))
+    )
+    environment = replace(
+        apply_lighting(environment_from_preset("sky_cloudy"), "dramatic"),
+        clouds=0.35,
+        floor=True,
+        floor_color=(0.4, 0.42, 0.45),
+        floor_reflection=0.2,
+        floor_offset=0.75,
+        key_azimuth=-50.0,
+        light_size=0.8,
+    )
+    project = Project(structure, scene=scene, environment=environment)
+    path = save_project(tmp_path / "m4.ycrystal", project)
+    again = load_project(path)
+    assert again.scene == project.scene  # overrides and colours, exactly
+    assert again.environment == project.environment  # background, floor, lighting
+    data = json.loads(path.read_text())
+    assert data["schema_version"] == 4
+    assert data["scene"]["element_materials"] == [{"element": "B", "material": "gold"}]
+    assert data["environment"]["floor"]["reflection"] == 0.2
+    assert data["environment"]["lighting"]["preset"] == "dramatic"
+    a = build_geometry(project.structure, project.scene)
+    b = build_geometry(again.structure, again.scene)
+    assert a.materials == b.materials and np.array_equal(a.colors, b.colors)
+
+
+def test_schema3_file_keeps_its_m3_appearance(tmp_path):
+    data = project_to_dict(Project(read_structure(FIXTURES / "MgB2.cif")))
+    data["schema_version"] = 3
+    for key in ("element_materials", "atom_materials", "element_colors"):
+        del data["scene"][key]
+    data["scene"]["material"] = "metallic"
+    data["environment"] = {
+        "preset": "dark",
+        "transparent": False,
+        "background": [0.13, 0.13, 0.15],
+        "key_light": 0.8,
+        "fill_light": 0.3,
+    }
+    path = tmp_path / "m3.ycrystal"
+    path.write_text(json.dumps(data))
+    project = load_project(path)
+    env = project.environment
+    assert env.preset == "dark" and env.background == (0.13, 0.13, 0.15)
+    assert (env.key_light, env.fill_light) == (0.8, 0.3)
+    # Fields that M3 did not have take the M3 behaviour, not the M4 "dark" preset values.
+    assert env.background_mode == "solid" and not env.floor and not env.reflector
+    assert env.lighting == "soft" and env.light_size == 0.0
+    assert project.scene.material == "metallic" and project.scene.element_materials == ()
+
+
+@pytest.mark.parametrize(
+    "path_keys, value",
+    [
+        (("scene", "element_materials"), [{"element": "O", "material": "unobtainium"}]),
+        (("scene", "atom_materials"), [{"atom": 0, "image": [0, 0, 0], "material": "unobtainium"}]),
+    ],
+)
+def test_unknown_override_materials_are_refused(tmp_path, path_keys, value):
+    data = project_to_dict(Project(read_structure(FIXTURES / "MgB2.cif")))
+    data[path_keys[0]][path_keys[1]] = value
+    path = tmp_path / "future.ycrystal"
+    path.write_text(json.dumps(data))
+    with pytest.raises(ProjectError, match="unobtainium.*Update Ycrystal"):
+        load_project(path)
+
+
+def test_unknown_lighting_is_refused(tmp_path):
+    data = project_to_dict(Project(read_structure(FIXTURES / "MgB2.cif")))
+    data["environment"]["lighting"]["preset"] = "unobtainium"
     path = tmp_path / "future.ycrystal"
     path.write_text(json.dumps(data))
     with pytest.raises(ProjectError, match="unobtainium.*Update Ycrystal"):

@@ -2,13 +2,14 @@
   "id": "matte",
   "name": "Matte",
   "order": 1,
-  "category": "scientific",
-  "description": "Diffuse surface with almost no highlight; reads well in print.",
+  "category": "finish",
   "kind": "finish",
-  "keeps_element_color": true,
+  "description": "Diffuse, almost no highlight.",
   "pov": {
     "finish": "ambient 0.10 diffuse 0.85 specular 0.05 roughness 0.1"
   },
+  "native": [],
+  "includes": [],
   "live": {
     "ambient": 0.15,
     "diffuse": 0.9,
@@ -16,7 +17,6 @@
     "specular_power": 10,
     "opacity": 1.0
   },
-  "includes": [],
   "min_povray": "3.7",
   "provenance": "Ycrystal recipe (MIT)"
 }

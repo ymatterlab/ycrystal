@@ -18,7 +18,8 @@ from __future__ import annotations
 
 import itertools
 from collections import Counter
-from dataclasses import dataclass, field
+from collections.abc import Iterable
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 from ase.data import chemical_symbols, covalent_radii
@@ -81,9 +82,18 @@ class SceneSettings:
     bonds
         BondSettings controlling candidate distances, enabled pairs, and radius.
     material
-        Id of the material preset applied to every atom and bond (see
+        Id of the default material preset for atoms and bonds (see
         [`ycrystal.presets`][ycrystal.presets]); ``"satin"`` is Ycrystal's original
-        finish. Resolved by the renderers, which reject unknown ids.
+        finish. Unknown ids are rejected when the geometry is built.
+    element_materials
+        Material overrides per element, as sorted ``(element, material_id)`` pairs.
+    atom_materials
+        Material overrides per displayed atom, as sorted ``(atom_id, material_id)``
+        pairs. Precedence: atom override, then element override, then `material`. Like
+        hidden IDs, overrides of atoms that are not displayed are kept.
+    element_colors
+        Colour overrides per element, as sorted ``(element, rgb)`` pairs; other elements
+        use ASE's Jmol colours. Materials with their own pigment ignore the colour.
     hidden
         Displayed-atom IDs omitted from the view and from exported scenes. IDs that are
         not displayed under the current settings (for example boundary images while
@@ -109,6 +119,9 @@ class SceneSettings:
     cell_mode: str = "all"
     bonds: BondSettings = field(default_factory=BondSettings)
     material: str = "satin"
+    element_materials: tuple[tuple[str, str], ...] = ()
+    atom_materials: tuple[tuple[AtomId, str], ...] = ()
+    element_colors: tuple[tuple[str, RGB], ...] = ()
 
     def __post_init__(self) -> None:
         reps = tuple(int(r) for r in self.repetitions)
@@ -117,35 +130,145 @@ class SceneSettings:
         object.__setattr__(self, "repetitions", reps)
         if self.cell_mode not in CELL_MODES:
             raise ValueError(f"cell_mode must be one of {CELL_MODES}")
+        # Canonical form: one entry per key, sorted, so equal settings compare equal.
+        object.__setattr__(
+            self, "element_materials", tuple(sorted(dict(self.element_materials).items()))
+        )
+        object.__setattr__(self, "atom_materials", tuple(sorted(dict(self.atom_materials).items())))
+        colors = {
+            element: (float(rgb[0]), float(rgb[1]), float(rgb[2]))
+            for element, rgb in self.element_colors
+        }
+        if any(not 0.0 <= c <= 1.0 for rgb in colors.values() for c in rgb):
+            raise ValueError("colour components must be between 0 and 1")
+        object.__setattr__(self, "element_colors", tuple(sorted(colors.items())))
+
+    def material_for(self, atom_id: AtomId, element: str) -> str:
+        """Return the material id of one displayed atom (atom > element > default).
+
+        Examples
+        --------
+        >>> from ycrystal.core.scene import SceneSettings
+        >>> s = SceneSettings(
+        ...     element_materials=(("O", "glass"),), atom_materials=(((0, (0, 0, 0)), "gold"),)
+        ... )
+        >>> s.material_for((0, (0, 0, 0)), "O"), s.material_for((1, (0, 0, 0)), "O")
+        ('gold', 'glass')
+        >>> s.material_for((2, (0, 0, 0)), "Ti")
+        'satin'
+        """
+        atoms = dict(self.atom_materials)
+        if atom_id in atoms:
+            return atoms[atom_id]
+        return dict(self.element_materials).get(element, self.material)
+
+    def with_element_material(self, element: str, material_id: str | None) -> SceneSettings:
+        """Return settings with the material override of ``element`` set or removed (None)."""
+        table = dict(self.element_materials)
+        if material_id is None:
+            table.pop(element, None)
+        else:
+            table[element] = material_id
+        return replace(self, element_materials=tuple(table.items()))
+
+    def with_atom_materials(
+        self, atom_ids: Iterable[AtomId], material_id: str | None
+    ) -> SceneSettings:
+        """Return settings with material overrides of displayed atoms set or removed."""
+        table = dict(self.atom_materials)
+        for atom_id in atom_ids:
+            if material_id is None:
+                table.pop(atom_id, None)
+            else:
+                table[atom_id] = material_id
+        return replace(self, atom_materials=tuple(table.items()))
+
+    def with_element_color(self, element: str, color: RGB | None) -> SceneSettings:
+        """Return settings with the colour override of ``element`` set or removed (None)."""
+        table = dict(self.element_colors)
+        if color is None:
+            table.pop(element, None)
+        else:
+            table[element] = color
+        return replace(self, element_colors=tuple(table.items()))
+
+    def material_ids(self) -> set[str]:
+        """Every material id the settings refer to (default and overrides)."""
+        return (
+            {self.material}
+            | {m for _, m in self.element_materials}
+            | {m for _, m in self.atom_materials}
+        )
 
 
 CELL_MODES = ("all", "outline", "unit")
 
+BACKGROUND_MODES = ("solid", "gradient", "sky")
+"""Background kinds: a plain colour, a vertical two-colour gradient, or a sky."""
+
 
 @dataclass(frozen=True)
 class Environment:
-    """Background and light intensities for the live view and exported scenes.
+    """Background, floor, and lighting for the live view and exported scenes.
 
-    Presentation state only. The POV-Ray writer places both lights relative to the
-    camera, on the viewer's side of the scene: the key light at the upper left (it
-    casts shadows) and the fill light at the lower right (shadowless). The live VTK view
-    applies only `background` and keeps its own default lighting.
+    Presentation state only; every field is saved in projects. An environment preset
+    (see [`environment_from_preset`][ycrystal.presets.environment_from_preset])
+    initialises all fields; each group can then be changed separately.
+
+    Lights are placed relative to the camera, on the viewer's side: the key light in the
+    direction given by `key_azimuth` and `key_elevation`, and a shadowless fill light at
+    the lower right. The floor, gradients, and skies are drawn relative to the output
+    frame as well, so they look the same for any orientation of the structure. The live
+    VTK view approximates them (see
+    [`StructureViewport.set_scene`][ycrystal.viewport.qt_viewport.StructureViewport.set_scene]).
 
     Attributes
     ----------
     background
-        Background colour as sRGB components between 0 and 1. With `transparent`, it
-        is shown only in the live view.
-    transparent
-        Whether rendered PNGs get an alpha channel with a fully transparent background.
-    preset
-        Id of the environment preset this environment was made from (see
-        [`ycrystal.presets`][ycrystal.presets]); saved in projects.
+        Solid background colour, top colour of a gradient, or zenith colour of a sky,
+        as sRGB components between 0 and 1. With `transparent`, shown only in the live
+        view.
     key_light
         Intensity of the key light (POV-Ray ``color rgb`` value); non-positive values
         omit the light.
     fill_light
         Intensity of the fill light; non-positive values omit the light.
+    transparent
+        Whether rendered PNGs get an alpha channel with a fully transparent background.
+        Floors, gradients, and skies are then left out.
+    preset
+        Id of the environment preset this environment was made from (see
+        [`ycrystal.presets`][ycrystal.presets]).
+    background_mode
+        One of [`BACKGROUND_MODES`][ycrystal.core.scene.BACKGROUND_MODES].
+    background_bottom
+        Bottom colour of a gradient, or horizon colour of a sky.
+    clouds
+        Cloud cover of a sky, from 0 (clear) to 1.
+    floor
+        Whether a floor is drawn below the structure (below as seen in the frame,
+        tilted towards the viewer so that it is visible and catches shadows).
+    floor_color
+        Floor colour (sRGB).
+    floor_reflection
+        Mirror reflection of the floor, 0 to 1.
+    floor_offset
+        Gap between the lowest atom and the floor, in Å (at least 0).
+    lighting
+        Id of the lighting preset the light values came from (see
+        [`lighting_presets`][ycrystal.presets.lighting_presets]).
+    key_azimuth
+        Key-light direction in degrees to the right of the viewer (negative: left).
+    key_elevation
+        Key-light direction in degrees above the frame's horizontal.
+    light_size
+        Key light as an area light of this size, in multiples of the scene radius; 0 for
+        a point light with sharp shadows.
+    shadows
+        Whether the key light casts shadows.
+    reflector
+        Whether an invisible bright panel near the key light is added, so that metals and
+        glass have something bright to reflect on dark backgrounds.
     """
 
     background: RGB = (1.0, 1.0, 1.0)  # sRGB
@@ -153,6 +276,45 @@ class Environment:
     fill_light: float = 0.35
     transparent: bool = False
     preset: str = "white"
+    background_mode: str = "solid"
+    background_bottom: RGB = (1.0, 1.0, 1.0)
+    clouds: float = 0.0
+    floor: bool = False
+    floor_color: RGB = (0.9, 0.9, 0.9)
+    floor_reflection: float = 0.0
+    floor_offset: float = 0.0
+    lighting: str = "soft"
+    key_azimuth: float = -29.0
+    key_elevation: float = 33.0
+    light_size: float = 0.0
+    shadows: bool = True
+    reflector: bool = False
+
+    def __post_init__(self) -> None:
+        if self.background_mode not in BACKGROUND_MODES:
+            raise ValueError(f"background_mode must be one of {BACKGROUND_MODES}")
+        for name in ("clouds", "floor_reflection"):
+            if not 0.0 <= getattr(self, name) <= 1.0:
+                raise ValueError(f"{name} must be between 0 and 1")
+        if self.light_size < 0 or self.floor_offset < 0:
+            raise ValueError("light_size and floor_offset must not be negative")
+        for name in ("background", "background_bottom", "floor_color"):
+            rgb = tuple(float(c) for c in getattr(self, name))
+            if len(rgb) != 3 or not all(0.0 <= c <= 1.0 for c in rgb):
+                raise ValueError(f"{name} components must be between 0 and 1")
+            object.__setattr__(self, name, rgb)
+
+    def live_background(self) -> tuple[RGB, RGB | None]:
+        """Return the live-view background: ``(bottom_or_solid, top_or_None)``.
+
+        A floor fills the background of an orthographic view, so the live view shows the
+        floor colour. Gradients and skies become vertical gradients.
+        """
+        if self.floor and not self.transparent:
+            return self.floor_color, None
+        if self.background_mode == "solid" or self.transparent:
+            return self.background, None
+        return self.background_bottom, self.background
 
 
 @dataclass(frozen=True, eq=False)
@@ -175,7 +337,9 @@ class DisplayGeometry:
     radii
         Sphere radii in Å, shape ``(M,)``.
     colors
-        Sphere colours as sRGB components between 0 and 1, shape ``(M, 3)``.
+        Sphere colours as sRGB components between 0 and 1, shape ``(M, 3)``: the element
+        colour (or its override), or the representative colour of a material with its
+        own pigment. POV-Ray uses them for materials that keep the element colour.
     cell_edges
         Cell-edge segments in Å, shape ``(E, 2, 3)``: start and end point of each edge.
         ``E`` depends on repetitions and cell mode; 0 when no cell is drawn.
@@ -188,7 +352,11 @@ class DisplayGeometry:
     bond_radius
         Cylinder radius in Å; each bond is split and coloured by its endpoints.
     material
-        Material preset id for atoms and bonds (from `SceneSettings.material`).
+        Default material preset id (from `SceneSettings.material`).
+    materials
+        Resolved material id of each displayed atom (atom override, element override,
+        or `material`). Each half-bond uses the material of its atom. Empty means
+        `material` for every atom.
     hidden_count
         Number of atoms that the settings would display but that are hidden.
 
@@ -217,12 +385,17 @@ class DisplayGeometry:
     bonds: np.ndarray = field(default_factory=lambda: np.zeros((0, 2), dtype=int))  # (B, 2)
     bond_radius: float = 0.12  # Å
     material: str = "satin"
+    materials: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         index = {atom_id: i for i, atom_id in enumerate(self.atom_ids)}
         if len(index) != len(self.atom_ids):
             raise ValueError("displayed atom IDs must be unique")
         object.__setattr__(self, "_index", index)
+        if not self.materials:
+            object.__setattr__(self, "materials", (self.material,) * len(self.atom_ids))
+        elif len(self.materials) != len(self.atom_ids):
+            raise ValueError("materials needs one entry per displayed atom")
 
     def __len__(self) -> int:
         return len(self.atom_ids)
@@ -472,10 +645,13 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
 
     Notes
     -----
-    Radii are ``settings.radius_scale`` times ASE's covalent radius, and colours are
-    ASE's Jmol colours. Cell edges are drawn when ``settings.show_cell`` is true and the
-    structure has a cell. Repetitions are display state: scientific arrays stay unchanged.
-    A bond is drawn only when both endpoint IDs are displayed and its pair is enabled.
+    Radii are ``settings.radius_scale`` times ASE's covalent radius. Each atom's material
+    is resolved with ``settings.material_for``; colours are the element colours (ASE's
+    Jmol colours or ``settings.element_colors``), except for atoms whose material has its
+    own pigment, which get the material's representative colour. Cell edges are drawn
+    when ``settings.show_cell`` is true and the structure has a cell. Repetitions are
+    display state: scientific arrays stay unchanged. A bond is drawn only when both
+    endpoint IDs are displayed and its pair is enabled.
 
     Examples
     --------
@@ -506,14 +682,22 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
     numbers = structure.numbers[sources] if len(sources) else np.zeros(0, dtype=int)
     positions = np.array([pos for _, pos in shown], dtype=float).reshape(-1, 3)
     radii = settings.radius_scale * covalent_radii[numbers]
-    colors = np.array([element_color(z) for z in numbers], dtype=float).reshape(-1, 3)
+    elements = tuple(chemical_symbols[z] for z in numbers)
+    atom_table, element_table = dict(settings.atom_materials), dict(settings.element_materials)
+    materials = tuple(
+        atom_table.get(atom_id) or element_table.get(element, settings.material)
+        for atom_id, element in zip(atom_ids, elements, strict=True)
+    )
+    colors = np.array(
+        _resolved_colors(numbers, elements, materials, settings), dtype=float
+    ).reshape(-1, 3)
     edges = cell_edge_segments(structure, settings)
     bonds = _displayed_bonds(structure, settings, atom_ids)
     for array in (positions, radii, colors, edges, bonds):
         array.setflags(write=False)
     return DisplayGeometry(
         atom_ids=atom_ids,
-        elements=tuple(chemical_symbols[z] for z in numbers),
+        elements=elements,
         positions=positions,
         radii=radii,
         colors=colors,
@@ -524,7 +708,31 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
         bonds=bonds,
         bond_radius=settings.bonds.radius,
         material=settings.material,
+        materials=materials,
     )
+
+
+def _resolved_colors(
+    numbers: np.ndarray,
+    elements: tuple[str, ...],
+    materials: tuple[str, ...],
+    settings: SceneSettings,
+) -> list[RGB]:
+    """Return element colours (or overrides), or live colours of own-pigment materials."""
+    from ycrystal.presets import get_material
+
+    overrides = dict(settings.element_colors)
+    looks = {material_id: get_material(material_id) for material_id in set(materials)}
+    for material_id in settings.material_ids():  # unknown ids fail even if unused
+        looks.setdefault(material_id, get_material(material_id))
+    colors = []
+    for z, element, material_id in zip(numbers, elements, materials, strict=True):
+        material = looks[material_id]
+        if not material.keeps_element_color and material.live.color is not None:
+            colors.append(material.live.color)
+        else:
+            colors.append(overrides.get(element) or element_color(int(z)))
+    return colors
 
 
 def _displayed_bonds(

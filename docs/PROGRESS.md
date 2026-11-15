@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0, M1, M2, and M3 complete and merged into `main` (M3 in PR #8). Repository made private; pre-commit.ci and the CI badge removed.
+Last updated: 15 November 2026. M0–M3 complete and merged into `main` (M3 in PR #8); M4 complete on branch `feature/m4-materials-lighting`. Repository private; pre-commit.ci and the CI badge removed.
 
 ## Milestones
 
@@ -9,8 +9,8 @@ Last updated: 15 November 2026. M0, M1, M2, and M3 complete and merged into `mai
 | M0 | Desktop/render feasibility: Qt window, embedded VTK view, camera model, first POV-Ray render matching the view | **Complete** (see evidence and caveats) |
 | M1 | File import (POSCAR/CIF/QE `ibrav=0`) and save/reopen projects | **Complete** (see evidence) |
 | M2 | Navigation tools, selection, supercells, periodic bonds, cell boundary images | **Complete** (see evidence; drag handles are M5) |
-| M3 | Complete figure workflow: preview, output frame, cancellation, final PNG | **Complete** (see evidence; full galleries are M4) |
-| M4 | Material and environment galleries | Not started |
+| M3 | Complete figure workflow: preview, output frame, cancellation, final PNG | **Complete** (see evidence) |
+| M4 | Material and environment galleries, assignment, lighting | **Complete** (see evidence; style reuse is M5) |
 | M5 | Supercell drag handles, reusable styles, undo coverage | Not started |
 | M6 | Installation path, launcher, user guide, release checks | Not started |
 
@@ -92,6 +92,58 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## M4 acceptance evidence
+
+Gate: at least 20 materials and 12 environments render individually; representative
+glass/metal/sky combinations pass; style changes survive reopen; live approximations
+are labelled and the actual POV-Ray preview is available for effects VTK cannot show.
+
+| Check | Result | How |
+| --- | --- | --- |
+| Catalog size | 30 materials, 12 environments, 6 lighting presets | JSON manifests in `src/ycrystal/presets/`; `test_catalog_meets_the_m4_targets` |
+| Native material types | All four declaration kinds (13 finish, 4 pigment, 8 texture, 5 material); 16 materials use native POV-Ray 3.7 identifiers (`T_Gold_3C`, `F_MetalD`, `M_Glass`, `White_Marble`, `T_Stone25`, …) with their include files; 14 have their own pigment | `test_writer_declares_each_material_kind`, `test_native_material_and_finish_identifiers`; every listed include file exists in the installed `povray-includes` (`test_manifest_fields_are_consistent`) |
+| Every catalog entry renders | Pass: 30 materials and 12 environments, each in its own POV-Ray 3.7 render | `test_every_material_renders`, `test_every_environment_renders` (size, alpha, drawn structure, gradient for gradients and skies) |
+| Representative combinations | Pass: glass/cloudy sky (blue sky above), gem/blue gradient, chrome/dark reflective studio (mirror image below), gold/dark grey, polished metal/black, marble/transparent (alpha 0), clear glass/white studio | `test_representative_combinations`; mixed default/element/atom overrides in the grey studio (`test_mixed_overrides_render_and_floor_shadows`) |
+| Genuine thumbnails | 42 POV-Ray thumbnails (128 × 128 px, 455 KB total) of fixed scenes; `index.json` records a digest of each scene, and a test fails when a recipe or the writer changes without re-rendering | `scripts/render_thumbnails.py` (all 42 in about 34 s on the development laptop); `test_every_preset_has_a_current_thumbnail`; reviewed visually (`artifacts/m4/`) |
+| Galleries, search, favourites | Pass: search by name, description, category, POV-Ray identifier, or include file; category filter; favourites in `QSettings` | `test_material_gallery_search_categories_and_favourites`, `test_environment_gallery_applies_preset` |
+| Assignment and precedence | Pass: default, element, and displayed-atom overrides (atom > element > default); half-bonds follow their atom; separate element colours; every step undoable | `test_material_precedence_and_colours`, `test_gallery_targets_apply_and_undo`, `test_element_table_material_and_colour`, `test_selection_buttons_and_edit_menu` |
+| Background, floor, lighting | Independent controls; a preset initialises all three. Solid, gradient, and sky backgrounds on a frame-aligned backdrop; tilted floor with shadows and optional reflection; key/fill intensities, direction, area-light size, shadows, reflection panel; spin-box drags merge into one undo step | `test_floor_backdrop_lights_and_reflector`, `test_environment_controls_merge_and_lighting_presets` |
+| Transparency | Transparent output leaves out floor and backdrop | writer and render tests (alpha 0 at the corner) |
+| Projects | Schema 4 restores overrides, colours, and the full environment exactly; schema-3 files keep their M3 appearance; unknown materials/lighting are refused with an update message | `test_schema4_overrides_colours_and_environment_round_trip`, `test_schema3_file_keeps_its_m3_appearance`, `test_overrides_and_environment_survive_reopen`, `test_render_with_overrides_after_reopen` |
+| Includes in exports | Header lists required include files; export warns if one is missing; render failures name the missing file and `povray-includes` | `test_export_reports_include_files`, `test_missing_include_is_explained` |
+| Live approximations labelled | One VTK actor per material; gradients and floor colours approximated; the Appearance tab states that shadows, reflections, refraction, clouds, and procedural textures appear only in the POV-Ray preview | `test_live_view_approximations` |
+| Earlier gates unchanged | M0 evidence: 0.067 px live view, 0.034 px POV-Ray; M3 gate tests pass | `scripts/m0_evidence.py`; `tests/test_gui_render.py` |
+| Packaging and docs | Wheel contains 30 + 12 manifests, `lighting.json`, 42 thumbnails, and `index.json`; new guide page lists every preset (checked by a test); strict docs build clean | `uv build --wheel`; `test_appearance_guide_lists_every_preset`; `zensical build --clean --strict` |
+| Automated suite | 260 passed, 0 skipped (strict mode) before the final UI/doc touch-ups; afterwards the non-rendering tests were rerun | `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs`; CI runs the full suite |
+
+Render times on the development laptop at preview size (480 × 320, SrTiO3 2 × 2 × 1,
+no antialiasing): satin on white 0.9 s, satin in the white studio 1.3 s, chrome in the
+dark studio 1.2 s, marble on a gradient 1.0 s, tinted glass on white 4.5 s and on the
+cloudy sky 5.2 s, tinted glass in the white studio (area light) 39 s.
+
+### M4 caveats
+
+- Transparent materials with area lights (Studio and Top lighting) are slow: POV-Ray
+  traces filtered shadow rays through the glass (5 × 5 area samples). The guide
+  recommends Soft/Bright lighting or switching off automatic previews while composing.
+  The *Bright* preset is a point light for this reason.
+- Live view: one material per actor with Phong approximations; floors become a flat
+  colour, skies a gradient; no shadows, reflections, refraction, clouds, or procedural
+  patterns (labelled in the panel).
+- Native metals (`T_*_3C`, `Polished_Chrome`) keep POV-Ray's own finishes (ambient
+  0.1–0.35, strong reflection); on white backgrounds they look pale. Dark and studio
+  environments with the reflection panel suit them better.
+- Procedural textures use the same pattern orientation on every atom.
+- Editable material parameters (for example a custom refractive index), user include
+  files, and image backgrounds are not implemented (later work in the plan).
+- Floor geometry is tied to the view (below the frame, tilted 20° towards the viewer);
+  it is not a fixed plane in crystal coordinates.
+- Material overrides refer to displayed-atom IDs, like hiding; transferring a style to
+  another structure is M5.
+- Thumbnail digests depend on the exact scene text; a different `libm` could in
+  principle change the last printed digit of a coordinate (CI and the development
+  machine share Ubuntu 24.04's).
 
 ## M3 acceptance evidence
 
@@ -387,6 +439,7 @@ VIRTUAL_ENV=$PWD/.venv uv pip install -e ".[dev]" -c constraints.txt
 .venv/bin/pre-commit run --all-files       # Ruff lint/format, file checks, Ruff sync
 YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent skips
 .venv/bin/python scripts/m0_evidence.py    # writes artifacts/m0/
+.venv/bin/python scripts/render_thumbnails.py  # re-renders changed preset thumbnails
 ```
 
 ## Environment baseline (development machine)
@@ -480,6 +533,19 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
   Scenes store ids; the POV writer writes a `texture` or a full `material` per element;
   the viewport applies the live approximation. Background presets also set a visible
   cell-edge colour, changed together with the environment in one undo step.
+- **Material assignment (M4):** `SceneSettings` stores a default material plus sorted
+  element and displayed-atom overrides and element colours; `build_geometry` resolves
+  one material and colour per atom. The POV writer declares each material once per
+  element colour (once overall for own-pigment materials) and applies unit-space
+  textures to a scaled unit sphere. The viewport draws one actor per material.
+- **Environment model (M4):** `Environment` holds background (solid, gradient, sky),
+  floor, lighting values, and the reflection panel; presets initialise it, the panel
+  edits fields. Gradients and skies use a self-lit backdrop aligned with the frame
+  (a `sky_sphere` would be one colour under orthographic projection) inside an empty
+  `light_group`; the floor is tilted 20° towards the viewer; area lights have no jitter
+  so renders are deterministic.
+- **Thumbnails (M4):** genuine POV-Ray renders of fixed scenes, shipped as package data,
+  with scene digests to detect stale images.
 - **Render lifecycle (M3):** `RenderProcess` (progress, cancellation, elapsed time,
   completion state) and `RenderQueue` (one process, newest request wins, job directory
   removed after the result slots). The window tags previews with `scene_revision` and
@@ -487,6 +553,6 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 
 ## Next bounded action
 
-M3 is merged. Next product work is M4: material/environment manifests at gallery scale
-(at least 20 materials and 12 environments) with genuine POV-Ray thumbnails, search and
-favourites, global/element/selected-atom assignment, and lighting controls.
+Review and merge the M4 branch. Next product work is M5: integer supercell drag
+handles with one-step undo (M5a), then style export/import for another structure and
+complete undo coverage (M5b), including how element and atom overrides transfer.

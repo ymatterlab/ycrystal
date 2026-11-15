@@ -1,0 +1,26 @@
+{
+  "id": "glass_frosted",
+  "name": "Frosted glass",
+  "order": 22,
+  "category": "transparent",
+  "kind": "material",
+  "description": "Element-tinted glass with a fine surface relief that blurs what is behind it (IOR 1.5).",
+  "pov": {
+    "finish": "ambient 0.04 diffuse 0.25 specular 0.4 roughness 0.03 reflection 0.04",
+    "filter": 0.6,
+    "normal": "bumps 0.6 scale 0.04",
+    "interior": "ior 1.5"
+  },
+  "native": [],
+  "includes": [],
+  "live": {
+    "ambient": 0.15,
+    "diffuse": 0.7,
+    "specular": 0.4,
+    "specular_power": 20,
+    "opacity": 0.55
+  },
+  "min_povray": "3.7",
+  "provenance": "Ycrystal recipe (MIT)",
+  "texture_space": "unit"
+}

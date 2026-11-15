@@ -35,30 +35,45 @@ may move the orthographic eye backward to put all geometry in front of it withou
 changing projection. VTK uses its own lighting and a material's live approximation;
 axes, the frame, and selection are overlays only.
 
-Materials and backgrounds are presets (`ycrystal.presets`, JSON manifests in
-`presets/materials/` and `presets/environments/`). The scene stores only ids; the
-POV writer and the viewport resolve them, so both backends draw the same material
-choice. Previews and final renders run as `QProcess` jobs; previews go through a
+Materials, environments, and lighting are presets (`ycrystal.presets`: JSON manifests
+in `presets/materials/` and `presets/environments/`, and `presets/lighting.json`). A
+material manifest names its declaration kind (finish, pigment, texture, or material),
+the native POV-Ray identifiers and the include files that declare them, whether it
+keeps the element colour, its texture space, and a live approximation. Scene settings
+store material ids at three levels (default, element, displayed atom);
+`build_geometry` resolves them per atom (`DisplayGeometry.materials`) together with the
+colours, so the POV writer and the viewport draw the same choice. The environment is a
+plain dataclass that a preset initialises; the writer turns it into a background, a
+frame-aligned backdrop (gradient or sky, unlit through an empty `light_group`), a
+tilted floor, camera-relative lights, and an optional `no_image` reflection panel.
+Gallery thumbnails are genuine POV-Ray renders of fixed scenes
+(`ycrystal.render.thumbnails`), shipped with the package; `index.json` records a digest
+of each thumbnail scene, and a test fails when a recipe changes without re-rendering
+(`scripts/render_thumbnails.py`). Previews and final renders run as `QProcess` jobs; previews go through a
 `RenderQueue` (one process, newest request wins) and are tagged with the window's scene
 revision so that stale results are discarded.
 
 Projects embed the structure and provenance, plus camera and presentation state.
 They do not store the machine's renderer path or last-used directory; those belong
-to `QSettings`. Schema 3 stores repetitions, cell mode, bond rules, the material id,
-the background preset, and the explicit output size; the saved camera is the output
-camera for that size (as it already was for schemas 1 and 2). Schema-1 projects load
-with bonds off, and schema-1/2 projects with the satin material, to preserve their
-appearance.
+to `QSettings` (as do gallery favourites). Schema 4 stores repetitions, cell mode, bond
+rules, the default material with element and atom overrides, element colours, the full
+environment (background, floor, lighting), and the explicit output size; the saved
+camera is the output camera for that size (as it already was for schemas 1–3).
+Schema-1 projects load with bonds off, schema-1/2 projects with the satin material, and
+schema-1–3 projects without floor, backdrop, overrides, or new lighting, to preserve
+their appearance.
 
 ## Extension points
 
 - Add future readers in `io/readers.py`, producing `Structure` and provenance.
   Keep questions/errors GUI-free, wire the format into GUI/CLI detection, and add
   equivalence/rejection fixtures. Do not put parsing logic in the viewport.
-- Add material and background presets as JSON manifests in `src/ycrystal/presets/`
-  (declaration kind, finish/filter/interior, includes, live approximation,
-  provenance) and render every combination in `tests/test_presets.py`. Galleries and
-  per-atom assignment (M4) should select presets rather than modify coordinates.
+- Add material or environment presets as JSON manifests in `src/ycrystal/presets/`
+  (declaration kind, recipe or native identifier, includes, live approximation,
+  provenance), render their thumbnails with `scripts/render_thumbnails.py`, inspect
+  them, and commit manifest, PNG, and `index.json` together. `tests/test_presets.py`
+  renders every entry individually; native identifiers must exist in POV-Ray 3.7's
+  standard include files. Assignment selects presets and never modifies coordinates.
 - Extend rendering options in `render/pov_writer.py` and their scene/output models;
   extend job lifecycle in `render/jobs.py` / `render/process.py`. Keep GUI orchestration
   in the interface. The output frame is the shared aspect contract: keep exported,

@@ -33,17 +33,23 @@ Scientific coordinates are unchanged. The arrays produced by `build_geometry` ar
 read-only, and the image offset is relative to input positions rather than wrapped
 positions. See [scene and geometry](../reference/scene.md).
 
-Materials and backgrounds are chosen by preset id; the geometry carries the material
-and the environment carries the background:
+Materials and environments are chosen by preset id. Scene settings carry the default
+material and per-element or per-atom overrides; the geometry resolves one material per
+displayed atom, and the environment carries background, floor, and lighting:
 
 ```pycon
 >>> from ycrystal.presets import environment_from_preset
->>> glass = build_geometry(structure, SceneSettings(material="glass"))
->>> glass.material, environment_from_preset("transparent").transparent
-('glass', True)
+>>> styled = SceneSettings(material="glass").with_element_material("Ti", "gold")
+>>> geometry = build_geometry(structure, styled)
+>>> sorted(set(geometry.materials))
+['glass', 'gold']
+>>> studio = environment_from_preset("studio_white")
+>>> studio.floor, studio.lighting
+(True, 'studio')
 ```
 
-See [material and environment presets](../reference/presets.md).
+See [material, environment, and lighting presets](../reference/presets.md) and the
+[appearance guide](../guide/appearance.md).
 
 Execute the complete lightweight example with:
 
@@ -54,7 +60,8 @@ Execute the complete lightweight example with:
 The [script](https://github.com/ymatterlab/ycrystal/blob/main/scripts/docs_examples.py)
 also projects the focal point, imports `tests/fixtures/MgB2.cif`, saves/reopens a
 project, and exports `.pov`/`.ini` text in a temporary directory, including a glass
-scene on a transparent background. It checks the
+scene on a transparent background and a white-studio scene with element and atom
+material overrides. It checks the
 expected outcomes and cleans its files. It does not import the viewport or run
 POV-Ray. Source docstrings contain further runnable examples; see
 [the doctest command](documentation.md#check-examples).

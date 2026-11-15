@@ -1,0 +1,29 @@
+{
+  "id": "gradient_blue",
+  "name": "Blue to white gradient",
+  "order": 7,
+  "category": "gradient",
+  "description": "Vertical gradient from soft blue at the top to white at the bottom.",
+  "background": {
+    "mode": "gradient",
+    "color": [
+      0.55,
+      0.7,
+      0.9
+    ],
+    "bottom": [
+      1,
+      1,
+      1
+    ]
+  },
+  "transparent": false,
+  "lighting": "soft",
+  "reflector": false,
+  "cell_edge_color": [
+    0.15,
+    0.15,
+    0.15
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

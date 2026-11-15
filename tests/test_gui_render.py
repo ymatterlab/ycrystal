@@ -92,7 +92,7 @@ def test_material_and_background_are_undoable(window, tmp_path):
         window.appearance_panel.material_combo.findData("glass")
     )
     assert window.scene_settings.material == "glass"
-    assert window.viewport._atoms_actor.GetProperty().GetOpacity() == pytest.approx(0.4)
+    assert window.viewport.atom_actors["glass"].GetProperty().GetOpacity() == pytest.approx(0.4)
     pov = window.export_pov(tmp_path / "glass.pov").read_text(encoding="utf-8")
     assert "material { Ycr_Material_Sr }" in pov and "interior { ior 1.45 }" in pov
     assert "// Renderer used:" in pov

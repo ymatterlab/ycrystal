@@ -1,0 +1,34 @@
+{
+  "id": "stone",
+  "name": "Stone (T_Stone25)",
+  "order": 29,
+  "category": "decorative",
+  "kind": "texture",
+  "description": "POV-Ray stone texture T_Stone25 (mottled).",
+  "pov": {
+    "texture": "T_Stone25"
+  },
+  "native": [
+    "T_Stone25"
+  ],
+  "includes": [
+    "colors.inc",
+    "stones.inc"
+  ],
+  "live": {
+    "ambient": 0.12,
+    "diffuse": 0.75,
+    "specular": 0.4,
+    "specular_power": 40,
+    "opacity": 1.0,
+    "color": [
+      0.55,
+      0.55,
+      0.5
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier T_Stone25 from the standard include file stones.inc; referenced by name, not copied",
+  "texture_space": "unit",
+  "texture_scale": 0.6
+}

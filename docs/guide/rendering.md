@@ -37,10 +37,12 @@ the `.pov` destination, but its companion `.ini` is replaced without another pro
 The directory must already exist.
 
 The `.pov` stores the orthographic camera of the output frame, visible spheres,
-bonds, cell edges, the material declarations, and lights in Cartesian Å. Its header
-records the Ycrystal version, the POV-Ray version found at export time (or that none
-was found), and any standard include files the material needs; the built-in presets
-need none. The `.ini` stores output size, PNG options, antialiasing, alpha for a
+bonds, cell edges, the material declarations, the background (with floor and backdrop),
+and lights in Cartesian Å. Its header records the Ycrystal version, the POV-Ray version
+found at export time (or that none was found), and the standard include files the
+materials need (none for Ycrystal's own recipes). Comments record the environment and
+lighting parameters and the native identifiers of each material. The `.ini` stores
+output size, PNG options, antialiasing, alpha for a
 transparent background, and the relative output name `NAME.png`. It sets
 `Verbose=on`, so a manual render prints progress lines.
 
@@ -75,23 +77,11 @@ framing in a window of any shape.
 
 ## Materials and backgrounds
 
-The **Scene ▸ Appearance** tab offers a small catalog (more presets and galleries are
-planned):
-
-| Material | Look |
-| --- | --- |
-| Matte | Diffuse, almost no highlight |
-| Satin (default) | Soft highlight; Ycrystal's finish before the catalog existed |
-| Glossy | Sharp highlight and a faint reflection |
-| Metallic | Element-coloured metal with tinted highlights and reflections |
-| Glass (tinted) | Transparent, tinted by the element colour, refractive index 1.45 |
-
-The material applies to every atom and bond; element colours are kept. **Backgrounds:**
-**White**, **Transparent (PNG alpha)** — the PNG gets an alpha channel and the live
-view shows light grey — and **Dark grey**, which also switches the cell edges to a light
-colour. Material and background changes are undoable and saved in projects. The 3D
-view approximates materials (opacity and highlights); refraction, reflection, and
-POV-Ray's lighting appear only in the preview and the render.
+Materials (per default, element, or selected atom), element colours, backgrounds,
+floors, and lighting are described in
+[Materials, backgrounds, and lighting](appearance.md). Scenes that use native POV-Ray
+identifiers such as `T_Gold_3C` include the standard POV-Ray files that declare them;
+the export lists them and warns if one is not installed.
 
 ## POV-Ray preview
 

@@ -1,0 +1,30 @@
+{
+  "id": "sky_cloudy",
+  "name": "Cloudy sky",
+  "order": 12,
+  "category": "sky",
+  "description": "Blue procedural sky with white clouds.",
+  "background": {
+    "mode": "sky",
+    "color": [
+      0.3,
+      0.5,
+      0.82
+    ],
+    "bottom": [
+      0.8,
+      0.87,
+      0.96
+    ],
+    "clouds": 0.6
+  },
+  "transparent": false,
+  "lighting": "bright",
+  "reflector": false,
+  "cell_edge_color": [
+    0.15,
+    0.15,
+    0.15
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

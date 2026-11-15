@@ -35,8 +35,9 @@ root. The built-in sample works without importing a file.
 2. In the **Scene** dock, open the **Render** tab and set **Width** to **640** and
    **Height** to **400** (or Width 640 and **Aspect 16:10**). The toolbar shows
    **640 × 400 px**, and a blue frame in the 3D view marks the image area. Press **F**
-   to fit the structure into the frame. In the **Appearance** tab, keep **Satin
-   (default)** and the **White** background.
+   to fit the structure into the frame. In the **Appearance** tab, keep the
+   **Satin** default material and the **White** environment (see
+   [Materials, backgrounds, and lighting](appearance.md) for the other choices).
 3. Choose **File ▸ Export POV-Ray…** and save as
    `artifacts/first-figure/SrTiO3.pov`. Ycrystal writes `SrTiO3.pov` and
    `SrTiO3.ini` in that directory. This step runs no renderer and creates no PNG.

@@ -1,0 +1,22 @@
+{
+  "id": "plastic",
+  "name": "Plastic",
+  "order": 5,
+  "category": "finish",
+  "kind": "finish",
+  "description": "Smooth plastic with a broad Phong highlight.",
+  "pov": {
+    "finish": "ambient 0.07 diffuse 0.8 phong 0.6 phong_size 40"
+  },
+  "native": [],
+  "includes": [],
+  "live": {
+    "ambient": 0.08,
+    "diffuse": 0.8,
+    "specular": 0.5,
+    "specular_power": 35,
+    "opacity": 1.0
+  },
+  "min_povray": "3.7",
+  "provenance": "Ycrystal recipe (MIT)"
+}

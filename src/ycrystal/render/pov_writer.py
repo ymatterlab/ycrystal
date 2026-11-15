@@ -6,10 +6,11 @@ not used, so POV-Ray does not re-derive the basis or flip handedness. Coordinate
 the original right-handed world coordinates in ångström, which keeps the scene
 readable and editable.
 
-Scenes use only POV-Ray 3.7 language features (``#version 3.7;``) and no ``#include``
-files. Colours are written as sRGB values and converted to linear light inside the
-scene (``assumed_gamma 1.0``); the ``.ini`` file writes the PNG with sRGB gamma. The
-writer produces text only; running POV-Ray is the job of
+Scenes use only POV-Ray 3.7 language features (``#version 3.7;``). Materials that use
+native POV-Ray identifiers (for example ``T_Gold_3C``) ``#include`` the standard files
+that declare them; other scenes are self-contained. Colours are written as sRGB values
+and converted to linear light inside the scene (``assumed_gamma 1.0``); the ``.ini``
+file writes the PNG with sRGB gamma. The writer produces text only; running POV-Ray is the job of
 [`ycrystal.render.jobs`][ycrystal.render.jobs].
 """
 
@@ -82,17 +83,131 @@ def _srgb(color: RGB) -> str:
     return "Ycr_sRGB(" + ", ".join(f"{c:.4f}" for c in color) + ")"
 
 
-def _identifier(element: str, declaration: str = "texture") -> str:
-    prefix = "Ycr_Material_" if declaration == "material" else "Ycr_Texture_"
-    return prefix + "".join(ch for ch in element if ch.isalnum())
-
-
-def _surface(element: str, declaration: str) -> str:
-    """Object modifier that applies an element's declared texture or material."""
-    return f"{declaration} {{ {_identifier(element, declaration)} }}"
-
+FLOOR_TILT_DEG = 20.0
+"""Tilt of the floor towards the viewer, in degrees (0 would show it edge-on)."""
 
 _CELL_FINISH = "ambient 0.08 diffuse 0.75 specular 0.35 roughness 0.02"
+_FLOOR_FINISH = "ambient 0.3 diffuse 0.65 specular 0.05 roughness 0.05"
+
+
+def _materials_used(geometry: DisplayGeometry) -> list:
+    """Material presets of the geometry in catalog order (the default if no atoms)."""
+    from ycrystal.presets import get_material
+
+    ids = set(geometry.materials) or {geometry.material}
+    return sorted((get_material(i) for i in ids), key=lambda m: (m.order, m.id))
+
+
+def required_includes(geometry: DisplayGeometry) -> tuple[str, ...]:
+    """Return the standard POV-Ray include files a scene needs, in loading order.
+
+    Parameters
+    ----------
+    geometry
+        Geometry whose resolved materials are inspected.
+
+    Returns
+    -------
+    tuple of str
+        Include file names without duplicates; empty when only Ycrystal recipes are
+        used.
+
+    Raises
+    ------
+    ycrystal.presets.PresetError
+        If a material id is unknown.
+    """
+    names: list[str] = []
+    for material in _materials_used(geometry):
+        for name in material.includes:
+            if name not in names:
+                names.append(name)
+    return tuple(names)
+
+
+def _identifier(material: object, element: str, default_id: str) -> str:
+    """Return the declared name of a material on one element (shared for own pigments)."""
+    prefix = "Ycr_Material_" if material.declaration == "material" else "Ycr_Texture_"
+    clean = "".join(ch for ch in element if ch.isalnum())
+    if not material.keeps_element_color:
+        return prefix + material.id
+    if material.id == default_id:
+        return prefix + clean
+    return prefix + clean + "_" + material.id
+
+
+def _declaration(material: object, ident: str, color: RGB) -> list[str]:
+    """``#declare`` lines for one material (on one element colour)."""
+    normal = f" normal {{ {material.normal} }}" if material.normal else ""
+    scale = f" scale {_f(material.texture_scale)}" if material.texture_scale != 1.0 else ""
+    finish = f"finish {{ {material.finish} }}" if material.finish else ""
+    if material.kind == "finish":
+        return [
+            f"#declare {ident} = texture {{",
+            f"  pigment {{ color {_srgb(color)} }}{normal}",
+            f"  {finish}",
+            "}",
+        ]
+    if material.kind == "pigment":
+        return [
+            f"#declare {ident} = texture {{",
+            f"  pigment {{ {material.pigment}{scale} }}{normal}",
+            f"  {finish}",
+            "}",
+        ]
+    if material.kind == "texture":
+        return [f"#declare {ident} = texture {{ {material.texture}{scale} }}"]
+    if material.material:  # native material identifier
+        return [f"#declare {ident} = material {{ {material.material}{scale} }}"]
+    lines = [
+        f"#declare {ident} = material {{",
+        f"  texture {{ pigment {{ color {_srgb(color)} filter {_f(material.filter)} }}{normal}",
+        f"            {finish} }}",
+    ]
+    if material.interior:
+        lines.append(f"  interior {{ {material.interior} }}")
+    lines.append("}")
+    return lines
+
+
+def _surface(material: object, ident: str, radius: float, position: np.ndarray) -> str:
+    """Object modifier applying a declared material, in its texture space."""
+    text = f"{material.declaration} {{ {ident}"
+    if material.texture_space == "unit":
+        text += f" scale {_f(radius)} translate {_v(position)}"
+    return text + " }"
+
+
+def _environment_comment(environment: Environment, transparent: bool) -> str:
+    e = environment
+    if transparent:
+        background = "transparent (alpha); floor and backdrop left out"
+    elif e.background_mode == "solid":
+        background = f"solid {_rgb_text(e.background)}"
+    elif e.background_mode == "gradient":
+        background = f"gradient {_rgb_text(e.background_bottom)} to {_rgb_text(e.background)}"
+    else:
+        background = (
+            f"sky {_rgb_text(e.background_bottom)} to {_rgb_text(e.background)}, "
+            f"clouds {_f(e.clouds)}"
+        )
+    floor = (
+        f"floor {_rgb_text(e.floor_color)}, reflection {_f(e.floor_reflection)}, "
+        f"offset {_f(e.floor_offset)} A"
+        if e.floor and not transparent
+        else "no floor"
+    )
+    size = f"area light {_f(e.light_size)} x scene radius" if e.light_size > 0 else "point light"
+    return (
+        f'// Environment "{e.preset}": background {background}; {floor}.\n'
+        f'// Lighting "{e.lighting}": key {_f(e.key_light)} at azimuth {_f(e.key_azimuth)} deg, '
+        f"elevation {_f(e.key_elevation)} deg, {size}, shadows {'on' if e.shadows else 'off'}; "
+        f"fill {_f(e.fill_light)}; reflection panel {'on' if e.reflector else 'off'}."
+    )
+
+
+def _rgb_text(color: RGB) -> str:
+    return "sRGB(" + ", ".join(f"{c:.3f}" for c in color) + ")"
 
 
 def scene_to_pov(
@@ -104,7 +219,7 @@ def scene_to_pov(
     title: str = "Ycrystal scene",
     renderer_note: str | None = None,
 ) -> str:
-    """Return the text of a self-contained POV-Ray scene.
+    """Return the text of a POV-Ray scene.
 
     Parameters
     ----------
@@ -113,7 +228,7 @@ def scene_to_pov(
     camera
         View to reproduce.
     environment
-        Background colour, transparency, and light intensities.
+        Background, floor, transparency, and lighting.
     settings
         Output size and background transparency. The size sets the camera's visible
         width and height; it should match the size in the ``.ini`` file. The background
@@ -127,55 +242,80 @@ def scene_to_pov(
     Returns
     -------
     str
-        The scene text. It lists the standard ``#include`` files its material needs
-        (none for the built-in presets).
+        The scene text. Its header lists the standard ``#include`` files the materials
+        need (see [`required_includes`][ycrystal.render.pov_writer.required_includes]);
+        a scene without them is self-contained.
 
     Raises
     ------
     ycrystal.presets.PresetError
-        If ``geometry.material`` is not a known material preset.
+        If a material of the geometry is not a known preset.
 
     Notes
     -----
     The camera is orthographic, with ``direction`` set to the unit viewing direction
     and ``right`` and ``up`` set to the screen vectors scaled to the visible width and
     height in Å. Its ``location`` lies on the line through the focal point along the
-    viewing direction, at the camera's distance or farther back when needed to keep
-    every sphere and cell edge in front of the eye; under orthographic projection this
-    does not change the image.
+    viewing direction, far enough back to keep everything drawn (and, with a floor, the
+    whole frame) in front of the eye; under orthographic projection this does not change
+    the image.
 
     Lights sit on the viewer's side at a distance that grows with the scene: the key
-    light at the upper left and a shadowless fill light at the lower right; a light
-    with non-positive intensity is omitted. Each element gets one declaration from its
-    first displayed colour and the material preset: a ``texture`` for opaque finishes,
-    or a ``material`` (pigment ``filter`` plus ``interior``) for transparent presets.
-    Each atom is a ``sphere`` with
-    a comment giving its 1-based source atom number, element, and image offset; a comment states how
-    many atoms are hidden. Bonds are two half cylinders coloured like their endpoint
-    atoms, using geometry.bond_radius. Cell edges are cylinders with spheres at the corners, marked
-    ``no_shadow``.
+    light in the environment's direction (an area light without jitter when
+    ``light_size`` > 0, so renders are deterministic) and a shadowless fill light at the
+    lower right; a light with non-positive intensity is omitted.
+
+    A floor is a plane below the drawn spheres as seen in the frame, tilted by
+    [`FLOOR_TILT_DEG`][ycrystal.render.pov_writer.FLOOR_TILT_DEG] towards the viewer;
+    in an orthographic view it fills the background. Gradients and skies are painted on
+    a backdrop plane behind the scene, aligned with the frame (a ``sky_sphere`` would be
+    a single colour in an orthographic view); it sits in a ``light_group`` without lights
+    because it needs no lighting. Transparent backgrounds leave out floor and backdrop.
+    The optional reflection panel is a bright disc near the key light marked
+    ``no_image``: invisible to the camera, it appears only in reflections.
+
+    Each material is declared once per element colour (once in total for materials with
+    their own pigment), as a ``texture`` or a ``material``. Materials in unit texture
+    space are applied to a unit sphere that is scaled and moved to each atom. Each atom
+    is a ``sphere`` with a comment giving its 1-based source atom number, element, and
+    image offset; a comment states how many atoms are hidden. Bonds are two half
+    cylinders with the material of their endpoint atoms, using geometry.bond_radius.
+    Cell edges are cylinders with spheres at the corners, marked ``no_shadow``.
 
     The header records the generation time (UTC), so two exports of the same scene
     differ in that line.
     """
-    from ycrystal.presets import get_material
-
-    material = get_material(geometry.material)
-    declaration = material.declaration
+    used = _materials_used(geometry)
+    by_id = {m.id: m for m in used}
+    includes = required_includes(geometry)
     transparent = settings.transparent_background or environment.transparent
     right, up, direction = camera.basis()
     world_w, world_h = camera.visible_size(settings.width, settings.height)
     focal = np.asarray(camera.focal_point)
     center, radius = geometry.bounding_sphere()
+    points, radii = geometry.points_and_radii()
 
     # The orthographic eye must lie in front of everything drawn.
-    points, radii = geometry.points_and_radii()
     depth_needed = float(np.max(-((points - focal) @ direction) + radii)) if len(points) else 0.0
     eye_distance = max(camera.distance, depth_needed + 1.0)
+
+    floor = environment.floor and not transparent
+    backdrop = environment.background_mode != "solid" and not transparent
+    tilt = np.radians(FLOOR_TILT_DEG)
+    floor_normal = np.cos(tilt) * up - np.sin(tilt) * direction
+    floor_height = 0.0
+    if floor:
+        lowest = float(np.min(points @ floor_normal - radii)) if len(points) else focal @ up
+        floor_height = lowest - environment.floor_offset
+        # The whole frame must start above the floor: the eye plane crosses it otherwise.
+        frame_low = float(focal @ floor_normal) - 0.5 * world_h * np.cos(tilt)
+        eye_distance = max(eye_distance, (floor_height + 1.0 - frame_low) / np.sin(tilt))
     location = focal - eye_distance * direction
 
     light_distance = 4.0 * radius + float(np.linalg.norm(center - focal)) + 10.0
-    key_pos = focal + light_distance * _unit(-0.55 * right + 0.75 * up - 1.0 * direction)
+    az, el = np.radians(environment.key_azimuth), np.radians(environment.key_elevation)
+    key_dir = np.cos(el) * (np.sin(az) * right - np.cos(az) * direction) + np.sin(el) * up
+    key_pos = focal + light_distance * key_dir
     fill_pos = focal + light_distance * _unit(0.70 * right - 0.25 * up - 1.0 * direction)
 
     lines: list[str] = []
@@ -187,18 +327,18 @@ def scene_to_pov(
         add(f"// Renderer used: {renderer_note}")
     add("// Units: angstrom; right-handed world coordinates (unchanged from the structure).")
     add(f"// Image: {settings.width} x {settings.height} px; render with the matching .ini file.")
-    if material.includes:
+    if includes:
         add(
             "// Requires standard POV-Ray include files: "
-            + ", ".join(material.includes)
+            + ", ".join(includes)
             + " (shipped with POV-Ray; not self-contained)."
         )
     else:
         add("// No #include files are required.")
     add("")
     add(f"#version {POV_LANGUAGE_VERSION};")
-    add("global_settings { assumed_gamma 1.0 }")
-    for include in material.includes:
+    add("global_settings { assumed_gamma 1.0 max_trace_level 8 }")
+    for include in includes:
         add(f'#include "{include}"')
     add("")
     add("// Colours below are written as sRGB values and converted to linear light.")
@@ -217,59 +357,105 @@ def scene_to_pov(
     add(f"  up        {_v(up * world_h)}")
     add("}")
     add("")
+    add(_environment_comment(environment, transparent))
     if transparent:
         add("background { color rgbt <0, 0, 0, 1> }  // transparent (Output_Alpha=on)")
-    else:
+    elif environment.background_mode == "solid":
         add(f"background {{ color {_srgb(environment.background)} }}")
+    else:
+        mean = tuple(
+            0.5 * (a + b)
+            for a, b in zip(environment.background, environment.background_bottom, strict=True)
+        )
+        add(f"background {{ color {_srgb(mean)} }}  // seen only in reflections")
+    if backdrop:
+        lines.extend(_backdrop(environment, points, radii, focal, right, up, direction, world_h))
+    if floor:
+        add("// Floor: below the structure as seen in the frame, tilted towards the viewer.")
+        add(f"plane {{ {_v(floor_normal)}, {_f(floor_height)}")
+        add(f"  texture {{ pigment {{ color {_srgb(environment.floor_color)} }}")
+        reflection = (
+            f" reflection {_f(environment.floor_reflection)}"
+            if environment.floor_reflection > 0
+            else ""
+        )
+        add(f"            finish {{ {_FLOOR_FINISH}{reflection} }} }}")
+        add("}")
     add("")
-    add("// Lights are placed relative to the camera (upper-left key, lower-right fill).")
+    add("// Lights are placed relative to the camera (key from the environment, lower-right fill).")
     if environment.key_light > 0:
-        add(f"light_source {{ {_v(key_pos)} color rgb {_f(environment.key_light)} }}")
+        extra = ""
+        if environment.light_size > 0:
+            size = environment.light_size * radius
+            extra += (
+                f" area_light {_v(right * size)}, {_v(up * size)}, 5, 5 adaptive 1 circular orient"
+            )
+        if not environment.shadows:
+            extra += " shadowless"
+        add(f"light_source {{ {_v(key_pos)} color rgb {_f(environment.key_light)}{extra} }}")
     if environment.fill_light > 0:
         add(f"light_source {{ {_v(fill_pos)} color rgb {_f(environment.fill_light)} shadowless }}")
+    if environment.reflector:
+        panel = center + 3.0 * radius * key_dir
+        add("// Reflection panel: invisible to the camera, seen in reflections only.")
+        add(
+            f"disc {{ {_v(panel)}, {_v(-key_dir)}, {_f(1.6 * radius)} "
+            "pigment { rgb 1 } finish { ambient 1 diffuse 0 } no_image no_shadow }"
+        )
     add("")
-    add(f'// Material "{material.id}": {material.name}. {material.description}')
-    add(f"#declare Ycr_Finish = finish {{ {material.finish} }}")
-    textures: dict[str, RGB] = {}
-    for element, color in zip(geometry.elements, geometry.colors, strict=True):
-        textures.setdefault(element, (float(color[0]), float(color[1]), float(color[2])))
-    for element, color in textures.items():
-        if declaration == "material":
-            add(f"#declare {_identifier(element, declaration)} = material {{")
-            add(f"  texture {{ pigment {{ color {_srgb(color)} filter {_f(material.filter)} }}")
-            add("            finish { Ycr_Finish } }")
-            if material.interior:
-                add(f"  interior {{ {material.interior} }}")
-            add("}")
-        else:
-            add(f"#declare {_identifier(element)} = texture {{")
-            add(f"  pigment {{ color {_srgb(color)} }}")
-            add("  finish { Ycr_Finish }")
-            add("}")
+    for material in used:
+        native = f" Native: {', '.join(material.native)}." if material.native else ""
+        add(f'// Material "{material.id}": {material.name}. {material.description}{native}')
+    idents: dict[tuple[str, str], str] = {}
+    for element, color, material_id in zip(
+        geometry.elements, geometry.colors, geometry.materials, strict=True
+    ):
+        material = by_id[material_id]
+        key = (material_id, element if material.keeps_element_color else "")
+        if key in idents:
+            continue
+        ident = _identifier(material, element, geometry.material)
+        idents[key] = ident
+        rgb = (float(color[0]), float(color[1]), float(color[2]))
+        lines.extend(_declaration(material, ident, rgb))
     add(
         f"#declare Ycr_Texture_Cell = texture {{ pigment {{ color "
         f"{_srgb(geometry.cell_edge_color)} }} finish {{ {_CELL_FINISH} }} }}"
     )
+
+    def declared(row: int) -> tuple[object, str]:
+        material = by_id[geometry.materials[row]]
+        element = geometry.elements[row]
+        return material, idents[(material.id, element if material.keeps_element_color else "")]
+
+    def surface(row: int) -> str:
+        material, ident = declared(row)
+        return _surface(material, ident, float(geometry.radii[row]), geometry.positions[row])
+
     add("")
     add(f"// Atoms ({len(geometry)}): source atom number (1-based, input order) and periodic image")
     if geometry.hidden_count:
         add(f"// ({geometry.hidden_count} atoms hidden in Ycrystal are not written.)")
-    for atom_id, element, pos, rad in zip(
-        geometry.atom_ids, geometry.elements, geometry.positions, geometry.radii, strict=True
+    for row, (atom_id, element, pos, rad) in enumerate(
+        zip(geometry.atom_ids, geometry.elements, geometry.positions, geometry.radii, strict=True)
     ):
         source, image = atom_id
-        add(
-            f"sphere {{ {_v(pos)}, {_f(float(rad))} {_surface(element, declaration)} }}"
-            f"  // atom #{source + 1} {element} image {image}"
-        )
+        material, ident = declared(row)
+        if material.texture_space == "unit":  # unit sphere, then scaled with its texture
+            shape = (
+                f"sphere {{ <0, 0, 0>, 1 {material.declaration} {{ {ident} }} "
+                f"scale {_f(float(rad))} translate {_v(pos)} }}"
+            )
+        else:
+            shape = f"sphere {{ {_v(pos)}, {_f(float(rad))} {surface(row)} }}"
+        add(f"{shape}  // atom #{source + 1} {element} image {image}")
     if len(geometry.bonds):
         add("")
-        add(f"// Bonds ({len(geometry.bonds)}): each half takes the {declaration} of its atom.")
+        add(f"// Bonds ({len(geometry.bonds)}): each half takes the material of its atom.")
         r_bond = _f(geometry.bond_radius)
         for a, b in geometry.bonds:
             start, end = geometry.positions[a], geometry.positions[b]
-            tex_a = _surface(geometry.elements[a], declaration)
-            tex_b = _surface(geometry.elements[b], declaration)
+            tex_a, tex_b = surface(a), surface(b)
             if tex_a == tex_b:
                 add(f"cylinder {{ {_v(start)}, {_v(end)}, {r_bond} {tex_a} }}")
             else:
@@ -292,6 +478,57 @@ def scene_to_pov(
             add(f"sphere {{ {_v(corner)}, {r_edge} texture {{ Ycr_Texture_Cell }} no_shadow }}")
     add("")
     return "\n".join(lines)
+
+
+def _backdrop(
+    environment: Environment,
+    points: np.ndarray,
+    radii: np.ndarray,
+    focal: np.ndarray,
+    right: np.ndarray,
+    up: np.ndarray,
+    direction: np.ndarray,
+    world_h: float,
+) -> list[str]:
+    """Return a self-lit backdrop plane carrying a gradient or sky aligned with the frame."""
+    far = float(np.max((points - focal) @ direction + radii)) if len(points) else 0.0
+    spread = float(np.max(radii)) if len(radii) else 1.0
+    depth = far + max(spread, 1.0) + 0.25 * world_h
+    distance = float((-direction) @ (focal + depth * direction))
+    # Local pattern coordinates: x right, y up across the frame (0 bottom, 1 top), unit
+    # length = frame height. POV-Ray's matrix rows are the images of x, y, z and the shift.
+    origin = focal - 0.5 * world_h * up
+    matrix = ", ".join(
+        ", ".join(_f(float(c)) for c in row)
+        for row in (right * world_h, up * world_h, -direction * world_h, origin)
+    )
+    bottom, top = _srgb(environment.background_bottom), _srgb(environment.background)
+    lines = [
+        "// Backdrop behind the scene: the gradient/sky runs from the bottom to the top of the "
+        "frame.",
+        "// It is self-lit; the light_group without lights spares POV-Ray its shadow rays.",
+        "light_group {",
+        f"plane {{ {_v(-direction)}, {_f(distance)}",
+        "  texture {",
+        f"    pigment {{ gradient y color_map {{ [0 color {bottom}] [1 color {top}] }}",
+        f"              scale 1.02 translate -0.01*y matrix <{matrix}> }}",
+        "    finish { ambient 1 diffuse 0 }",
+        "  }",
+    ]
+    if environment.background_mode == "sky" and environment.clouds > 0:
+        start = 1.0 - 0.75 * environment.clouds
+        lines += [
+            "  texture {  // clouds",
+            "    pigment { bozo turbulence 0.65 octaves 6 omega 0.6 lambda 2.2",
+            f"      color_map {{ [0 rgbt <1, 1, 1, 1>] [{_f(start)} rgbt <1, 1, 1, 1>]",
+            f"                  [{_f(min(start + 0.2, 1.0))} rgb <1, 1, 1>] "
+            "[1 rgb <0.86, 0.87, 0.9>] }",
+            f"      scale <0.55, 0.16, 0.55> matrix <{matrix}> }}",
+            "    finish { ambient 1 diffuse 0 }",
+            "  }",
+        ]
+    lines += ["  no_shadow", "}", "global_lights off", "}"]
+    return lines
 
 
 def render_ini(settings: RenderSettings, pov_name: str, image_name: str) -> str:

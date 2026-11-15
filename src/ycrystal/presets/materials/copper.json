@@ -1,0 +1,32 @@
+{
+  "id": "copper",
+  "name": "Copper (T_Copper_3C)",
+  "order": 16,
+  "category": "metal",
+  "kind": "texture",
+  "description": "POV-Ray copper texture: medium-reflective copper.",
+  "pov": {
+    "texture": "T_Copper_3C"
+  },
+  "native": [
+    "T_Copper_3C"
+  ],
+  "includes": [
+    "metals.inc"
+  ],
+  "live": {
+    "ambient": 0.15,
+    "diffuse": 0.6,
+    "specular": 1.0,
+    "specular_power": 90,
+    "opacity": 1.0,
+    "color": [
+      0.78,
+      0.45,
+      0.3
+    ]
+  },
+  "min_povray": "3.7",
+  "provenance": "Native POV-Ray 3.7 identifier T_Copper_3C from the standard include file metals.inc; referenced by name, not copied",
+  "texture_space": "unit"
+}

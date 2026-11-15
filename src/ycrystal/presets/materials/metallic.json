@@ -1,14 +1,15 @@
 {
   "id": "metallic",
   "name": "Metallic",
-  "order": 4,
+  "order": 11,
   "category": "metal",
-  "description": "Element-coloured metal with tinted highlights and reflections.",
   "kind": "finish",
-  "keeps_element_color": true,
+  "description": "Element-coloured metal with tinted highlights and reflections.",
   "pov": {
     "finish": "ambient 0.05 diffuse 0.4 brilliance 2 specular 0.9 roughness 0.006 metallic reflection { 0.25 metallic }"
   },
+  "native": [],
+  "includes": [],
   "live": {
     "ambient": 0.05,
     "diffuse": 0.55,
@@ -16,7 +17,6 @@
     "specular_power": 70,
     "opacity": 1.0
   },
-  "includes": [],
   "min_povray": "3.7",
   "provenance": "Ycrystal recipe (MIT)"
 }

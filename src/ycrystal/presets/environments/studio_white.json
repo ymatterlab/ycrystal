@@ -1,0 +1,33 @@
+{
+  "id": "studio_white",
+  "name": "White studio (soft shadows)",
+  "order": 8,
+  "category": "studio",
+  "description": "White matte floor below the structure with soft shadows from a large area light.",
+  "background": {
+    "mode": "solid",
+    "color": [
+      1,
+      1,
+      1
+    ]
+  },
+  "transparent": false,
+  "floor": {
+    "color": [
+      1,
+      1,
+      1
+    ],
+    "reflection": 0.0,
+    "offset": 0.3
+  },
+  "lighting": "studio",
+  "reflector": false,
+  "cell_edge_color": [
+    0.15,
+    0.15,
+    0.15
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

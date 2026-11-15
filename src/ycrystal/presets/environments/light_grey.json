@@ -1,0 +1,24 @@
+{
+  "id": "light_grey",
+  "name": "Light grey",
+  "order": 3,
+  "category": "plain",
+  "description": "Plain light grey background.",
+  "background": {
+    "mode": "solid",
+    "color": [
+      0.86,
+      0.86,
+      0.87
+    ]
+  },
+  "transparent": false,
+  "lighting": "soft",
+  "reflector": false,
+  "cell_edge_color": [
+    0.15,
+    0.15,
+    0.15
+  ],
+  "provenance": "Ycrystal recipe (MIT)"
+}

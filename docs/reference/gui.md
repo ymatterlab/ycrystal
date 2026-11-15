@@ -23,7 +23,16 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - set_bond_pair
         - view_along
         - set_material
+        - set_element_material
+        - set_atom_material
+        - set_selection_material
+        - clear_atom_materials
+        - set_element_color
         - set_background
+        - set_environment
+        - set_lighting
+        - open_material_gallery
+        - open_environment_gallery
         - set_output_size
         - current_camera
         - current_render_settings
@@ -33,6 +42,19 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - export_pov
         - render_png
         - check_renderer
+
+::: ycrystal.gui.gallery.PresetGallery
+    options:
+      members:
+        - apply_requested
+        - reset_requested
+        - favourites
+        - set_favourite
+        - visible_ids
+        - current_id
+        - select_preset
+        - set_targets
+        - target
 
 ::: ycrystal.viewport.qt_viewport.StructureViewport
     options:
