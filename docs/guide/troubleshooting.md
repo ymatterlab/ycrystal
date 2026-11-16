@@ -39,6 +39,10 @@ write nothing.
 - *A `.ycrystal` file does not open in Ycrystal*: right-click it, choose
   *Open With ▸ Other Application*, and pick Ycrystal; `xdg-mime query filetype FILE`
   should report `application/x-ycrystal-project`.
+- *The menu or panel still shows the old icon after `git pull`*: run
+  `.venv/bin/ycrystal --install-desktop` to replace the installed icon copy with the
+  updated SVG. Close and reopen Ycrystal. If Cinnamon still shows the old icon,
+  log out and back in to refresh the desktop session.
 - `--uninstall-desktop` removes the launcher, icon, and file type.
 
 ## Current limitations and roadmap
