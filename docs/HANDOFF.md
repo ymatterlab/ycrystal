@@ -11,10 +11,9 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 
 - **Milestone:** version 0.2.0 is released (tags `v0.1.0`, `v0.2.0`). The features below
   marked "unreleased" are merged on `main` without a changelog entry or tag. macOS
-  support is merged (PR #22, `6ed6b03`).
-- **Work in progress:** FR-EXPORT-01 (PDF and JPEG export with publication sizes) on
-  branch `feature/export-formats`, described under
-  [Latest development session](#latest-development-session).
+  support (PR #22) and FR-EXPORT-01 (PR #23, merge commit `52b3e5e`) are merged.
+- **Work in progress:** none. No feature is open or authorized; see
+  [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
 | --- | --- | --- |
@@ -26,10 +25,11 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-MATERIAL-01 custom material variants (Customize Material…, personal materials) | PR #18 |
 | unreleased | FR-VECTOR-01 atom-attached direction/magnetic-moment vectors (project schema 7) | PR #19 |
 | unreleased | Maintenance: macOS (Apple silicon) support, Ubuntu + macOS CI | PR #22 |
-| in progress | FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi | branch `feature/export-formats`, not merged |
+| unreleased | FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi | PR #23 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
-person are still open for most of them; the user reports FR-VECTOR-01 working well.
+person are still open for most of them; the user reports FR-VECTOR-01 and FR-EXPORT-01
+working.
 
 Known limitations and unresolved issues:
 
@@ -51,8 +51,8 @@ Known limitations and unresolved issues:
 - **Date and machine:** 16 November 2026, Mac mini (macOS 15.8, Apple silicon).
 - **Branch:** `feature/export-formats`, created from `main` at `6ed6b03` (PR #22 merged;
   the user reported the Linux Mint tests and the new CI jobs passing for it).
-- **Commits:** one commit on the branch, pushed, with a pull request into `main`
-  (16 November 2026). After reviewing the result the user reported that everything
+- **Commits:** `a55b298`, merged into `main` by PR #23 (merge commit `52b3e5e`,
+  16 November 2026) after all four CI checks passed. The user reported that everything
   works.
 - **Task:** FR-EXPORT-01 — PDF and JPEG export next to PNG, publication size presets,
   and custom size/resolution, as one feature. Evidence: "FR-EXPORT-01" in PROGRESS.md.
@@ -84,20 +84,19 @@ Tests performed on the Mac (details: "FR-EXPORT-01" in PROGRESS.md):
 | New doctests (`core/export.py`, `render/formats.py`); ruff; `pre-commit run --all-files`; `zensical build --clean --strict` | Clean |
 | Dialog screenshots (PNG, JPEG with preset, unlocked PDF) | Layout correct on macOS |
 
-Not done: nothing run on Linux; no hands-on use of the dialog by a person; the
-exported PDFs were checked by their structure (page box, embedded image), not opened in
-PDF viewers.
+CI of PR #23 passed: pre-commit, docs, macOS 15 (tests without windows), and Ubuntu
+24.04 (full suite under Xvfb with POV-Ray 3.7, including the new export tests).
+
+Not done by Claude: the Linux laptop and hands-on use (the user reports that everything
+works); the exported PDFs were checked by their structure (page box, embedded image),
+not opened in PDF viewers by Claude.
 
 ## Next recommended steps
 
-Open parts of the authorized task (FR-EXPORT-01):
+FR-EXPORT-01 is complete and merged. Optional follow-up checks (no new work):
 
-1. Read both CI results of the pull request; merge when they pass and the user agrees.
-2. On the Linux laptop: run `pytest tests/test_export.py tests/test_gui_export.py` and
-   the full suite; render a figure with each format by hand.
-3. Hands-on: Render Image dialog on both systems (presets, Custom in mm and px, lock,
-   JPEG quality, Browse…); open the PDF in a viewer and check its page size; place it in
-   a LaTeX or Word document.
+1. Place an exported PDF in a LaTeX or Word document and check its size there.
+2. Delete the merged branch `feature/export-formats` if it is no longer needed.
 
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
@@ -136,7 +135,7 @@ user's report for PR #22.
 | POV-Ray discovery and include files | Verified (PR #22, user report) | Verified 16 Nov 2026 (Homebrew) | Not tested; known issue: no `povray` command |
 | Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified (PR #22, user report) | Verified 16 Nov 2026 | Not tested |
 | GUI tests (real windows, OpenGL) | Verified (PR #22, user report; CI under Xvfb) | Verified 16 Nov 2026 (non-Retina display) | Not tested |
-| PNG/PDF/JPEG export (FR-EXPORT-01, branch `feature/export-formats`) | Not tested | Verified 16 Nov 2026 (automated, real POV-Ray); hands-on not checked | Not tested |
+| PNG/PDF/JPEG export (FR-EXPORT-01) | Verified by CI (PR #23, Ubuntu, full suite) | Verified 16 Nov 2026 (automated, real POV-Ray; CI without windows); the user reports it working | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
