@@ -1,5 +1,7 @@
 # Ycrystal
 
+![Ycrystal logo: a Y-shaped molecule next to the word crystal](assets/logo_horizontal.png){ width="480" }
+
 Ycrystal is a desktop application for Linux and macOS for composing crystal-structure
 figures and
 rendering the current view with [POV-Ray](https://www.povray.org/). The live interface

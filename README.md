@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo_horizontal.png" alt="Ycrystal logo: a Y-shaped molecule next to the word crystal" width="480">
+</p>
+
 # ycrystal
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
