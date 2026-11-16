@@ -1,6 +1,7 @@
 """M6 release checks: command line, desktop launcher, examples, end-to-end workflow."""
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -69,6 +70,17 @@ def test_desktop_launcher_install_and_uninstall(tmp_path):
     assert sorted(uninstall_desktop(tmp_path)) == sorted(files)
     assert not any(path.exists() for path in files)
     assert "-m ycrystal.app %f" in desktop_entry("/usr/bin/python3 -m ycrystal.app")
+
+
+def test_reinstalling_the_icon_bumps_the_theme_folder_time(tmp_path):
+    """Desktops notice a replaced icon only through the theme folder's modification time."""
+    _, icon, _ = install_desktop(tmp_path, command="/opt/yc/.venv/bin/ycrystal")
+    theme = tmp_path / "icons" / "hicolor"
+    os.utime(theme, (1_000_000_000, 1_000_000_000))
+    icon.write_text("stale")
+    install_desktop(tmp_path, command="/opt/yc/.venv/bin/ycrystal")
+    assert theme.stat().st_mtime > 1_000_000_000
+    assert icon.read_text() != "stale"
 
 
 # ----- examples --------------------------------------------------------------------------------

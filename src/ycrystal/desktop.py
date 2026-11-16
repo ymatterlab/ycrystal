@@ -135,6 +135,18 @@ def _refresh(base: Path) -> None:
     ):
         if shutil.which(tool) and folder.is_dir():
             subprocess.run([tool, str(folder)], capture_output=True, check=False, timeout=60)
+    # Desktops reload icons when the theme folder's modification time changes; replacing
+    # the icon file in place leaves that time alone, so an updated icon would stay hidden.
+    theme = base / "icons" / "hicolor"
+    if theme.is_dir():
+        theme.touch()
+        if (theme / "icon-theme.cache").is_file() and shutil.which("gtk-update-icon-cache"):
+            subprocess.run(
+                ["gtk-update-icon-cache", "-f", "-t", str(theme)],
+                capture_output=True,
+                check=False,
+                timeout=60,
+            )
 
 
 def install_desktop(base: Path | None = None, command: str | None = None) -> list[Path]:

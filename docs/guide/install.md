@@ -91,6 +91,15 @@ git pull
 .venv/bin/python -m pip install -e . -c constraints.txt
 ```
 
+On Linux, if you installed the menu launcher, refresh it after updating:
+
+```bash
+.venv/bin/ycrystal --install-desktop
+```
+
+The launcher uses a separate copy of the application icon under `~/.local/share`;
+`git pull` updates the source SVG but does not replace that installed copy.
+
 Projects and styles from earlier versions keep opening; newer project files are refused
 by older versions with a message to update. To uninstall, run
 `.venv/bin/ycrystal --uninstall-desktop` (Linux), then delete the checkout directory.
