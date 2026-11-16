@@ -74,10 +74,20 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - set_vector_style
         - open_material_editor
         - save_personal_material
+        - export_image
+        - ask_export
         - render_png
+        - render_image
         - check_renderer
 
 ::: ycrystal.gui.main_window.PreviewRequest
+
+::: ycrystal.gui.export_dialog
+    options:
+      members:
+        - SIZE_MODES
+        - ExportChoice
+        - ExportDialog
 
 ::: ycrystal.gui.color_dialog.ColorDialog
     options:

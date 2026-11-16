@@ -22,6 +22,7 @@ extending them.
 | `render/pov_writer.py` | Pure text export of shared geometry/camera into POV-Ray 3.7 and INI output. No renderer process or display needed. |
 | `render/jobs.py`, `render/povray.py` | Isolated job directories, discovery, synchronous execution, results, and image copying. The caller owns cleanup. POV-Ray is found through the saved setting, `YCRYSTAL_POVRAY`, or `PATH`; its standard include files are located from the executable's installation prefix, never from a fixed system path alone. |
 | `gui/native.py`, `desktop.py` | The platform-dependent choices of the interface, kept in one place: modifier-key names in help texts, the folder for personal-material thumbnails, and whether the freedesktop menu launcher applies (Linux only). Each takes the platform as a parameter, so every branch is tested on any system. |
+| `core/export.py`, `render/formats.py`, `gui/export_dialog.py` | Image export (FR-EXPORT-01): formats, publication sizes, and mm/px/dpi arithmetic without Qt; writing the POV-Ray PNG as PNG (resolution chunk added, pixels untouched), JPEG, or PDF (`QPdfWriter`, lossless) through a checked `.part` file; and the *Render Image* dialog. All formats share one POV-Ray job; only the last step differs. |
 | `render/process.py` | Asynchronous `QProcess` adapter. Needs a running Qt event loop (`QCoreApplication` is enough), not a window. |
 | `render/selftest.py`, `render/imagecheck.py` | Small renderer diagnostic and analytic/image alignment measurements. Runs without a display, but the diagnostic invokes POV-Ray. |
 

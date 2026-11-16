@@ -10,9 +10,10 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 ## Current project status
 
 - **Milestone:** version 0.2.0 is released (tags `v0.1.0`, `v0.2.0`). The features below
-  marked "unreleased" are merged on `main` without a changelog entry or tag. No feature
-  milestone is open; the current topic is maintenance: support for macOS next to Linux.
-- **Work in progress:** branch `feature/cross-platform` (macOS support), described under
+  marked "unreleased" are merged on `main` without a changelog entry or tag. macOS
+  support is merged (PR #22, `6ed6b03`).
+- **Work in progress:** FR-EXPORT-01 (PDF and JPEG export with publication sizes) on
+  branch `feature/export-formats`, described under
   [Latest development session](#latest-development-session).
 
 | Version | Feature | Merged |
@@ -24,6 +25,8 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-BGIMAGE-01 background pictures, ZIP project/style packages (project schema 6) | PR #18 |
 | unreleased | FR-MATERIAL-01 custom material variants (Customize Material…, personal materials) | PR #18 |
 | unreleased | FR-VECTOR-01 atom-attached direction/magnetic-moment vectors (project schema 7) | PR #19 |
+| unreleased | Maintenance: macOS (Apple silicon) support, Ubuntu + macOS CI | PR #22 |
+| in progress | FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi | branch `feature/export-formats`, not merged |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01 working well.
@@ -37,74 +40,71 @@ Known limitations and unresolved issues:
   Dock and the menu bar show "Python", and `.ycrystal` files do not open by double click.
 - macOS: nothing has been checked by hand yet, and no Retina display was available (see
   [Cross-platform status](#cross-platform-status)).
-- The macOS job in CI and the Linux job with the changes of the latest session have not
-  run yet.
+- FR-EXPORT-01: the PDF holds the POV-Ray raster image (not vector graphics); PDF page
+  sizes are whole points (up to 0.18 mm from the exact size); JPEG fills a transparent
+  background with white. Not yet run on Linux or checked by hand.
 - `docs/guide/troubleshooting.md` ("Current limitations") still says that image
   backgrounds and editable material parameters are unsupported; both exist since PR #18.
 
 ## Latest development session
 
-- **Date and machine:** 16 November 2026, Mac mini (macOS 15.8, Apple silicon, one
-  non-Retina display).
-- **Branch:** `feature/cross-platform`, created from `main` at `792df59`.
-- **Commits:** none. The changes were in the working tree when this was written;
-  committing, pushing, and opening the pull request await the user's instruction.
+- **Date and machine:** 16 November 2026, Mac mini (macOS 15.8, Apple silicon).
+- **Branch:** `feature/export-formats`, created from `main` at `6ed6b03` (PR #22 merged;
+  the user reported the Linux Mint tests and the new CI jobs passing for it).
+- **Commits:** one commit on the branch, pushed, with a pull request into `main`
+  (16 November 2026). After reviewing the result the user reported that everything
+  works.
+- **Task:** FR-EXPORT-01 — PDF and JPEG export next to PNG, publication size presets,
+  and custom size/resolution, as one feature. Evidence: "FR-EXPORT-01" in PROGRESS.md.
 
-Summary of changes (causes and evidence: "Maintenance: macOS support" in PROGRESS.md):
+Summary of changes:
 
-- `viewport/interactor.py` (new): both VTK views draw before `render()` returns on every
-  platform; on macOS PyVistaQt alone leaves the view one frame behind.
-- `viewport/qt_viewport.py`: resizing the view is no longer reported as a view change.
-  **This also changes Linux**: resizing the window or a panel no longer marks the preview
-  out of date. On macOS it was needed: small windows grow when a preview starts, and the
-  preview then discarded itself.
-- `render/povray.py`: standard include files are located from the POV-Ray executable's
-  installation (Homebrew, `/usr`, `/usr/local`, …); install hints name Homebrew.
-- `gui/native.py` (new): ⌘ instead of Ctrl in help texts on macOS; personal-material
-  thumbnails go to the application data folder on macOS and Windows.
-- `app.py`, `desktop.py`: `--install-desktop` / `--uninstall-desktop` refuse outside
-  Linux. `gui/main_window.py`: the POV-Ray file dialog starts at the found executable.
-- Tests: `tests/conftest.py` recognizes the macOS/Windows desktop; new
-  `tests/test_platform.py` (8 tests) and one test in `tests/test_gui_render.py`; two
-  tests corrected for HiDPI displays (`tests/test_gui.py`,
-  `tests/test_preview_resolution.py`).
-- CI: the `test` job is a matrix (Ubuntu: everything under Xvfb; macOS 15: tests that
-  open no window). `pyproject.toml` classifiers; two macOS-only pins in
-  `constraints.txt`.
-- Documentation: `CLAUDE.md`, this file, PROGRESS.md, README, the install, support,
-  rendering, controls, and troubleshooting guides, the architecture page,
-  CONTRIBUTING.md.
+- `core/export.py` (new, no Qt): formats, presets (85 mm and 180 mm at 600 dpi), mm/px/dpi
+  arithmetic, limits, `ExportOptions`.
+- `render/formats.py` (new): writes POV-Ray's PNG as PNG (a `pHYs` resolution chunk is
+  inserted; pixels and compressed data untouched), JPEG (`QImageWriter`, quality, white
+  under transparency), or PDF (`QPdfWriter`, lossless, page = physical size), always via
+  a checked `.part` file.
+- `gui/export_dialog.py` (new): the Render Image dialog; `gui/main_window.py`: the action
+  is now **Render Image…** (Ctrl+R) → `export_image` → `render_image`; `render_png(path)`
+  keeps its former output (no resolution chunk). Exports never change the output size,
+  camera, or project.
+- Tests: `tests/test_export.py` (43, no window or POV-Ray), `tests/test_gui_export.py`
+  (17, one with real POV-Ray); `tests/conftest.py` blocks the new `ask_export` dialog.
+- Documentation: rendering, first-figure, controls, support, and troubleshooting guides,
+  README, index, API reference, architecture; CI doctest list. The private plan has a
+  new row and section 14.9 for FR-EXPORT-01.
 
-Tests performed on the Mac (final code):
+Tests performed on the Mac (details: "FR-EXPORT-01" in PROGRESS.md):
 
 | Check | Result |
 | --- | --- |
-| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (real windows, Homebrew POV-Ray 3.7.0.10) | 505 passed, none skipped |
-| Steps of the macOS CI job run locally (version, `--check-renderer`, doctests, `scripts/docs_examples.py`, `pytest -m "not gui"`) | All pass; 357 tests |
-| GUI tests with an emulated 2× display scale (`QT_SCALE_FACTOR=2`) | 148 passed (not a Retina test) |
-| Scripted launch of the real application (native settings, automatic preview) | Preview "Up to date", exit status 0 |
-| `pre-commit run --all-files`; `zensical build --clean --strict` | Clean |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (real windows, Homebrew POV-Ray 3.7.0.10) | 565 passed, none skipped (505 before + 60 new) |
+| `pytest -m "not gui"` (what the macOS CI job runs) | 400 passed |
+| New doctests (`core/export.py`, `render/formats.py`); ruff; `pre-commit run --all-files`; `zensical build --clean --strict` | Clean |
+| Dialog screenshots (PNG, JPEG with preset, unlocked PDF) | Layout correct on macOS |
 
-Before the changes the same Mac gave: 349 passed without windows, all 147 GUI tests
-skipped; run on the desktop, 9 of them failed.
-
-Not done in this session: Linux was not available, so nothing was run there; nothing
-was pushed, so the changed workflow never ran; no hands-on use of the window.
+Not done: nothing run on Linux; no hands-on use of the dialog by a person; the
+exported PDFs were checked by their structure (page box, embedded image), not opened in
+PDF viewers.
 
 ## Next recommended steps
 
-Open parts of the task the user authorized (macOS support and cross-platform testing):
+Open parts of the authorized task (FR-EXPORT-01):
 
-1. Review the working tree on `feature/cross-platform`; commit and open a pull request
-   when the user says so. The pull request is the first run of the Ubuntu job with these
-   changes and of the new macOS job: read both results, do not assume them.
-2. Go through the [hands-on macOS checklist](#hands-on-checks-on-a-mac) and record the
-   outcome in the status table below.
-3. On the Linux laptop: pull the branch, run the full suite once, and confirm that
-   previews behave as before apart from the resize change.
+1. Read both CI results of the pull request; merge when they pass and the user agrees.
+2. On the Linux laptop: run `pytest tests/test_export.py tests/test_gui_export.py` and
+   the full suite; render a figure with each format by hand.
+3. Hands-on: Render Image dialog on both systems (presets, Custom in mm and px, lock,
+   JPEG quality, Browse…); open the PDF in a viewer and check its page size; place it in
+   a LaTeX or Word document.
+
+Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
 Suggestions only — not approved, ask before starting any of them:
 
+- A command-line option for PDF/JPEG (`--render figure.pdf --dpi 600`); the CLI still
+  writes PNG only.
 - A macOS application bundle or launcher (name and icon in the Dock, opening
   `.ycrystal` files from Finder).
 - Correct the outdated limitations list in `docs/guide/troubleshooting.md`.
@@ -126,19 +126,21 @@ Dependencies and blockers:
 ## Cross-platform status
 
 Status words: **verified** (tested on that system, date given), **partial** (some of it
-tested), **not tested**, **known issue**. "This branch" means `feature/cross-platform`.
+tested), **not tested**, **known issue**. Linux results for the macOS changes are the
+user's report for PR #22.
 
 | Area | Linux Mint 22.1 / Ubuntu 24.04 | macOS 15 (Apple silicon) | Windows |
 | --- | --- | --- | --- |
 | Install from source with `constraints.txt` | Verified on `main` (CI, PR #19) | Verified 16 Nov 2026 | Not tested |
-| Command line: `--version`, `--check-renderer`, `--render`, `--export-pov` | Verified on `main`; not tested on this branch | Verified 16 Nov 2026 | Not tested |
-| POV-Ray discovery and include files | Verified on `main` (apt package); new prefix lookup not tested on Linux | Verified 16 Nov 2026 (Homebrew) | Not tested; known issue: no `povray` command |
-| Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified on `main`; not tested on this branch | Verified 16 Nov 2026 (357 passed) | Not tested |
-| GUI tests (real windows, OpenGL) | Verified on `main` under Xvfb (CI) and on the laptop; not tested on this branch | Verified 16 Nov 2026 (148 passed, non-Retina display) | Not tested |
+| Command line: `--version`, `--check-renderer`, `--render`, `--export-pov` | Verified (PR #22, user report) | Verified 16 Nov 2026 | Not tested |
+| POV-Ray discovery and include files | Verified (PR #22, user report) | Verified 16 Nov 2026 (Homebrew) | Not tested; known issue: no `povray` command |
+| Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified (PR #22, user report) | Verified 16 Nov 2026 | Not tested |
+| GUI tests (real windows, OpenGL) | Verified (PR #22, user report; CI under Xvfb) | Verified 16 Nov 2026 (non-Retina display) | Not tested |
+| PNG/PDF/JPEG export (FR-EXPORT-01, branch `feature/export-formats`) | Not tested | Verified 16 Nov 2026 (automated, real POV-Ray); hands-on not checked | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
-| Continuous integration | Verified on `main`; changed workflow not run | Not tested: job added, never run; no GUI tests by design | None |
+| Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | None |
 
 ### Hands-on checks on a Mac
 
@@ -154,7 +156,8 @@ perovskite` and note what fails.
 - [ ] Menus: Ycrystal's Quit is in the application menu; ⌘O, ⌘S, ⇧⌘S, ⌘Z, ⇧⌘Z, ⌘R, ⌘M,
       ⌘← / ⌘→, F (Fit), and F5 (Preview; may need Fn) work with the 3D view focused.
 - [ ] File dialogs: Open lists POSCAR/CONTCAR files without an extension, `.cif`,
-      `.pw.in`; Save Project adds `.ycrystal`; Render PNG… and Export POV-Ray… save.
+      `.pw.in`; Save Project adds `.ycrystal`; Render Image… (PNG, PDF, JPEG) and
+      Export POV-Ray… save.
 - [ ] Render ▸ Set POV-Ray Executable… starts in the folder of the found executable;
       Render ▸ Check Renderer passes.
 - [ ] Preview with **Update automatically** on: one preview per change, no repeated
@@ -250,6 +253,11 @@ Troubleshooting:
 - Personal materials are stored in `QSettings` (`materials/personal`) with thumbnails in
   a `material-thumbnails/` folder (per machine, not in Git; locations above).
 - Preview resolution presets are widths (Small 480, Medium 800, Large 1200, Custom).
+- Export (FR-EXPORT-01): one POV-Ray render per export at the export pixel size; pixels
+  and dpi are the source of truth (mm derived); no resampling; JPEG transparency →
+  white; PDF = raster image on a page of the physical size, never called vector; the
+  export does not change the project's output size; dialog settings last for the
+  session only (not `QSettings`).
 
 ## Handoff and maintenance rules
 

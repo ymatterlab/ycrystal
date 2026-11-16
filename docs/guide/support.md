@@ -17,7 +17,9 @@ the development version after 0.2.0.
 | Ycrystal project `.ycrystal` (schema 1–5) | Yes | Schema 5 | Self-contained JSON |
 | Ycrystal style `.ycstyle` | Yes | Yes | Presentation only |
 | POV-Ray scene `.pov` + `.ini` | — | Yes | Editable; may `#include` standard POV-Ray files |
-| PNG image | — | Yes (via POV-Ray) | 8-bit sRGB, optional alpha |
+| PNG image | — | Yes (via POV-Ray) | 8-bit sRGB, optional alpha; resolution (dpi) stored when rendered from the Render Image dialog |
+| PDF document | — | Yes (via POV-Ray) | One page of the figure's physical size with the POV-Ray image embedded losslessly; raster, not vector graphics |
+| JPEG image | — | Yes (via POV-Ray) | Quality 1–100 (default 95), resolution stored; transparent backgrounds become white |
 
 Details: [structure files and projects](../FORMATS.md).
 
@@ -30,7 +32,7 @@ Details: [structure files and projects](../FORMATS.md).
 | Other 3.7.x builds | Expected to work; `ycrystal --check-renderer` decides |
 | 3.7 built from source with `-ffast-math` (POV-Ray's default GCC flags) | Fails: misreported camera angle; the check explains how to rebuild |
 | 3.8 betas, UberPOV, other forks | Unverified |
-| No POV-Ray | Viewing, editing, projects, styles, and `.pov` export work; preview and PNG need POV-Ray |
+| No POV-Ray | Viewing, editing, projects, styles, and `.pov` export work; preview and rendered images need POV-Ray |
 
 ## Platform
 

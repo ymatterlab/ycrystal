@@ -42,6 +42,7 @@ from ycrystal import presets as presets_module
 from ycrystal.core import aspect, measure
 from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
 from ycrystal.core.camera import Camera, default_camera
+from ycrystal.core.export import ExportOptions, format_label, path_for_format
 from ycrystal.core.lighting import resolve_lighting
 from ycrystal.core.scene import (
     AtomId,
@@ -55,6 +56,7 @@ from ycrystal.core.scene import (
 from ycrystal.core.structure import Structure
 from ycrystal.core.vectors import Key, VectorRecord, VectorSet, VectorStyle
 from ycrystal.gui.commands import SceneSettingsCommand
+from ycrystal.gui.export_dialog import ExportChoice, ExportDialog
 from ycrystal.gui.gallery import TARGET_DEFAULT, TARGET_SELECTION, PresetGallery
 from ycrystal.gui.lighting_setup import LightingSetupWindow
 from ycrystal.gui.material_editor import (
@@ -101,6 +103,7 @@ from ycrystal.presets import (
     get_lighting,
     get_material,
 )
+from ycrystal.render.formats import write_export
 from ycrystal.render.jobs import RenderResult, copy_result, prepare_job
 from ycrystal.render.pov_writer import RenderSettings, required_includes, write_scene_files
 from ycrystal.render.povray import (
@@ -204,8 +207,8 @@ position (View ▸ Show Boundary Atoms). Each drawn ball can be hidden on its ow
 View ▸ Show All Atoms brings hidden balls back.</p>
 <p>Navigation and hiding change only the presentation, never atomic coordinates.<br>
 The blue frame shows the rendered area. The live view approximates materials and
-lighting; Preview (F5) renders the framed view small with POV-Ray, Render writes the
-full-size PNG, and Cancel stops a running render.</p>"""
+lighting; Preview (F5) renders the framed view small with POV-Ray, Render Image writes
+the full-size PNG, PDF, or JPEG, and Cancel stops a running render.</p>"""
 
 
 class PreviewRequest(NamedTuple):
@@ -224,12 +227,15 @@ class PreviewRequest(NamedTuple):
 class RenderResultDialog(QDialog):
     """Non-modal dialog that shows a rendered image and its path."""
 
-    def __init__(self, image: Path, parent: QWidget | None = None) -> None:
+    def __init__(
+        self, image: Path, parent: QWidget | None = None, picture: Path | None = None
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle(f"Rendered image — {image.name}")
         layout = QVBoxLayout(self)
         label = QLabel()
-        label.setPixmap(QPixmap(str(image)))
+        # `picture`: the rendered PNG, shown for files Qt cannot display (PDF).
+        label.setPixmap(QPixmap(str(picture or image)))
         scroll = QScrollArea()
         scroll.setWidget(label)
         layout.addWidget(scroll)
@@ -355,6 +361,9 @@ class MainWindow(QMainWindow):
         self._vector_targets: tuple[str, tuple] = ("images", ())
         self._render: RenderProcess | None = None
         self._render_destination: Path | None = None
+        self._render_options: ExportOptions | None = None
+        # Last choice of the Render Image dialog (this session only).
+        self.export_choice: ExportChoice | None = None
         self._result_dialog: RenderResultDialog | None = None
         self._show_result = True
         self._camera_initialised = False
@@ -530,12 +539,12 @@ class MainWindow(QMainWindow):
         )
         self.export_action.triggered.connect(lambda: self.export_pov())
         self.render_action = QAction(
-            "Render PNG…",
+            "Render Image…",
             self,
             shortcut=QKeySequence("Ctrl+R"),
-            toolTip="Render the current view with POV-Ray",
+            toolTip="Render the current view with POV-Ray as PNG, PDF, or JPEG",
         )
-        self.render_action.triggered.connect(lambda: self.render_png())
+        self.render_action.triggered.connect(lambda: self.export_image())
         self.preview_action = QAction(
             "Preview",
             self,
@@ -2957,31 +2966,104 @@ class MainWindow(QMainWindow):
             return "none found when this scene was exported"
         return f"POV-Ray {povray_version(executable) or 'unknown version'} ({executable})"
 
-    def render_png(self, path: str | Path | None = None, show_result: bool = True) -> bool:
-        """Start a POV-Ray render of the current view (*Render PNG…*, Ctrl+R).
+    def export_image(self) -> bool:
+        """Ask for format, size, and file, then render (*Render ▸ Render Image…*, Ctrl+R).
 
-        After a synchronous version query (up to 15 seconds) and job preparation,
-        POV-Ray runs in the background in a temporary job directory. The method
-        returns once that process has been requested; the toolbar's Cancel stops it
-        and the status bar shows its progress. When it finishes, the PNG is copied to
-        the destination (replacing an existing file), the job directory is deleted, and
-        the image is shown or an error message explains the failure. A cancelled render
-        leaves the destination untouched and shows no error.
+        Shows the [`ExportDialog`][ycrystal.gui.export_dialog.ExportDialog] with the
+        last choice of this session (fitted to the current output frame) and starts
+        [`render_image`][ycrystal.gui.main_window.MainWindow.render_image].
+
+        Returns
+        -------
+        bool
+            Whether a render started.
+        """
+        if self._render is not None and self._render.is_running():
+            self.statusBar().showMessage("A render is already running.", 5000)
+            return False
+        answer = self.ask_export()
+        if answer is None:
+            return False
+        destination, options = answer
+        self._remember_directory(destination)
+        return self.render_image(destination, options)
+
+    def ask_export(self) -> tuple[Path, ExportOptions] | None:
+        """Show the Render Image dialog; return ``(destination, options)`` or ``None``."""
+        choice = self.export_choice or ExportChoice(
+            path=Path(self._last_directory()) / f"{self._output_stem()}.png"
+        )
+        if choice.path is None:
+            choice = replace(choice, path=Path(self._last_directory()) / self._output_stem())
+        choice = replace(choice, path=path_for_format(choice.path, choice.format))
+        dialog = ExportDialog(
+            choice.fitted(self._output_size), self._output_size, self.environment.transparent, self
+        )
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        self.export_choice = dialog.choice()
+        options = dialog.options()
+        destination = dialog.destination()
+        if not accepted or options is None or destination is None:
+            return None
+        return destination, options
+
+    def render_png(self, path: str | Path | None = None, show_result: bool = True) -> bool:
+        """Render the current view as a PNG of the output size (as before Render Image).
 
         Parameters
         ----------
         path
-            Destination PNG; ``None`` shows a file dialog. The suffix is replaced by
-            ``.png``.
+            Destination PNG; ``None`` shows the Render Image dialog instead
+            ([`export_image`][ycrystal.gui.main_window.MainWindow.export_image]). The
+            suffix is made ``.png``.
         show_result
             Whether to show the finished image in a dialog.
 
         Returns
         -------
         bool
-            Whether a render started. ``False`` if one is already running, POV-Ray is
-            not found (a message explains how to set it up), or the dialog was
-            cancelled.
+            Whether a render started (see
+            [`render_image`][ycrystal.gui.main_window.MainWindow.render_image]).
+        """
+        if path is None:
+            return self.export_image()
+        width, height = self._output_size
+        options = ExportOptions("png", width, height)  # no dpi: the PNG is copied unchanged
+        return self.render_image(path_for_format(path, "png"), options, show_result)
+
+    def render_image(
+        self, path: str | Path, options: ExportOptions, show_result: bool = True
+    ) -> bool:
+        """Start a POV-Ray render of the current view and write it as PNG, PDF, or JPEG.
+
+        POV-Ray renders ``options.width × options.height`` pixels with the current
+        camera, geometry, and environment; a size of another shape than the output frame
+        shows a wider or narrower area at the same scale (never stretched). The scene,
+        the Render panel's output size, and the project are not changed.
+
+        After a synchronous version query (up to 15 seconds) and job preparation,
+        POV-Ray runs in the background in a temporary job directory. The method
+        returns once that process has been requested; the toolbar's Cancel stops it
+        and the status bar shows its progress. When it finishes, the image is written
+        to the destination by [`write_export`][ycrystal.render.formats.write_export]
+        (replacing an existing file only once the new one is complete), the job
+        directory is deleted, and the image is shown or an error message explains the
+        failure. A cancelled render leaves the destination untouched and shows no error.
+
+        Parameters
+        ----------
+        path
+            Destination file; its suffix is made to match ``options.format``.
+        options
+            Format, pixel size, resolution, and JPEG quality.
+        show_result
+            Whether to show the finished image in a dialog.
+
+        Returns
+        -------
+        bool
+            Whether a render started. ``False`` if one is already running or POV-Ray is
+            not found (a message explains how to set it up).
 
         Raises
         ------
@@ -2996,19 +3078,10 @@ class MainWindow(QMainWindow):
         except PovrayNotFoundError as exc:
             self.show_error("POV-Ray Not Available", str(exc))
             return False
-        if path is None:
-            path, _ = QFileDialog.getSaveFileName(
-                self,
-                "Render PNG",
-                str(Path(self._last_directory()) / f"{self._output_stem()}.png"),
-                "PNG image (*.png)",
-            )
-            if not path:
-                return False
-        destination = Path(path)
-        if destination.suffix.lower() != ".png":
-            destination = destination.with_suffix(".png")
-        settings = self.current_render_settings()
+        destination = path_for_format(path, options.format)
+        settings = replace(
+            self.current_render_settings(), width=options.width, height=options.height
+        )
         version = povray_version(executable)
         job = prepare_job(
             self.geometry,
@@ -3019,6 +3092,7 @@ class MainWindow(QMainWindow):
             renderer_note=f"POV-Ray {version or 'unknown version'} ({executable})",
         )
         self._render_destination = destination
+        self._render_options = options
         self._show_result = show_result
         self._render = RenderProcess(job, executable, self)
         self._render.finished.connect(self._on_render_finished)
@@ -3039,19 +3113,33 @@ class MainWindow(QMainWindow):
         process = self._render
         self.render_action.setEnabled(True)
         destination = self._render_destination
+        options = self._render_options
         try:
             if result.cancelled:
                 self.statusBar().showMessage("Render cancelled.", 10000)
-            elif result.ok and result.image_path is not None and destination is not None:
+            elif (
+                result.ok
+                and result.image_path is not None
+                and destination is not None
+                and options is not None
+            ):
                 try:
-                    saved = copy_result(result.image_path, destination)
+                    saved = write_export(
+                        result.image_path,
+                        destination,
+                        options,
+                        title=f"Ycrystal: {self.structure.composition()}",
+                    )
                 except OSError as exc:
-                    self.show_error("Could Not Save Image", f"{destination}: {exc}")
+                    self.show_error("Could Not Save Image", f"{destination}:\n{exc}")
                     return
                 self.last_render_path = saved
-                self.statusBar().showMessage(f"Rendered {saved}", 10000)
+                self.statusBar().showMessage(
+                    f"Rendered {saved} ({_export_summary(options)})", 10000
+                )
                 if self._show_result:
-                    self._result_dialog = RenderResultDialog(saved, self)
+                    # A PDF cannot be shown directly: show the rendered image instead.
+                    self._result_dialog = RenderResultDialog(saved, self, picture=result.image_path)
                     self._result_dialog.show()
             else:
                 self.statusBar().showMessage("Render failed.", 10000)
@@ -3141,6 +3229,15 @@ class MainWindow(QMainWindow):
             self.lighting_setup.close()
         self.viewport.close_viewport()
         super().closeEvent(event)
+
+
+def _export_summary(options: ExportOptions) -> str:
+    """Short description of an export for the status bar."""
+    text = f"{format_label(options.format)}, {options.width} × {options.height} px"
+    size = options.physical_size_mm()
+    if size is not None:
+        text += f", {size[0]:.1f} × {size[1]:.1f} mm at {options.dpi:g} dpi"
+    return text
 
 
 def _lock_state(output: RenderSettings) -> tuple[bool, float]:

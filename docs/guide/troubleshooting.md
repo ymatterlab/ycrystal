@@ -19,7 +19,7 @@
 | CLI check passes, GUI rendering fails to find POV-Ray | The CLI does not use the saved GUI setting. Re-select the executable in the application. |
 | “Viewing angle has to be smaller than 180” | A known self-built 3.8 build with `-ffast-math` rejects unset camera fields. Use the distribution 3.7 package and run Check Renderer. Rebuild custom binaries without that optimisation if necessary. |
 | I/O restriction / permission denied | Ycrystal's jobs write in a temporary working directory. Check its permissions and whether `povray.conf` permits the working directory. Run an exported `.ini` from its own directory. |
-| Render finished but cannot save the PNG | Choose a writable destination. The GUI removes its job files after handling the failure; retry the render. |
+| Render finished but cannot save the image | Choose a writable destination. An existing file of that name is left unchanged and no partial file remains. The GUI removes its job files after handling the failure; retry the render. |
 | The preview dock says “out of date” or “discarded” | The view or scene changed after the preview started. Press **Preview** (F5), or enable **Update automatically**. Resizing the window or a panel does not make a preview out of date. |
 | The preview dock shows an error | Previews report problems in the dock instead of a dialog; the same renderer setup fixes apply. |
 

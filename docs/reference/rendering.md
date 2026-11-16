@@ -53,6 +53,51 @@
         - preview_size
         - preview_preset_width
 
+## Image export (PNG, PDF, JPEG)
+
+::: ycrystal.core.export
+    options:
+      members:
+        - MM_PER_INCH
+        - FORMATS
+        - DEFAULT_FORMAT
+        - DEFAULT_JPEG_QUALITY
+        - DEFAULT_DPI
+        - COMMON_DPI
+        - MIN_EXPORT_PIXELS
+        - MAX_EXPORT_PIXELS
+        - MAX_EXPORT_MEGAPIXELS
+        - MIN_DPI
+        - MAX_DPI
+        - MAX_PDF_PAGE_MM
+        - SizePreset
+        - SIZE_PRESETS
+        - ExportSizeError
+        - size_preset
+        - pixels_from_mm
+        - mm_from_pixels
+        - convert_length
+        - figure_pixels
+        - linked_height
+        - linked_width
+        - format_suffixes
+        - format_label
+        - format_for_path
+        - path_for_format
+        - ExportOptions
+        - check_export_size
+
+::: ycrystal.render.formats
+    options:
+      members:
+        - ExportWriteError
+        - JPEG_MATTE
+        - write_export
+        - png_with_resolution
+        - png_resolution
+        - opaque_image
+        - fitted_rect
+
 ::: ycrystal.render.povray
     options:
       members:
