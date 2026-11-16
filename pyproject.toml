@@ -14,7 +14,9 @@ requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
     "Environment :: X11 Applications :: Qt",
+    "Environment :: MacOS X",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Visualization",
 ]
@@ -65,7 +67,7 @@ testpaths = ["tests"]
 qt_api = "pyside6"
 markers = [
     "povray: needs a working POV-Ray executable (skipped otherwise)",
-    "gui: needs an X11 display (skipped otherwise)",
+    "gui: needs a display with OpenGL (skipped otherwise)",
 ]
 
 [tool.ruff]

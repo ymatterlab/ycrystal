@@ -19,6 +19,20 @@ Use the system interpreter, not Miniconda/Anaconda: their bundled `libstdc++` ca
 Mesa's OpenGL driver from loading ("Could not initialize GLX"). `constraints.txt` pins the
 integration-tested versions; always install with `-c constraints.txt`.
 
+On macOS 15 (Apple silicon), with Homebrew:
+
+```bash
+brew install python@3.12 povray
+git clone https://github.com/ymatterlab/ycrystal.git
+cd ycrystal
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -e ".[dev]" -c constraints.txt
+```
+
+There is one repository and one codebase for all systems. Keep code free of fixed
+system paths, and keep the few platform checks where they already are
+(`src/ycrystal/gui/native.py`, `desktop.py`, `render/povray.py`); see `CLAUDE.md`.
+
 ## Pre-commit hooks
 
 ```bash
@@ -48,13 +62,19 @@ used; the Actions job runs the same pinned hooks.
 .venv/bin/python -m pytest -q -rs
 ```
 
-- GUI tests (`gui` marker) need an X11 display: a desktop session or
+- GUI tests (`gui` marker) need a display with OpenGL: a desktop session (Linux or
+  macOS; the windows appear on screen) or, on Linux,
   `xvfb-run -a python -m pytest -q -rs`.
 - Rendering tests (`povray` marker) need a POV-Ray 3.7 executable that passes
-  `ycrystal --check-renderer`; set `YCRYSTAL_POVRAY=/usr/bin/povray` if needed.
+  `ycrystal --check-renderer`; it is found on `PATH`, or set `YCRYSTAL_POVRAY` to it.
 - Locally, missing prerequisites skip those tests (`-rs` lists them). CI sets
   `YCRYSTAL_REQUIRE_INTEGRATION=1`, which turns a missing display or renderer into an
   error; set it yourself to make sure nothing was skipped.
+- CI runs every test on Ubuntu 24.04 under Xvfb. On macOS it runs the tests that open
+  no window (`-m "not gui"`), because GitHub's hosted Macs have no GPU for Qt's
+  OpenGL widget; run the GUI tests on a real Mac before relying on a GUI change
+  there. To add an operating system, add a matrix entry and a system-packages step
+  to the `test` job.
 - `scripts/m0_evidence.py` regenerates screenshots and alignment measurements.
 - `scripts/benchmark_scene.py` measures display cost for growing supercells; rerun it
   when changing the viewport, and record the hardware with the numbers.
@@ -139,9 +159,12 @@ pins in a fresh environment and test them:
 /tmp/yc-env/bin/python -m pip freeze --exclude-editable > constraints.new
 ```
 
-Keep the two header comment lines of `constraints.txt`, replace the pins with those in
+Keep the header comment lines of `constraints.txt` and the pins that carry an
+environment marker (`; sys_platform == "darwin"`: packages installed on macOS only,
+which a freeze on Linux does not list), replace the other pins with those in
 `constraints.new`, rerun `pre-commit run --all-files`, and record the change in
-`docs/PROGRESS.md`.
+`docs/PROGRESS.md`. Then install with the new pins on the other system and run its
+tests.
 
 ## Repository-owner setup
 
@@ -153,6 +176,8 @@ Committed configuration does not by itself activate these services:
 - **Dependabot:** version updates start from `.github/dependabot.yml` once Dependabot is
   allowed for the repository; check *Settings ▸ Code security* (also for Dependabot
   alerts and security updates, which this file does not configure).
-- **Branch protection (optional):** require the `pre-commit` and `tests` checks on `main`.
+- **Branch protection (optional):** require the `pre-commit` and `tests` checks on `main`
+  (the `tests` job reports one check per operating system; the Ubuntu check keeps its
+  earlier name).
   On GitHub Free, rulesets are enforced only on public repositories; the "Protect main"
   ruleset is kept but inactive while the repository is private.

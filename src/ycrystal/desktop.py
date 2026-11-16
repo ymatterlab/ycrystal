@@ -51,6 +51,15 @@ _MIME_XML = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+def desktop_supported(platform: str = sys.platform) -> bool:
+    """Return whether this system uses freedesktop menu launchers.
+
+    True on Linux and other Unix desktops; false on macOS and Windows, which have their
+    own application formats (no launcher is installed there).
+    """
+    return platform not in ("darwin", "win32")
+
+
 def data_home() -> Path:
     """Return ``$XDG_DATA_HOME`` or ``~/.local/share``."""
     value = os.environ.get("XDG_DATA_HOME")

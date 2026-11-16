@@ -12,8 +12,9 @@ POVRAY_ENV = "YCRYSTAL_POVRAY"
 """Environment variable that names the POV-Ray executable."""
 
 INSTALL_HINT = (
-    "Install POV-Ray (Linux Mint: sudo apt install povray), choose the executable with "
-    "Render > Set POV-Ray Executable…, or set the environment variable "
+    "Install POV-Ray (Linux Mint: sudo apt install povray; macOS: brew install povray), "
+    "choose the executable with Render > Set POV-Ray Executable…, or set the environment "
+    "variable "
     f"{POVRAY_ENV}=/path/to/povray. Viewing and exporting .pov/.ini files work without it."
 )
 """Setup guidance appended to every "not found" message."""
@@ -126,8 +127,8 @@ _KNOWN_FAILURES: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(r"Cannot open include file|Cannot find file", re.IGNORECASE),
         "POV-Ray could not find a required include file{name}. Materials that use native "
         "POV-Ray identifiers need the standard include files: on Linux Mint/Ubuntu install "
-        "them with 'sudo apt install povray-includes', or check the include library path "
-        "(Library_Path) of this installation.",
+        "them with 'sudo apt install povray-includes' (Homebrew's povray on macOS contains "
+        "them), or check the include library path (Library_Path) of this installation.",
     ),
 )
 
@@ -137,19 +138,64 @@ INCLUDE_FALLBACK_DIRS = (
     Path("/usr/share/povray-3.7/include"),
     Path("/usr/local/share/povray-3.7/include"),
 )
-"""Standard include directories searched in addition to ``Library_Path`` entries."""
+"""Standard include directories searched in addition to ``Library_Path`` entries and the
+installation of the POV-Ray executable (see
+[`include_directories`][ycrystal.render.povray.include_directories])."""
 
 
-def include_directories() -> list[Path]:
+def _installation_prefixes(executable: str | os.PathLike[str] | None) -> list[Path]:
+    """Return the installation prefixes of a POV-Ray executable (``PREFIX/bin/povray``).
+
+    Both the path as given and the path with symbolic links resolved count, so that a
+    package manager's link (Homebrew: ``/opt/homebrew/bin/povray``) and the real
+    location (its ``Cellar``) are covered. ``None`` looks the executable up like
+    [`find_povray`][ycrystal.render.povray.find_povray]; no executable gives no prefix.
+    """
+    if executable is None:
+        try:
+            executable = find_povray()
+        except PovrayNotFoundError:
+            return []
+    path = Path(executable).expanduser()
+    prefixes: list[Path] = []
+    for candidate in (path.absolute(), path.resolve()):
+        prefix = candidate.parent.parent
+        if prefix not in prefixes:
+            prefixes.append(prefix)
+    return prefixes
+
+
+def include_directories(executable: str | os.PathLike[str] | None = None) -> list[Path]:
     """Return the directories where POV-Ray looks for standard include files.
 
-    Reads the ``Library_Path`` entries of the system and user ``povray.ini`` files
-    (``/etc/povray/3.7/povray.ini``, ``~/.povray/3.7/povray.ini``) and adds
-    [`INCLUDE_FALLBACK_DIRS`][ycrystal.render.povray.INCLUDE_FALLBACK_DIRS]. Only
-    existing directories are returned, without duplicates.
+    POV-Ray is installed under a prefix (``/usr``, ``/usr/local``, Homebrew's
+    ``/opt/homebrew``, a Conda environment, …) with its settings in
+    ``PREFIX/etc/povray/VERSION/povray.ini`` and its include files in
+    ``PREFIX/share/povray-VERSION/include``. This function reads the ``Library_Path``
+    entries of the ``povray.ini`` files of the system (``/etc/povray/3.7``), of the
+    executable's prefix, and of the user (``~/.povray/3.7``), and adds the prefix's
+    include directories and
+    [`INCLUDE_FALLBACK_DIRS`][ycrystal.render.povray.INCLUDE_FALLBACK_DIRS].
+
+    Parameters
+    ----------
+    executable
+        POV-Ray executable whose installation is searched; ``None`` uses the one that
+        [`find_povray`][ycrystal.render.povray.find_povray] returns without a configured
+        path (``$YCRYSTAL_POVRAY``, then ``PATH``), if any.
+
+    Returns
+    -------
+    list of pathlib.Path
+        Existing directories, without duplicates. Nothing is executed.
     """
+    prefixes = _installation_prefixes(executable)
+    ini_files = [Path("/etc/povray/3.7/povray.ini")]
+    for prefix in prefixes:
+        ini_files.extend(sorted(prefix.glob("etc/povray/*/povray.ini")))
+    ini_files.append(Path.home() / ".povray/3.7/povray.ini")
     candidates: list[Path] = []
-    for ini in (Path("/etc/povray/3.7/povray.ini"), Path.home() / ".povray/3.7/povray.ini"):
+    for ini in ini_files:
         try:
             text = ini.read_text(encoding="utf-8", errors="replace")
         except OSError:
@@ -158,6 +204,8 @@ def include_directories() -> list[Path]:
             match = re.match(r"\s*Library_Path\s*=\s*\"?([^\";]+)\"?", line, re.IGNORECASE)
             if match:
                 candidates.append(Path(os.path.expanduser(match.group(1).strip())))
+    for prefix in prefixes:
+        candidates.extend(sorted(prefix.glob("share/povray-*/include")))
     candidates.extend(INCLUDE_FALLBACK_DIRS)
     result: list[Path] = []
     for directory in candidates:
@@ -166,7 +214,9 @@ def include_directories() -> list[Path]:
     return result
 
 
-def missing_includes(names: tuple[str, ...] | list[str]) -> list[str]:
+def missing_includes(
+    names: tuple[str, ...] | list[str], executable: str | os.PathLike[str] | None = None
+) -> list[str]:
     """Return the include files of ``names`` that none of the include directories has.
 
     Parameters
@@ -174,13 +224,16 @@ def missing_includes(names: tuple[str, ...] | list[str]) -> list[str]:
     names
         Include file names, for example from
         [`required_includes`][ycrystal.render.pov_writer.required_includes].
+    executable
+        POV-Ray executable whose installation is searched; see
+        [`include_directories`][ycrystal.render.povray.include_directories].
 
     Returns
     -------
     list of str
         The missing names, in the given order; empty when all are found.
     """
-    directories = include_directories()
+    directories = include_directories(executable)
     return [name for name in names if not any((d / name).is_file() for d in directories)]
 
 

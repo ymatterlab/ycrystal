@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ycrystal.gui.native import native_keys
+
 HEADERS = ("Type", "Atoms", "Result")
 
 ATOMS_TIP = (
@@ -96,8 +98,10 @@ class MeasurementPanel(QWidget):
         row.addWidget(self.note_label, 1)
         self.copy_button = QPushButton("Copy Selected")
         self.copy_button.setToolTip(
-            "Copy the selected measurements with atom identities, units, and the angle "
-            "vertex (Ctrl+C in the table)"
+            native_keys(
+                "Copy the selected measurements with atom identities, units, and the angle "
+                "vertex (Ctrl+C in the table)"
+            )
         )
         self.remove_button = QPushButton("Remove Selected")
         self.remove_button.setToolTip("Remove the selected measurements from the table")

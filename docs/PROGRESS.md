@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 15 November 2026. M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), and FR-VECTOR-01 (atom-attached vectors; PR #19). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 16 November 2026 (macOS support, see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), and FR-VECTOR-01 (atom-attached vectors; PR #19). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -256,7 +256,8 @@ helpers are not part of the geometry).
 
 Remaining limitations: revealing the panel shrinks the 3D view like any window resize,
 so the output camera stays the same but the preview is marked out of date (and refreshed
-if automatic); removed measurements are not restored by undo; the dashed lines are drawn
+if automatic) — resolved on 16 November 2026: a resize is no longer a change of the
+figure (see the macOS maintenance section); removed measurements are not restored by undo; the dashed lines are drawn
 in front of all atoms, so a guide may cross atoms that lie in front of it; a ball hidden
 behind others must be brought into view (orbit) before it can be clicked.
 
@@ -650,6 +651,59 @@ spheres); without this, 14³ took 232 ms per step and 20³ 640 ms. The soft limi
 | Undo/redo | Pass | Ctrl+Z / Ctrl+Shift+Z (Ctrl+Y) for hide, Show All Atoms, and the boundary toggle; hidden IDs survive toggling |
 | Automated suite | 66 passed, 0 skipped | `pytest -q -rs` with `/usr/bin/povray` |
 
+## Maintenance: macOS support and cross-platform tests (16 November 2026)
+
+No feature was added and no milestone status changed. Work done on a Mac mini (macOS
+15.8, Apple silicon, one non-Retina 2560 × 1440 display) on the branch
+`feature/cross-platform`; one repository and one codebase serve Linux and macOS. Every
+result below was observed on that Mac. **Linux was not re-run with these changes**; the
+Ubuntu CI job does that when the branch is pushed.
+
+Before the changes, on the Mac (Homebrew Python 3.12.16 and POV-Ray 3.7.0.10, all pins
+of `constraints.txt` installed): `ycrystal --check-renderer` passed; 282 tests without
+POV-Ray and 67 with it passed; all 147 GUI tests were skipped because the test suite
+looked for `DISPLAY`. Run on the macOS desktop, 138 GUI tests passed and 9 failed.
+
+| Finding | Cause | Change | Evidence |
+| --- | --- | --- | --- |
+| GUI tests skipped on macOS | `tests/conftest.py` required `DISPLAY`/`WAYLAND_DISPLAY` | `display_available()`: macOS and Windows use the desktop session (unless Qt draws off-screen); Linux unchanged | 148 GUI tests run and pass |
+| Live view one frame behind: screenshots, lights (3 tests) | PyVistaQt's `QtInteractor.render()` returns before drawing on macOS only (it emits its render signal from a helper thread) | `viewport/interactor.py`: `SynchronousInteractor`, used by both views, draws in the calling thread on every platform | `test_live_view_matches_camera_model`, two lighting tests |
+| Previews discarded as "scene changed" in windows up to 714 px high (5 tests) | macOS controls are taller: the window's minimum height is 688 px, and 714 px while the preview progress bar shows, so the window grows, the view is resized, and a resize counted as a view change | A resize keeps the output camera and is no longer reported (`camera_changed` is not emitted for the scale adjustment): no new `scene_revision`. **Applies to Linux too**: resizing the window or a panel no longer marks the preview out of date | The five preview tests; new `test_resizing_the_view_keeps_the_preview_valid` |
+| Export warned that `metals.inc` was missing (1 test) | Include files were searched only in `/etc/povray`, `~/.povray`, `/usr/share`, `/usr/local/share` | `include_directories(executable)` reads the `povray.ini` and include folders of the executable's installation prefix (link and real location); the old locations remain | `test_export_reports_include_files`; 4 tests with stand-in installations |
+| Personal-material thumbnails would go to `~/Library/Preferences/material-thumbnails` | The folder was "next to the settings file" | `gui/native.py`: Qt's application data folder where the native settings are not a file of their own (macOS, Windows); Linux and INI settings unchanged | `test_personal_thumbnails_stay_out_of_shared_folders`; real launch reports `~/Library/Application Support/Y-Matter Lab/Ycrystal/material-thumbnails` |
+| `--install-desktop` wrote freedesktop files on macOS | No platform check | The two options print an error and return 1 outside freedesktop systems; Linux unchanged | `test_launcher_command_applies_to_freedesktop_systems_only`; run by hand: exit 1, nothing written |
+| Help texts said "Ctrl" | Qt maps Ctrl to ⌘ on macOS | `native_keys` for the Mouse Controls help and three tooltips; install hints name `brew install povray`; the POV-Ray file dialog starts at the found executable instead of `/usr/bin` | `test_native_key_names` |
+| Two GUI tests failed at a 2× display scale | Test assumptions: one compared logical with device pixels; one compared cameras exactly after the output size went to another shape and back (they differ in the last digit) | The expected pan is multiplied by the device pixel ratio (`tests/test_gui.py`); the camera is compared with `_same_camera` (`tests/test_preview_resolution.py`) | Both pass at scale 1 and with `QT_SCALE_FACTOR=2` |
+
+Results after the changes, on the Mac:
+
+- `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs`: **505 passed, none skipped** (about 170 s):
+  the 496 earlier tests and 9 new ones (`tests/test_platform.py`, one in
+  `tests/test_gui_render.py`).
+- The steps of the macOS CI job, run locally in order: version, `--check-renderer`
+  (PASS, POV-Ray 3.7.0.10 at `/opt/homebrew/bin/povray`, 0.14 px), doctests,
+  `scripts/docs_examples.py`, `pytest -m "not gui"` (357 passed).
+- GUI tests with an emulated 2× display scale (`QT_SCALE_FACTOR=2`): all 148 passed
+  after the two test corrections above (two failed before them). This is not a test on
+  a Retina display.
+- Real launch through `ycrystal.app.main` (scripted, 7 s): Cocoa platform, native menu
+  bar, shortcuts shown as ⌘O, ⇧⌘Z, ⌘←, …; window icon set; the automatic POV-Ray preview
+  reached "Up to date" in the default 1100 × 720 window; exit status 0.
+- `pre-commit run --all-files` and `zensical build --clean --strict` (documentation
+  pins installed on macOS): clean.
+
+Continuous integration: the `test` job is now a matrix with one entry per operating
+system. Ubuntu keeps its job name and runs everything under Xvfb; macOS 15 (arm64,
+Homebrew POV-Ray) runs the tests that open no window. POV-Ray is found on `PATH` on
+both. **The changed workflow has not run on GitHub.** `constraints.txt` gains the two
+macOS-only packages that PyVista needs there (`pyobjc-core`, `pyobjc-framework-cocoa`,
+with environment markers).
+
+Unverified: Linux with these changes; the macOS CI job; a Retina display; Intel Macs;
+hands-on use on macOS (native file dialogs, trackpad scrolling and pinching, ⌘ + click,
+dark appearance, long renders); Windows (no test of any kind). On macOS Ycrystal runs
+from the checkout: there is no application bundle, so the Dock shows "Python".
+
 ## Maintenance: repository tooling (15 November 2026)
 
 No product behaviour changed and no milestone status changed. Inspired by quacc's setup,
@@ -847,6 +901,14 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 - POV-Ray 3.7.0.10 (distribution package `1:3.7.0.10-3build4`, `/usr/bin/povray`),
   include files in `/usr/share/povray-3.7/include`.
 
+Second development machine (since 16 November 2026):
+
+- Mac mini, macOS 15.8 (Apple silicon), one external non-Retina display (2560 × 1440,
+  scale 1.0).
+- Python 3.12.16 and POV-Ray 3.7.0.10 from Homebrew (`/opt/homebrew/bin/povray`, include
+  files in `/opt/homebrew/share/povray-3.7/include`); the same pins as above plus
+  pyobjc-core and pyobjc-framework-Cocoa 13.0.
+
 ## Architecture decisions
 
 - **System Python, not Miniconda.** With Miniconda's interpreter, its bundled
@@ -960,6 +1022,8 @@ YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rs   # no silent s
 
 ## Next bounded action
 
-Hands-on checks of the 0.2.0 features (Lighting Setup window, aspect lock, colour
-dialog) by a person; the maintainer decides whether to publish a GitHub release for
-`v0.2.0`.
+Review the macOS changes on `feature/cross-platform`, let CI run them on Ubuntu and
+macOS, and go through the hands-on macOS checklist in [HANDOFF.md](HANDOFF.md). Still
+open from before: hands-on checks of the 0.2.0 features (Lighting Setup window, aspect
+lock, colour dialog) by a person; the maintainer decides whether to publish a GitHub
+release for `v0.2.0`.

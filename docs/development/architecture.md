@@ -17,9 +17,11 @@ extending them.
 | `core/measure.py` | Distances and bond angles between displayed instances (`AtomId`), computed from the structure's coordinates and cell only, plus the session state of the measurement modes. No Qt or VTK; nothing is saved in projects. |
 | `core/lighting.py` | `resolve_lighting` turns an environment's relative light values into a world-space `LightingRig` (key, fill, reflection panel) for an output camera and a displayed geometry. Shared by the POV writer, the live view, and the Lighting Setup window; nothing is stored. No Qt or VTK. |
 | `viewport/qt_viewport.py` | The VTK/PyVistaQt adapter. It consumes shared geometry, exchanges `Camera` objects, draws overlays, and reports clicks. VTK objects stay here. Its two scene lights come from the resolved rig. |
+| `viewport/interactor.py` | The PyVistaQt interactor used by both views. Its `render()` draws before it returns on every platform (PyVistaQt alone defers the drawing to the event loop on macOS), which the start-of-render bookkeeping (output camera, lights, frame overlay) relies on. |
 | `viewport/lighting_view.py` | The Lighting Setup overview: a second VTK window with its own camera that draws the rig and reports main-light handle drags as angles. Its graphics never reach the main view, picking, fitting, or exports. |
 | `render/pov_writer.py` | Pure text export of shared geometry/camera into POV-Ray 3.7 and INI output. No renderer process or display needed. |
-| `render/jobs.py`, `render/povray.py` | Isolated job directories, discovery, synchronous execution, results, and image copying. The caller owns cleanup. |
+| `render/jobs.py`, `render/povray.py` | Isolated job directories, discovery, synchronous execution, results, and image copying. The caller owns cleanup. POV-Ray is found through the saved setting, `YCRYSTAL_POVRAY`, or `PATH`; its standard include files are located from the executable's installation prefix, never from a fixed system path alone. |
+| `gui/native.py`, `desktop.py` | The platform-dependent choices of the interface, kept in one place: modifier-key names in help texts, the folder for personal-material thumbnails, and whether the freedesktop menu launcher applies (Linux only). Each takes the platform as a parameter, so every branch is tested on any system. |
 | `render/process.py` | Asynchronous `QProcess` adapter. Needs a running Qt event loop (`QCoreApplication` is enough), not a window. |
 | `render/selftest.py`, `render/imagecheck.py` | Small renderer diagnostic and analytic/image alignment measurements. Runs without a display, but the diagnostic invokes POV-Ray. |
 
@@ -36,7 +38,8 @@ half-height scale, and pixels. Two cameras exist in the GUI: VTK's camera for th
 whole view, and the **output camera** for the image inside the output frame (same
 orientation and centre, parallel scale multiplied by the frame-to-view height ratio).
 Export, preview, render, and projects use the output camera with the explicit output
-size; resizing the window keeps it. POV-Ray export writes explicit camera vectors and
+size; resizing the window keeps it, so a resize is not a change of the figure (no
+new scene revision, and a preview stays current). POV-Ray export writes explicit camera vectors and
 may move the orthographic eye backward to put all geometry in front of it without
 changing projection. VTK uses the key and fill lights of the shared lighting rig and a
 material's live approximation; axes, the frame, and selection are overlays only.

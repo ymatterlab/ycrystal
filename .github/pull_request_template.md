@@ -8,7 +8,7 @@
      Say what you could not run (no display, no POV-Ray, …). -->
 
 - [ ] `pre-commit run --all-files`
-- [ ] `python -m pytest -q -rs` (display: …, POV-Ray: …)
+- [ ] `python -m pytest -q -rs` (system: Linux/macOS …, display: …, POV-Ray: …)
 
 ## Checklist
 

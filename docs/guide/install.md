@@ -1,7 +1,8 @@
 # Install and launch
 
 The integration baseline is Linux Mint 22.1 / Ubuntu 24.04 with the system Python
-3.12, an X11 desktop, and working OpenGL. Other operating systems and Python versions
+3.12, an X11 desktop, and working OpenGL. macOS 15 on Apple silicon is supported from
+the same source and passes the same automated tests; Windows and other Python versions
 have not been verified (see the [support matrix](support.md)). Ycrystal is installed
 from a source checkout into its own virtual environment; no `sudo` is needed except for
 the system packages.
@@ -37,6 +38,27 @@ uv venv --python /usr/bin/python3.12 .venv
 uv pip install --python .venv/bin/python -e . -c constraints.txt
 ```
 
+## macOS
+
+With [Homebrew](https://brew.sh/) on macOS 15 (Apple silicon):
+
+```bash
+xcode-select --install            # Git and the command-line tools, if missing
+brew install python@3.12 povray
+git clone https://github.com/ymatterlab/ycrystal.git
+cd ycrystal
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -e . -c constraints.txt
+.venv/bin/ycrystal
+```
+
+Homebrew's `povray` is POV-Ray 3.7 and contains the standard include files; Ycrystal
+finds it on `PATH` (`/opt/homebrew/bin/povray`). The window is started from the
+terminal: there is no application bundle or Dock launcher yet, so the Dock and the
+menu bar show “Python”, and `--install-desktop` (below) applies to Linux only.
+Shortcuts use ⌘ where this guide says Ctrl. A virtual environment cannot be copied
+between Linux and macOS: create it on each machine.
+
 ## Check the installation
 
 ```bash
@@ -47,7 +69,7 @@ uv pip install --python .venv/bin/python -e . -c constraints.txt
 
 The last command renders an [example project](examples.md) without opening a window.
 
-## Menu launcher
+## Menu launcher (Linux)
 
 ```bash
 .venv/bin/ycrystal --install-desktop
@@ -71,8 +93,11 @@ git pull
 
 Projects and styles from earlier versions keep opening; newer project files are refused
 by older versions with a message to update. To uninstall, run
-`.venv/bin/ycrystal --uninstall-desktop`, then delete the checkout directory. Settings
-(POV-Ray path, favourites, last folder) are in `~/.config/Y-Matter Lab/Ycrystal.conf`.
+`.venv/bin/ycrystal --uninstall-desktop` (Linux), then delete the checkout directory.
+Settings (POV-Ray path, favourites, last folder) are in
+`~/.config/Y-Matter Lab/Ycrystal.conf` on Linux and in
+`~/Library/Preferences/com.y-matter-lab.Ycrystal.plist` on macOS, where the thumbnails
+of personal materials are in `~/Library/Application Support/Y-Matter Lab/Ycrystal`.
 
 ## Launch options
 

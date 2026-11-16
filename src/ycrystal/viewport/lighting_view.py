@@ -36,7 +36,6 @@ import pyvista as pv  # noqa: E402
 from PySide6.QtCore import QEvent, QObject, QPointF, Qt, Signal  # noqa: E402
 from PySide6.QtGui import QKeyEvent, QMouseEvent  # noqa: E402
 from PySide6.QtWidgets import QVBoxLayout, QWidget  # noqa: E402
-from pyvistaqt import QtInteractor  # noqa: E402
 from vtkmodules.vtkFiltersSources import vtkSphereSource  # noqa: E402
 from vtkmodules.vtkRenderingCore import (  # noqa: E402
     vtkActor,
@@ -48,6 +47,7 @@ from vtkmodules.vtkRenderingCore import (  # noqa: E402
 from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.lighting import LightingRig, angles_of, wrap_azimuth  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry  # noqa: E402
+from ycrystal.viewport.interactor import SynchronousInteractor  # noqa: E402
 
 HANDLE_PICK_PX = 14.0
 """Largest distance in device pixels between the cursor and a handle that grabs it."""
@@ -140,7 +140,7 @@ class LightingOverview(QWidget):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self._plotter = QtInteractor(self, auto_update=False, multi_samples=4)
+        self._plotter = SynchronousInteractor(self, auto_update=False, multi_samples=4)
         layout.addWidget(self._plotter)
         self._plotter.enable_trackball_style()
         self._plotter.set_background(BACKGROUND)

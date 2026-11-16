@@ -12,6 +12,7 @@ saving to [`ycrystal.io.readers`][ycrystal.io.readers] and
 
 from __future__ import annotations
 
+import shutil
 from dataclasses import replace
 from pathlib import Path
 from typing import NamedTuple
@@ -61,6 +62,7 @@ from ycrystal.gui.material_editor import (
     load_personal_materials,
     save_personal_material,
 )
+from ycrystal.gui.native import native_keys, personal_thumbnail_directory
 from ycrystal.gui.panels.appearance_panel import AppearancePanel
 from ycrystal.gui.panels.measurement_panel import MeasurementPanel, MeasurementRow
 from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
@@ -338,10 +340,9 @@ class MainWindow(QMainWindow):
         self.geometry = build_geometry(self.structure, self.scene_settings)
         self.settings = QSettings()
         # Personal custom materials (FR-MATERIAL-01) live in the user's settings, with
-        # their rendered thumbnails in a folder next to the settings file.
-        presets_module.CUSTOM_THUMBNAILS = Path(self.settings.fileName()).parent / (
-            "material-thumbnails"
-        )
+        # their rendered thumbnails in a folder next to the settings file (or in the
+        # application data folder where the settings are not a file of their own).
+        presets_module.CUSTOM_THUMBNAILS = personal_thumbnail_directory(self.settings)
         self.personal_material_notes = load_personal_materials(self.settings)[1]
         self.material_editor: MaterialEditorDialog | None = None
         self._material_preview = False
@@ -779,10 +780,10 @@ class MainWindow(QMainWindow):
         self.undo_stack.canUndoChanged.connect(self.toolbar_undo.setEnabled)
         self.undo_stack.canRedoChanged.connect(self.toolbar_redo.setEnabled)
         self.undo_stack.undoTextChanged.connect(
-            lambda text: self.toolbar_undo.setToolTip(f"Undo {text} (Ctrl+Z)")
+            lambda text: self.toolbar_undo.setToolTip(native_keys(f"Undo {text} (Ctrl+Z)"))
         )
         self.undo_stack.redoTextChanged.connect(
-            lambda text: self.toolbar_redo.setToolTip(f"Redo {text} (Ctrl+Shift+Z)")
+            lambda text: self.toolbar_redo.setToolTip(native_keys(f"Redo {text} (Ctrl+Shift+Z)"))
         )
         toolbar.addAction(self.toolbar_undo)
         toolbar.addAction(self.toolbar_redo)
@@ -2933,7 +2934,7 @@ class MainWindow(QMainWindow):
                 f" with the background picture {asset_filename(env.image.asset, env.image.format)}"
             )
         includes = required_includes(self.geometry)
-        missing = missing_includes(includes)
+        missing = missing_includes(includes, self.configured_povray())
         if includes:
             message += f" (needs POV-Ray include files: {', '.join(includes)})"
         self.last_export_missing_includes = missing
@@ -2942,8 +2943,9 @@ class MainWindow(QMainWindow):
                 "Include Files Not Found",
                 f"The exported scene needs the standard POV-Ray include files "
                 f"{', '.join(missing)}, which were not found on this computer. Install them "
-                "(Linux Mint/Ubuntu: sudo apt install povray-includes) before rendering the "
-                "scene, or choose materials without native POV-Ray identifiers.",
+                "(Linux Mint/Ubuntu: sudo apt install povray-includes; Homebrew's povray on "
+                "macOS contains them) before rendering the scene, or choose materials "
+                "without native POV-Ray identifiers.",
             )
         self.statusBar().showMessage(message, 8000)
         return pov
@@ -3062,9 +3064,8 @@ class MainWindow(QMainWindow):
 
     def choose_povray(self) -> None:
         """Ask for a POV-Ray executable, store it, and check it."""
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Select POV-Ray Executable", self.configured_povray() or "/usr/bin"
-        )
+        start = self.configured_povray() or shutil.which("povray") or str(Path.home())
+        path, _ = QFileDialog.getOpenFileName(self, "Select POV-Ray Executable", start)
         if path:
             self.settings.setValue(SETTINGS_POVRAY, path)
             self.check_renderer()
@@ -3116,7 +3117,7 @@ class MainWindow(QMainWindow):
 
     def show_mouse_help(self) -> None:
         """Show the mouse and keyboard summary (*Help ▸ Mouse Controls*, F1)."""
-        QMessageBox.information(self, "Mouse Controls", MOUSE_HELP)
+        QMessageBox.information(self, "Mouse Controls", native_keys(MOUSE_HELP))
 
     def show_format_help(self) -> None:
         """Show the supported file formats (*Help ▸ Supported File Formats*)."""

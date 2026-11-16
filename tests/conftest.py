@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 
 import numpy as np
 import pytest
@@ -16,14 +17,27 @@ from ycrystal.core.scene import DisplayGeometry  # noqa: E402
 REQUIRE_INTEGRATION = os.environ.get("YCRYSTAL_REQUIRE_INTEGRATION") == "1"
 
 
+def display_available() -> bool:
+    """Whether Qt can open real windows here (the GUI tests draw with OpenGL).
+
+    macOS and Windows have no display variable: Qt uses the desktop session, so a
+    display is assumed unless Qt is told to draw off-screen (``QT_QPA_PLATFORM``).
+    Elsewhere an X11 or Wayland display must be named in the environment.
+    """
+    if sys.platform in ("darwin", "win32"):
+        return os.environ.get("QT_QPA_PLATFORM", "") not in ("offscreen", "minimal")
+    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
+    if display_available():
         return
     gui_items = [item for item in items if "gui" in item.keywords]
     if gui_items and REQUIRE_INTEGRATION:
         raise pytest.UsageError(
-            f"YCRYSTAL_REQUIRE_INTEGRATION=1 but no X11/Wayland display is available for "
-            f"{len(gui_items)} GUI tests. Run under a display or xvfb-run."
+            f"YCRYSTAL_REQUIRE_INTEGRATION=1 but no display is available for "
+            f"{len(gui_items)} GUI tests. Run in a desktop session (Linux: under X11, "
+            f"Wayland, or xvfb-run)."
         )
     skip = pytest.mark.skip(reason="no display available for GUI tests")
     for item in gui_items:
