@@ -127,7 +127,8 @@ def test_mouse_navigation_changes_only_the_camera(window):
     panned = window.viewport.camera()
     np.testing.assert_allclose(panned.basis()[2], orbited.basis()[2], atol=1e-9)
     moved = panned.project(atom, width, height)[0] - start_px
-    np.testing.assert_allclose(moved, (60, -30), atol=1.5)
+    ratio = widget.devicePixelRatioF()  # the drag is in logical, the projection in device pixels
+    np.testing.assert_allclose(moved, (60 * ratio, -30 * ratio), atol=1.5 * ratio)
 
     # Middle drag also pans.
     _send_drag(widget, centre, (w / 2 - 40, h / 2), Qt.MouseButton.MiddleButton)

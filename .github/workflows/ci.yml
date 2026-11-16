@@ -64,25 +64,53 @@ jobs:
         run: zensical build --clean --strict
 
   test:
-    # Integration baseline: Ubuntu 24.04, Python 3.12, real Qt/VTK under Xvfb, and the
-    # distribution's POV-Ray 3.7. YCRYSTAL_REQUIRE_INTEGRATION makes a missing display or
-    # renderer fail the run instead of skipping the GUI and rendering tests.
-    name: tests (Ubuntu 24.04, Python 3.12, Xvfb, POV-Ray 3.7)
-    runs-on: ubuntu-24.04
+    # One job per operating system, same steps. To add a system (for example Windows),
+    # add a matrix entry and a "System packages" step for it; POV-Ray must be on PATH.
+    # YCRYSTAL_REQUIRE_INTEGRATION makes a missing display or renderer fail the run
+    # instead of skipping the GUI and rendering tests.
+    name: tests (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Integration baseline: real Qt/VTK under Xvfb (software OpenGL) and the
+          # distribution's POV-Ray 3.7. Runs every test.
+          - name: Ubuntu 24.04, Python 3.12, Xvfb, POV-Ray 3.7
+            os: ubuntu-24.04
+            pytest: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -rs
+          # macOS on Apple silicon with Homebrew's POV-Ray 3.7: installation, imports,
+          # structure and project code, POV-Ray discovery and rendering, and Qt without
+          # windows (QProcess, QSettings). The GUI tests are left out: hosted macOS
+          # runners have no GPU, and Qt's OpenGL widget is unreliable on Apple's software
+          # renderer. Run them on a real Mac (docs/HANDOFF.md).
+          - name: macOS 15 arm64, Python 3.12, POV-Ray 3.7, no GUI tests
+            os: macos-15
+            pytest: python -m pytest -q -rs -m "not gui"
+    defaults:
+      run:
+        shell: bash
     env:
-      YCRYSTAL_POVRAY: /usr/bin/povray
       YCRYSTAL_REQUIRE_INTEGRATION: "1"
     steps:
       - uses: actions/checkout@v7
 
-      - name: System packages (POV-Ray 3.7 with its standard include files, Qt xcb, virtual display)
+      - name: System packages (Linux; POV-Ray 3.7 with its include files, Qt xcb, virtual display)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends povray povray-includes xvfb \
             libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xfixes0 \
             libegl1 libgl1 libdbus-1-3
+
+      - name: System packages (macOS; Homebrew POV-Ray 3.7, include files included)
+        if: runner.os == 'macOS'
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+          HOMEBREW_NO_INSTALL_CLEANUP: "1"
+        run: brew install povray
 
       - uses: actions/setup-python@v7
         with:
@@ -95,13 +123,16 @@ jobs:
       - name: Install (integration-tested pins from constraints.txt)
         run: python -m pip install -e ".[dev]" -c constraints.txt
 
-      - name: Renderer check
-        run: ycrystal --check-renderer --povray /usr/bin/povray
+      - name: Command line and renderer check (POV-Ray found on PATH)
+        run: |
+          ycrystal --version
+          command -v povray
+          ycrystal --check-renderer
 
       - name: Display-independent documentation examples
         run: |
-          python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/colors.py src/ycrystal/core/aspect.py src/ycrystal/core/lighting.py src/ycrystal/core/measure.py src/ycrystal/core/vectors.py src/ycrystal/core/background.py src/ycrystal/presets/custom.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py src/ycrystal/io/style.py src/ycrystal/presets/__init__.py src/ycrystal/render/jobs.py src/ycrystal/render/thumbnails.py src/ycrystal/batch.py src/ycrystal/desktop.py
+          python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/colors.py src/ycrystal/core/aspect.py src/ycrystal/core/lighting.py src/ycrystal/core/measure.py src/ycrystal/core/vectors.py src/ycrystal/core/background.py src/ycrystal/presets/custom.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py src/ycrystal/io/style.py src/ycrystal/presets/__init__.py src/ycrystal/render/jobs.py src/ycrystal/render/thumbnails.py src/ycrystal/batch.py src/ycrystal/desktop.py src/ycrystal/gui/native.py
           python scripts/docs_examples.py
 
-      - name: Tests (GUI under Xvfb)
-        run: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -rs
+      - name: Tests
+        run: ${{ matrix.pytest }}

@@ -21,6 +21,7 @@ from ycrystal.gui.main_window import (
     SETTINGS_PREVIEW_WIDTH,
     MainWindow,
     PreviewRequest,
+    _same_camera,
 )
 from ycrystal.render.pov_writer import scene_to_pov
 
@@ -325,4 +326,7 @@ def test_preview_png_has_the_requested_size(window, qtbot, povray_executable):
         assert window.preview_shown[1:] == expected
     window.set_output_size(1200, 800)
     after = final_state(window)
-    assert after[:4] == before[:4]  # same output size, settings, camera, and scene
+    # Same output size, settings, and scene; the camera to round-off (the output size went
+    # to another shape and back, which rescales the view camera twice).
+    assert after[:2] == before[:2] and after[3] == before[3]
+    assert _same_camera(after[2], before[2])

@@ -56,7 +56,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     batch.add_argument("--width", type=int, help="output width in pixels (default: FILE's)")
     batch.add_argument("--height", type=int, help="output height in pixels (default: FILE's)")
-    desktop = parser.add_argument_group("desktop integration (current user)")
+    desktop = parser.add_argument_group("desktop integration (Linux, current user)")
     desktop.add_argument(
         "--install-desktop",
         action="store_true",
@@ -137,20 +137,30 @@ def main(argv: list[str] | None = None) -> int:
     they draw ``FILE`` (a project exactly as saved, or a structure with the default
     settings and view) through [`ycrystal.batch`][ycrystal.batch], print one line, and
     return 0, or 1 with an ``ERROR:`` message on standard error (2 for invalid sizes).
-    ``--install-desktop`` / ``--uninstall-desktop`` manage the menu launcher (see
-    [`ycrystal.desktop`][ycrystal.desktop]).
+    ``--install-desktop`` / ``--uninstall-desktop`` manage the menu launcher on Linux
+    (see [`ycrystal.desktop`][ycrystal.desktop]); on macOS and Windows they print an
+    error and return 1 without writing anything.
 
     Otherwise a window opens with the ``--sample`` structure. A ``FILE`` argument is
     opened once the event loop runs; if it cannot be read, a message appears and the
     sample stays open. Settings are stored for the organization "Y-Matter Lab" and the
-    application "Ycrystal" (``~/.config/Y-Matter Lab/Ycrystal.conf`` on Linux).
+    application "Ycrystal" (``~/.config/Y-Matter Lab/Ycrystal.conf`` on Linux,
+    ``~/Library/Preferences/com.y-matter-lab.Ycrystal.plist`` on macOS).
     """
     parser = _parser()
     args = parser.parse_args(argv)
 
     if args.install_desktop or args.uninstall_desktop:
-        from ycrystal.desktop import install_desktop, uninstall_desktop
+        from ycrystal.desktop import desktop_supported, install_desktop, uninstall_desktop
 
+        if not desktop_supported():
+            print(
+                "ERROR: --install-desktop and --uninstall-desktop manage a Linux menu "
+                "launcher and do not apply to this system; start Ycrystal with the "
+                "ycrystal command.",
+                file=sys.stderr,
+            )
+            return 1
         if args.install_desktop:
             for path in install_desktop():
                 print(f"Installed {path}")

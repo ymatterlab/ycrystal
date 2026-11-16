@@ -47,7 +47,6 @@ import qtpy  # noqa: E402
 from PySide6.QtCore import QEvent, QObject, QPointF, Qt, Signal  # noqa: E402
 from PySide6.QtGui import QKeyEvent, QKeySequence, QMouseEvent  # noqa: E402
 from PySide6.QtWidgets import QVBoxLayout, QWidget  # noqa: E402
-from pyvistaqt import QtInteractor  # noqa: E402
 from vtkmodules.vtkCommonTransforms import vtkTransform  # noqa: E402
 from vtkmodules.vtkFiltersGeneral import vtkTransformFilter  # noqa: E402
 from vtkmodules.vtkFiltersSources import vtkCylinderSource, vtkSphereSource  # noqa: E402
@@ -65,6 +64,7 @@ from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.lighting import LightingRig, resolve_lighting_for_bounds  # noqa: E402
 from ycrystal.core.picking import pick_sphere  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry, Environment  # noqa: E402
+from ycrystal.viewport.interactor import SynchronousInteractor  # noqa: E402
 
 if qtpy.API_NAME != "PySide6":  # pragma: no cover - environment guard
     raise ImportError(f"qtpy selected {qtpy.API_NAME}; Ycrystal requires PySide6")
@@ -216,10 +216,12 @@ class StructureViewport(QWidget):
     """
 
     camera_changed = Signal()
-    """Emitted whenever the VTK camera changes: during mouse navigation and after
+    """Emitted whenever the view changes: during mouse navigation and after
     [`set_camera`][ycrystal.viewport.qt_viewport.StructureViewport.set_camera] or
     [`fit`][ycrystal.viewport.qt_viewport.StructureViewport.fit]. One change can emit
-    it several times."""
+    it several times. Resizing the view does not emit it: the view camera's parallel
+    scale is adjusted so that the output camera, and so the rendered image, stays the
+    same."""
 
     #: A click without dragging: (index into the displayed atoms or -1, Ctrl held)
     atom_clicked = Signal(int, bool)
@@ -241,7 +243,7 @@ class StructureViewport(QWidget):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self._plotter = QtInteractor(self, auto_update=False, multi_samples=8)
+        self._plotter = SynchronousInteractor(self, auto_update=False, multi_samples=8)
         layout.addWidget(self._plotter)
         self._input_filter = _InputFilter(self)
         self._plotter.installEventFilter(self._input_filter)
@@ -267,7 +269,9 @@ class StructureViewport(QWidget):
         """Live-view-only measurement helpers (cages, labels, guides); never exported."""
         self.detail: tuple[int, int, int] = detail_for(0)
         self._geometry: DisplayGeometry | None = None
-        # Any camera change (mouse navigation, wheel, Fit, programmatic) notifies listeners.
+        # Any camera change (mouse navigation, wheel, Fit, programmatic) notifies listeners,
+        # except the scale adjustment that keeps the output camera when the view is resized.
+        self._keeping_output = False
         self._plotter.renderer.GetActiveCamera().AddObserver(
             "ModifiedEvent", self._on_camera_modified
         )
@@ -1142,14 +1146,20 @@ class StructureViewport(QWidget):
 
     # ----- internals --------------------------------------------------------------
     def _on_camera_modified(self, *_args: object) -> None:
-        self.camera_changed.emit()
+        if not self._keeping_output:
+            self.camera_changed.emit()
 
     def _before_render(self, *_args: object) -> None:
         factor = self.frame_factor()
         cam = self._plotter.renderer.GetActiveCamera()
         if self._last_factor is not None and abs(factor - self._last_factor) > 1e-12:
-            # The view was resized: keep the output camera's parallel scale.
-            cam.SetParallelScale(cam.GetParallelScale() * self._last_factor / factor)
+            # The view was resized: keep the output camera's parallel scale. The output
+            # camera is unchanged, so this is not reported as a change of the view.
+            self._keeping_output = True
+            try:
+                cam.SetParallelScale(cam.GetParallelScale() * self._last_factor / factor)
+            finally:
+                self._keeping_output = False
         self._last_factor = factor
         self._update_lights()
         self._update_frame_overlay()

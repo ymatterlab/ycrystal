@@ -70,6 +70,30 @@ def test_frame_matches_output_aspect_and_survives_resize(window, qtbot):
     assert not window.is_modified()  # resizing the window is not a change of the figure
 
 
+def test_resizing_the_view_keeps_the_preview_valid(window, qtbot, tmp_path):
+    """A resize changes the view camera only: no new revision, the preview stays current.
+
+    The window may also resize itself, for example when the preview's progress bar needs
+    more height than the window has (macOS controls are taller than Linux ones).
+    """
+    window.settings.setValue(SETTINGS_POVRAY, fake_povray(tmp_path, 0.1))
+    assert window.request_preview()
+    qtbot.waitUntil(lambda: window.preview_panel.state == "ready", timeout=10_000)
+    assert window.preview_discarded == 0
+    revision, camera = window.scene_revision, window.current_camera()
+    view_scale = window.viewport.camera().parallel_scale
+    window.resize(window.width() - 120, window.height() + 90)
+    qtbot.wait(300)
+    window.viewport.render()
+    assert window.viewport.camera().parallel_scale != pytest.approx(view_scale)
+    assert window.current_camera().parallel_scale == pytest.approx(camera.parallel_scale, rel=1e-9)
+    assert window.scene_revision == revision
+    assert window.preview_panel.state == "ready" and not window._preview_timer.isActive()
+    # A real change of the view still counts.
+    window.viewport.set_output_camera(window.current_camera().orbit(azimuth=10))
+    assert window.scene_revision > revision and window.preview_panel.state == "stale"
+
+
 def test_output_size_keeps_output_camera_and_marks_modified(window):
     camera = window.current_camera()
     window.render_panel.aspect_combo.setCurrentIndex(

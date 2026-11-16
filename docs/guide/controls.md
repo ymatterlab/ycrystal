@@ -30,6 +30,11 @@ the in-app summary.
 | Ctrl+R | Render PNG… (toolbar **Cancel Render** stops it) |
 | Ctrl+Q | Quit (asks about unsaved changes) |
 
+On macOS, read **Ctrl** as **⌘** (Command) throughout: ⌘ + click toggles the
+selection (Control + click is a right click there), ⌘Z undoes, ⌘R renders. The
+function keys F1 and F5 may need the Fn key, depending on the keyboard settings. A
+mouse or trackpad without a middle button pans with Shift + left drag.
+
 ## Boundary atoms and hiding
 
 **View ▸ Show Boundary Atoms** is on by default. Atoms are wrapped along periodic

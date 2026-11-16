@@ -15,6 +15,7 @@
       members:
         - DESKTOP_ID
         - PROJECT_MIME_TYPE
+        - desktop_supported
         - data_home
         - icon_path
         - launcher_installed

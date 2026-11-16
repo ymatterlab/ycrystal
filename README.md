@@ -3,8 +3,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Status: early development](https://img.shields.io/badge/status-early%20development-orange.svg)](docs/PROGRESS.md)
 
-Ycrystal is a Linux desktop application (PySide6 + VTK) for preparing reproducible
-crystal-structure figures and rendering them with [POV-Ray](https://www.povray.org/).
+Ycrystal is a desktop application for Linux and macOS (PySide6 + VTK) for preparing
+reproducible crystal-structure figures and rendering them with
+[POV-Ray](https://www.povray.org/).
 
 **Early development.** Open POSCAR/CONTCAR, CIF, and Quantum ESPRESSO (`ibrav = 0`)
 inputs, save/reopen `.ycrystal` projects, orbit/pan/zoom, select and hide individual
@@ -30,13 +31,24 @@ cd ycrystal
 .venv/bin/ycrystal --sample perovskite
 ```
 
-Use the system interpreter: Conda's bundled `libstdc++` can prevent Mesa from
+On Linux use the system interpreter: Conda's bundled `libstdc++` can prevent Mesa from
 loading. POV-Ray is needed for PNG rendering; viewing and exporting `.pov`/`.ini`
 work without it. Check it with `.venv/bin/ycrystal --check-renderer`. While the
 repository is private, clone it with `gh repo clone ymatterlab/ycrystal` or over SSH.
 
+macOS 15 on Apple silicon, with [Homebrew](https://brew.sh/):
+
 ```bash
-.venv/bin/ycrystal --install-desktop                                    # menu launcher
+brew install python@3.12 povray
+git clone https://github.com/ymatterlab/ycrystal.git
+cd ycrystal
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -e . -c constraints.txt
+.venv/bin/ycrystal --sample perovskite
+```
+
+```bash
+.venv/bin/ycrystal --install-desktop                                    # menu launcher (Linux)
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png  # no window
 ```
 
@@ -75,8 +87,9 @@ docs-only installation, NumPy-style writing conventions, and asset regeneration.
 .venv/bin/python -m pytest -q -rs
 ```
 
-GUI tests need a display; renderer tests need POV-Ray. CI retains the full application
-suite under Xvfb with POV-Ray and also builds documentation separately. See
+GUI tests need a display; renderer tests need POV-Ray. CI runs the full application
+suite on Ubuntu under Xvfb with POV-Ray, the tests that need no window on macOS, and
+builds documentation separately. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for strict integration checks and maintenance setup.
 
 ## License

@@ -1,6 +1,7 @@
 # Ycrystal
 
-Ycrystal is a Linux desktop application for composing crystal-structure figures and
+Ycrystal is a desktop application for Linux and macOS for composing crystal-structure
+figures and
 rendering the current view with [POV-Ray](https://www.povray.org/). The live interface
 uses PySide6 and VTK; the exported scene keeps the same orthographic camera and
 displayed atoms.
@@ -15,7 +16,7 @@ per-atom materials, floors, skies, and lighting controls. Drag the a/b/c handles
 cells, rotate freely or about a lattice/Cartesian axis, and reuse a figure's style with
 another structure; every figure change is undoable.
 
-- [Install and launch](guide/install.md) on Linux Mint.
+- [Install and launch](guide/install.md) on Linux Mint or macOS.
 - Follow [Your first crystal figure](guide/first-figure.md) using the built-in SrTiO3 sample.
 - Find [controls](guide/controls.md), [supported formats](FORMATS.md), and
   [rendering instructions](guide/rendering.md).
