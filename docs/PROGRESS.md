@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 16 November 2026 (FR-EXPORT-01, PDF and JPEG export; before that macOS support, see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; branch `feature/export-formats`, not yet merged). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 16 November 2026 (FR-EXPORT-01, PDF and JPEG export; before that macOS support, see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -95,8 +95,7 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 
 ## FR-EXPORT-01: PDF and JPEG export with publication sizes (post-0.2.0, 16 November 2026)
 
-Development after version 0.2.0 on branch `feature/export-formats` (from `main` at
-`6ed6b03`), uncommitted when recorded. **Render ▸ Render Image…** (Ctrl+R; formerly
+Development after version 0.2.0; merged in PR #23 (merge commit `52b3e5e`). **Render ▸ Render Image…** (Ctrl+R; formerly
 *Render PNG…*) opens one dialog: format (PNG default, PDF, JPEG), size (the Render
 panel's output size, Single column 85 mm at 600 dpi, Double column 180 mm at 600 dpi,
 Custom), width × height in px or mm, resolution (300/600 offered, 1–100 000 dpi
@@ -116,7 +115,9 @@ step differs per format (`render/formats.py`). The settings persist for the sess
 | 8. Window: each format written through the same render path with a stand-in renderer; scene revision, output size, camera, environment, and modified state unchanged; status bar names format and size; the action opens the dialog; a write failure shows "Could Not Save Image" and leaves no partial file | Pass | `test_render_image_writes_each_format_without_changing_the_scene`, `test_render_image_action_uses_the_dialog_answer`, `test_a_failed_write_is_reported` |
 | 9. Real POV-Ray 3.7 (Homebrew, macOS): one scene rendered as PNG, PDF, and JPEG at 40 mm, 150 dpi (236 × 157 px) into a non-ASCII folder: equal pixel sizes, PNG and JPEG at 150 dpi, JPEG within mean 4 levels of the PNG, PDF page within half a point of the physical size with the full image; camera, output size, and modified state unchanged | Pass | `test_same_scene_as_png_pdf_and_jpeg` |
 | Dialog layout on macOS (screenshots of the PNG, JPEG, and unlocked PDF states) | Pass (scripted) | screenshots in the session's scratch folder (not kept) |
-| Linux Mint; hands-on use of the dialog by a person; PDF opened in Acrobat, Preview, and a journal's submission system | Unverified | |
+| CI of PR #23: Ubuntu 24.04 full suite under Xvfb with POV-Ray 3.7 (including all new tests); macOS 15 tests without windows; pre-commit; docs | Pass | GitHub Actions run 43883106317 |
+| Hands-on use | Pass (user report) | The user reported that everything works (16 November 2026) |
+| PDF opened in specific viewers (Acrobat, Preview) and journal submission systems | Unverified by Claude | |
 
 Decisions: pixel size and dpi are the source of truth; millimetres are derived (a
 PDF page is the rendered pixels at the chosen dpi, so 85 mm at 600 dpi becomes 2008 px
@@ -132,7 +133,7 @@ tests: 43 in `tests/test_export.py`, 17 in `tests/test_gui_export.py`); after a 
 one-line dialog change `test_export.py`, `test_gui_export.py`, and `test_gui_render.py`
 72 passed and `pytest -m "not gui"` 400 passed; doctests of the CI list including the
 two new modules; ruff, `pre-commit run --all-files`, `zensical build --clean --strict`
-clean. Not run on Linux.
+clean. Linux: CI of PR #23 (Ubuntu, full suite) passed.
 
 ## FR-VECTOR-01: manual atom-attached vectors (post-0.2.0, 15 November 2026)
 
@@ -1063,8 +1064,9 @@ Second development machine (since 16 November 2026):
 
 ## Next bounded action
 
-Review the macOS changes on `feature/cross-platform`, let CI run them on Ubuntu and
-macOS, and go through the hands-on macOS checklist in [HANDOFF.md](HANDOFF.md). Still
+No feature is open: macOS support (PR #22) and FR-EXPORT-01 (PR #23) are merged and
+pass CI on Ubuntu and macOS. Remaining hands-on item from the macOS work: the checklist
+in [HANDOFF.md](HANDOFF.md). Still
 open from before: hands-on checks of the 0.2.0 features (Lighting Setup window, aspect
 lock, colour dialog) by a person; the maintainer decides whether to publish a GitHub
 release for `v0.2.0`.
