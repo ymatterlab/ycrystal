@@ -159,8 +159,8 @@ class RenderPanel(QWidget):
         layout.addWidget(group)
         note = QLabel(
             "The blue frame in the 3D view shows exactly what the image contains. "
-            "Preview renders a small POV-Ray image of the same view; Render writes the "
-            "full-size PNG."
+            "Preview renders a small POV-Ray image of the same view; Render Image writes "
+            "it as PNG, PDF, or JPEG at this size or at a publication size."
         )
         note.setWordWrap(True)
         layout.addWidget(note)

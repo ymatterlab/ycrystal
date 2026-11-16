@@ -32,8 +32,8 @@ cd ycrystal
 ```
 
 On Linux use the system interpreter: Conda's bundled `libstdc++` can prevent Mesa from
-loading. POV-Ray is needed for PNG rendering; viewing and exporting `.pov`/`.ini`
-work without it. Check it with `.venv/bin/ycrystal --check-renderer`. While the
+loading. POV-Ray is needed for rendering PNG, PDF, and JPEG images; viewing and
+exporting `.pov`/`.ini` work without it. Check it with `.venv/bin/ycrystal --check-renderer`. While the
 repository is private, clone it with `gh repo clone ymatterlab/ycrystal` or over SSH.
 
 macOS 15 on Apple silicon, with [Homebrew](https://brew.sh/):

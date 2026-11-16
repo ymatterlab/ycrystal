@@ -27,7 +27,7 @@ the in-app summary.
 | Ctrl+O | Open a structure or project |
 | Ctrl+S / Ctrl+Shift+S | Save Project / Save Project As… |
 | F5 | POV-Ray preview of the framed view |
-| Ctrl+R | Render PNG… (toolbar **Cancel Render** stops it) |
+| Ctrl+R | Render Image… as PNG, PDF, or JPEG (toolbar **Cancel Render** stops it) |
 | Ctrl+Q | Quit (asks about unsaved changes) |
 
 On macOS, read **Ctrl** as **⌘** (Command) throughout: ⌘ + click toggles the

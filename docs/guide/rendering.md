@@ -147,11 +147,53 @@ out of date; a new resolution then renders automatically if **Update automatical
 on, or when you press **Preview**. Preview problems (for example POV-Ray not
 found) appear in the dock, without a dialog.
 
-## Render a PNG in the application
+## Render an image in the application (PNG, PDF, JPEG)
 
-Choose **Render ▸ Render PNG…** (Ctrl+R) and a destination. The image has the output
-size from the Render tab and shows exactly the framed area. Antialiasing is always on
-in the GUI.
+Choose **Render ▸ Render Image…** (Ctrl+R). One dialog sets the format, the size, and
+the file; **Render** starts POV-Ray. The defaults (PNG at the output size from the
+Render tab) give the same image as earlier versions. Antialiasing is always on in the
+GUI.
+
+| Format | What is written |
+| --- | --- |
+| PNG (`.png`) | The POV-Ray image unchanged (8-bit sRGB, alpha with a transparent background), with the resolution stored in the file. |
+| PDF (`.pdf`) | One page of the physical size of the figure, containing the POV-Ray image at full resolution, losslessly compressed. A transparent background stays transparent. |
+| JPEG (`.jpg`, `.jpeg`) | The POV-Ray image encoded once with the chosen **Quality** (1–100, default 95), with the resolution stored in the file. JPEG has no transparency: a transparent background becomes white. |
+
+The PDF contains a raster image, like the PNG: it is **not** a vector drawing and does
+not become sharper when enlarged. Choose the size and resolution the figure needs.
+
+**Size.** Choose one of:
+
+| Size | Width | Resolution | Pixels (3:2 frame) |
+| --- | --- | --- | --- |
+| Output size (Render panel) | Render tab width | any | for example 1200 × 800 |
+| Single column | 85 mm | 600 dpi | 2008 × 1339 |
+| Double column | 180 mm | 600 dpi | 4252 × 2835 |
+| Custom | any, in px or mm | any | computed |
+
+The publication sizes are common defaults, not the rule of a particular journal: check
+the author guidelines and use **Custom** where they differ. Pixels are
+`millimetres / 25.4 × dpi`, rounded to whole pixels. With **Keep the shape of the
+output frame** (the default) the height follows the blue frame, so the image shows
+exactly the framed area at any size. Unchecked, width and height are independent: the
+image then shows a wider or narrower area at the same scale (the dialog says so);
+nothing is ever stretched.
+
+Editing a value of a preset switches to **Custom** and keeps the values. In millimetres,
+changing the resolution keeps the physical size (more or fewer pixels); in pixels it
+keeps the pixel size and changes only the stored resolution and the physical size. The
+dialog shows the pixel size POV-Ray renders and the physical size. **Resolution (dpi)**
+offers 300 and 600; any whole number from 1 to 100 000 can be typed. Images are limited
+to 16–20 000 px per side and 150 megapixels, and PDF pages to 5080 mm (200 inches) per
+side. The dialog remembers its settings until Ycrystal is closed.
+
+POV-Ray always renders at the pixel size shown; a small image is never enlarged. The
+render uses the current camera, structure, materials, and lighting; it does not change
+the scene, the Render tab, or the project. PDF page sizes are whole PostScript points
+(1/72 inch), so a page can differ from the exact physical size by up to 0.18 mm; the
+image is centred on it without distortion. The PNG stores the resolution in whole
+pixels per metre (600 dpi reads back as 599.999 dpi).
 
 After a synchronous version query (up to 15 seconds) and scene preparation,
 POV-Ray runs asynchronously through Qt's `QProcess`. The window stays responsive and
@@ -163,13 +205,15 @@ error. A failed render shows an explanation; the next render starts normally. Cl
 the window stops active processes after handling unsaved changes.
 
 Each job uses a new system temporary directory named `ycrystal-job-*`, containing
-`scene.pov`, `scene.ini`, and, on success, `scene.png`. Python copies the image to
-the chosen destination via `DESTINATION.png.part`, then replaces the destination.
-The GUI removes the job directory after handling the result, including failures and
-cancellations. The job files are not kept for editing; export a scene if you need
-them. A failed copy can leave the `.part` file behind.
+`scene.pov`, `scene.ini`, and, on success, `scene.png`. Ycrystal writes the chosen
+format to `DESTINATION.part` next to the destination, checks that the file is complete
+and readable, and only then replaces the destination. If writing fails, an error
+explains why, the `.part` file is removed, and an existing file of that name is left
+unchanged. The GUI removes the job directory after handling the result, including
+failures and cancellations. The job files are not kept for editing; export a scene if
+you need them.
 
-The finished PNG uses the same displayed atoms, bonds, and framing as the preview and
+The finished image uses the same displayed atoms, bonds, and framing as the preview and
 the frame in the live view. The live view uses the same key and fill light positions,
 but its shading is approximate and it has no shadows or reflections (see
 [lighting](appearance.md#lighting)). Viewport orientation axes, the frame, and selection highlights are

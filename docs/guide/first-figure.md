@@ -52,8 +52,10 @@ root. The built-in sample works without importing a file.
 2. Choose **Render ▸ Check Renderer**. Expect a pass message naming POV-Ray and
    a sphere-centre error below 1 pixel. The check briefly blocks the window. If it
    fails, follow [renderer setup](rendering.md#configure-and-check-pov-ray).
-3. Choose **Render ▸ Render PNG…** (Ctrl+R) and save as
-   `artifacts/first-figure/SrTiO3.png`. The status bar shows **Rendering …** with the
+3. Choose **Render ▸ Render Image…** (Ctrl+R). Keep **PNG** and **Output size
+   (Render panel)**, set **Save as** to `artifacts/first-figure/SrTiO3.png`, and
+   press **Render**. (The same dialog writes PDF and JPEG files and publication sizes;
+   see [rendering](rendering.md#render-an-image-in-the-application-png-pdf-jpeg).) The status bar shows **Rendering …** with the
    progress, and the window stays responsive. **Cancel Render** would stop it without
    writing the file.
 4. When complete, a dialog shows the PNG and its path. The image is 640 × 400

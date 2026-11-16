@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 16 November 2026 (macOS support, see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), and FR-VECTOR-01 (atom-attached vectors; PR #19). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 16 November 2026 (FR-EXPORT-01, PDF and JPEG export; before that macOS support, see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; branch `feature/export-formats`, not yet merged). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,47 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## FR-EXPORT-01: PDF and JPEG export with publication sizes (post-0.2.0, 16 November 2026)
+
+Development after version 0.2.0 on branch `feature/export-formats` (from `main` at
+`6ed6b03`), uncommitted when recorded. **Render ▸ Render Image…** (Ctrl+R; formerly
+*Render PNG…*) opens one dialog: format (PNG default, PDF, JPEG), size (the Render
+panel's output size, Single column 85 mm at 600 dpi, Double column 180 mm at 600 dpi,
+Custom), width × height in px or mm, resolution (300/600 offered, 1–100 000 dpi
+accepted), shape lock, JPEG quality, and destination. POV-Ray renders once at the
+export pixel size with the unchanged camera, geometry, and environment; only the last
+step differs per format (`render/formats.py`). The settings persist for the session.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| 1. PNG compatibility: `render_png(path)` copies the POV-Ray file byte for byte (no resolution chunk); from the dialog the PNG gains only a `pHYs` chunk, with identical compressed image data and pixels; an existing `pHYs` is replaced; damaged/truncated PNGs are reported | Pass | `test_png_without_resolution_is_copied_byte_for_byte`, `test_png_resolution_is_added_without_touching_the_pixels`, `test_an_existing_png_resolution_is_replaced`, `test_damaged_png_is_reported`, `test_render_png_keeps_its_former_behaviour`; the existing render tests unchanged |
+| 2. PDF: valid header and end marker; page size equals the physical size within half a point (Qt writes whole points); the image is embedded once at its rendered pixel size with Flate (no DCT); transparency kept as a soft mask; title stored | Pass | `test_pdf_page_has_the_physical_size_and_the_full_image` (2008 × 1339 at 600 dpi; portrait 300 × 450 at 150 dpi), `test_pdf_keeps_a_transparent_background` |
+| 3. JPEG: rendered size, JFIF resolution, colours; quality 10 < 95 < 100 in file size; transparent background white; half-transparent pixels blend to grey | Pass | `test_jpeg_has_the_rendered_size_resolution_and_colours`, `test_jpeg_quality_changes_the_file`, `test_jpeg_fills_transparency_with_white`, `test_jpeg_blends_partly_transparent_edges_with_white` |
+| 4. Sizes: 85 mm/600 dpi → 2008 px, 180 mm/600 dpi → 4252 px; heights for 3:2, 1:1, 2:3, 16:9 frames within one pixel of the shape; custom combinations including 1200 dpi; px ↔ mm round trip; physical size from pixels and dpi | Pass | `test_publication_presets_give_the_documented_pixel_widths`, `test_height_follows_the_frame_shape`, `test_custom_width_and_resolution_combinations`, `test_units_convert_both_ways_without_drift`, `test_options_report_the_physical_size`; doctests in `ycrystal.core.export` |
+| 5. Validation: sides 16–20 000 px, at most 150 megapixels, 1–100 000 dpi, quality 1–100, PDF needs a resolution and pages ≤ 5080 mm; unknown formats refused; suffixes follow the format (`.jpg`/`.jpeg` kept, `SrTiO3 v1.2` gets `.png` appended) | Pass | `test_invalid_settings_are_rejected_with_an_explanation`, `test_valid_extremes_are_accepted`, `test_file_suffixes_follow_the_format` |
+| 6. Files: paths with spaces and non-ASCII characters (`Figures für Ångström ✓/new folder/SrTiO₃ figure 1`) for each format; a write error leaves no `.part` file, and an export that fails keeps the previous file | Pass | `test_paths_with_spaces_and_non_ascii_characters`, `test_write_errors_leave_no_partial_file`, `test_a_failed_export_keeps_the_previous_file` |
+| 7. Dialog: PNG at the output size by default; presets set mm and dpi and follow landscape and portrait frames; editing a preset switches to Custom and keeps the values; mm keep the physical size when the dpi changes, px keep the pixels; height edits compute the width; unlocking allows any shape and explains it; invalid entries and an empty file name disable Render; format changes the suffix, shows JPEG quality (and the white-background note only for transparent backgrounds) and the PDF raster note; remembered choices follow a new frame | Pass | `tests/test_gui_export.py` (dialog tests) |
+| 8. Window: each format written through the same render path with a stand-in renderer; scene revision, output size, camera, environment, and modified state unchanged; status bar names format and size; the action opens the dialog; a write failure shows "Could Not Save Image" and leaves no partial file | Pass | `test_render_image_writes_each_format_without_changing_the_scene`, `test_render_image_action_uses_the_dialog_answer`, `test_a_failed_write_is_reported` |
+| 9. Real POV-Ray 3.7 (Homebrew, macOS): one scene rendered as PNG, PDF, and JPEG at 40 mm, 150 dpi (236 × 157 px) into a non-ASCII folder: equal pixel sizes, PNG and JPEG at 150 dpi, JPEG within mean 4 levels of the PNG, PDF page within half a point of the physical size with the full image; camera, output size, and modified state unchanged | Pass | `test_same_scene_as_png_pdf_and_jpeg` |
+| Dialog layout on macOS (screenshots of the PNG, JPEG, and unlocked PDF states) | Pass (scripted) | screenshots in the session's scratch folder (not kept) |
+| Linux Mint; hands-on use of the dialog by a person; PDF opened in Acrobat, Preview, and a journal's submission system | Unverified | |
+
+Decisions: pixel size and dpi are the source of truth; millimetres are derived (a
+PDF page is the rendered pixels at the chosen dpi, so 85 mm at 600 dpi becomes 2008 px
+and an 85.005 mm page). Exports never resample. JPEG composites transparency over white
+(not the live-view colour of a transparent environment). PDF uses `QPdfWriter` with
+`LosslessImageRendering`; the page box is in whole points (≤ 0.18 mm difference), with
+the image centred without distortion. Exports do not change the project's output size,
+so the Render panel and saved projects are unaffected. No new dependency.
+
+Regression runs on the Mac mini (macOS 15.8, Homebrew POV-Ray 3.7.0.10):
+`YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` 565 passed, none skipped (179 s; 60 new
+tests: 43 in `tests/test_export.py`, 17 in `tests/test_gui_export.py`); after a final
+one-line dialog change `test_export.py`, `test_gui_export.py`, and `test_gui_render.py`
+72 passed and `pytest -m "not gui"` 400 passed; doctests of the CI list including the
+two new modules; ruff, `pre-commit run --all-files`, `zensical build --clean --strict`
+clean. Not run on Linux.
 
 ## FR-VECTOR-01: manual atom-attached vectors (post-0.2.0, 15 November 2026)
 

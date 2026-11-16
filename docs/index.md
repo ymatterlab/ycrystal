@@ -8,7 +8,7 @@ displayed atoms.
 
 **Early development.** You can open POSCAR/CONTCAR, CIF, and Quantum ESPRESSO
 `ibrav = 0` inputs, save self-contained `.ycrystal` projects, navigate, select and hide
-individual displayed atoms, export scenes, and render PNGs. Supercell repetitions,
+individual displayed atoms, export scenes, and render PNG, PDF, or JPEG figures. Supercell repetitions,
 periodic bonds, cell-edge modes, and view-direction controls
 are available, as are an output frame, a POV-Ray preview, cancellable renders, and
 galleries of 30 materials and 12 environments with POV-Ray thumbnails, per-element and
