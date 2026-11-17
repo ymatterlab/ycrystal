@@ -171,3 +171,56 @@ Nothing is guessed: B in MgB2 gets no settings, because no element is mapped to 
 
 The mapping is a presentation choice, not a statement of chemical equivalence or site
 correspondence; see [element mapping](appearance.md#element-mapping-a-style-for-another-composition).
+
+## Choose the view and framing
+
+**Why.** Without options, `--render` and `--export-pov` draw a project with its saved
+camera and a structure file with the default view. That suits one figure. For a series,
+or for figures made by a script, you usually want every structure seen along the same
+crystallographic direction, framed so that nothing is cut off, and sometimes drawn at
+the same physical scale so that sizes can be compared. These options choose the camera
+without opening the window; the structure itself is never rotated or moved.
+
+```bash
+# Look down the c axis of MgB2 (the hexagonal cell seen from above):
+.venv/bin/ycrystal tests/fixtures/MgB2.cif --view c --render MgB2-c.png
+# Two perovskites along a, at the same scale: 9 Å of height in both images.
+.venv/bin/ycrystal tests/fixtures/SrTiO3.cif --view a --view-height 9 --width 600 --height 600 --render SrTiO3-a.png
+.venv/bin/ycrystal tests/fixtures/BaZrO3.cif --view a --view-height 9 --width 600 --height 600 --render BaZrO3-a.png
+# A saved project after a style changed its cells: keep its orientation, refit the frame.
+.venv/bin/ycrystal examples/MgB2-gradient.ycrystal --style examples/grey-studio.ycstyle --style-parts display --camera-policy fit --render MgB2-refit.png
+```
+
+In the second pair the BaZrO3 cell (a = 4.19 Å) is visibly larger than the SrTiO3 cell
+(a = 3.905 Å), because both images show 9 Å of height.
+
+- **`--view`** `default`, `a`, `b`, `c`, `x`, `y`, or `z`: the named axis points toward
+  the viewer, as with the window's **View along** buttons (same rule, same camera). `a`,
+  `b`, `c` are the **real-space lattice vectors**, not normals of lattice planes (hkl);
+  for skewed cells they differ from each other and from x, y, z. Screen up is the first
+  of c, b, a (z, y, x) that is not parallel to the axis: down a or b, c is up; down c,
+  b is up. A structure without a cell has no a, b, c views (an error says so); `x`, `y`,
+  `z`, and `default` always work.
+- **`--camera-policy`** `saved` or `fit`. `saved` (the default without `--view`) uses
+  a project's saved camera exactly as saved; a structure file, which has none, gets the
+  default view. `fit` keeps the saved orientation but refits the centre and scale to
+  what is drawn now, useful after a style changed the repetitions. `--view` and
+  `--view-height` imply `fit`; combining them with `--camera-policy saved` is a usage
+  error.
+- **Fitting** includes everything drawn: atoms, cell edges, and whole vector arrows.
+  Nothing is clipped at any output shape, portrait or landscape. `--fit-margin` sets the
+  space around it as a fraction of the half-height, 0–1 (default 0.06).
+- **`--view-height ANGSTROM`** shows a fixed height of the scene (in Å) instead of
+  fitting the scale, centred on the scene; the width follows the image's shape. If the
+  scene does not fit, the command stops with an error that gives the height needed (for
+  example `it needs at least 5.85 Å` for SrTiO3 along a at 1200 × 800) instead of
+  cutting the figure.
+- **Without these options nothing changes**: the camera is chosen exactly as before.
+- **Errors.** An unknown view, a margin outside 0–1, a non-positive height, or
+  `--camera-policy saved` with `--view` is a usage error (status 2); these options
+  without `--render` or `--export-pov` are a usage error too, and open no window. A
+  lattice view without a cell, or a scene too large for `--view-height`, is an error
+  (status 1). Nothing is written in either case.
+
+Orthographic projection is used throughout, so atoms at the back are as large as atoms
+at the front, and the visible height in Å is a true scale of the structure.

@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 17 November 2026 (FR-STYLE-MAP-01, element mapping for styles; PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 17 November 2026 (FR-CAMERA-01, view and framing policies; PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), and FR-CAMERA-01 (view and framing policies; PR #30). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,64 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## FR-CAMERA-01: view and framing policies (post-0.3.0, 17 November 2026)
+
+Development after version 0.3.0, on branch `feature/camera-policy` from `main` at
+`445ca84` (PR #29 merged); submitted as PR #30. Reproducible orientation and framing for
+figures made without a window: `--view default|a|b|c|x|y|z`, `--camera-policy
+saved|fit`, `--fit-margin FRACTION`, `--view-height ANGSTROM`.
+
+Design: one pure helper in `core/camera.py` serves the window and the command line.
+`axis_view(axis, cell, reverse)` is the window's former View-along rule, moved
+unchanged (the named axis points at the viewer; screen up is the first of c, b, a, or
+z, y, x, that is not parallel; a, b, c are real-space lattice vectors, not hkl plane
+normals); `MainWindow.view_along` now calls it. `ViewPolicy(camera, view, margin,
+visible_height).resolve(saved, points, radii, aspect, cell)` returns the saved camera
+untouched with the saved policy (the default without a view), and otherwise fits the
+framing bounds of `DisplayGeometry.points_and_radii` (atoms, cell edges, whole arrows)
+at the final aspect ratio. A fixed visible height keeps the fitted centre and is
+refused, with the height needed, if the scene does not fit; it is never cropped.
+`batch.scene_for`, `export_scene`, and `render_png` take an optional policy (`None`:
+exactly the previous behaviour), ready for FR-BATCH-01. The structure is never rotated
+or moved. No schema change, no new dependency. With `--camera-policy fit` the CLI
+leaves out FR-STYLE-CLI-01's note that the saved camera was kept.
+
+Fix found by the new GUI parity test: `StructureViewport.set_camera` applied position,
+focal point, and up vector one VTK call at a time, and the camera observer reported each
+call; switching the view from c to x of the triclinic sample read a half-applied camera
+whose up vector was parallel to the new direction and raised `ValueError` in the Qt
+event loop. The observer is now silent while `set_camera` applies a camera, which
+reports the change once at the end, as before.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Axis conventions: cubic a/b/c/x/y/z directions and up vectors; reverse; triclinic a, b, c along the real-space vectors; Cartesian views without a cell; lattice views without a cell or with a zero vector refused | Pass | `test_axis_view_conventions`; doctests in `ycrystal.core.camera` |
+| No options: saved camera returned unchanged; without one, identical to `default_camera`; repeated runs identical | Pass | `test_without_options_nothing_changes`, all earlier camera, CLI, and example tests unchanged |
+| `fit` refits a saved camera, same orientation | Pass | `test_fit_policy_refits_a_saved_camera_and_keeps_its_orientation` |
+| No clipping, zero margin: SrTiO3, MgB2, triclinic × 7 views × 800 × 600, 400 × 900, 500 × 500 × repetitions 1 × 1 × 1 and 3 × 2 × 1, every sphere inside the image; coordinates unchanged | Pass | `test_fitted_views_never_clip` (126 cases) |
+| Whole vector arrows (tips) inside fitted views of the vector example, portrait | Pass | `test_fitted_views_include_whole_vector_arrows` |
+| Margin scales the frame; fixed visible height keeps the centre; exactly the needed height accepted and unclipped; smaller refused with the needed value | Pass | `test_margin_and_fixed_visible_height` |
+| Invalid policies (unknown policy or view, margin outside 0–1 or NaN, non-positive height, saved with a view or height) | Pass | `test_invalid_policies_are_refused` (7) |
+| CLI: `--view a`/`c` on MgB2 give −a/−c directions in the exported scene, b up for c; portrait frame; `--view-height 30` gives a 30 Å `up` vector | Pass | `test_views_from_command_line` |
+| CLI: saved camera kept with no option and with `--camera-policy saved`; `fit` after a style changed MgB2's 3 × 3 × 1 to 2 × 2 × 1 keeps the direction, changes the frame, and drops the camera note | Pass | `test_saved_camera_is_kept_unless_asked` |
+| CLI errors: too small height status 1 with "needs at least 6.14 Å"; conflicts, margin, height, unknown view status 2; options without an output operation status 2; nothing written | Pass | `test_camera_option_errors` |
+| Real POV-Ray 3.7: MgB2 down c at 160 × 240 (portrait): the image border is background only, atoms drawn | Pass | `test_render_fitted_view_is_not_clipped` |
+| Window and command line agree: View along a, b, c, x, y, z of the triclinic sample equals `ViewPolicy(view=…)` (basis, scale, focal point up to depth) | Pass | `test_view_buttons_and_command_line_views_agree` |
+
+Visual checks (Claude, on the Mac): MgB2 down c (hexagonal cell, b up); SrTiO3 and
+BaZrO3 down a at `--view-height 9`, side by side, the larger BaZrO3 cell visibly larger.
+`scripts/docs_examples.py` (run in CI) runs the guide's view commands and checks
+direction, the 9 Å height, and the "needs at least 5.85 Å" message.
+
+Regression runs on the Mac mini (macOS 15.8, Homebrew POV-Ray 3.7.0.10):
+`YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` 771 passed, none skipped (183 s; 143 new
+tests: 138 in `tests/test_camera.py`, 4 in `tests/test_release.py`, 1 in
+`tests/test_gui_scene.py`), twice. One earlier full run reported 1 failure among 771
+that did not reproduce in the two following full runs; its name was not captured
+(**unidentified intermittent failure**, to watch in CI). Doctests of `core/camera.py`
+and `batch.py`; `pre-commit run --all-files`; `zensical build --clean --strict` clean.
+**Linux not run locally** (CI of PR #30).
 
 ## FR-STYLE-MAP-01: element mapping for styles (post-0.3.0, 17 November 2026)
 

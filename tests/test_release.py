@@ -250,6 +250,98 @@ def test_render_with_element_map(tmp_path, capsys, povray_executable):
     assert not np.array_equal(image, plain)  # chrome Zr instead of the default material
 
 
+# ----- camera choice from the command line (FR-CAMERA-01) --------------------------------
+def pov_camera(path: Path) -> dict[str, np.ndarray]:
+    """Return the location, direction, right, and up vectors of an exported scene."""
+    vectors = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        key, _, rest = line.strip().partition(" ")
+        if key in ("location", "direction", "right", "up") and rest.strip().startswith("<"):
+            vectors.setdefault(key, np.array([float(v) for v in rest.strip()[1:-1].split(",")]))
+    return vectors
+
+
+def test_views_from_command_line(tmp_path, capsys):
+    cell = load_input(MGB2).structure.cell
+    for view, toward in (("a", cell[0]), ("c", cell[2])):
+        out = tmp_path / f"MgB2-{view}"
+        assert main([str(MGB2), "--view", view, "--export-pov", str(out)]) == 0
+        camera = pov_camera(out.with_suffix(".pov"))
+        # The real-space lattice vector points at the viewer.
+        np.testing.assert_allclose(-camera["direction"], toward / np.linalg.norm(toward), atol=1e-5)
+    up = pov_camera(tmp_path / "MgB2-c.pov")["up"]
+    np.testing.assert_allclose(
+        up / np.linalg.norm(up), cell[1] / np.linalg.norm(cell[1]), atol=1e-5
+    )
+    # Portrait output: same direction, the frame follows the requested shape.
+    out = tmp_path / "portrait"
+    args = [str(MGB2), "--view", "c", "--width", "300", "--height", "600", "--export-pov"]
+    assert main([*args, str(out)]) == 0
+    assert ini_size(out.with_suffix(".ini")) == (300, 600)
+    camera = pov_camera(out.with_suffix(".pov"))
+    assert np.linalg.norm(camera["up"]) == pytest.approx(2 * np.linalg.norm(camera["right"]), 1e-4)
+    # A fixed visible height in angstrom.
+    out = tmp_path / "fixed"
+    assert main([str(MGB2), "--view-height", "30", "--export-pov", str(out)]) == 0
+    assert np.linalg.norm(pov_camera(out.with_suffix(".pov"))["up"]) == pytest.approx(30, 1e-5)
+    capsys.readouterr()
+
+
+def test_saved_camera_is_kept_unless_asked(tmp_path, capsys):
+    example = ROOT / "examples" / "SrTiO3-studio.ycrystal"
+    saved = load_project(example).camera
+    for extra in ([], ["--camera-policy", "saved"]):
+        out = tmp_path / f"s{len(extra)}"
+        assert main([str(example), *extra, "--export-pov", str(out)]) == 0
+        camera = pov_camera(out.with_suffix(".pov"))
+        np.testing.assert_allclose(camera["direction"], saved.basis()[2], atol=1e-5)
+        assert np.linalg.norm(camera["up"]) == pytest.approx(2 * saved.parallel_scale, 1e-5)
+    # Refit after a style changes the cells (MgB2 3 × 3 × 1 → the style's 2 × 2 × 1):
+    # same orientation, new frame, and no warning about the kept camera.
+    mgb2 = ROOT / "examples" / "MgB2-gradient.ycrystal"
+    args = [str(mgb2), "--style", str(STYLE), "--style-parts", "display", "--export-pov"]
+    assert main([*args, str(tmp_path / "kept")]) == 0
+    assert "saved camera was kept" in capsys.readouterr().err
+    assert main([*args, str(tmp_path / "refit"), "--camera-policy", "fit"]) == 0
+    assert "saved camera was kept" not in capsys.readouterr().err
+    kept, refit = pov_camera(tmp_path / "kept.pov"), pov_camera(tmp_path / "refit.pov")
+    np.testing.assert_allclose(refit["direction"], kept["direction"], atol=1e-5)
+    assert not np.allclose(refit["up"], kept["up"])
+
+
+def test_camera_option_errors(tmp_path, capsys):
+    out = tmp_path / "out"
+    out.mkdir()
+    code = main([str(MGB2), "--view-height", "3", "--export-pov", str(out / "x")])
+    assert code == 1 and "needs at least 6.14 Å" in capsys.readouterr().err
+    for args, message in (
+        (["--camera-policy", "saved", "--view", "a"], "replaces the saved camera"),
+        (["--fit-margin", "1.5"], "between 0 and 1"),
+        (["--view-height", "-2"], "positive"),
+        (["--view", "q"], "invalid choice"),
+    ):
+        with pytest.raises(SystemExit) as exit_info:
+            main([str(MGB2), *args, "--export-pov", str(out / "x")])
+        assert exit_info.value.code == 2 and message in capsys.readouterr().err
+    with pytest.raises(SystemExit) as exit_info:
+        main([str(MGB2), "--view", "c"])  # no --render/--export-pov: no window either
+    assert exit_info.value.code == 2 and "need one of them" in capsys.readouterr().err
+    assert list(out.iterdir()) == []
+
+
+@pytest.mark.povray
+def test_render_fitted_view_is_not_clipped(tmp_path, capsys, povray_executable):
+    out = tmp_path / "MgB2 c ü.png"
+    args = [str(MGB2), "--view", "c", "--width", "160", "--height", "240"]
+    assert main([*args, "--render", str(out), "--povray", povray_executable]) == 0
+    image = load_rgba(out)
+    assert image.shape == (240, 160, 4)
+    border = np.concatenate([image[0], image[-1], image[:, 0], image[:, -1]])
+    assert np.all(np.abs(border.astype(int) - border[0].astype(int)) <= 2)  # background only
+    assert not np.all(np.abs(image.astype(int) - border[0].astype(int)) <= 2)  # atoms drawn
+    capsys.readouterr()
+
+
 # ----- desktop launcher --------------------------------------------------------------------
 def test_desktop_launcher_install_and_uninstall(tmp_path):
     files = install_desktop(tmp_path, command="/opt/yc/.venv/bin/ycrystal")

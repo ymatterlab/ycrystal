@@ -272,6 +272,8 @@ class StructureViewport(QWidget):
         # Any camera change (mouse navigation, wheel, Fit, programmatic) notifies listeners,
         # except the scale adjustment that keeps the output camera when the view is resized.
         self._keeping_output = False
+        # True while set_camera applies several VTK settings: one change, reported once.
+        self._applying_camera = False
         self._plotter.renderer.GetActiveCamera().AddObserver(
             "ModifiedEvent", self._on_camera_modified
         )
@@ -630,12 +632,19 @@ class StructureViewport(QWidget):
         """
         renderer = self._plotter.renderer
         cam = renderer.GetActiveCamera()
-        cam.ParallelProjectionOn()
-        cam.SetWindowCenter(0.0, 0.0)
-        cam.SetPosition(*camera.position)
-        cam.SetFocalPoint(*camera.focal_point)
-        cam.SetViewUp(*camera.view_up)
-        cam.SetParallelScale(camera.parallel_scale)
+        # Each Set call below modifies the VTK camera; in between it can be inconsistent
+        # (for example an old up vector parallel to the new direction), so listeners are
+        # told once, at the end, instead of after every call.
+        self._applying_camera = True
+        try:
+            cam.ParallelProjectionOn()
+            cam.SetWindowCenter(0.0, 0.0)
+            cam.SetPosition(*camera.position)
+            cam.SetFocalPoint(*camera.focal_point)
+            cam.SetViewUp(*camera.view_up)
+            cam.SetParallelScale(camera.parallel_scale)
+        finally:
+            self._applying_camera = False
         renderer.camera_set = True
         renderer.ResetCameraClippingRange()
         if render:
@@ -1146,7 +1155,7 @@ class StructureViewport(QWidget):
 
     # ----- internals --------------------------------------------------------------
     def _on_camera_modified(self, *_args: object) -> None:
-        if not self._keeping_output:
+        if not (self._keeping_output or self._applying_camera):
             self.camera_changed.emit()
 
     def _before_render(self, *_args: object) -> None:

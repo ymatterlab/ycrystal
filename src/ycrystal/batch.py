@@ -43,7 +43,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from ycrystal.core import aspect
-from ycrystal.core.camera import Camera, default_camera
+from ycrystal.core.camera import Camera, ViewPolicy
 from ycrystal.core.scene import (
     LARGE_DISPLAY_ATOMS,
     DisplayGeometry,
@@ -151,6 +151,7 @@ def apply_style_file(
     parts: Iterable[str] = CLI_STYLE_PARTS,
     max_atoms: int = LARGE_DISPLAY_ATOMS,
     element_map: dict[str, str | None] | None = None,
+    camera_kept: bool = True,
 ) -> tuple[Project, tuple[str, ...]]:
     """Return a new project with a style applied, and notes on what was left out.
 
@@ -173,6 +174,9 @@ def apply_style_file(
         another composition (see
         [`resolve_element_map`][ycrystal.io.style.resolve_element_map]); ``None``
         transfers by matching symbols.
+    camera_kept
+        Whether the project's saved camera will be used as it is. ``False`` (a view
+        policy refits the camera) leaves out the note about new repetitions.
 
     Returns
     -------
@@ -233,10 +237,12 @@ def apply_style_file(
             "applied without a window. Leave out the display part (--style-parts), or "
             "apply the style in the window and save a project."
         )
-    if project.camera is not None and scene.repetitions != project.scene.repetitions:
+    repetitions_changed = scene.repetitions != project.scene.repetitions
+    if camera_kept and project.camera is not None and repetitions_changed:
         notes.append(
             "The project's saved camera was kept; the style's repetitions "
-            f"({' × '.join(map(str, scene.repetitions))}) may extend beyond the frame."
+            f"({' × '.join(map(str, scene.repetitions))}) may extend beyond the frame "
+            "(--camera-policy fit refits it)."
         )
     width, height = result.output_size
     if (width, height) != (output.width, output.height):
@@ -291,21 +297,44 @@ def _settings(project: Project, width: int | None, height: int | None) -> Render
 
 
 def scene_for(
-    project: Project, width: int | None = None, height: int | None = None
+    project: Project,
+    width: int | None = None,
+    height: int | None = None,
+    view: ViewPolicy | None = None,
 ) -> tuple[DisplayGeometry, Camera, RenderSettings]:
     """Return the geometry, camera, and output settings that draw ``project``.
 
-    The saved camera is used when there is one, otherwise the default view fitted to the
-    output aspect ratio. A different `width` or `height` keeps the camera's centre and
-    visible height (only the visible width follows the new aspect ratio), as in the
-    window.
+    Parameters
+    ----------
+    project
+        What to draw.
+    width, height
+        Output size in pixels; ``None`` keeps the project's size.
+    view
+        How to choose the camera (FR-CAMERA-01); ``None`` is ``ViewPolicy()``: the saved
+        camera when there is one, otherwise the default view fitted to the output
+        aspect ratio.
+
+    Notes
+    -----
+    A saved camera that is kept, with a different `width` or `height`, keeps its centre
+    and visible height (only the visible width follows the new aspect ratio), as in the
+    window. A fitted camera is fitted at the final aspect ratio, to the framing bounds
+    of the drawn scene: atoms, cell edges, and complete vector arrows.
+
+    Raises
+    ------
+    ycrystal.core.camera.CameraPolicyError
+        If the view cannot be produced (a lattice axis without a cell, or a scene that
+        does not fit in a fixed visible height).
     """
     settings = _settings(project, width, height)
     geometry = build_geometry(project.structure, project.scene)
-    camera = project.camera
-    if camera is None:
-        points, radii = geometry.points_and_radii()
-        camera = default_camera(points, radii, settings.width / settings.height)
+    points, radii = geometry.points_and_radii()
+    cell = project.structure.cell if project.structure.has_cell else None
+    camera = (view or ViewPolicy()).resolve(
+        project.camera, points, radii, settings.width / settings.height, cell
+    )
     return geometry, camera, settings
 
 
@@ -314,8 +343,11 @@ def export_scene(
     pov_path: str | Path,
     width: int | None = None,
     height: int | None = None,
+    view: ViewPolicy | None = None,
 ) -> tuple[Path, Path]:
     """Write ``NAME.pov`` and ``NAME.ini`` for a project; POV-Ray is not needed.
+
+    `width`, `height`, and `view` are as in [`scene_for`][ycrystal.batch.scene_for].
 
     Returns
     -------
@@ -323,7 +355,7 @@ def export_scene(
         The scene and settings files (the ``.ini`` names ``NAME.png`` as output).
     """
     pov_path = Path(pov_path).with_suffix(".pov")
-    geometry, camera, settings = scene_for(project, width, height)
+    geometry, camera, settings = scene_for(project, width, height, view)
     pov, ini, _ = write_scene_files(
         pov_path.parent,
         pov_path.stem,
@@ -343,6 +375,7 @@ def render_png(
     width: int | None = None,
     height: int | None = None,
     timeout: float | None = 1800.0,
+    view: ViewPolicy | None = None,
 ) -> RenderResult:
     """Render a project to a PNG with POV-Ray and wait for the result.
 
@@ -359,6 +392,8 @@ def render_png(
         Output size in pixels; ``None`` keeps the project's size.
     timeout
         Seconds before the render is stopped.
+    view
+        How to choose the camera; see [`scene_for`][ycrystal.batch.scene_for].
 
     Returns
     -------
@@ -372,7 +407,7 @@ def render_png(
         If no POV-Ray executable is found.
     """
     executable = find_povray(povray)
-    geometry, camera, settings = scene_for(project, width, height)
+    geometry, camera, settings = scene_for(project, width, height, view)
     version = povray_version(executable)
     job = prepare_job(
         geometry,

@@ -1,10 +1,21 @@
 import json
+from dataclasses import replace
+from pathlib import Path
 
 import numpy as np
 import pytest
 from vtkmodules.vtkRenderingCore import vtkCamera
 
-from ycrystal.core.camera import Camera, default_camera
+from ycrystal.batch import load_input
+from ycrystal.core.camera import (
+    DEFAULT_MARGIN,
+    Camera,
+    CameraPolicyError,
+    ViewPolicy,
+    axis_view,
+    default_camera,
+)
+from ycrystal.core.scene import build_geometry
 
 
 def simple_camera(scale: float = 5.0) -> Camera:
@@ -178,3 +189,155 @@ def test_rotate_about_axis_keeps_axis_fixed_on_screen():
     np.testing.assert_allclose(back.position, camera.position, atol=1e-9)
     with pytest.raises(ValueError):
         camera.rotate_about((0, 0, 0), 10)
+
+
+# ----- view policies (FR-CAMERA-01) -----------------------------------------------------
+ROOT = Path(__file__).resolve().parents[1]
+FIXTURES = ROOT / "tests" / "fixtures"
+
+
+def scene_of(name, repetitions=(1, 1, 1)):
+    project = load_input(FIXTURES / name if "/" not in name else ROOT / name)
+    geometry = build_geometry(project.structure, replace(project.scene, repetitions=repetitions))
+    return project, geometry
+
+
+def assert_inside(camera, geometry, width, height, margin_px=0.0):
+    """Every sphere of the framing bounds lies completely inside the image."""
+    points, radii = geometry.points_and_radii()
+    pixels = camera.project(points, width, height)
+    r = np.broadcast_to(radii, (len(points),)) * camera.pixels_per_angstrom(height)
+    assert np.all(pixels[:, 0] - r >= -1e-6 - margin_px)
+    assert np.all(pixels[:, 0] + r <= width + 1e-6 + margin_px)
+    assert np.all(pixels[:, 1] - r >= -1e-6 - margin_px)
+    assert np.all(pixels[:, 1] + r <= height + 1e-6 + margin_px)
+
+
+def test_axis_view_conventions():
+    cubic = np.diag([4.0, 4.0, 4.0])
+    for axis, direction, up in (
+        ("a", (-1, 0, 0), (0, 0, 4)),
+        ("b", (0, -1, 0), (0, 0, 4)),
+        ("c", (0, 0, -1), (0, 4, 0)),
+        ("x", (-1, 0, 0), (0, 0, 1)),
+        ("y", (0, -1, 0), (0, 0, 1)),
+        ("z", (0, 0, -1), (0, 1, 0)),
+    ):
+        d, u = axis_view(axis, cubic)
+        np.testing.assert_allclose(d, direction, atol=1e-12)
+        np.testing.assert_allclose(u, up, atol=1e-12)
+    d, _ = axis_view("a", cubic, reverse=True)
+    np.testing.assert_allclose(d, (1, 0, 0), atol=1e-12)
+    # Triclinic: the real-space vector, not a plane normal.
+    project, _ = scene_of("triclinic.cif")
+    cell = project.structure.cell
+    for index, axis in enumerate("abc"):
+        d, u = axis_view(axis, cell)
+        np.testing.assert_allclose(-d, cell[index] / np.linalg.norm(cell[index]), atol=1e-12)
+        assert np.linalg.norm(np.cross(d, u / np.linalg.norm(u))) > 1e-3
+    # Cartesian views need no cell; lattice views do.
+    assert axis_view("z", None)[0].tolist() == [-0.0, -0.0, -1.0]
+    for cell in (None, np.zeros((3, 3))):
+        with pytest.raises(CameraPolicyError, match="has no cell"):
+            axis_view("a", cell)
+    with pytest.raises(CameraPolicyError, match="Unknown view axis"):
+        axis_view("w", np.eye(3))
+
+
+def test_without_options_nothing_changes():
+    _, geometry = scene_of("MgB2.cif")
+    points, radii = geometry.points_and_radii()
+    saved = Camera((1, 2, 30), (1, 2, 0), (0, 1, 0), parallel_scale=7.0)
+    policy = ViewPolicy()
+    assert policy.policy == "saved" and policy.resolve(saved, points, radii, 1.5) is saved
+    assert policy.resolve(None, points, radii, 1.5) == default_camera(points, radii, 1.5)
+    assert ViewPolicy(camera="saved").resolve(saved, points, radii, 1.5) is saved
+    # Repeated runs give the same camera.
+    view = ViewPolicy(view="c")
+    cell = scene_of("MgB2.cif")[0].structure.cell
+    assert view.resolve(None, points, radii, 1.5, cell) == view.resolve(
+        None, points, radii, 1.5, cell
+    )
+
+
+def test_fit_policy_refits_a_saved_camera_and_keeps_its_orientation():
+    _, geometry = scene_of("SrTiO3.cif", (3, 2, 1))
+    points, radii = geometry.points_and_radii()
+    saved = Camera.looking_along((0.3, 1.0, -0.2), (0, 0, 1), parallel_scale=1.0)  # far too tight
+    fitted = ViewPolicy(camera="fit").resolve(saved, points, radii, 1.5)
+    for a, b in zip(fitted.basis(), saved.basis(), strict=True):
+        np.testing.assert_allclose(a, b, atol=1e-12)  # same orientation
+    assert fitted.parallel_scale > 5 * saved.parallel_scale
+    assert_inside(fitted, geometry, 600, 400)
+
+
+@pytest.mark.parametrize("name", ["SrTiO3.cif", "MgB2.cif", "triclinic.cif"])
+@pytest.mark.parametrize("view", ["default", "a", "b", "c", "x", "y", "z"])
+@pytest.mark.parametrize("size", [(800, 600), (400, 900), (500, 500)])
+@pytest.mark.parametrize("repetitions", [(1, 1, 1), (3, 2, 1)])
+def test_fitted_views_never_clip(name, view, size, repetitions):
+    project, geometry = scene_of(name, repetitions)
+    positions = project.structure.positions.copy()
+    points, radii = geometry.points_and_radii()
+    width, height = size
+    camera = ViewPolicy(view=view, margin=0.0).resolve(
+        None, points, radii, width / height, project.structure.cell
+    )
+    assert_inside(camera, geometry, width, height)
+    np.testing.assert_array_equal(project.structure.positions, positions)  # camera only
+
+
+def test_fitted_views_include_whole_vector_arrows():
+    project = load_input(ROOT / "examples" / "vectors-synthetic-afm.ycrystal")
+    geometry = build_geometry(project.structure, project.scene)
+    assert len(geometry.arrows) > 0
+    points, radii = geometry.points_and_radii()
+    for view in ("c", "a", "x"):
+        camera = ViewPolicy(view=view, margin=0.0).resolve(
+            project.camera, points, radii, 0.75, project.structure.cell
+        )
+        assert_inside(camera, geometry, 600, 800)
+        tips = np.array([arrow.tip for arrow in geometry.arrows])
+        pixels = camera.project(tips, 600, 800)
+        assert np.all((pixels >= -1e-6) & (pixels <= np.array([600, 800]) + 1e-6))
+
+
+def test_margin_and_fixed_visible_height():
+    _, geometry = scene_of("SrTiO3.cif")
+    points, radii = geometry.points_and_radii()
+    tight = ViewPolicy(view="a", margin=0.0).resolve(None, points, radii, 1.0, np.eye(3) * 3.905)
+    loose = ViewPolicy(view="a", margin=0.5).resolve(None, points, radii, 1.0, np.eye(3) * 3.905)
+    assert loose.parallel_scale == pytest.approx(1.5 * tight.parallel_scale)
+    assert ViewPolicy(view="a").margin == DEFAULT_MARGIN == 0.06
+    needed = 2 * tight.parallel_scale
+    fixed = ViewPolicy(view="a", visible_height=20.0).resolve(
+        None, points, radii, 1.0, np.eye(3) * 3.905
+    )
+    assert fixed.parallel_scale == 10.0 and fixed.focal_point == tight.focal_point
+    assert ViewPolicy(visible_height=20.0).policy == "fit"
+    with pytest.raises(CameraPolicyError, match=f"needs at least {needed:.2f} Å"):
+        ViewPolicy(view="a", visible_height=needed * 0.9).resolve(
+            None, points, radii, 1.0, np.eye(3) * 3.905
+        )
+    # Exactly the needed height is accepted (nothing clipped, no margin).
+    exact = ViewPolicy(view="a", visible_height=needed).resolve(
+        None, points, radii, 1.0, np.eye(3) * 3.905
+    )
+    assert_inside(exact, geometry, 500, 500)
+
+
+@pytest.mark.parametrize(
+    "kwargs, message",
+    [
+        ({"camera": "keep"}, "Unknown camera policy"),
+        ({"view": "d"}, "Unknown view"),
+        ({"margin": -0.1}, "between 0 and 1"),
+        ({"margin": float("nan")}, "between 0 and 1"),
+        ({"visible_height": 0.0}, "positive"),
+        ({"camera": "saved", "view": "a"}, "replaces the saved camera"),
+        ({"camera": "saved", "visible_height": 10.0}, "replaces the saved camera"),
+    ],
+)
+def test_invalid_policies_are_refused(kwargs, message):
+    with pytest.raises(CameraPolicyError, match=message):
+        ViewPolicy(**kwargs)

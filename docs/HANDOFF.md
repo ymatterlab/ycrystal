@@ -15,9 +15,11 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   development version `0.4.0.dev0`.
   FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
   listed as "Unreleased" in `CHANGELOG.md`.
-- **Work in progress:** none. FR-STYLE-MAP-01 (element mapping for styles) was
-  submitted from branch `feature/style-map` as PR #29, to be merged after CI passes;
-  FR-STYLE-CLI-01 is merged (PR #28). No other feature is open or authorized;
+- **Work in progress:** FR-CAMERA-01 (view and framing policies) submitted from
+  branch `feature/camera-policy` as PR #30, to be merged after CI passes; then
+  FR-BATCH-01, which the user authorized to follow once FR-CAMERA-01 is merged.
+  FR-STYLE-CLI-01 (PR #28) and FR-STYLE-MAP-01 (PR #29) are merged. Nothing else is
+  open or authorized;
   see [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
@@ -34,6 +36,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | Maintenance: new application icon and logo, logo-rendering script; Linux launcher refreshes the icon cache | PRs #25, #26 |
 | unreleased | FR-STYLE-CLI-01 `--style`/`--style-parts` apply a `.ycstyle` before `--render`/`--export-pov` | PR #28 |
 | unreleased | FR-STYLE-MAP-01 element mapping for styles (`--element-map`, Import Style dialog) | PR #29 |
+| unreleased | FR-CAMERA-01 `--view`, `--camera-policy`, `--fit-margin`, `--view-height` (shared with View along) | PR #30 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01 and FR-EXPORT-01
@@ -55,57 +58,51 @@ Known limitations and unresolved issues:
 ## Latest development session
 
 - **Date and machine:** 17 November 2026, Mac mini (macOS 15.8, Apple silicon).
-- **Branch:** `feature/style-map`, created from `main` at `f77e163` (PR #28,
-  FR-STYLE-CLI-01, merged).
-- **Commits:** on `feature/style-map`, pull request #29 (merge after CI passes).
-- **Task:** FR-STYLE-MAP-01 only — explicit element mapping when applying a style to
-  another composition. Evidence: "FR-STYLE-MAP-01" in PROGRESS.md.
+- **Branch:** `feature/camera-policy`, created from `main` at `445ca84` (PR #29 merged).
+- **Commits:** on `feature/camera-policy`, pull request #30 (merge after CI passes).
+- **Task:** FR-CAMERA-01, then FR-BATCH-01 (each merged after CI before the next), as
+  the user asked. Evidence: "FR-CAMERA-01" in PROGRESS.md.
 
 Summary of changes:
 
-- `io/style.py`: `ElementMapError`, `ElementTransfer`, `LEAVE_OUT_LABEL`,
-  `check_element`, `style_elements`, `resolve_element_map`; `apply_style` takes an
-  optional `element_map` (default `None`: unchanged behaviour).
-- `batch.py`: `parse_element_map`; `apply_style_file(…, element_map=None)`.
-  `app.py`: `--element-map MAP` (needs `--style`).
-- `gui/style_dialog.py` (new): `StyleImportDialog` with the part check boxes (moved
-  from the main window) and the mapping rows; `StyleImportChoice`; `STYLE_PART_LABELS`
-  moved here (still importable from `gui/main_window.py`).
-  `gui/main_window.py`: `ask_style_import` replaces `ask_style_parts`;
-  `import_style(…, element_map=None)`.
-- `tests/fixtures/BaZrO3.cif` (new, illustrative, a = 4.19 Å rounded).
-- Tests: 24 new in `tests/test_style.py`, 3 in `tests/test_release.py` (one real
-  POV-Ray), 6 in the new `tests/test_gui_style_map.py` (one follows the guide's window
-  walkthrough); `tests/conftest.py` and
-  `tests/test_gui_interactions.py` use the renamed dialog hook.
-- Documentation: appearance guide (new "Element mapping" section), examples guide
-  (window walkthrough with BaZrO3; "Map elements to another composition" with three
-  commands and their exact warnings), README, FORMATS (mapping not stored), API
-  reference (`io`, `cli`, `gui`), changelog, fixtures README; `scripts/docs_examples.py`
-  runs the three documented commands.
+- `core/camera.py`: `axis_view`, `ViewPolicy`, `CameraPolicyError`, `VIEWS`,
+  `CAMERA_POLICIES`, `DEFAULT_DIRECTION`, `DEFAULT_MARGIN`.
+- `batch.py`: `scene_for`, `export_scene`, `render_png` take `view=ViewPolicy(...)`;
+  `apply_style_file(..., camera_kept=True)`. `app.py`: `--view`, `--camera-policy`,
+  `--fit-margin`, `--view-height`.
+- `gui/main_window.py`: `view_along` uses `axis_view` (same behaviour).
+  `viewport/qt_viewport.py`: camera changes reported once per `set_camera` (fix).
+- Tests: 138 new in `tests/test_camera.py`, 4 in `tests/test_release.py` (one real
+  POV-Ray), 1 in `tests/test_gui_scene.py`.
+- Documentation: examples guide (new "Choose the view and framing", with the
+  motivation and four commands), controls guide (screen-up rule, real-space vs hkl),
+  README, API reference (`camera`), changelog; `scripts/docs_examples.py` runs the
+  documented commands.
 
 Tests performed on the Mac:
 
 | Check | Result |
 | --- | --- |
-| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (real windows, Homebrew POV-Ray 3.7.0.10) | 627 passed, none skipped |
-| `pytest -m "not gui"` (what the macOS CI job runs) | 457 passed |
-| Doctests (`io/style.py`, `batch.py`, `core/scene.py`), `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Clean |
-| Import Style dialog screenshots (default, mapped, ambiguous) and the guide's BaZrO3 render | Layout and result as documented |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (real windows, Homebrew POV-Ray 3.7.0.10) | 771 passed, none skipped (twice; one earlier run: 1 unidentified failure, not reproduced) |
+| Doctests (`core/camera.py`, `batch.py`), `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Clean |
+| Renders: MgB2 down c; SrTiO3 and BaZrO3 down a at the same 9 Å height | As documented |
 
-Not done: Linux (CI will run it on a pull request); hands-on use of the dialog by a
-person.
+Not done: Linux (CI of PR #30); hands-on use of the View along buttons in every order.
 
 ## Next recommended steps
 
 1. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
    checks so far), for example with `tests/fixtures/BaZrO3.cif` and
-   `examples/grey-studio.ycstyle` as in the examples guide.
-2. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
+   `examples/grey-studio.ycstyle` as in the examples guide; and the View along buttons
+   in every order (the camera fix of PR #30).
+2. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
+   1 failure that did not reproduce twice; its name was not captured.
+3. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
    check its size there.
 
-The next features in the private plan (FR-CAMERA-01, FR-BATCH-01, …)
-are **not** authorized by this record; each needs its own request.
+FR-BATCH-01 is authorized by the user to follow FR-CAMERA-01 once that is merged after
+CI. Later features in the private plan (FR-REPRO-01, …) are **not** authorized by this
+record; each needs its own request.
 
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
@@ -147,7 +144,8 @@ user's report for PR #22.
 | GUI tests (real windows, OpenGL) | Verified (PR #22, user report; CI under Xvfb) | Verified 16 Nov 2026 (non-Retina display) | Not tested |
 | PNG/PDF/JPEG export (FR-EXPORT-01) | Verified by CI (PR #23, Ubuntu, full suite) | Verified 16 Nov 2026 (automated, real POV-Ray; CI without windows); the user reports it working | Not tested |
 | Styles from the command line (FR-STYLE-CLI-01) | Verified by CI (PR #28, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
-| Element mapping for styles (FR-STYLE-MAP-01) | CI of PR #29 (Ubuntu, full suite under Xvfb) | Verified 17 Nov 2026 (automated, real POV-Ray, scripted dialog screenshots; CI without windows) | Not tested |
+| Element mapping for styles (FR-STYLE-MAP-01) | Verified by CI (PR #29, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray, scripted dialog screenshots; CI without windows) | Not tested |
+| View and framing policies (FR-CAMERA-01) | CI of PR #30 (Ubuntu, full suite under Xvfb) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
@@ -264,6 +262,11 @@ Troubleshooting:
 - Personal materials are stored in `QSettings` (`materials/personal`) with thumbnails in
   a `material-thumbnails/` folder (per machine, not in Git; locations above).
 - Preview resolution presets are widths (Small 480, Medium 800, Large 1200, Custom).
+- Views (FR-CAMERA-01): one rule for the window and `--view` (`core/camera.py::axis_view`);
+  a, b, c are real-space vectors; a saved camera is kept unless a view, a fixed height,
+  or `--camera-policy fit` is asked for; fitted views include whole arrows; a fixed
+  visible height that does not fit is an error, never a crop. No reverse views on the
+  command line (`--view -a` would clash with option parsing).
 - Element mapping (FR-STYLE-MAP-01): explicit only, never inferred; unmapped elements
   match by symbol; ambiguity (shared targets, a mapped element landing on one with its
   own settings) is an error, never resolved by order; per-atom settings never follow a
