@@ -7,6 +7,7 @@ import os
 import sys
 
 from ycrystal import __version__
+from ycrystal.core.camera import CAMERA_POLICIES, DEFAULT_MARGIN, VIEWS
 from ycrystal.core.samples import SAMPLES
 
 
@@ -73,6 +74,31 @@ def _parser() -> argparse.ArgumentParser:
         "output (default: appearance,environment,output)",
     )
     batch.add_argument(
+        "--view",
+        choices=VIEWS,
+        help="look down a real-space lattice vector (a, b, c) or a Cartesian axis (x, y, z), "
+        "or use the default view; the camera is fitted to the scene",
+    )
+    batch.add_argument(
+        "--camera-policy",
+        choices=CAMERA_POLICIES,
+        help="saved: use FILE's saved camera as it is (default without --view); fit: refit "
+        "the framing to the drawn scene, keeping the saved orientation unless --view is given",
+    )
+    batch.add_argument(
+        "--fit-margin",
+        type=float,
+        metavar="FRACTION",
+        help=f"space around a fitted view, 0-1 of its half-height (default {DEFAULT_MARGIN})",
+    )
+    batch.add_argument(
+        "--view-height",
+        type=float,
+        metavar="ANGSTROM",
+        help="fixed visible image height in Å instead of fitting the scale (same scale for "
+        "several structures); an error if the scene does not fit",
+    )
+    batch.add_argument(
         "--element-map",
         metavar="MAP",
         type=_element_map,
@@ -125,6 +151,7 @@ def _batch(args: argparse.Namespace) -> int:
         load_input,
         render_png,
     )
+    from ycrystal.core.camera import CameraPolicyError
     from ycrystal.io.project import ProjectError
     from ycrystal.io.readers import StructureImportError
     from ycrystal.io.style import StyleError
@@ -147,6 +174,7 @@ def _batch(args: argparse.Namespace) -> int:
                 args.style,
                 args.style_parts or CLI_STYLE_PARTS,
                 element_map=args.element_map,
+                camera_kept=args.view_policy.policy == "saved",
             )
         except (StyleError, StyleTransferError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
@@ -155,7 +183,12 @@ def _batch(args: argparse.Namespace) -> int:
             print(f"WARNING: {note}", file=sys.stderr)
     if args.export_pov:
         try:
-            pov, ini = export_scene(project, args.export_pov, args.width, args.height)
+            pov, ini = export_scene(
+                project, args.export_pov, args.width, args.height, args.view_policy
+            )
+        except CameraPolicyError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
         except OSError as exc:
             print(f"ERROR: cannot write {args.export_pov}: {exc.strerror or exc}", file=sys.stderr)
             return 1
@@ -163,8 +196,15 @@ def _batch(args: argparse.Namespace) -> int:
     if args.render:
         started = time.monotonic()
         try:
-            result = render_png(project, args.render, args.povray, args.width, args.height)
-        except PovrayNotFoundError as exc:
+            result = render_png(
+                project,
+                args.render,
+                args.povray,
+                args.width,
+                args.height,
+                view=args.view_policy,
+            )
+        except (PovrayNotFoundError, CameraPolicyError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
         except OSError as exc:
@@ -210,7 +250,10 @@ def main(argv: list[str] | None = None) -> int:
     is written. ``--width`` and ``--height`` override the style's output size.
     ``--element-map Sr=Ba,Ti=Zr`` sends the style's element settings to other elements
     ([`parse_element_map`][ycrystal.batch.parse_element_map]); an invalid or ambiguous
-    mapping is an error before anything is written.
+    mapping is an error before anything is written. ``--view``, ``--camera-policy``,
+    ``--fit-margin``, and ``--view-height`` choose the camera
+    ([`ViewPolicy`][ycrystal.core.camera.ViewPolicy]); without them a project is drawn
+    with its saved camera and a structure with the fitted default view, as before.
     ``--style`` without ``--render`` or ``--export-pov`` is a usage error (status 2).
     ``--install-desktop`` / ``--uninstall-desktop`` manage the menu launcher on Linux
     (see [`ycrystal.desktop`][ycrystal.desktop]); on macOS and Windows they print an
@@ -249,10 +292,27 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--style-parts needs --style")
     if args.element_map is not None and not args.style:
         parser.error("--element-map needs --style")
+    camera_options = (args.view, args.camera_policy, args.fit_margin, args.view_height)
+    from ycrystal.core.camera import CameraPolicyError, ViewPolicy
+
+    try:
+        args.view_policy = ViewPolicy(
+            camera=args.camera_policy,
+            view=args.view,
+            margin=DEFAULT_MARGIN if args.fit_margin is None else args.fit_margin,
+            visible_height=args.view_height,
+        )
+    except CameraPolicyError as exc:
+        parser.error(str(exc))
     if args.render or args.export_pov:
         if not args.file:
             parser.error("--render and --export-pov need a FILE")
         return _batch(args)
+    if any(option is not None for option in camera_options):
+        parser.error(
+            "--view, --camera-policy, --fit-margin, and --view-height choose the camera of "
+            "--render or --export-pov and need one of them"
+        )
     if args.style:
         parser.error(
             "--style applies a style without a window and needs --render OUT.png or "

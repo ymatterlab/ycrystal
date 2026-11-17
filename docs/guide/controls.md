@@ -115,9 +115,14 @@ appears only when both endpoint atoms are displayed; hiding an atom removes its 
 These are geometric contacts, not calculated chemical bond orders.
 
 The **View along** toolbar offers **a, b, c** and **x, y, z**. The selected positive
-axis points toward the viewer; hold **Shift** when clicking to reverse it. For skewed
-cells, lattice directions differ from Cartesian directions. These actions fit the view
-and affect the camera only; they are outside the display-setting undo stack.
+axis points toward the viewer; hold **Shift** when clicking to reverse it. Screen up is
+the first of c, b, a (for x, y, z: z, y, x) that is not parallel to the chosen axis, so
+looking down a or b puts c up and looking down c puts b up. **a, b, c are the real-space
+lattice vectors**, not normals of lattice planes: in a skewed cell, looking down c is
+not the same as looking at the (001) plane face-on, and lattice directions differ from
+Cartesian directions. These actions fit the view and affect the camera only; they are
+outside the display-setting undo stack. `ycrystal --view` uses exactly the same rule
+(see [choose the view](examples.md#choose-the-view-and-framing)).
 
 ## Rotation modes
 

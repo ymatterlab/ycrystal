@@ -40,7 +40,7 @@ from PySide6.QtWidgets import (
 from ycrystal import presets as presets_module
 from ycrystal.core import aspect, measure
 from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
-from ycrystal.core.camera import Camera, default_camera
+from ycrystal.core.camera import Camera, CameraPolicyError, axis_view, default_camera
 from ycrystal.core.export import ExportOptions, format_label, path_for_format
 from ycrystal.core.lighting import resolve_lighting
 from ycrystal.core.scene import (
@@ -1827,26 +1827,17 @@ class MainWindow(QMainWindow):
         """Look down a lattice (a, b, c) or Cartesian (x, y, z) axis.
 
         The axis points toward the viewer (away with ``reverse``); the next axis in
-        c, b, a (or z, y, x) order that is not parallel to it points up.
+        c, b, a (or z, y, x) order that is not parallel to it points up. The same rule
+        as ``ycrystal --view`` ([`axis_view`][ycrystal.core.camera.axis_view]).
         """
-        cell = self.structure.cell
-        if axis in "abc":
-            if not self.structure.has_cell:
-                return
-            index = "abc".index(axis)
-            toward = cell[index]
-            ups = [cell[2], cell[1], cell[0]]
-        else:
-            index = "xyz".index(axis)
-            toward = np.eye(3)[index]
-            ups = list(np.eye(3)[::-1])
-        toward = toward / np.linalg.norm(toward)
-        if reverse:
-            toward = -toward
-        up = next(u for u in ups if np.linalg.norm(np.cross(u / np.linalg.norm(u), toward)) > 1e-3)
+        cell = self.structure.cell if self.structure.has_cell else None
+        try:
+            direction, up = axis_view(axis, cell, reverse)
+        except CameraPolicyError:
+            return  # a lattice axis of a structure without a cell
         current = self.current_camera()
         camera = Camera.looking_along(
-            -toward,
+            direction,
             up,
             focal_point=current.focal_point,
             distance=current.distance,

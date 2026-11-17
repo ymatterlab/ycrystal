@@ -35,6 +35,19 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   the same structure. Ambiguous mappings are refused with an explanation. The mapping
   is a presentation choice, not chemistry, and is not stored in the style. New fixture
   `tests/fixtures/BaZrO3.cif` (illustrative cubic perovskite).
+- **Choose the view and framing from the command line (FR-CAMERA-01).** `--view a|b|c|
+  x|y|z|default` looks down a real-space lattice vector or a Cartesian axis (the same rule
+  and camera as the window's View along buttons), fitted so that atoms, cell edges, and
+  whole vector arrows are never cut off at any image shape. `--camera-policy fit`
+  refits a saved project's frame while keeping its orientation, `--fit-margin` sets the
+  space around a fitted view, and `--view-height ANGSTROM` draws several structures at
+  the same physical scale (an error, never a crop, if the scene does not fit). Without
+  these options the camera is chosen as before.
+
+### Fixes
+- Switching the view directly between some axes in the window (for example from c to
+  x) could raise an error while the camera was half updated; the view now reports a
+  camera change once, after it is complete.
 
 ### Details
 - New application icon (a Y-shaped molecule on a dark tile on the macOS icon grid) and

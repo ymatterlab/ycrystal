@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from PySide6.QtCore import Qt
 
+from ycrystal.core.camera import ViewPolicy
 from ycrystal.core.samples import perovskite_srtio3, triclinic_marker
 from ycrystal.gui.main_window import SOFT_LIMIT_ATOMS, MainWindow
 
@@ -151,6 +152,27 @@ def test_view_along_triclinic_axes(qtbot):
         d = win.current_camera().basis()[2]
         np.testing.assert_allclose(-d, cell[index] / np.linalg.norm(cell[index]), atol=1e-12)
         assert all_visible(win)
+    win.close()
+
+
+def test_view_buttons_and_command_line_views_agree(qtbot):
+    """FR-CAMERA-01: the window and `ycrystal --view` share one camera rule."""
+    win = make_window(qtbot, triclinic_marker())
+    points, radii = win.geometry.points_and_radii()
+    for axis in "abcxyz":
+        win.view_along(axis)
+        shown = win.current_camera()
+        expected = ViewPolicy(view=axis).resolve(
+            None, points, radii, win.viewport.output_aspect(), win.structure.cell
+        )
+        for a, b in zip(shown.basis(), expected.basis(), strict=True):
+            np.testing.assert_allclose(a, b, atol=1e-9)
+        # Same image: the focal points may differ only along the viewing direction
+        # (depth), which does not change an orthographic image.
+        offset = np.subtract(shown.focal_point, expected.focal_point)
+        direction = expected.basis()[2]
+        np.testing.assert_allclose(offset - (offset @ direction) * direction, 0, atol=1e-6)
+        assert shown.parallel_scale == pytest.approx(expected.parallel_scale, rel=1e-6)
     win.close()
 
 

@@ -142,6 +142,41 @@ def main() -> None:
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
                 assert ycrystal(args) == 0
             assert stderr.getvalue() == f"WARNING: {warning}\n"
+        # Choose the view and framing (examples guide): down c, a fixed scale, a refit.
+        fixtures = root / "tests" / "fixtures"
+        with contextlib.redirect_stdout(io.StringIO()):
+            assert (
+                ycrystal(
+                    [
+                        str(fixtures / "MgB2.cif"),
+                        "--view",
+                        "c",
+                        "--export-pov",
+                        str(directory / "MgB2-c"),
+                    ]
+                )
+                == 0
+            )
+            for name in ("SrTiO3", "BaZrO3"):
+                args = [str(fixtures / f"{name}.cif"), "--view", "a", "--view-height", "9"]
+                args += ["--width", "600", "--height", "600", "--export-pov"]
+                assert ycrystal([*args, str(directory / f"{name}-a")]) == 0
+            refit = [str(root / "examples" / "MgB2-gradient.ycrystal"), "--style"]
+            refit += [str(root / "examples" / "grey-studio.ycstyle"), "--style-parts", "display"]
+            assert (
+                ycrystal(
+                    [*refit, "--camera-policy", "fit", "--export-pov", str(directory / "refit")]
+                )
+                == 0
+            )
+        assert "direction <0, 0, -1>" in (directory / "MgB2-c.pov").read_text()
+        for name in ("SrTiO3", "BaZrO3"):
+            assert "up        <0, 0, 9>" in (directory / f"{name}-a.pov").read_text()
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            args = [str(fixtures / "SrTiO3.cif"), "--view", "a", "--view-height", "1"]
+            assert ycrystal([*args, "--export-pov", str(directory / "small")]) == 1
+        assert "it needs at least 5.85 Å" in stderr.getvalue()
     print("Documentation examples passed (no display or renderer).")
 
 

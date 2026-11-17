@@ -540,8 +540,193 @@ def default_camera(points: Any, radii: Any, aspect: float) -> Camera:
     Camera
         The fitted camera (see [`Camera.fitted`][ycrystal.core.camera.Camera.fitted]).
     """
-    camera = Camera.looking_along(direction=(-0.42, 1.0, -0.38), view_up=(0.0, 0.0, 1.0))
+    camera = Camera.looking_along(direction=DEFAULT_DIRECTION, view_up=(0.0, 0.0, 1.0))
     return camera.fitted(points, radii, aspect)
+
+
+# ----- view policies (FR-CAMERA-01) -------------------------------------------------
+DEFAULT_DIRECTION = (-0.42, 1.0, -0.38)
+"""Viewing direction of the default view (slightly from above, Cartesian +z up)."""
+
+DEFAULT_MARGIN = 0.06
+"""Extra space around fitted views, as a fraction of the fitted half-height."""
+
+VIEWS = ("default", "a", "b", "c", "x", "y", "z")
+"""Views of [`ViewPolicy`][ycrystal.core.camera.ViewPolicy]: the default view, the
+real-space lattice vectors a, b, c, and the Cartesian axes x, y, z."""
+
+CAMERA_POLICIES = ("saved", "fit")
+"""``saved``: use the saved camera as it is; ``fit``: refit the framing to the scene."""
+
+
+class CameraPolicyError(ValueError):
+    """A view or framing cannot be produced; ``str(error)`` is a message for the user."""
+
+
+def axis_view(axis: str, cell: Any = None, reverse: bool = False) -> tuple[np.ndarray, np.ndarray]:
+    """Return ``(viewing direction, view up)`` for looking down a lattice or Cartesian axis.
+
+    The named axis points toward the viewer (away from the viewer with `reverse`), as
+    with the view buttons of the window. ``a``, ``b``, ``c`` are the **real-space**
+    lattice vectors (the rows of `cell`), not normals of lattice planes (hkl): in a
+    non-orthogonal cell, looking down c is not looking at the (001) plane face-on.
+    Screen up is the first of c, b, a (or z, y, x) that is not parallel to the viewing
+    direction, projected onto the screen; looking down a or b therefore puts c up,
+    looking down c puts b up.
+
+    >>> direction, up = axis_view("c", np.diag([3.0, 3.0, 5.0]))
+    >>> direction.tolist(), up.tolist()
+    ([-0.0, -0.0, -1.0], [0.0, 3.0, 0.0])
+
+    Raises
+    ------
+    CameraPolicyError
+        If `axis` is not one of a, b, c, x, y, z, or a lattice axis is requested for
+        a structure without a cell (`cell` is ``None`` or has a zero-length vector).
+    """
+    if axis in ("a", "b", "c"):
+        vectors = None if cell is None else np.asarray(cell, dtype=float).reshape(3, 3)
+        if vectors is None or np.any(np.linalg.norm(vectors, axis=1) < 1e-9):
+            raise CameraPolicyError(
+                f"The view along {axis} needs a lattice, and this structure has no cell; "
+                "use x, y, z, or default."
+            )
+        toward = vectors["abc".index(axis)]
+        ups = [vectors[2], vectors[1], vectors[0]]
+    elif axis in ("x", "y", "z"):
+        toward = np.eye(3)["xyz".index(axis)]
+        ups = list(np.eye(3)[::-1])
+    else:
+        raise CameraPolicyError(f"Unknown view axis {axis!r}; choose from a, b, c, x, y, z.")
+    toward = toward / np.linalg.norm(toward)
+    if reverse:
+        toward = -toward
+    up = next(u for u in ups if np.linalg.norm(np.cross(u / np.linalg.norm(u), toward)) > 1e-3)
+    return -toward, up
+
+
+@dataclass(frozen=True)
+class ViewPolicy:
+    """How to choose the camera of a figure without a window.
+
+    Attributes
+    ----------
+    camera
+        ``"saved"`` keeps a saved camera exactly; ``"fit"`` refits the framing (centre
+        and scale) to the scene, keeping the saved orientation unless `view` is set.
+        ``None`` (the default) means ``"fit"`` when `view` or `visible_height` is set,
+        and ``"saved"`` otherwise.
+    view
+        Orientation: ``"default"``, ``"a"``, ``"b"``, ``"c"``, ``"x"``, ``"y"``, or
+        ``"z"`` (see [`axis_view`][ycrystal.core.camera.axis_view]); ``None`` keeps the
+        saved orientation, or the default view if there is no saved camera.
+    margin
+        Extra space around a fitted view as a fraction of its half-height (0–1).
+    visible_height
+        Fixed visible height of the image in Å instead of fitting the scale, so that
+        figures of different structures share one physical scale. The scene is still
+        centred. If the scene does not fit, that is an error, never a silent crop.
+
+    Raises
+    ------
+    CameraPolicyError
+        If a value is out of range, or ``camera="saved"`` is combined with `view` or
+        `visible_height` (they change the camera).
+
+    Examples
+    --------
+    Without options the saved camera is used unchanged; without a saved camera, the
+    default view is fitted, exactly as before this policy existed:
+
+    >>> points, radii = np.array([[0.0, 0.0, 0.0], [4.0, 0.0, 0.0]]), 1.0
+    >>> ViewPolicy().resolve(None, points, radii, 1.5) == default_camera(points, radii, 1.5)
+    True
+    >>> along_x = ViewPolicy(view="x").resolve(None, points, radii, 1.5)
+    >>> [float(v) for v in along_x.basis()[2]]
+    [-1.0, 0.0, 0.0]
+    """
+
+    camera: str | None = None
+    view: str | None = None
+    margin: float = DEFAULT_MARGIN
+    visible_height: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.camera is not None and self.camera not in CAMERA_POLICIES:
+            raise CameraPolicyError(
+                f"Unknown camera policy {self.camera!r}; choose from {', '.join(CAMERA_POLICIES)}."
+            )
+        if self.view is not None and self.view not in VIEWS:
+            raise CameraPolicyError(f"Unknown view {self.view!r}; choose from {', '.join(VIEWS)}.")
+        if not (math.isfinite(self.margin) and 0.0 <= self.margin <= 1.0):
+            raise CameraPolicyError("The fit margin must be between 0 and 1.")
+        if self.visible_height is not None and not (
+            math.isfinite(self.visible_height) and self.visible_height > 0
+        ):
+            raise CameraPolicyError("The visible height must be a positive number of Å.")
+        if self.camera == "saved" and (self.view is not None or self.visible_height is not None):
+            raise CameraPolicyError(
+                "A view or a visible height replaces the saved camera, so it cannot be "
+                "combined with the saved camera policy; use the fit policy or leave it out."
+            )
+
+    @property
+    def policy(self) -> str:
+        """Return the effective policy, ``"saved"`` or ``"fit"``."""
+        if self.camera is not None:
+            return self.camera
+        return "fit" if self.view is not None or self.visible_height is not None else "saved"
+
+    def resolve(
+        self, saved: Camera | None, points: Any, radii: Any, aspect: float, cell: Any = None
+    ) -> Camera:
+        """Return the camera for a scene.
+
+        Parameters
+        ----------
+        saved
+            The project's saved camera, or ``None`` (a structure file).
+        points, radii
+            Framing bounds of the scene, from
+            [`DisplayGeometry.points_and_radii`][ycrystal.core.scene.DisplayGeometry.points_and_radii]:
+            atoms, cell edges, and whole vector arrows.
+        aspect
+            Output width divided by height.
+        cell
+            Lattice vectors as rows, or ``None`` without a cell (for a, b, c).
+
+        Returns
+        -------
+        Camera
+            The saved camera itself with the ``saved`` policy; otherwise a fitted
+            camera. The structure is never moved or rotated: only the camera changes.
+
+        Raises
+        ------
+        CameraPolicyError
+            If a lattice view is requested without a cell, or the scene does not fit in
+            `visible_height`.
+        """
+        if self.policy == "saved" and saved is not None:
+            return saved
+        if self.view is not None and self.view != "default":
+            direction, up = axis_view(self.view, cell)
+            base = Camera.looking_along(direction, up)
+        elif self.view is None and saved is not None:
+            base = saved
+        else:
+            base = Camera.looking_along(DEFAULT_DIRECTION, (0.0, 0.0, 1.0))
+        if self.visible_height is None:
+            return base.fitted(points, radii, aspect, self.margin)
+        tight = base.fitted(points, radii, aspect, margin=0.0)
+        needed = 2.0 * tight.parallel_scale
+        if self.visible_height < needed * (1.0 - 1e-9):
+            raise CameraPolicyError(
+                f"The scene does not fit in a visible height of {self.visible_height:g} Å at "
+                f"this aspect ratio: it needs at least {needed:.2f} Å. Increase the visible "
+                "height, or let the view be fitted."
+            )
+        return tight._replace(parallel_scale=0.5 * self.visible_height)
 
 
 def _check_size(width: int, height: int) -> None:
