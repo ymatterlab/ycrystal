@@ -100,4 +100,8 @@ schemas are rejected with a message to update Ycrystal.
 materials, colours, radii, display settings, the environment, the output size, and the
 element sequence of the source structure (used to decide whether per-atom settings can
 transfer). See [reusing the look](guide/appearance.md#reusing-the-look-styles) for the
-transfer rules. Style files are versioned JSON; newer versions are rejected.
+transfer rules. Style files are versioned JSON, or a ZIP package when they carry a
+background picture; newer versions are rejected. An element mapping chosen when a style
+is applied ([element mapping](guide/appearance.md#element-mapping-a-style-for-another-composition))
+is not stored in the style file, which stays unchanged; a project saved afterwards
+stores the resulting element settings.

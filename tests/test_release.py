@@ -188,6 +188,68 @@ def test_render_with_style_from_command_line(tmp_path, capsys, povray_executable
     assert [p.name for p in tmp_path.iterdir() if p.suffix != ".png"] == []
 
 
+# ----- element mapping from the command line (FR-STYLE-MAP-01) ---------------------------
+BAZRO3 = FIXTURES / "BaZrO3.cif"
+
+
+def atom_texture(pov: Path, label: str) -> str:
+    """Return the texture of the first sphere whose comment names ``label``."""
+    for line in pov.read_text(encoding="utf-8").splitlines():
+        if line.startswith("sphere") and f"// atom {label} " in line:
+            return line.split("texture {")[1].split("}")[0].strip()
+    raise AssertionError(f"no atom {label}")
+
+
+def test_element_map_from_command_line(tmp_path, capsys):
+    before = BAZRO3.read_bytes(), STYLE.read_bytes()
+    args = [str(BAZRO3), "--style", str(STYLE), "--export-pov"]
+    assert main([*args, str(tmp_path / "plain")]) == 0
+    assert "Element overrides for Ti were not applied" in capsys.readouterr().err
+    assert main([*args, str(tmp_path / "mapped"), "--element-map", "Sr=Ba,Ti=Zr"]) == 0
+    captured = capsys.readouterr()
+    # The style has no Sr settings: the mapping says so instead of failing.
+    assert "WARNING: The style has no element settings for Sr" in captured.err
+    assert "Element overrides" not in captured.err
+    assert atom_texture(tmp_path / "plain.pov", "#2 Zr") != "Ycr_Texture_chrome"
+    assert atom_texture(tmp_path / "mapped.pov", "#2 Zr") == "Ycr_Texture_chrome"  # Ti's look
+    assert atom_texture(tmp_path / "mapped.pov", "#3 O") == "Ycr_Texture_O_ceramic"  # by symbol
+    assert (BAZRO3.read_bytes(), STYLE.read_bytes()) == before  # inputs untouched
+
+
+def test_bad_element_maps_write_nothing(tmp_path, capsys):
+    out = tmp_path / "out"
+    out.mkdir()
+    base = [str(BAZRO3), "--style", str(STYLE), "--export-pov", str(out / "x")]
+    for mapping, message in (
+        ("Ti=O", "O would receive the settings of both O and Ti"),
+        ("Ti=Mg", "the structure has no Mg"),
+    ):
+        assert main([*base, "--element-map", mapping]) == 1
+        err = capsys.readouterr().err
+        assert "ERROR: Element mapping:" in err and message in err
+    for mapping in ("Ti", "ti=Zr", "Ti=Zr,Ti=Ba", ""):
+        with pytest.raises(SystemExit) as exit_info:
+            main([*base, "--element-map", mapping])
+        assert exit_info.value.code == 2 and "--element-map" in capsys.readouterr().err
+    with pytest.raises(SystemExit) as exit_info:
+        main([str(BAZRO3), "--element-map", "Ti=Zr", "--export-pov", str(out / "x")])
+    assert exit_info.value.code == 2 and "--element-map needs --style" in capsys.readouterr().err
+    assert list(out.iterdir()) == []
+
+
+@pytest.mark.povray
+def test_render_with_element_map(tmp_path, capsys, povray_executable):
+    size = ["--width", "160", "--height", "120", "--povray", povray_executable]
+    base = [str(BAZRO3), "--style", str(STYLE)]
+    assert main([*base, "--render", str(tmp_path / "plain.png"), *size]) == 0
+    mapped = tmp_path / "Ba Zr O3 ü.png"
+    assert main([*base, "--element-map", "Ti=Zr", "--render", str(mapped), *size]) == 0
+    assert "Rendered" in capsys.readouterr().out
+    image, plain = load_rgba(mapped), load_rgba(tmp_path / "plain.png")
+    assert image.shape == plain.shape == (120, 160, 4)
+    assert not np.array_equal(image, plain)  # chrome Zr instead of the default material
+
+
 # ----- desktop launcher --------------------------------------------------------------------
 def test_desktop_launcher_install_and_uninstall(tmp_path):
     files = install_desktop(tmp_path, command="/opt/yc/.venv/bin/ycrystal")
