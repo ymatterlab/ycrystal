@@ -100,7 +100,8 @@ jobs:
       run:
         shell: bash
     env:
-      YCRYSTAL_REQUIRE_INTEGRATION: "1"
+      # The experimental Windows job may skip the POV-Ray tests (see its install step).
+      YCRYSTAL_REQUIRE_INTEGRATION: ${{ matrix.experimental == true && '0' || '1' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -121,7 +122,11 @@ jobs:
         run: brew install povray
 
       - name: System packages (Windows; POV-Ray for Windows 3.7, official installer)
+        id: povwin
         if: runner.os == 'Windows'
+        # povray.org answers runners with a Cloudflare browser challenge (first run of
+        # this job, 17 Nov 2026), so this may fail; the job then runs without POV-Ray.
+        continue-on-error: true
         shell: pwsh
         run: |
           # The official installer, as in the Chocolatey package pov-ray 3.7.0.20161121.
@@ -148,7 +153,7 @@ jobs:
         run: python -m pip install -e ".[dev]" -c constraints.txt
 
       - name: How POV-Ray for Windows behaves (diagnostics for the port)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && steps.povwin.outcome == 'success'
         timeout-minutes: 5
         continue-on-error: true
         run: python scripts/windows_povray_probe.py
@@ -158,9 +163,12 @@ jobs:
         run: |
           ycrystal --version
           if [ "$RUNNER_OS" != "Windows" ]; then command -v povray; fi
-          ycrystal --check-renderer
+          if [ "$RUNNER_OS" != "Windows" ] || [ "${{ steps.povwin.outcome }}" = "success" ]; then
+            ycrystal --check-renderer
+          fi
 
       - name: Display-independent documentation examples
+        continue-on-error: ${{ matrix.experimental == true }}
         run: |
           python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/colors.py src/ycrystal/core/aspect.py src/ycrystal/core/lighting.py src/ycrystal/core/measure.py src/ycrystal/core/vectors.py src/ycrystal/core/background.py src/ycrystal/presets/custom.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py src/ycrystal/io/style.py src/ycrystal/presets/__init__.py src/ycrystal/render/jobs.py src/ycrystal/render/povray.py src/ycrystal/render/thumbnails.py src/ycrystal/batch.py src/ycrystal/provenance.py src/ycrystal/desktop.py src/ycrystal/gui/native.py src/ycrystal/core/export.py src/ycrystal/render/formats.py
           python scripts/docs_examples.py
