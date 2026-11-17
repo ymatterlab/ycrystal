@@ -126,7 +126,8 @@ experiments still needed: `docs/development/windows-port.md`.
 | Check | Result |
 | --- | --- |
 | Linux, `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` | 718 passed, 1 skipped (Windows-only), 172 GUI deselected |
-| Windows CI (first run) | See `docs/development/windows-port.md` |
+| Windows CI, run 1 | Installer download blocked by povray.org's Cloudflare challenge; nothing else ran |
+| Windows CI, run 2 (job continues without POV-Ray) | Ycrystal installs; doctests and documentation examples pass; tests 621 passed, 98 skipped (95 need POV-Ray, 1 needs POV-Ray for Windows, 2 POSIX-only), none failed |
 
 ## Audit: next tests on the Mac and other computers (17 November 2026)
 

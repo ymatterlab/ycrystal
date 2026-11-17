@@ -136,9 +136,10 @@ hands-on runs by a person.
 
 1. Continue the Windows port on a Windows computer, from branch `feature/windows`,
    following [docs/development/windows-port.md](development/windows-port.md): set
-   up, run `scripts/windows_povray_probe.py`, answer its ten questions, make the
-   experimental Windows CI job pass, then update the documentation. Do not merge
-   draft PR #35 before that.
+   up, run `scripts/windows_povray_probe.py`, answer its ten questions, and decide
+   how Windows CI gets POV-Ray (povray.org blocks CI downloads; options on that page),
+   then update the documentation. On CI, Ycrystal already installs and 621 tests pass
+   on Windows without POV-Ray. Do not merge draft PR #35 before that.
 2. Run the tests of [docs/development/next-tests.md](development/next-tests.md)
    (audited 17 November 2026), in its order:
    - on the Mac mini: the full suite with real windows (881 expected), the memory
@@ -198,10 +199,10 @@ user's report for PR #22.
 
 | Area | Linux Mint 22.1 / Ubuntu 24.04 | macOS 15 (Apple silicon) | Windows |
 | --- | --- | --- | --- |
-| Install from source with `constraints.txt` | Verified on `main` (CI, PR #19) | Verified 16 Nov 2026 | Not tested |
+| Install from source with `constraints.txt` | Verified on `main` (CI, PR #19) | Verified 16 Nov 2026 | CI only (draft PR #35, Windows Server 2022, Python 3.12) |
 | Command line: `--version`, `--check-renderer`, `--render`, `--export-pov` | Verified (PR #22, user report) | Verified 16 Nov 2026 | Not tested |
-| POV-Ray discovery and include files | Verified (PR #22, user report) | Verified 16 Nov 2026 (Homebrew) | Not tested; known issue: no `povray` command |
-| Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified (PR #22, user report) | Verified 16 Nov 2026 | Not tested |
+| POV-Ray discovery and include files | Verified (PR #22, user report) | Verified 16 Nov 2026 (Homebrew) | Not tested: the installer cannot be downloaded on CI (Cloudflare); code for POV-Ray for Windows in draft PR #35 |
+| Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified (PR #22, user report) | Verified 16 Nov 2026 | CI only (draft PR #35): 621 passed, the 95 POV-Ray tests skipped (no POV-Ray on the runner) |
 | GUI tests (real windows, OpenGL) | Verified (PR #22, user report; CI under Xvfb) | Verified 16 Nov 2026 (non-Retina display) | Not tested |
 | PNG/PDF/JPEG export (FR-EXPORT-01) | Verified by CI (PR #23, Ubuntu, full suite) | Verified 16 Nov 2026 (automated, real POV-Ray; CI without windows); the user reports it working | Not tested |
 | Styles from the command line (FR-STYLE-CLI-01) | Verified by CI (PR #28, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
@@ -214,7 +215,7 @@ user's report for PR #22.
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
-| Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | None |
+| Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | Experimental job without POV-Ray (draft PR #35) |
 
 ### Hands-on checks on a Mac
 

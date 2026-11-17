@@ -95,11 +95,50 @@ before, and every existing test passes on Linux.
 
 ## Evidence from the Windows CI job
 
-CI-EVIDENCE-PLACEHOLDER
+Two runs of the experimental job on draft PR #35, 17 November 2026, Windows Server
+2022, Python 3.12. The Ubuntu and macOS jobs passed in both runs, so the port changes
+nothing there.
+
+| Run | Result |
+| --- | --- |
+| 1 (`3741931`) | Failed after 13 s at the installer download. povray.org answered the GitHub runner with a **Cloudflare browser challenge** ("Just a moment… Enable JavaScript and cookies to continue") instead of the installer. The official installer, and the Chocolatey package that fetches the same URL, **cannot be installed automatically on CI**. Nothing after that step ran |
+| 2 (`9d2c4d1`) | The job now continues without POV-Ray. The installer download failed again, as expected, and the probe was skipped. **Ycrystal installed with the pinned dependencies**, and `ycrystal --version` printed `ycrystal 0.4.0.dev0`. **All doctests and `scripts/docs_examples.py` passed. Tests: 621 passed, 98 skipped, none failed** (GUI tests deselected) |
+
+The 98 skipped tests:
+- 95 need a working POV-Ray: presets, validation, release examples, render
+  alignment, reproducibility, background pictures, gallery, and others;
+- 1 needs an installed POV-Ray for Windows;
+- 2 are POSIX-only by design: the execute-bit check and the unwritable-folder test.
+
+What passed on Windows includes:
+- structure reading and projects, styles, element mapping, cameras, batch manifests,
+  snapshots and provenance;
+- the benchmark and replay-check scripts with stand-in renderers (`.cmd` launchers),
+  the benchmark without peak memory, since `wait4` does not exist on Windows;
+- the 9 Windows contract tests, with a stand-in POV-Ray for Windows.
+
+**Not yet seen on Windows:** a real POV-Ray for Windows render, and the window.
+
+### Decision needed: POV-Ray for Windows on CI
+
+The CI runner cannot download the installer, so real Windows renders in CI need one of
+these:
+
+| Option | For | Against |
+| --- | --- | --- |
+| a. Keep the official installer (SHA-256 above) as a release asset of this repository, and download it from there in CI | Real POV-Ray 3.7 renders on every pull request | Redistributes an AGPL-3.0 binary: check the licence obligations (the corresponding source is POV-Ray's public repository) before the repository or the asset becomes public |
+| b. A self-hosted Windows runner with POV-Ray installed by hand | Real renders, the real program, no redistribution | A machine to keep online |
+| c. POV-Ray's 3.8 beta installer from its GitHub releases (downloadable) | Automatic | Not 3.7: the tests, the documentation, and the users' version all assume 3.7 |
+| d. No POV-Ray on Windows CI; test rendering by hand on a Windows computer | Nothing to decide now | Rendering on Windows is only as tested as the last hand run |
+
+Suggested: **d** while the port is completed by hand, then **a** or **b** once Windows
+is a supported target. The experimental job already runs everything else.
 
 ## Experiments for the real Windows computer
 
-Set up once, in PowerShell, from a clone of the repository on branch `feature/windows`:
+Everything but rendering and the window already passed on a Windows CI runner (see
+above), so the work on a real computer is about POV-Ray for Windows and the GUI. Set
+up once, in PowerShell, from a clone of the repository on branch `feature/windows`:
 
 ```powershell
 py -3.12 -m venv .venv
@@ -128,8 +167,10 @@ the code where they change it.
 
 ## What remains before "Windows is supported"
 
-1. **CI.** The Windows CI job passes; then remove `experimental: true` from its
-   matrix entry, so that failures count.
+1. **CI.** Decide how CI gets POV-Ray for Windows (see the decision above). Once
+   the job passes with real renders, remove `experimental: true` from its matrix
+   entry and the `continue-on-error` of its install and documentation-example steps,
+   so that failures count.
 2. **Questions above.** Answer questions 1–10 on a real computer, and change the code
    where an answer requires it.
 3. **The window.** Go through the hands-on checklist of HANDOFF.md, adapted: Ctrl
