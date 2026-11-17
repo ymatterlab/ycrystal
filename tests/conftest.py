@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import shutil
 import sys
+import textwrap
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -15,6 +17,41 @@ from ycrystal.core.scene import DisplayGeometry  # noqa: E402
 #: Set to 1 (as CI does) to make a missing display or POV-Ray an error instead of a
 #: skip, so that the GUI and rendering tests cannot silently pass as "skipped".
 REQUIRE_INTEGRATION = os.environ.get("YCRYSTAL_REQUIRE_INTEGRATION") == "1"
+
+
+def fake_povray(folder: Path, fail: bool = False) -> str:
+    """Return a stand-in for POV-Ray that writes a plain PNG of the requested size.
+
+    ``--version`` reports ``3.7.0.fake``. The image has the colour given by
+    ``$YCRYSTAL_FAKE_COLOR`` (``"r,g,b"``, default ``40,60,80``); with `fail` the
+    program prints a parse error and exits with status 1. For tests of the command
+    line, snapshots, and scripts that need no real ray tracing.
+    """
+    name = "fake_povray_fail" if fail else "fake_povray"
+    script = folder / f"{name}.py"
+    script.write_text(
+        textwrap.dedent(
+            f"""
+            import os, re, sys
+            from pathlib import Path
+            if "--version" in sys.argv:
+                print("POV-Ray 3.7.0.fake")
+                sys.exit(0)
+            if {fail!r}:
+                print("Parse Error: this renderer always fails")
+                sys.exit(1)
+            ini = Path(sys.argv[1]).read_text()
+            size = [int(re.search(k + r"=(\\d+)", ini).group(1)) for k in ("Width", "Height")]
+            color = os.environ.get("YCRYSTAL_FAKE_COLOR", "40,60,80")
+            from PIL import Image
+            Image.new("RGB", tuple(size), tuple(int(v) for v in color.split(","))).save("scene.png")
+            """
+        )
+    )
+    launcher = folder / name
+    launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n')
+    launcher.chmod(0o755)
+    return str(launcher)
 
 
 def display_available() -> bool:

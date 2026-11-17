@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 17 November 2026 (FR-REPRO-01, figure snapshots and provenance records; PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), and FR-REPRO-01 (figure snapshots and provenance; PR #32). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 17 November 2026 (FR-VALIDATION-01, scientific validation and benchmarks; PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), and FR-VALIDATION-01 (validation and benchmarks; PR #33). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -93,12 +93,111 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## FR-VALIDATION-01: scientific validation and benchmarks (post-0.3.0, 17 November 2026)
+
+Evidence work after version 0.3.0 on the Linux Mint 22.1 laptop, on branch
+`feature/validation` from `main` at `e7ec99f` (PR #32 merged); submitted as PR #33
+after the user's review. No
+application code changed: tests, two scripts, and documentation only. Evidence report:
+`docs/development/validation.md`, with the observed values and the reasons for each
+tolerance.
+
+What was added:
+
+- `tests/test_validation.py` (55 tests; 26 with real POV-Ray), checking:
+  - **A. Geometry.** The scene file holds exactly the shared geometry:
+    - atoms with identity, position, and radius;
+    - bonds as whole or half cylinders between atom centres;
+    - cell edges between lattice points.
+
+    Also: periodic images are exact lattice translations; lattice views are not
+    mirrored; vectors keep their attachment, direction, and sign in every image.
+  - **A. Ray-traced images** of SrTiO3, SrTiO3 2 × 2 × 1, MgB2 2 × 2 × 1, triclinic
+    2 × 1 × 1, and BaZrO3:
+    - every sphere at its projected centre and of its projected size, with a mirrored
+      control;
+    - half-bonds in their atom's colour;
+    - arrow heads where projected;
+    - fitted views never cut off (landscape and portrait).
+
+    Views are chosen analytically so that all atoms are visible.
+  - **B. Styles.** The grey studio style applied to 8 inputs with 2 sets of parts
+    (one with Ti → Zr) changes no scientific data and writes no file.
+  - **E. Effects**, each comparison changing one setting:
+    - cast shadows;
+    - the area light's soft shadows vs a point light;
+    - chrome reflecting a red floor, against matte and satin;
+    - glass transmitting a blue background, against satin.
+- `scripts/benchmark_render.py`. Cases:
+  - SrTiO3 1³, 4³, 8³, 12³;
+  - a resolution series;
+  - plain, studio, chrome, and glass effects;
+  - MgB2 with `--style`.
+
+  Method: each run is a new `ycrystal --render` process. Recorded: warm-up and timed
+  runs; median, minimum, and maximum of wall time and printed render time; peak
+  memory from `wait4`. Also: input, fixture, and style SHA-256, and the system. The
+  first warm-up saves a snapshot per case (`--save-project`).
+
+  Peak memory is read by a small launcher process. The first recorded run measured
+  from the benchmark process itself, and its memory column rose monotonically
+  (84.9 → 87.9 MiB). The cause: on Linux a child's `ru_maxrss` includes the size of the
+  process that started it (inherited at fork and exec), here the growing benchmark
+  process. The same case alone gave 71 MiB. That run was discarded and the
+  measurement fixed. Verified on Linux: a 300 MB parent no longer shows (11.2 MiB for
+  a trivial command), and a 200 MB grandchild is still seen (199.9 MiB).
+- `scripts/replay_check.py`: for each provenance record in a folder:
+  - verifies the recorded SHA-256 of image and snapshot;
+  - renders the snapshot with the production command;
+  - compares pixels (largest and mean difference, fraction beyond the tolerance) and
+    reports both systems.
+
+  This gives a ready command for cross-installation checks.
+- `tests/test_validation_scripts.py` (4 tests; 1 with real POV-Ray): reports, inputs,
+  snapshots, `same`/`different`/`modified`/no-record outcomes, and usage errors.
+  The stand-in renderer moved into `tests/conftest.py::fake_povray` (now with a
+  colour setting) and is shared with `tests/test_reproducibility.py`.
+- `docs/development/comparison.md`: VESTA, OVITO 3.17.2, and CView 1.3.1, from their
+  documentation only, with quotations and links. None was installed. A research
+  subagent collected the quotations; three key claims were rechecked against the
+  pages: the OVITO POV-Ray removals, where VESTA's `-export_img` is listed, and
+  CView's planned items. The CView article's full text was not accessible (its
+  abstract was used).
+- `docs/development/independent-evaluation.md`: a checklist for two independent
+  evaluators. No evaluation has taken place. The journal's requirement is quoted from
+  a search summary, because the IUCr pages refused automated access; recheck it
+  before submitting.
+- `tests/fixtures/README.md` now says which structures are real compounds (idealised)
+  and which are synthetic (the triclinic cell, the antiferromagnet example), and
+  states the licence.
+
+Runs on the laptop (all with real POV-Ray 3.7.0.10.unofficial):
+
+| Check | Result |
+| --- | --- |
+| `tests/test_validation.py`, `tests/test_validation_scripts.py`, `tests/test_reproducibility.py` with `YCRYSTAL_REQUIRE_INTEGRATION=1` | 84 passed, none skipped (70 s) |
+| Observed margins (`--junitxml` properties) | Sphere centres ≤ 0.19 px (tolerance 0.5); disc areas ≤ 3.5 % (8 %); mirrored control ≥ 51 px; fitted bounds ≤ 0.76 px without arrows (1.5); shadows darken 20.4 % of pixels; penumbra 0.46 vs 0.31; chrome red excess 84–124 vs 0 for matte and satin; glass blue excess 49–78 vs 0 for satin |
+| `benchmark_render.py --quick --scale 0.5 --repeats 3` | 9 cases. 15–2,969 atoms: 1.7–2.6 s per command at 400 × 300. Studio +0.5 s; chrome instead of satin in the studio +1.2 s; glass in the studio 65 s (56–75). Peak memory 71–85 MiB. Raw data: `docs/development/validation-results/benchmark-linux-2026-11-17.json` |
+| `replay_check.py` of that run's 9 snapshots, same laptop | 9 of 9 identical pixels (largest difference 0), including glass, chrome, area-light shadows. Raw data: `…/replay-check-linux-2026-11-17.json` |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` | 702 passed, 172 GUI tests deselected, none skipped (184 s); the GUI tests still collect |
+| `ruff check`/`format --check`, `pre-commit` on the new and changed files, `scripts/docs_examples.py`, `zensical build --clean --strict` | Clean |
+
+**Not run:**
+- the GUI tests (no GUI code changed);
+- the full benchmark (12³ and 1600 × 1200; too heavy for the laptop);
+- anything on macOS;
+- replays between two machines;
+- CI.
+
+The comparison rests on documentation only.
+
 ## FR-REPRO-01: figure snapshots and provenance records (post-0.3.0, 17 November 2026)
 
 Development after version 0.3.0 on the Linux Mint 22.1 laptop, on branch
-`feature/repro-snapshots` from `main` at `5b5791f` (PR #31 merged); submitted as PR #32
-after the user's review. The user tested it by hand (17 November 2026) and reports it
-working.
+`feature/repro-snapshots` from `main` at `5b5791f` (PR #31 merged); committed as
+`86ba228` after the user's review, PR #32, merged at `e7ec99f` after CI passed
+(pre-commit, docs, Ubuntu full suite under Xvfb, macOS without windows). The user
+tested it by hand (17 November 2026) and reports it working.
 `ycrystal FILE … --render OUT.png --save-project FIGURE.ycrystal [--overwrite]` and the
 manifest's top-level `"save_projects": true` save, next to each image, a self-contained
 snapshot (an ordinary `.ycrystal` project) and a provenance record
@@ -166,8 +265,10 @@ deselected, none skipped (137 s; 25 new tests in `tests/test_reproducibility.py`
 in all); `tests/test_release.py` including its windowed workflow test passed after the
 CLI change; the CI doctest list (now with `provenance.py`); `scripts/docs_examples.py`
 (now also checks the guide's dry-run line); `pre-commit run --all-files` and on the
-new files; `zensical build --clean --strict` clean. **Not run:** the GUI tests (no GUI
-code changed; the windows would have taken over the desktop session), macOS, CI.
+new files; `zensical build --clean --strict` clean. Not run locally: the GUI tests (no
+GUI code changed; the windows would have taken over the desktop session) and macOS;
+both ran in the CI of PR #32 (Ubuntu with GUI tests under Xvfb; macOS without
+windows), which passed.
 
 ## FR-BATCH-01: render a series from a manifest (post-0.3.0, 17 November 2026)
 
@@ -1363,7 +1464,7 @@ Second development machine (since 16 November 2026):
 
 ## Next bounded action
 
-Open: FR-REPRO-01 (PR #32) is to be merged after CI passes; then a run on the Mac. Merged features after
+Open: FR-VALIDATION-01 (PR #33) is to be merged after CI passes; then the validation runs on the Mac. FR-REPRO-01 is merged (PR #32). Merged features after
 0.3.0 pass CI on Ubuntu and macOS. Remaining hands-on item from the macOS work: the checklist
 in [HANDOFF.md](HANDOFF.md). Still
 open from before: hands-on checks of the 0.2.0 features (Lighting Setup window, aspect

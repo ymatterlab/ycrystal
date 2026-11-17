@@ -24,6 +24,9 @@ nav = [
         { "Architecture" = "development/architecture.md" },
         { "Documentation workflow" = "development/documentation.md" },
         { "Python examples" = "development/examples.md" },
+        { "Validation and benchmarks" = "development/validation.md" },
+        { "Comparison with other programs" = "development/comparison.md" },
+        { "Independent evaluation checklist" = "development/independent-evaluation.md" },
         { "Release procedure and checklist" = "development/release.md" },
     ] },
     { "API reference" = [

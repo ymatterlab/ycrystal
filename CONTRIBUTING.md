@@ -78,6 +78,10 @@ used; the Actions job runs the same pinned hooks.
 - `scripts/m0_evidence.py` regenerates screenshots and alignment measurements.
 - `scripts/benchmark_scene.py` measures display cost for growing supercells; rerun it
   when changing the viewport, and record the hardware with the numbers.
+- `scripts/benchmark_render.py` measures POV-Ray renders through the command line, and
+  `scripts/replay_check.py` renders saved snapshots again and compares the pixels (on
+  another machine, too); see the [validation report](docs/development/validation.md).
+  Never edit their results by hand; record the command and the machine with them.
 
 ## Generated files
 

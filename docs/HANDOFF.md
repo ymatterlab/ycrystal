@@ -15,12 +15,12 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   development version `0.4.0.dev0`.
   FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
   listed as "Unreleased" in `CHANGELOG.md`.
-- **Work in progress:** FR-REPRO-01 (figure snapshots and provenance records)
-  submitted from branch `feature/repro-snapshots` as PR #32, to be merged after CI
-  passes; the user tested it by hand (17 November 2026) and reports it working.
-  FR-STYLE-CLI-01 (PR #28),
-  FR-STYLE-MAP-01 (PR #29), FR-CAMERA-01 (PR #30), and FR-BATCH-01 (PR #31, merge
-  commit `5b5791f`) are merged. Nothing else is open or authorized;
+- **Work in progress:** FR-VALIDATION-01 (validation tests, benchmark and replay-check
+  scripts, evidence report, comparison, evaluation checklist; no application change)
+  submitted from branch `feature/validation` as PR #33, to be merged after CI passes.
+  FR-STYLE-CLI-01 (PR #28), FR-STYLE-MAP-01 (PR #29), FR-CAMERA-01
+  (PR #30), FR-BATCH-01 (PR #31), and FR-REPRO-01 (PR #32, merge commit `e7ec99f`; the
+  user tested it by hand) are merged. Nothing else is open or authorized;
   see [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
@@ -40,6 +40,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-CAMERA-01 `--view`, `--camera-policy`, `--fit-margin`, `--view-height` (shared with View along) | PR #30 |
 | unreleased | FR-BATCH-01 `--batch MANIFEST --output-dir DIR` (`--dry-run`, `--overwrite`), report JSON | PR #31 |
 | unreleased | FR-REPRO-01 `--save-project FIGURE.ycrystal`, manifest `save_projects`, provenance records | PR #32 |
+| unreleased | FR-VALIDATION-01 validation tests, `scripts/benchmark_render.py`, `scripts/replay_check.py`, evidence report (no application change) | PR #33 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
@@ -60,6 +61,14 @@ Known limitations and unresolved issues:
 - FR-REPRO-01: pixel differences of snapshot replays between systems or POV-Ray builds
   are unmeasured (same machine: identical pixels, never identical PNG bytes); not run
   on macOS; snapshots only for PNG renders from the command line.
+- FR-VALIDATION-01: everything was measured on the Linux laptop only. Not run: the
+  benchmark and the validation tests on the Mac, the full benchmark set (too heavy for
+  the laptop), and replays between two machines (commands in
+  `docs/development/validation.md`). The comparison with VESTA, OVITO, and CView is
+  from their documentation only. No independent evaluation has taken place.
+- JAC submission: referees need anonymous access to the program and a web page with
+  documentation (per the journal's instructions; recheck them), but the repository
+  is private. Decide how to provide access before submitting.
 - Found during FR-REPRO-01, not changed: `save_project` (and so every project and
   snapshot) is written through `mkstemp` and ends up readable by the owner only (mode
   0600 on Linux/macOS), which matters for shared folders. The new provenance records
@@ -68,54 +77,71 @@ Known limitations and unresolved issues:
 ## Latest development session
 
 - **Date and machine:** 17 November 2026, the Linux laptop (Linux Mint 22.1, Intel
-  Core Ultra 5 135U, Python 3.12.3, POV-Ray 3.7.0.10 from apt).
-- **Branch:** `feature/repro-snapshots` from `main` at `5b5791f`, submitted as PR #32
-  after the user's review and hand test.
-- **Task:** FR-REPRO-01 only, as the user asked. Evidence: "FR-REPRO-01" in
-  PROGRESS.md. The private plan was read but not changed (its status row still says
-  "Planned").
+  Core Ultra 5 135U, 14 logical CPUs, 7.2 GiB, Python 3.12.3, POV-Ray 3.7.0.10 from
+  apt).
+- **Done first:** FR-REPRO-01 committed on `feature/repro-snapshots` (`86ba228`) after
+  the user's review and hand test, PR #32. CI passed: pre-commit, docs, Ubuntu full
+  suite, and macOS without windows. Merged at `e7ec99f`, as the user asked.
+- **Then:** FR-VALIDATION-01 on branch `feature/validation` from `e7ec99f`, submitted
+  as PR #33 after the user's review. The private plan was read but not changed.
 
-Summary of FR-REPRO-01 changes:
+Summary of FR-VALIDATION-01 changes (no file under `src/` changed):
 
-- `src/ycrystal/provenance.py` (new): `snapshot_project`, `render_snapshot`,
-  `provenance_record` (schema 1), `check_snapshot_target`, `SourceFile`,
-  `FigureRequest`, `SnapshotRender`, `SnapshotError`, helpers.
-- `app.py`: `--save-project FIGURE.ycrystal` with `--render`; `--overwrite` also for it.
-- `manifest.py`: top-level `save_projects`; report fields `project`, `provenance`;
-  dry-run lines name the snapshots.
-- Tests: `tests/test_reproducibility.py` (25; 3 with real POV-Ray).
-- Documentation: new guide `docs/guide/reproducibility.md` (in the navigation), examples
-  guide, formats page, home page, README, changelog, API reference (`cli`);
-  `scripts/docs_examples.py` checks the guide's dry-run line; CI doctests include
-  `provenance.py`.
+- `tests/test_validation.py` (new, 55 tests; 26 with real POV-Ray), checking:
+  - the scene file against the shared geometry;
+  - ray-traced atoms, periodic images, bonds, and arrows against the camera model;
+  - that fitted views are never clipped;
+  - that styles change no scientific data;
+  - shadows, soft shadows, reflection, and refraction.
+- `tests/test_validation_scripts.py` (new, 4 tests; 1 with real POV-Ray).
+  `tests/conftest.py::fake_povray` is shared now (moved from
+  `test_reproducibility.py`, with a colour setting).
+- `scripts/benchmark_render.py` and `scripts/replay_check.py` (new).
+- Documentation:
+  - new developer pages `docs/development/validation.md` (evidence, tolerances,
+    results), `comparison.md`, and `independent-evaluation.md`, all in the navigation;
+  - raw results in `docs/development/validation-results/`;
+  - fixture README (real vs synthetic), CONTRIBUTING, changelog.
 
-Tests performed on the laptop:
+Tests and runs on the laptop:
 
 | Check | Result |
 | --- | --- |
-| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` (real POV-Ray) | 643 passed, 172 GUI tests deselected, none skipped |
-| `tests/test_release.py` (includes one windowed test) after the CLI change | 51 passed |
-| CI doctest list, `scripts/docs_examples.py`, `pre-commit` (all files and the new files), `zensical build --clean --strict` | Clean |
-| Replays of snapshots compared with the originals (real POV-Ray) | Identical pixels; PNG bytes always differ (render date in the file) |
+| New and affected test files with `YCRYSTAL_REQUIRE_INTEGRATION=1` (real POV-Ray) | 84 passed, none skipped |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` | 702 passed, 172 GUI tests deselected (they still collect), none skipped |
+| `benchmark_render.py --quick --scale 0.5 --repeats 3` | 9 cases recorded (`docs/development/validation-results/`); glass is by far the costliest (65 s at 400 × 300) |
+| `replay_check.py` on the same laptop | 9 of 9 identical pixels |
+| Lint, pre-commit on the changed files, `scripts/docs_examples.py`, `zensical build --clean --strict` | Clean |
 
-Not done: GUI tests (no GUI code changed), macOS, CI; hands-on runs by a person.
+Not done: GUI tests (no GUI code changed), the full benchmark, macOS, replays between
+two machines, CI; hands-on runs by a person. A first benchmark run measured memory
+wrongly (it counted the benchmark's own process); it was discarded and the method fixed
+(see PROGRESS.md).
 
 ## Next recommended steps
 
-1. Watch the CI of PR #32 (Ubuntu full suite, macOS without windows) and merge it when
-   it passes; then run the suite on the Mac.
-2. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
+1. Watch the CI of PR #33 and merge it when it passes. The new tests add about 1 min
+   of POV-Ray renders per CI job.
+2. On the Mac, run:
+   - the validation tests;
+   - `scripts/benchmark_render.py --quick --scale 0.5 --repeats 3`;
+   - `scripts/replay_check.py` on a reference set from the other machine (copy the
+     `snapshots` folder of a benchmark run).
+
+   Record the results in `docs/development/validation-results/` and the report (see
+   `docs/development/validation.md`).
+3. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
    checks so far), for example with `tests/fixtures/BaZrO3.cif` and
    `examples/grey-studio.ycstyle` as in the examples guide; and the View along buttons
    in every order (the camera fix of PR #30).
-3. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
+4. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
    1 failure that did not reproduce (PR #30's CI and three later full runs passed); its
    name was not captured.
-4. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
+5. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
    check its size there.
 
-Later features in the private plan (FR-VALIDATION-01, FR-GALLERY-01) are **not**
-authorized by this record; each needs its own request.
+FR-GALLERY-01 (in the private plan) is **not** authorized by this record; it needs its
+own request.
 
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
@@ -160,7 +186,8 @@ user's report for PR #22.
 | Element mapping for styles (FR-STYLE-MAP-01) | Verified by CI (PR #29, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray, scripted dialog screenshots; CI without windows) | Not tested |
 | View and framing policies (FR-CAMERA-01) | Verified by CI (PR #30, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
 | Batch manifests (FR-BATCH-01) | Verified by CI (PR #31, Ubuntu, full suite under Xvfb) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
-| Snapshots and provenance (FR-REPRO-01) | Verified 17 Nov 2026 on the Mint laptop (automated, real POV-Ray 3.7.0.10; tests without windows; the user's hand test); CI of PR #32 | Not tested | Not tested |
+| Snapshots and provenance (FR-REPRO-01) | Verified 17 Nov 2026 on the Mint laptop (automated, real POV-Ray 3.7.0.10; the user's hand test) and by CI (PR #32, full suite under Xvfb) | CI only (PR #32, tests without windows, real POV-Ray); not run on the Mac itself | Not tested |
+| Validation suite and benchmark (FR-VALIDATION-01) | Verified 17 Nov 2026 on the Mint laptop (tests with real POV-Ray; benchmark quick set at half size; replay check on the same machine); CI of PR #33 | Not tested | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
@@ -277,6 +304,16 @@ Troubleshooting:
 - Personal materials are stored in `QSettings` (`materials/personal`) with thumbnails in
   a `material-thumbnails/` folder (per machine, not in Git; locations above).
 - Preview resolution presets are widths (Small 480, Medium 800, Large 1200, Custom).
+- Validation (FR-VALIDATION-01):
+  - Images are checked by measured properties, never against stored pixels.
+  - Tolerances: sphere centre 0.5 px, disc area 8 %, fitted bounds 1.5 px, scene file
+    5e-7 Å; each is justified in `docs/development/validation.md`.
+  - Views for image checks are chosen analytically on a 10° grid.
+  - The benchmark uses the production command in new processes (median and range;
+    peak memory through a launcher process, see PROGRESS.md).
+  - The comparison with other programs rests on their documentation only, quoted with
+    links.
+  - Evaluator answers are written only by the evaluators.
 - Snapshots (FR-REPRO-01): the snapshot is an ordinary `.ycrystal` project (no new
   recipe format, no project schema change) holding the resolved scene, camera, and
   output size; the image is rendered from the saved snapshot; image, snapshot, and
