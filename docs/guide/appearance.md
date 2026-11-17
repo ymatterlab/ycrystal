@@ -381,3 +381,8 @@ left out, and a message lists them:
   with the same element at every position (for example the same structure from another
   file, or relaxed); otherwise they are left out.
 - Repetitions that would display more than 20,000 atoms ask for confirmation first.
+
+A style can also be applied without a window, for example to render many structures
+with the same look from a script: `ycrystal FILE --style STYLE.ycstyle --render OUT.png`
+(see [styles from the command line](examples.md#apply-a-style-from-the-command-line)).
+There, the display part is left out unless you ask for it.

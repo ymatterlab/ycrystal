@@ -45,6 +45,7 @@ from ycrystal.core.camera import Camera, default_camera
 from ycrystal.core.export import ExportOptions, format_label, path_for_format
 from ycrystal.core.lighting import resolve_lighting
 from ycrystal.core.scene import (
+    LARGE_DISPLAY_ATOMS,
     AtomId,
     DisplayGeometry,
     Environment,
@@ -158,7 +159,7 @@ LIGHTING_SETUP_DELAY_MS = 30
 
 
 #: Ask before displaying more atoms than this (measured; see docs/PROGRESS.md, M2).
-SOFT_LIMIT_ATOMS = 20000
+SOFT_LIMIT_ATOMS = LARGE_DISPLAY_ATOMS
 
 #: View-along directions: (label, tooltip). The named axis points toward the viewer.
 VIEW_AXES = {

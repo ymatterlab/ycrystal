@@ -6,6 +6,10 @@
     options:
       members:
         - load_input
+        - CLI_STYLE_PARTS
+        - StyleTransferError
+        - parse_style_parts
+        - apply_style_file
         - scene_for
         - export_scene
         - render_png

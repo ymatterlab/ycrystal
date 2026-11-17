@@ -17,6 +17,15 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   The PDF page has the figure's physical size and embeds the POV-Ray image losslessly:
   it is a raster image, not vector graphics. JPEG has a quality setting (default 95) and
   fills a transparent background with white. PNG and JPEG files record their resolution.
+- **Styles from the command line (FR-STYLE-CLI-01).** `--style STYLE.ycstyle` applies a
+  style to the input before `--render` or `--export-pov`, without a window:
+  `ycrystal MgB2.cif --style grey-studio.ycstyle --render MgB2.png`. By default the
+  materials, colours, and radii, the environment, and the output size are applied; the
+  display settings (repetitions, hidden atoms, bonds) only with `--style-parts`. The
+  transfer rules are those of *File ▸ Import Style…*; what is left out is printed as
+  `WARNING:` lines. The input's coordinates, vectors, and a saved project's camera are
+  kept, and `--width`/`--height` override the style's size. A style may not raise the
+  display above 20,000 atoms from the command line.
 
 ### Details
 - New application icon (a Y-shaped molecule on a dark tile on the macOS icon grid) and

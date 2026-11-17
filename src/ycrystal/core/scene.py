@@ -241,6 +241,12 @@ BACKGROUND_MODES = ("solid", "gradient", "sky", "image")
 """Background kinds: a plain colour, a vertical two-colour gradient, a sky, or an
 imported picture (see [`BackgroundImage`][ycrystal.core.background.BackgroundImage])."""
 
+LARGE_DISPLAY_ATOMS = 20000
+"""Displayed-atom count above which an expansion is large (measured; PROGRESS.md, M2).
+
+The window asks before showing more atoms than this; a style applied from the command
+line may not raise the count above it (see [`ycrystal.batch`][ycrystal.batch])."""
+
 
 @dataclass(frozen=True)
 class Environment:

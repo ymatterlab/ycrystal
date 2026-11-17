@@ -5,6 +5,12 @@ as saved (camera of the output image, output size, materials, environment); a st
 file gets the default display settings and the default view. No Qt or VTK code is
 imported, so these functions work without a display.
 
+With ``--style`` (FR-STYLE-CLI-01), [`apply_style_file`][ycrystal.batch.apply_style_file]
+first applies a ``.ycstyle`` file with the transfer rules of
+[`apply_style`][ycrystal.io.style.apply_style], as *File ▸ Import Style…* does in the
+window. The command line applies the parts in
+[`CLI_STYLE_PARTS`][ycrystal.batch.CLI_STYLE_PARTS] unless told otherwise.
+
 Examples
 --------
 >>> import tempfile
@@ -15,20 +21,181 @@ Examples
 ...     pov, ini = export_scene(project, Path(tmp) / "SrTiO3.pov", width=320, height=240)
 ...     ("Width=320" in ini.read_text(), pov.name)
 (True, 'SrTiO3.pov')
+
+A style designed for SrTiO3 applied to MgB2: the environment and output size transfer,
+the Ti and O overrides do not (MgB2 has neither), and a note says so.
+
+>>> from ycrystal.batch import apply_style_file
+>>> mgb2 = load_input("tests/fixtures/MgB2.cif")
+>>> styled, notes = apply_style_file(mgb2, "examples/grey-studio.ycstyle")
+>>> styled.environment.preset, (styled.output.width, styled.output.height)
+('studio_grey', (800, 600))
+>>> styled.scene.repetitions  # display settings are not applied by default
+(1, 1, 1)
+>>> print(notes[0])
+Element overrides for O, Ti were not applied: the structure has no O, Ti.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import replace
 from pathlib import Path
 
+from ycrystal.core import aspect
 from ycrystal.core.camera import Camera, default_camera
-from ycrystal.core.scene import DisplayGeometry, build_geometry
+from ycrystal.core.scene import (
+    LARGE_DISPLAY_ATOMS,
+    DisplayGeometry,
+    build_geometry,
+    count_displayed_atoms,
+)
 from ycrystal.io.project import PROJECT_SUFFIX, Project, load_project
 from ycrystal.io.readers import read_structure
+from ycrystal.io.style import STYLE_PARTS, Style, apply_style, load_style
 from ycrystal.render.jobs import RenderResult, copy_result, prepare_job, run_job
 from ycrystal.render.pov_writer import RenderSettings, write_scene_files
 from ycrystal.render.povray import find_povray, povray_version
+
+CLI_STYLE_PARTS = ("appearance", "environment", "output")
+"""Style parts that ``ycrystal --style`` applies when ``--style-parts`` is not given.
+
+``display`` (repetitions, cell edges, bonds, atom size, hidden atoms) is left out: the
+repetitions and hidden atoms of the style's own structure rarely suit another one. Ask
+for it with ``--style-parts appearance,display,environment,output``. The window's
+*File ▸ Import Style…* still offers all four parts.
+"""
+
+
+class StyleTransferError(ValueError):
+    """A style cannot be applied as requested; ``str(error)`` is a message for the user."""
+
+
+def parse_style_parts(text: str) -> tuple[str, ...]:
+    """Parse a comma-separated list of style parts, as given to ``--style-parts``.
+
+    Spaces around names are ignored, and a repeated name counts once; the result is in
+    the order of [`STYLE_PARTS`][ycrystal.io.style.STYLE_PARTS].
+
+    >>> parse_style_parts("environment, appearance")
+    ('appearance', 'environment')
+
+    Raises
+    ------
+    ValueError
+        If the list is empty, has an empty entry, or names an unknown part.
+    """
+    names = [name.strip() for name in text.split(",")]
+    if not text.strip() or any(not name for name in names):
+        raise ValueError(
+            "expected a comma-separated list of style parts, for example "
+            f"'appearance,environment'; choose from {', '.join(STYLE_PARTS)}"
+        )
+    unknown = sorted(set(names) - set(STYLE_PARTS))
+    if unknown:
+        raise ValueError(
+            f"unknown style part {', '.join(unknown)}; choose from {', '.join(STYLE_PARTS)}"
+        )
+    return tuple(part for part in STYLE_PARTS if part in names)
+
+
+def apply_style_file(
+    project: Project,
+    style: str | Path | Style,
+    parts: Iterable[str] = CLI_STYLE_PARTS,
+    max_atoms: int = LARGE_DISPLAY_ATOMS,
+) -> tuple[Project, tuple[str, ...]]:
+    """Return a new project with a style applied, and notes on what was left out.
+
+    Parameters
+    ----------
+    project
+        Target project (a saved project or a structure read by
+        [`load_input`][ycrystal.batch.load_input]). It is not modified.
+    style
+        Style file (JSON or a ZIP package with a background picture), or a loaded
+        [`Style`][ycrystal.io.style.Style]. Loading registers the package's picture and
+        custom material definitions for this session.
+    parts
+        Parts to apply, a subset of [`STYLE_PARTS`][ycrystal.io.style.STYLE_PARTS];
+        default [`CLI_STYLE_PARTS`][ycrystal.batch.CLI_STYLE_PARTS].
+    max_atoms
+        Limit on displayed atoms when the style's display settings raise the count.
+
+    Returns
+    -------
+    tuple
+        ``(project, notes)``: a new project sharing the structure, with the settings of
+        [`apply_style`][ycrystal.io.style.apply_style], and one sentence per part that
+        was not applied or deserves attention (for warnings, not errors).
+
+    Raises
+    ------
+    ycrystal.io.style.StyleError
+        If the style file cannot be read.
+    StyleTransferError
+        If `parts` is empty or names an unknown part, or if the style's display
+        settings would raise the number of displayed atoms above `max_atoms`.
+
+    Notes
+    -----
+    The structure, its vectors (components and attachments), and the project's saved
+    camera are kept. A structure without a camera gets the default view fitted to the
+    styled geometry when it is drawn (see [`scene_for`][ycrystal.batch.scene_for]). A
+    style's repetitions are not applied if they would display more than `max_atoms`
+    atoms *and* more atoms than the project already shows; a project saved with many
+    atoms is drawn as before.
+    """
+    parts = tuple(parts)
+    if not parts:
+        raise StyleTransferError("No style parts were chosen.")
+    unknown = sorted(set(parts) - set(STYLE_PARTS))
+    if unknown:
+        raise StyleTransferError(f"Unknown style parts: {', '.join(unknown)}.")
+    if not isinstance(style, Style):
+        style = load_style(style)
+    structure = project.structure
+    output = project.output
+    result = apply_style(
+        style,
+        structure,
+        project.scene,
+        project.environment,
+        (output.width, output.height),
+        parts,
+    )
+    notes = list(result.notes)
+    scene = result.scene
+    before = count_displayed_atoms(structure, project.scene)
+    count = count_displayed_atoms(structure, scene)
+    if count > max_atoms and count > before:
+        cells = " × ".join(map(str, scene.repetitions))
+        raise StyleTransferError(
+            f"The style's display settings ({cells} cells) would show {count:,} atoms of "
+            f"{structure.composition()}, more than the limit of {max_atoms:,} for styles "
+            "applied without a window. Leave out the display part (--style-parts), or "
+            "apply the style in the window and save a project."
+        )
+    if project.camera is not None and scene.repetitions != project.scene.repetitions:
+        notes.append(
+            "The project's saved camera was kept; the style's repetitions "
+            f"({' × '.join(map(str, scene.repetitions))}) may extend beyond the frame."
+        )
+    width, height = result.output_size
+    if (width, height) != (output.width, output.height):
+        ratio = output.aspect_ratio
+        if ratio is not None and not aspect.matches_ratio((width, height), ratio):
+            ratio = None  # the lock follows the new shape, as in the window
+        output = replace(output, width=width, height=height, aspect_ratio=ratio)
+    output = replace(output, transparent_background=result.environment.transparent)
+    styled = Project(
+        structure=structure,
+        scene=scene,
+        environment=result.environment,
+        camera=project.camera,
+        output=output,
+    )
+    return styled, tuple(notes)
 
 
 def load_input(path: str | Path, fmt: str | None = None) -> Project:

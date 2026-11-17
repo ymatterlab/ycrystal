@@ -19,7 +19,8 @@ are available, as are an output frame, a POV-Ray preview, cancellable renders, a
 galleries of 30 materials and 12 environments with POV-Ray thumbnails, per-element and
 per-atom materials, floors, skies, and lighting controls. Drag the a/b/c handles to add
 cells, rotate freely or about a lattice/Cartesian axis, and reuse a figure's style with
-another structure; every figure change is undoable.
+another structure, in the window or from the command line; every figure change is
+undoable.
 Python interfaces are evolving developer functionality, without a stable API guarantee.
 
 ## Install and run
@@ -54,6 +55,7 @@ python3.12 -m venv .venv
 ```bash
 .venv/bin/ycrystal --install-desktop                                    # menu launcher (Linux)
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png  # no window
+.venv/bin/ycrystal tests/fixtures/MgB2.cif --style examples/grey-studio.ycstyle --render MgB2.png
 ```
 
 Latest release 0.3.0; `main` is the development version 0.4.0.dev0. See the [changelog](CHANGELOG.md), the

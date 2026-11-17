@@ -8,6 +8,7 @@
         - SceneSettings
         - Environment
         - BACKGROUND_MODES
+        - LARGE_DISPLAY_ATOMS
         - element_color
         - count_displayed_atoms
         - cell_edge_segments
