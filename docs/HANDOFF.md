@@ -15,8 +15,10 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   development version `0.4.0.dev0`.
   FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
   listed as "Unreleased" in `CHANGELOG.md`.
-- **Work in progress:** none. No feature is open or authorized; see
-  [Next recommended steps](#next-recommended-steps).
+- **Work in progress:** FR-STYLE-CLI-01 (styles from the command line) is implemented
+  and tested on the Mac, committed on branch `feature/style-cli` (pushed; no pull
+  request yet). No other feature is open or authorized;
+  see [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
 | --- | --- | --- |
@@ -30,6 +32,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | 0.3.0 | Maintenance: macOS (Apple silicon) support, Ubuntu + macOS CI | PR #22, tag `v0.3.0` |
 | unreleased | FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi | PR #23 |
 | unreleased | Maintenance: new application icon and logo, logo-rendering script; Linux launcher refreshes the icon cache | PRs #25, #26 |
+| unreleased | FR-STYLE-CLI-01 `--style`/`--style-parts` apply a `.ycstyle` before `--render`/`--export-pov` | Branch `feature/style-cli` (not merged) |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01 and FR-EXPORT-01
@@ -51,43 +54,50 @@ Known limitations and unresolved issues:
 ## Latest development session
 
 - **Date and machine:** 17 November 2026, Mac mini (macOS 15.8, Apple silicon).
-- **Branch:** `docs/release-0.3.0-housekeeping`, created from `main` at `98acb9c`.
-- **Task:** release housekeeping for the existing tag `v0.3.0`. No code behaviour
-  changed apart from the version number.
+- **Branch:** `feature/style-cli`, created from `main` at `410d87e`.
+- **Commits:** `b8801ac` and a follow-up correcting this record; pushed, no pull
+  request or merge yet.
+- **Task:** FR-STYLE-CLI-01 only — apply `.ycstyle` files from the command line.
+  Evidence: "FR-STYLE-CLI-01" in PROGRESS.md.
 
-Changes:
+Summary of changes:
 
-- `__version__` 0.2.0 → `0.4.0.dev0`, the development version after the 0.3.0 tag
-  (`ycrystal --version` prints `ycrystal 0.4.0.dev0`).
-- `CHANGELOG.md`: section 0.3.0 (the content of the tag) and an "Unreleased" section
-  (FR-EXPORT-01, new icon and logo, Linux icon-cache refresh).
-- `docs/development/release.md`: checklist for 0.3.0 recording that the tag came before
-  the version bump and that the release checklist was not run; CI of `6ed6b03` (all
-  four jobs) passed.
-- `docs/guide/troubleshooting.md`: "Current limitations" brought up to date
-  (custom materials and background pictures exist; PDF is raster; CLI writes PNG only;
-  vectors are manual; measurements are not saved).
-- `docs/guide/support.md`, `docs/FORMATS.md`: project schema 7 and ZIP packages
-  (previously "schema 5"); macOS CI runs on every pull request; status line for 0.3.0.
-- README and install guide: latest release 0.3.0, development version 0.4.0.dev0. This file: status table and next steps.
+- `batch.py`: `CLI_STYLE_PARTS`, `StyleTransferError`, `parse_style_parts`,
+  `apply_style_file` (load the style, call `apply_style`, return a new `Project` and the
+  notes; large-display check). Rendering and export are unchanged.
+- `app.py`: `--style STYLE.ycstyle` and `--style-parts LIST` in the "without a window"
+  group; notes as `WARNING:` lines; `--style` without `--render`/`--export-pov` and
+  `--style-parts` without `--style` are usage errors.
+- `core/scene.py`: `LARGE_DISPLAY_ATOMS = 20000`; `gui/main_window.py` uses it
+  (`SOFT_LIMIT_ATOMS` stays as an alias).
+- Tests: 15 new in `tests/test_style.py`, 14 new in `tests/test_release.py` (one with
+  real POV-Ray, one in a subprocess without `DISPLAY`).
+- Documentation: examples guide (new section "Apply a style from the command line",
+  example table), appearance guide (styles), README and documentation home (command
+  example), API reference (`batch`, `scene`), changelog ("Unreleased"), PROGRESS.md.
+  `scripts/docs_examples.py` (run in CI) now runs the documented MgB2 `--style` command
+  with `--export-pov` and checks its warning, size, and studio.
 
 Tests performed on the Mac:
 
 | Check | Result |
 | --- | --- |
-| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` | 401 passed |
-| `pre-commit run --all-files`; `zensical build --clean --strict` | Clean |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (real windows, Homebrew POV-Ray 3.7.0.10) | 595 passed, none skipped |
+| `pytest -m "not gui"` (what the macOS CI job runs) | 430 passed |
+| Doctests (`core/scene.py`, `io/style.py`, `batch.py`), `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Clean |
+| The documented commands (MgB2 with the grey studio, with all parts, the vector example) rendered and inspected | As described in the guide |
 
-The GUI tests were not rerun: the change affects no window code.
-
-The previous session (FR-EXPORT-01, PR #23) is recorded under "FR-EXPORT-01" in
-PROGRESS.md.
+Not done: Linux (CI will run it on a push); hands-on use by a person.
 
 ## Next recommended steps
 
-No feature is in progress. Optional follow-up checks (no new work):
+1. Open a pull request for `feature/style-cli` when the user asks; CI then runs the new
+   tests on Ubuntu (not yet run on Linux). Merge after CI passes, when the user asks.
+2. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
+   check its size there.
 
-1. Place an exported PDF in a LaTeX or Word document and check its size there.
+The next features in the private plan (FR-STYLE-MAP-01, FR-CAMERA-01, FR-BATCH-01, …)
+are **not** authorized by this record; each needs its own request.
 
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
@@ -128,6 +138,7 @@ user's report for PR #22.
 | Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified (PR #22, user report) | Verified 16 Nov 2026 | Not tested |
 | GUI tests (real windows, OpenGL) | Verified (PR #22, user report; CI under Xvfb) | Verified 16 Nov 2026 (non-Retina display) | Not tested |
 | PNG/PDF/JPEG export (FR-EXPORT-01) | Verified by CI (PR #23, Ubuntu, full suite) | Verified 16 Nov 2026 (automated, real POV-Ray; CI without windows); the user reports it working | Not tested |
+| Styles from the command line (FR-STYLE-CLI-01) | Not tested by hand; CI (Ubuntu) runs it on a pull request | Verified 17 Nov 2026 (automated, real POV-Ray) | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
@@ -219,7 +230,7 @@ Troubleshooting:
 | Item | Status | What to do |
 | --- | --- | --- |
 | `IMPLEMENTATION_PLAN.md` | Private, gitignored | Copy manually (USB drive or private storage) to the repository root; keep it untracked |
-| `IMPLEMENTATION_PLAN.md.org` | Untracked, **not** gitignored | Copy manually if wanted; never `git add -A` without checking |
+| Other private planning files at the root (older plan copies, the owner's notes) | Untracked; excluded in this checkout's `.git/info/exclude`, not in `.gitignore` | Copy manually if wanted, and add them to `.git/info/exclude` in the new checkout; never `git add -A` without checking |
 | `.venv/`, `.venv-docs/` | Gitignored | Recreate on each machine (never copy between systems) |
 | `artifacts/` | Gitignored | Local screenshots and renders; not needed |
 | `build/`, `dist/`, `.cache/`, `site/` | Gitignored | Generated; recreate if needed |
@@ -244,6 +255,11 @@ Troubleshooting:
 - Personal materials are stored in `QSettings` (`materials/personal`) with thumbnails in
   a `material-thumbnails/` folder (per machine, not in Git; locations above).
 - Preview resolution presets are widths (Small 480, Medium 800, Large 1200, Custom).
+- Styles from the command line (FR-STYLE-CLI-01): default parts
+  `appearance,environment,output` (`ycrystal.batch.CLI_STYLE_PARTS`), `display` on
+  request; the GUI's Import Style dialog is unchanged. A saved project keeps its camera.
+  A style may not raise the display above 20,000 atoms (`LARGE_DISPLAY_ATOMS`) from
+  the command line; there is no override. Notes are `WARNING:` lines on stderr.
 - Export (FR-EXPORT-01): one POV-Ray render per export at the export pixel size; pixels
   and dpi are the source of truth (mm derived); no resampling; JPEG transparency →
   white; PDF = raster image on a page of the physical size, never called vector; the

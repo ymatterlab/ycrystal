@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 16 November 2026 (FR-EXPORT-01, PDF and JPEG export; before that macOS support, see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 17 November 2026 (FR-STYLE-CLI-01, styles from the command line; branch `feature/style-cli`, not merged). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; branch `feature/style-cli`, not merged). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,58 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## FR-STYLE-CLI-01: styles from the command line (post-0.3.0, 17 November 2026)
+
+Development after version 0.3.0, on branch `feature/style-cli` from `main` at `410d87e`
+(0.4.0.dev0); commit `b8801ac`, not merged.
+`ycrystal FILE --style STYLE.ycstyle [--style-parts LIST] --render OUT.png | --export-pov
+OUT.pov` applies a style without a window. `batch.apply_style_file` loads the style
+with `load_style` and calls the existing `apply_style` on the input from `load_input`;
+the result is a new `Project` that `scene_for`, `export_scene`, and `render_png` draw
+as before. No second style parser, scene builder, or renderer; no new dependency; no
+project or style schema change.
+
+Decisions: the command line's default parts are `appearance,environment,output`
+(`CLI_STYLE_PARTS`); `display` only on request, because a style's repetitions and
+hidden atoms belong to its own structure. The GUI's Import Style dialog is unchanged
+(all four parts offered). The saved camera of a project is kept (a warning when
+`display` changes its repetitions); a structure without a camera gets the default view
+fitted to the styled geometry. A style may not raise the displayed-atom count above
+20,000 (`LARGE_DISPLAY_ATOMS`, now in `core/scene.py` and shared with the window's
+confirmation, previously `SOFT_LIMIT_ATOMS = 20000` in `gui/main_window.py`, which
+remains as an alias) when that is more than the input already shows; the window asks
+instead, and there is no command-line override. Style notes go to standard error as
+`WARNING:` lines; errors keep `ERROR:` and status 1; usage errors status 2. `--render`
+stays PNG-only.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Same structure: every requested part, no notes | Pass | `test_same_structure_receives_every_requested_part` |
+| Different composition (SrTiO3 style → MgB2): default parts leave repetitions, bonds, and hidden atoms; notes for absent elements and per-atom overrides; input project not modified; structure shared, not copied | Pass | `test_cli_default_parts_leave_display_settings_alone`; doctest in `ycrystal.batch` |
+| Saved project target (`vectors-synthetic-afm.ycrystal`): camera and vectors kept, arrow appearance transferred, coordinates unchanged, file bytes unchanged, camera warning when repetitions change | Pass | `test_saved_project_keeps_camera_vectors_and_structure`, `test_style_on_a_saved_project_keeps_its_camera_and_vectors` (identical `location`/`look_at` and arrow lines in the exported scene) |
+| ZIP style with a background picture and a custom material, original picture deleted and registries cleared: applied, picture staged next to the exported scene, custom declaration written; paths with spaces and non-ASCII | Pass | `test_packaged_style_with_picture_and_custom_material` |
+| Parts: parsing, order, duplicates; empty, empty entry, unknown, wrong case refused; `--style-parts` without `--style`; `--style` without an output operation is a usage error (no window) | Pass | `test_style_parts_are_parsed`, `test_bad_style_parts_are_refused`, `test_style_usage_errors` |
+| Sizes: style size by default; `--width` and `--height` override each on its own; without `output` the input's size stays | Pass | `test_command_line_sizes_override_the_style` (5 cases) |
+| Large display (30 × 30 × 30 SrTiO3 with `display`) refused before writing; without `display` applied; a project already that large draws as saved | Pass | `test_large_display_from_a_style_is_refused`, `test_style_errors_write_nothing` |
+| Missing and damaged style, large display, missing POV-Ray: status 1, `ERROR:`, output folder stays empty; inputs (style and structure) byte-identical afterwards; without `--style` the output is as before | Pass | `test_style_errors_write_nothing`, `test_style_from_command_line` |
+| No window toolkit: the `--style --export-pov` path, run without `DISPLAY`, loads no `PySide6`, `vtk`, or `pyvista` module | Pass | `test_style_command_needs_no_window_toolkit` (subprocess) |
+| Real POV-Ray 3.7 render with a style: 200 × 150 PNG, differs from the unstyled render, warnings printed, no stray files | Pass | `test_render_with_style_from_command_line` |
+
+Visual check (Claude, on the Mac): `ycrystal tests/fixtures/MgB2.cif --style
+examples/grey-studio.ycstyle --render MgB2.png` (800 × 600 and 400 × 300) shows MgB2
+1 × 1 × 1 in the grey studio with floor shadows; with `--style-parts
+appearance,display,environment,output` 2 × 2 × 1, refitted; the vector example keeps
+its camera and arrows.
+
+Regression runs on the Mac mini (macOS 15.8, Homebrew POV-Ray 3.7.0.10):
+`YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` 595 passed, none skipped (180 s; 29 new
+tests: 15 in `tests/test_style.py`, 14 in `tests/test_release.py`);
+`pytest -m "not gui"` 430 passed; doctests of `core/scene.py`, `io/style.py`,
+`batch.py` and `scripts/docs_examples.py` (which now runs the guide's MgB2 `--style`
+command with `--export-pov` and checks its exact warning, 800 × 600 size, and studio); `pre-commit run --all-files`;
+`zensical build --clean --strict` clean. **Linux not run** (expected from CI when the
+branch is pushed); no hands-on GUI change to check.
 
 ## FR-EXPORT-01: PDF and JPEG export with publication sizes (post-0.2.0, 16 November 2026)
 

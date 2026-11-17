@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 import tempfile
 from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
 
+from ycrystal.app import main as ycrystal
 from ycrystal.core.camera import default_camera
 from ycrystal.core.samples import perovskite_srtio3
 from ycrystal.core.scene import Environment, SceneSettings, build_geometry
@@ -91,6 +94,20 @@ def main() -> None:
         assert result.environment.preset == "studio_white" and result.output_size == (640, 400)
         assert any("Ti" in note for note in result.notes)
         np.testing.assert_array_equal(imported.positions, mgb2_positions)
+
+        # Styles from the command line (examples guide): the grey studio for MgB2.
+        root = Path(__file__).resolve().parents[1]
+        args = [str(root / "tests" / "fixtures" / "MgB2.cif"), "--style"]
+        args += [str(root / "examples" / "grey-studio.ycstyle"), "--export-pov"]
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            assert ycrystal([*args, str(directory / "MgB2")]) == 0
+        assert stderr.getvalue() == (
+            "WARNING: Element overrides for O, Ti were not applied: the structure has no O, Ti.\n"
+        )
+        ini = (directory / "MgB2.ini").read_text()
+        assert "Width=800" in ini and "Height=600" in ini  # the style's output size
+        assert "// Floor:" in (directory / "MgB2.pov").read_text()  # its grey studio
     print("Documentation examples passed (no display or renderer).")
 
 

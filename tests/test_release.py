@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -52,6 +53,139 @@ def test_render_from_command_line(tmp_path, capsys, povray_executable):
     assert main([*args, "--height", "150", "--povray", povray_executable]) == 0
     assert load_rgba(out).shape == (150, 200, 4)
     assert "Rendered" in capsys.readouterr().out
+
+
+# ----- styles from the command line (FR-STYLE-CLI-01) ----------------------------------
+STYLE = ROOT / "examples" / "grey-studio.ycstyle"
+MGB2 = FIXTURES / "MgB2.cif"
+
+
+def ini_size(path: Path) -> tuple[int, int]:
+    lines = dict(line.split("=", 1) for line in path.read_text().splitlines() if "=" in line)
+    return int(lines["Width"]), int(lines["Height"])
+
+
+def test_style_from_command_line(tmp_path, capsys):
+    folder = tmp_path / "Stile ü"  # spaces and non-ASCII in every path
+    folder.mkdir()
+    style = shutil.copy(STYLE, folder / "grey studio.ycstyle")
+    source = shutil.copy(MGB2, folder / "Mg B2.cif")
+    before = (Path(style).read_bytes(), Path(source).read_bytes())
+    out = folder / "out ü"
+    out.mkdir()
+    code = main([str(source), "--style", str(style), "--export-pov", str(out / "Mg B2")])
+    assert code == 0
+    captured = capsys.readouterr()
+    assert "Exported" in captured.out
+    # What the style could not apply is a warning on stderr, not an error.
+    assert "WARNING: Element overrides for O, Ti were not applied" in captured.err
+    assert "ERROR" not in captured.err
+    assert ini_size(out / "Mg B2.ini") == (800, 600)  # the style's output size
+    pov = (out / "Mg B2.pov").read_text(encoding="utf-8")
+    assert "// Floor:" in pov  # the style's grey studio
+    assert (Path(style).read_bytes(), Path(source).read_bytes()) == before  # inputs untouched
+    # Without --style nothing changes: the structure's defaults and no warnings.
+    assert main([str(source), "--export-pov", str(out / "plain")]) == 0
+    assert ini_size(out / "plain.ini") == (1200, 800)
+    assert "WARNING" not in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "extra, size",
+    [
+        ([], (800, 600)),
+        (["--width", "320"], (320, 600)),
+        (["--height", "150"], (800, 150)),
+        (["--width", "320", "--height", "240"], (320, 240)),
+        (["--style-parts", "appearance,environment"], (1200, 800)),  # FILE's size kept
+    ],
+)
+def test_command_line_sizes_override_the_style(tmp_path, extra, size):
+    args = [str(MGB2), "--style", str(STYLE), "--export-pov", str(tmp_path / "s"), *extra]
+    assert main(args) == 0
+    assert ini_size(tmp_path / "s.ini") == size
+
+
+def test_style_on_a_saved_project_keeps_its_camera_and_vectors(tmp_path, capsys):
+    example = ROOT / "examples" / "vectors-synthetic-afm.ycrystal"
+    original = example.read_bytes()
+    assert main([str(example), "--export-pov", str(tmp_path / "plain")]) == 0
+    code = main([str(example), "--style", str(STYLE), "--export-pov", str(tmp_path / "styled")])
+    assert code == 0
+    plain = (tmp_path / "plain.pov").read_text().splitlines()
+    styled = (tmp_path / "styled.pov").read_text().splitlines()
+    camera = [line for line in plain if line.lstrip().startswith(("location", "look_at"))]
+    assert camera and camera == [
+        line for line in styled if line.lstrip().startswith(("location", "look_at"))
+    ]
+    arrows = [line for line in plain if "mu_B" in line]
+    assert arrows and arrows == [line for line in styled if "mu_B" in line]  # same vectors
+    assert "// Floor:" in "\n".join(styled) and example.read_bytes() == original
+    capsys.readouterr()
+
+
+def test_style_errors_write_nothing(tmp_path, capsys):
+    out = tmp_path / "out"
+    out.mkdir()
+    damaged = tmp_path / "damaged.ycstyle"
+    damaged.write_bytes(b"PK\x03\x04garbage")
+    for style in (tmp_path / "missing.ycstyle", damaged):
+        code = main([str(MGB2), "--style", str(style), "--export-pov", str(out / "x")])
+        assert code == 1 and "ERROR:" in capsys.readouterr().err
+    big = json.loads(STYLE.read_text())
+    big["scene"]["repetitions"] = [30, 30, 30]
+    (tmp_path / "big.ycstyle").write_text(json.dumps(big))
+    args = [str(FIXTURES / "SrTiO3.cif"), "--style", str(tmp_path / "big.ycstyle")]
+    code = main([*args, "--style-parts", "display", "--export-pov", str(out / "x")])
+    assert code == 1 and "limit of 20,000" in capsys.readouterr().err
+    code = main([*args, "--render", str(out / "x.png"), "--povray", str(tmp_path / "none")])
+    assert code == 1 and "POV-Ray was not found" in capsys.readouterr().err
+    assert list(out.iterdir()) == []  # no scene, no image, no partial file
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        [str(MGB2), "--style", str(STYLE)],  # no --render/--export-pov: no window either
+        [str(MGB2), "--style-parts", "display", "--export-pov", "x.pov"],  # no --style
+        [str(MGB2), "--style", str(STYLE), "--style-parts", "", "--export-pov", "x.pov"],
+        [str(MGB2), "--style", str(STYLE), "--style-parts", "camera", "--export-pov", "x"],
+    ],
+)
+def test_style_usage_errors(args, capsys):
+    with pytest.raises(SystemExit) as exit_info:
+        main(args)
+    assert exit_info.value.code == 2 and "--style" in capsys.readouterr().err
+
+
+def test_style_command_needs_no_window_toolkit(tmp_path):
+    script = (
+        "import sys; from ycrystal.app import main; "
+        f"code = main([{str(MGB2)!r}, '--style', {str(STYLE)!r}, "
+        f"'--export-pov', {str(tmp_path / 'x')!r}]); "
+        "loaded = sorted(m for m in sys.modules "
+        "if m.split('.')[0] in ('PySide6', 'vtk', 'vtkmodules', 'pyvista', 'pyvistaqt')); "
+        "print(code, loaded)"
+    )
+    env = {k: v for k, v in os.environ.items() if k not in ("DISPLAY", "WAYLAND_DISPLAY")}
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, env=env, timeout=120
+    )
+    assert result.stdout.split("\n")[-2] == "0 []", result.stdout + result.stderr
+
+
+@pytest.mark.povray
+def test_render_with_style_from_command_line(tmp_path, capsys, povray_executable):
+    size = ["--width", "200", "--height", "150", "--povray", povray_executable]
+    assert main([str(MGB2), "--render", str(tmp_path / "plain.png"), *size]) == 0
+    styled = tmp_path / "Mg B2 ü.png"
+    assert main([str(MGB2), "--style", str(STYLE), "--render", str(styled), *size]) == 0
+    captured = capsys.readouterr()
+    assert "Rendered" in captured.out and "WARNING:" in captured.err
+    image, plain = load_rgba(styled), load_rgba(tmp_path / "plain.png")
+    assert image.shape == plain.shape == (150, 200, 4)
+    assert not np.array_equal(image, plain)  # the grey studio, not the default look
+    assert [p.name for p in tmp_path.iterdir() if p.suffix != ".png"] == []
 
 
 # ----- desktop launcher --------------------------------------------------------------------

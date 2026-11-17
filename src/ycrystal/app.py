@@ -54,8 +54,24 @@ def _parser() -> argparse.ArgumentParser:
         metavar="OUT.pov",
         help="write OUT.pov and OUT.ini for FILE and exit (POV-Ray not needed)",
     )
-    batch.add_argument("--width", type=int, help="output width in pixels (default: FILE's)")
-    batch.add_argument("--height", type=int, help="output height in pixels (default: FILE's)")
+    batch.add_argument(
+        "--width", type=int, help="output width in pixels (default: FILE's, or the style's)"
+    )
+    batch.add_argument(
+        "--height", type=int, help="output height in pixels (default: FILE's, or the style's)"
+    )
+    batch.add_argument(
+        "--style",
+        metavar="STYLE.ycstyle",
+        help="apply this style to FILE before --render or --export-pov (FILE is not changed)",
+    )
+    batch.add_argument(
+        "--style-parts",
+        metavar="LIST",
+        type=_style_parts,
+        help="comma-separated parts of the style to apply: appearance, display, environment, "
+        "output (default: appearance,environment,output)",
+    )
     desktop = parser.add_argument_group("desktop integration (Linux, current user)")
     desktop.add_argument(
         "--install-desktop",
@@ -70,13 +86,31 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _style_parts(text: str) -> tuple[str, ...]:
+    """Parse ``--style-parts`` (an argparse type: errors become usage errors)."""
+    from ycrystal.batch import parse_style_parts
+
+    try:
+        return parse_style_parts(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+
+
 def _batch(args: argparse.Namespace) -> int:
     """Run --render / --export-pov; print a result line and return the exit status."""
     import time
 
-    from ycrystal.batch import export_scene, load_input, render_png
+    from ycrystal.batch import (
+        CLI_STYLE_PARTS,
+        StyleTransferError,
+        apply_style_file,
+        export_scene,
+        load_input,
+        render_png,
+    )
     from ycrystal.io.project import ProjectError
     from ycrystal.io.readers import StructureImportError
+    from ycrystal.io.style import StyleError
     from ycrystal.render.povray import PovrayNotFoundError
 
     for value, name in ((args.width, "--width"), (args.height, "--height")):
@@ -88,6 +122,17 @@ def _batch(args: argparse.Namespace) -> int:
     except (ProjectError, StructureImportError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
+    if args.style:
+        # Everything is checked before a file is written.
+        try:
+            project, notes = apply_style_file(
+                project, args.style, args.style_parts or CLI_STYLE_PARTS
+            )
+        except (StyleError, StyleTransferError) as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        for note in notes:
+            print(f"WARNING: {note}", file=sys.stderr)
     if args.export_pov:
         try:
             pov, ini = export_scene(project, args.export_pov, args.width, args.height)
@@ -137,6 +182,13 @@ def main(argv: list[str] | None = None) -> int:
     they draw ``FILE`` (a project exactly as saved, or a structure with the default
     settings and view) through [`ycrystal.batch`][ycrystal.batch], print one line, and
     return 0, or 1 with an ``ERROR:`` message on standard error (2 for invalid sizes).
+    ``--style STYLE.ycstyle`` first applies a style to ``FILE`` with
+    [`apply_style_file`][ycrystal.batch.apply_style_file]; ``--style-parts`` chooses the
+    parts (default [`CLI_STYLE_PARTS`][ycrystal.batch.CLI_STYLE_PARTS]). What the style
+    could not apply is printed as ``WARNING:`` lines on standard error; an unreadable
+    style, or display settings that would show too many atoms, is an error and nothing
+    is written. ``--width`` and ``--height`` override the style's output size.
+    ``--style`` without ``--render`` or ``--export-pov`` is a usage error (status 2).
     ``--install-desktop`` / ``--uninstall-desktop`` manage the menu launcher on Linux
     (see [`ycrystal.desktop`][ycrystal.desktop]); on macOS and Windows they print an
     error and return 1 without writing anything.
@@ -170,10 +222,17 @@ def main(argv: list[str] | None = None) -> int:
             print("\n".join(f"Removed {path}" for path in removed) or "Nothing to remove.")
         return 0
 
+    if args.style_parts is not None and not args.style:
+        parser.error("--style-parts needs --style")
     if args.render or args.export_pov:
         if not args.file:
             parser.error("--render and --export-pov need a FILE")
         return _batch(args)
+    if args.style:
+        parser.error(
+            "--style applies a style without a window and needs --render OUT.png or "
+            "--export-pov OUT.pov; to apply a style in the window, use File > Import Style…"
+        )
 
     if args.check_renderer:
         from ycrystal.render.selftest import run_self_test
