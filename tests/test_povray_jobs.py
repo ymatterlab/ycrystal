@@ -1,8 +1,9 @@
 import os
-import stat
+import sys
 
 import pytest
 
+from conftest import python_program
 from ycrystal.core.camera import Camera
 from ycrystal.core.scene import Environment
 from ycrystal.render.jobs import copy_result, prepare_job, run_job
@@ -16,10 +17,9 @@ from ycrystal.render.povray import (
 from ycrystal.render.selftest import run_self_test
 
 
-def make_script(path, body: str):
-    path.write_text("#!/bin/sh\n" + body + "\n")
-    path.chmod(path.stat().st_mode | stat.S_IXUSR)
-    return path
+def make_script(path, code: str):
+    """A stand-in POV-Ray running Python ``code`` (``import sys`` is done)."""
+    return python_program(path, "import sys\n" + code)
 
 
 @pytest.fixture
@@ -28,6 +28,8 @@ def no_povray(monkeypatch, tmp_path):
     empty.mkdir()
     monkeypatch.setenv("PATH", str(empty))
     monkeypatch.delenv(POVRAY_ENV, raising=False)
+    # An installed POV-Ray for Windows would otherwise be found outside PATH.
+    monkeypatch.setattr("ycrystal.render.povray.installed_windows_engine", lambda: None)
 
 
 def test_missing_renderer_on_path_gives_guidance(no_povray):
@@ -48,17 +50,17 @@ def test_missing_configured_and_env_paths(no_povray, monkeypatch, tmp_path):
 
 
 def test_precedence_configured_env_path(monkeypatch, tmp_path):
-    configured = make_script(tmp_path / "configured", "exit 0")
-    env = make_script(tmp_path / "env", "exit 0")
+    configured = make_script(tmp_path / "configured", "sys.exit(0)")
+    env = make_script(tmp_path / "env", "sys.exit(0)")
     on_path_dir = tmp_path / "bin"
     on_path_dir.mkdir()
-    on_path = make_script(on_path_dir / "povray", "exit 0")
+    on_path = make_script(on_path_dir / "povray", "sys.exit(0)")
     monkeypatch.setenv("PATH", str(on_path_dir))
     monkeypatch.setenv(POVRAY_ENV, str(env))
     assert find_povray(configured) == str(configured)
     assert find_povray() == str(env)
     monkeypatch.delenv(POVRAY_ENV)
-    assert find_povray() == str(on_path)
+    assert os.path.samefile(find_povray(), on_path)  # Windows may report another case
 
 
 def test_self_test_reports_missing_renderer(no_povray):
@@ -99,7 +101,8 @@ def test_job_directory_uses_ascii_names(tmp_path):
 def test_failed_render_is_explained(tmp_path):
     fake = make_script(
         tmp_path / "povray",
-        "echo 'Parse Error: Viewing angle has to be smaller than 180' >&2; exit 1",
+        "print('Parse Error: Viewing angle has to be smaller than 180', file=sys.stderr)\n"
+        "sys.exit(1)",
     )
     result = run_job(_job(tmp_path), str(fake))
     assert not result.ok and result.returncode == 1
@@ -107,17 +110,20 @@ def test_failed_render_is_explained(tmp_path):
 
 
 def test_success_without_image_is_a_failure(tmp_path):
-    fake = make_script(tmp_path / "povray", "echo done; exit 0")
+    fake = make_script(tmp_path / "povray", "print('done')")
     result = run_job(_job(tmp_path), str(fake))
     assert not result.ok and "produced no image" in result.message
 
 
 def test_runs_in_job_directory(tmp_path):
-    fake = make_script(tmp_path / "povray", "pwd > cwd.txt; printf PNG > scene.png; exit 0")
+    fake = make_script(
+        tmp_path / "povray",
+        "import os\nopen('cwd.txt', 'w').write(os.getcwd())\nopen('scene.png', 'w').write('PNG')",
+    )
     job = _job(tmp_path)
     result = run_job(job, str(fake))
     assert result.ok and result.image_path == job.image_path
-    assert (job.directory / "cwd.txt").read_text().strip() == str(job.directory)
+    assert os.path.samefile((job.directory / "cwd.txt").read_text().strip(), job.directory)
 
 
 def test_copy_result_to_unusual_destination(tmp_path):
@@ -129,6 +135,7 @@ def test_copy_result_to_unusual_destination(tmp_path):
     assert not destination.with_name(destination.name + ".part").exists()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows has no execute permission bit")
 def test_uncreatable_executable_is_reported(tmp_path):
     not_exec = tmp_path / "povray"
     not_exec.write_text("plain file")

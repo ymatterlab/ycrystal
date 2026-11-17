@@ -51,7 +51,8 @@ def relative_source(structure, path: Path):
 def write_json(path: Path, data: dict) -> None:
     data["saved_at"] = STAMP
     data["generator"] = "Ycrystal (scripts/make_examples.py)"
-    path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    text = json.dumps(data, indent=1, ensure_ascii=False) + "\n"
+    path.write_text(text, encoding="utf-8", newline="\n")  # the same bytes on every system
     print(f"wrote {path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}")
 
 

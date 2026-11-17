@@ -19,6 +19,25 @@ from ycrystal.core.scene import DisplayGeometry  # noqa: E402
 REQUIRE_INTEGRATION = os.environ.get("YCRYSTAL_REQUIRE_INTEGRATION") == "1"
 
 
+def python_program(path: Path, code: str) -> str:
+    """Write a small program that runs ``code`` with this Python; return its path.
+
+    The program is ``path`` itself on Linux and macOS (a shell launcher) and
+    ``path.cmd`` on Windows (a batch launcher), so that tests can stand in for POV-Ray
+    on every system. The code receives the program's arguments in ``sys.argv``.
+    """
+    script = path.with_name(path.name + "_main.py")
+    script.write_text(textwrap.dedent(code), encoding="utf-8")
+    if sys.platform == "win32":
+        launcher = path.with_name(path.name + ".cmd")
+        launcher.write_text(f'@"{sys.executable}" "{script}" %*\n', encoding="utf-8")
+    else:
+        launcher = path
+        launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n')
+        launcher.chmod(0o755)
+    return str(launcher)
+
+
 def fake_povray(folder: Path, fail: bool = False) -> str:
     """Return a stand-in for POV-Ray that writes a plain PNG of the requested size.
 
@@ -28,30 +47,22 @@ def fake_povray(folder: Path, fail: bool = False) -> str:
     line, snapshots, and scripts that need no real ray tracing.
     """
     name = "fake_povray_fail" if fail else "fake_povray"
-    script = folder / f"{name}.py"
-    script.write_text(
-        textwrap.dedent(
-            f"""
-            import os, re, sys
-            from pathlib import Path
-            if "--version" in sys.argv:
-                print("POV-Ray 3.7.0.fake")
-                sys.exit(0)
-            if {fail!r}:
-                print("Parse Error: this renderer always fails")
-                sys.exit(1)
-            ini = Path(sys.argv[1]).read_text()
-            size = [int(re.search(k + r"=(\\d+)", ini).group(1)) for k in ("Width", "Height")]
-            color = os.environ.get("YCRYSTAL_FAKE_COLOR", "40,60,80")
-            from PIL import Image
-            Image.new("RGB", tuple(size), tuple(int(v) for v in color.split(","))).save("scene.png")
-            """
-        )
-    )
-    launcher = folder / name
-    launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n')
-    launcher.chmod(0o755)
-    return str(launcher)
+    code = f"""
+        import os, re, sys
+        from pathlib import Path
+        if "--version" in sys.argv:
+            print("POV-Ray 3.7.0.fake")
+            sys.exit(0)
+        if {fail!r}:
+            print("Parse Error: this renderer always fails")
+            sys.exit(1)
+        ini = Path(sys.argv[1]).read_text()
+        size = [int(re.search(k + r"=(\\d+)", ini).group(1)) for k in ("Width", "Height")]
+        color = os.environ.get("YCRYSTAL_FAKE_COLOR", "40,60,80")
+        from PIL import Image
+        Image.new("RGB", tuple(size), tuple(int(v) for v in color.split(","))).save("scene.png")
+        """
+    return python_program(folder / name, code)
 
 
 def display_available() -> bool:

@@ -34,7 +34,12 @@ from pathlib import Path
 from ycrystal.core.camera import Camera
 from ycrystal.core.scene import DisplayGeometry, Environment
 from ycrystal.render.pov_writer import RenderSettings, write_scene_files
-from ycrystal.render.povray import explain_failure
+from ycrystal.render.povray import (
+    background_startupinfo,
+    explain_failure,
+    read_log,
+    render_arguments,
+)
 
 JOB_BASENAME = "scene"
 """File-name stem of the scene, settings, and image files inside a job directory."""
@@ -65,16 +70,23 @@ class RenderJob:
     image_path: Path
     settings: RenderSettings
 
-    def arguments(self) -> list[str]:
+    def arguments(self, executable: str | None = None) -> list[str]:
         """Return the POV-Ray command-line arguments, without the executable.
+
+        Parameters
+        ----------
+        executable
+            The POV-Ray that will run: POV-Ray for Windows needs more arguments (see
+            [`render_arguments`][ycrystal.render.povray.render_arguments]). ``None``
+            means ``povray``.
 
         Returns
         -------
         list of str
-            ``["scene.ini"]``. The name is relative, so the process must run with
-            `directory` as its working directory.
+            ``["scene.ini"]`` for ``povray``. The names are relative, so the process
+            must run with `directory` as its working directory.
         """
-        return [self.ini_path.name]
+        return render_arguments(executable or "povray", self.ini_path.name)
 
     def cleanup(self) -> None:
         """Delete the job directory and everything in it, ignoring errors.
@@ -260,20 +272,24 @@ def run_job(job: RenderJob, executable: str, timeout: float | None = 600.0) -> R
     """
     try:
         completed = subprocess.run(
-            [executable, *job.arguments()],
+            [executable, *job.arguments(executable)],
             cwd=job.directory,
             capture_output=True,
             text=True,
             errors="replace",
             timeout=timeout,
             check=False,
+            startupinfo=background_startupinfo(executable),
         )
     except subprocess.TimeoutExpired as exc:
         log = (exc.stdout or "") + (exc.stderr or "") if isinstance(exc.stdout, str) else ""
+        log += read_log(job.directory)
         return RenderResult(False, None, log, None, f"POV-Ray timed out after {timeout} s.")
     except OSError as exc:
         return RenderResult(False, None, str(exc), None, f"Could not start POV-Ray: {exc}")
-    return finish_job(job, completed.returncode, completed.stdout + completed.stderr)
+    # POV-Ray for Windows prints nothing; its messages are in its log file.
+    log = completed.stdout + completed.stderr + read_log(job.directory)
+    return finish_job(job, completed.returncode, log)
 
 
 def copy_result(image: Path, destination: Path) -> Path:

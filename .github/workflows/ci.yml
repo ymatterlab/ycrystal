@@ -64,13 +64,17 @@ jobs:
         run: zensical build --clean --strict
 
   test:
-    # One job per operating system, same steps. To add a system (for example Windows),
-    # add a matrix entry and a "System packages" step for it; POV-Ray must be on PATH.
+    # One job per operating system, same steps. To add a system, add a matrix entry and
+    # a "System packages" step for it; POV-Ray must be on PATH, except POV-Ray for
+    # Windows, which Ycrystal finds in its installation folder.
     # YCRYSTAL_REQUIRE_INTEGRATION makes a missing display or renderer fail the run
     # instead of skipping the GUI and rendering tests.
     name: tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    # The Windows port is experimental (docs/development/windows-port.md): its job
+    # reports, but does not fail the run, until it passes reliably.
+    continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       fail-fast: false
       matrix:
@@ -88,6 +92,10 @@ jobs:
           - name: macOS 15 arm64, Python 3.12, POV-Ray 3.7, no GUI tests
             os: macos-15
             pytest: python -m pytest -q -rs -m "not gui"
+          - name: Windows Server 2022, Python 3.12, POV-Ray for Windows 3.7, no GUI tests, experimental
+            os: windows-2022
+            pytest: python -m pytest -q -rs -m "not gui"
+            experimental: true
     defaults:
       run:
         shell: bash
@@ -112,6 +120,22 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: "1"
         run: brew install povray
 
+      - name: System packages (Windows; POV-Ray for Windows 3.7, official installer)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # The official installer, as in the Chocolatey package pov-ray 3.7.0.20161121.
+          $url = "http://www.povray.org/redirect/www.povray.org/ftp/pub/povray/Official/povwin-3.7-agpl3-setup.exe"
+          $expected = "2B1331641B6F96113C2DBA951BE80D99EB548639480399CABB5E3A60DCE5BDC8"
+          Invoke-WebRequest -Uri $url -OutFile povwin-setup.exe
+          $hash = (Get-FileHash povwin-setup.exe -Algorithm SHA256).Hash
+          if ($hash -ne $expected) { throw "Unexpected installer checksum $hash" }
+          Start-Process -FilePath .\povwin-setup.exe -ArgumentList "/S" -Wait
+          Get-ChildItem "$env:ProgramFiles\POV-Ray" -Recurse -Depth 3 | Select-Object -ExpandProperty FullName
+          Get-ChildItem "$env:USERPROFILE\Documents\POV-Ray" -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+          Get-ItemProperty "HKCU:\Software\POV-Ray\v3.7\Windows" -ErrorAction SilentlyContinue
+          Get-ItemProperty "HKLM:\Software\POV-Ray\v3.7\Windows" -ErrorAction SilentlyContinue
+
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -123,15 +147,22 @@ jobs:
       - name: Install (integration-tested pins from constraints.txt)
         run: python -m pip install -e ".[dev]" -c constraints.txt
 
-      - name: Command line and renderer check (POV-Ray found on PATH)
+      - name: How POV-Ray for Windows behaves (diagnostics for the port)
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        continue-on-error: true
+        run: python scripts/windows_povray_probe.py
+
+      - name: Command line and renderer check (POV-Ray found)
+        timeout-minutes: 10
         run: |
           ycrystal --version
-          command -v povray
+          if [ "$RUNNER_OS" != "Windows" ]; then command -v povray; fi
           ycrystal --check-renderer
 
       - name: Display-independent documentation examples
         run: |
-          python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/colors.py src/ycrystal/core/aspect.py src/ycrystal/core/lighting.py src/ycrystal/core/measure.py src/ycrystal/core/vectors.py src/ycrystal/core/background.py src/ycrystal/presets/custom.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py src/ycrystal/io/style.py src/ycrystal/presets/__init__.py src/ycrystal/render/jobs.py src/ycrystal/render/thumbnails.py src/ycrystal/batch.py src/ycrystal/provenance.py src/ycrystal/desktop.py src/ycrystal/gui/native.py src/ycrystal/core/export.py src/ycrystal/render/formats.py
+          python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/colors.py src/ycrystal/core/aspect.py src/ycrystal/core/lighting.py src/ycrystal/core/measure.py src/ycrystal/core/vectors.py src/ycrystal/core/background.py src/ycrystal/presets/custom.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py src/ycrystal/io/style.py src/ycrystal/presets/__init__.py src/ycrystal/render/jobs.py src/ycrystal/render/povray.py src/ycrystal/render/thumbnails.py src/ycrystal/batch.py src/ycrystal/provenance.py src/ycrystal/desktop.py src/ycrystal/gui/native.py src/ycrystal/core/export.py src/ycrystal/render/formats.py
           python scripts/docs_examples.py
 
       - name: Tests

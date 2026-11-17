@@ -108,6 +108,15 @@
         - INCLUDE_FALLBACK_DIRS
         - include_directories
         - missing_includes
+        - WINDOWS_ENGINES
+        - LOG_NAME
+        - is_windows_engine
+        - windows_engine_candidates
+        - installed_windows_engine
+        - render_arguments
+        - background_startupinfo
+        - read_log
+        - windows_file_version
 
 ::: ycrystal.render.jobs
     options:

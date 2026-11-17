@@ -9,6 +9,7 @@ from typing import Any
 from PySide6.QtCore import QObject, QProcess, Signal
 
 from ycrystal.render.jobs import RenderJob, RenderResult, finish_job, parse_progress
+from ycrystal.render.povray import read_log
 
 
 class RenderProcess(QObject):
@@ -62,7 +63,7 @@ class RenderProcess(QObject):
         self._last_percent = -1
         self._process = QProcess(self)
         self._process.setProgram(executable)
-        self._process.setArguments(job.arguments())
+        self._process.setArguments(job.arguments(executable))
         self._process.setWorkingDirectory(str(job.directory))
         self._process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         self._process.readyReadStandardOutput.connect(self._read_output)
@@ -108,7 +109,7 @@ class RenderProcess(QObject):
         self._done = True
         self._read_output()
         elapsed = time.monotonic() - self._started_at
-        log = "".join(self._log)
+        log = "".join(self._log) + read_log(self.job.directory)  # POV-Ray for Windows
         if self._cancelled:
             result = RenderResult(False, None, log, None, "Render cancelled.", True, elapsed)
         else:

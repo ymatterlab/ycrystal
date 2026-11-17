@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 17 November 2026 (FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers; PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 17 November 2026 (Windows port in progress, draft PR #35). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,41 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## Windows port, in progress (17 November 2026)
+
+Requested by the user. Decisions by the user: native Ycrystal rendering with POV-Ray
+for Windows 3.7 (`pvengine64.exe`), and a pushed branch with a Windows CI job. Branch
+`feature/windows` from `main` at `5b72f92`, draft PR #35. **Not finished; nothing
+here establishes that Ycrystal works on Windows.** Full record, sources, and the
+experiments still needed: `docs/development/windows-port.md`.
+
+- **Code.**
+  - `render/povray.py` finds POV-Ray for Windows outside PATH (registry `Home`, the
+    `ProgramFiles` folders, `POV-Ray\v3.7\bin`).
+  - It starts it with `/EXIT /NR +GAscene.log scene.ini`, minimised, and reads its
+    log file.
+  - It reads its version from the file's version resource, never starting it.
+  - It finds its include folders.
+  - `render/jobs.py` and `render/process.py` use this. Linux and macOS arguments
+    are unchanged.
+- **Tests.**
+  - Fakes are cross-platform (`conftest.python_program`; `.cmd` launchers on
+    Windows), and the execute-bit test is skipped on Windows.
+  - `tests/test_windows_povray.py` (10 tests) checks the Windows contract with a
+    stand-in on any system.
+  - `.gitattributes` keeps LF in Windows checkouts, and `make_examples.py` writes
+    LF.
+- **Tools.** `scripts/windows_povray_probe.py` reports how POV-Ray for Windows
+  behaves.
+- **CI.** An experimental (`continue-on-error`) Windows Server 2022 job installs the
+  official installer (SHA-256 checked) silently, runs the probe, the renderer check,
+  and the tests without windows.
+
+| Check | Result |
+| --- | --- |
+| Linux, `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` | 718 passed, 1 skipped (Windows-only), 172 GUI deselected |
+| Windows CI (first run) | See `docs/development/windows-port.md` |
 
 ## Audit: next tests on the Mac and other computers (17 November 2026)
 
@@ -1579,7 +1614,7 @@ Second development machine (since 16 November 2026):
 
 ## Next bounded action
 
-Open: FR-GALLERY-01 (PR #34) is to be merged after CI passes; the tests of `docs/development/next-tests.md` are next. FR-VALIDATION-01 is merged (PR #33); its runs on the Mac are still to do. FR-REPRO-01 is merged (PR #32). Merged features after
+Open: the Windows port (draft PR #35, `docs/development/windows-port.md`), to be continued on a Windows computer; the tests of `docs/development/next-tests.md`. FR-GALLERY-01 is merged (PR #34). FR-VALIDATION-01 is merged (PR #33); its runs on the Mac are still to do. FR-REPRO-01 is merged (PR #32). Merged features after
 0.3.0 pass CI on Ubuntu and macOS. Remaining hands-on item from the macOS work: the checklist
 in [HANDOFF.md](HANDOFF.md). Still
 open from before: hands-on checks of the 0.2.0 features (Lighting Setup window, aspect

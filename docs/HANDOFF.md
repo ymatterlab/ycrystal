@@ -15,14 +15,14 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   development version `0.4.0.dev0`.
   FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
   listed as "Unreleased" in `CHANGELOG.md`.
-- **Work in progress:** FR-GALLERY-01 (publication gallery: `examples/publication/`,
-  `scripts/make_gallery.py`, gallery and manuscript-figure pages; no application
-  change) and the audit of the next tests on other computers
-  (`docs/development/next-tests.md`) submitted from branch `feature/gallery` as PR #34,
-  to be merged after CI passes. Merged: FR-STYLE-CLI-01 (PR #28), FR-STYLE-MAP-01
-  (PR #29), FR-CAMERA-01 (PR #30), FR-BATCH-01 (PR #31), FR-REPRO-01 (PR #32; the user
-  tested it by hand), and FR-VALIDATION-01 (PR #33, merge commit `0c18079`). Nothing
-  else is open or authorized;
+- **Work in progress:** the **Windows port**, requested by the user on 17 November
+  2026, on branch `feature/windows` as **draft** PR #35. It is not finished: see
+  [docs/development/windows-port.md](development/windows-port.md) for the decisions,
+  what is implemented, the CI evidence, and the experiments to run on a real Windows
+  computer. Merged: FR-STYLE-CLI-01 (PR #28), FR-STYLE-MAP-01 (PR #29), FR-CAMERA-01
+  (PR #30), FR-BATCH-01 (PR #31), FR-REPRO-01 (PR #32; the user tested it by hand),
+  FR-VALIDATION-01 (PR #33), and FR-GALLERY-01 with the next-tests audit (PR #34,
+  merge commit `5b72f92`). Nothing else is open or authorized;
   see [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
@@ -85,13 +85,17 @@ Known limitations and unresolved issues:
 - **Date and machine:** 17 November 2026, the Linux laptop (Linux Mint 22.1, Intel
   Core Ultra 5 135U, 14 logical CPUs, 7.2 GiB, Python 3.12.3, POV-Ray 3.7.0.10 from
   apt).
-- **Done first:** FR-VALIDATION-01 committed on `feature/validation` (`77008d6`) after
-  the user's review, PR #33. CI passed: pre-commit, docs, Ubuntu full suite (7 min),
-  and macOS without windows (7 min). Merged at `0c18079`, as the user asked.
-- **Then:** FR-GALLERY-01, reviewed by the user, and an audit of the tests still to
-  run on the Mac and other computers (`docs/development/next-tests.md`). Committed on
-  `feature/gallery` from `0c18079` as PR #34. The private plan was read but not
-  changed.
+- **Done first:** FR-GALLERY-01 and the next-tests audit, PR #34. CI passed (Ubuntu
+  881 passed, macOS 709 passed, the gallery script running there for the first
+  time); merged at `5b72f92`, as the user asked.
+- **Then:** the Windows port, on the user's request and decisions (native Ycrystal +
+  POV-Ray for Windows; a pushed branch with an experimental Windows CI job). The
+  user then chose to continue it on a real Windows computer: this session leaves the
+  groundwork and [a takeover page](development/windows-port.md) on `feature/windows`,
+  draft PR #35. Local check: `pytest -m "not gui"` 718 passed, 1 skipped (the
+  Windows-only test).
+
+Earlier in the same session:
 
 Summary of FR-GALLERY-01 changes (no file under `src/` changed):
 
@@ -130,9 +134,11 @@ hands-on runs by a person.
 
 ## Next recommended steps
 
-1. Watch the CI of PR #34 and merge it when it passes. The gallery test adds about
-   25 s of POV-Ray per CI job, and on macOS it is the first run of the gallery
-   script on that system.
+1. Continue the Windows port on a Windows computer, from branch `feature/windows`,
+   following [docs/development/windows-port.md](development/windows-port.md): set
+   up, run `scripts/windows_povray_probe.py`, answer its ten questions, make the
+   experimental Windows CI job pass, then update the documentation. Do not merge
+   draft PR #35 before that.
 2. Run the tests of [docs/development/next-tests.md](development/next-tests.md)
    (audited 17 November 2026), in its order:
    - on the Mac mini: the full suite with real windows (881 expected), the memory
@@ -165,7 +171,7 @@ Suggestions only — not approved, ask before starting any of them:
   writes PNG only.
 - A macOS application bundle or launcher (name and icon in the Dock, opening
   `.ycrystal` files from Finder).
-- Windows: a CI entry and a decision about the renderer there.
+- Windows: decided and in progress (draft PR #35), see above.
 - From earlier sessions: hide the disabled Bottom/Clouds rows for the Image background
   type; a way to manage personal materials; hands-on checks of the unreleased features,
   then the next release (FR-EXPORT-01 and the branding): move the changelog's
@@ -179,8 +185,10 @@ Dependencies and blockers:
   that is too costly, restrict it (for example to `main` and manual runs).
 - GitHub's hosted Macs have no GPU, so the GUI tests cannot run there reliably; they
   need a real Mac.
-- Windows: POV-Ray for Windows is a GUI program without a `povray` command, so
-  rendering needs a different executable or command line there. Nothing is designed.
+- Windows: POV-Ray for Windows is a GUI program without a `povray` command. Ycrystal
+  now drives `pvengine64.exe` with `/EXIT /NR +GAscene.log scene.ini` (draft PR #35);
+  its behaviour on a real Windows computer is still to be confirmed
+  (`docs/development/windows-port.md`).
 
 ## Cross-platform status
 

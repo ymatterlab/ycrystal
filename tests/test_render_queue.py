@@ -1,11 +1,11 @@
 """Non-blocking render processes: progress, cancellation, superseded previews, cleanup."""
 
-import stat
 from pathlib import Path
 
 import pytest
 from PIL import Image
 
+from conftest import python_program
 from ycrystal.core.camera import default_camera
 from ycrystal.core.samples import perovskite_srtio3
 from ycrystal.core.scene import Environment, SceneSettings, build_geometry
@@ -22,17 +22,17 @@ def fake_povray(tmp_path: Path, seconds: float, exit_code: int = 0) -> str:
     """
     png = tmp_path / "tiny.png"
     Image.new("RGBA", (4, 4), (255, 0, 0, 255)).save(png)
-    script = tmp_path / f"fake-povray-{seconds}-{exit_code}"
-    script.write_text(
-        "#!/bin/sh\n"
-        'if [ "$1" = "--version" ]; then echo "POV-Ray 3.7.0.10"; exit 0; fi\n'
-        f"sleep {seconds}\n"
-        "echo 'Rendered 8 of 16 pixels (50%)'\n"
-        f"cp '{png}' scene.png\n"
-        f"exit {exit_code}\n"
-    )
-    script.chmod(script.stat().st_mode | stat.S_IXUSR)
-    return str(script)
+    code = f"""
+        import shutil, sys, time
+        if sys.argv[1:2] == ["--version"]:
+            print("POV-Ray 3.7.0.10")
+            sys.exit(0)
+        time.sleep({seconds})
+        print("Rendered 8 of 16 pixels (50%)", flush=True)
+        shutil.copyfile({str(png)!r}, "scene.png")
+        sys.exit({exit_code})
+        """
+    return python_program(tmp_path / f"fake-povray-{seconds}-{exit_code}", code)
 
 
 @pytest.fixture
