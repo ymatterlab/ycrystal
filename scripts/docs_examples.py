@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import tempfile
 from dataclasses import replace
 from pathlib import Path
@@ -186,6 +187,24 @@ def main() -> None:
         for line in (stderr.getvalue() + stdout.getvalue()).splitlines():
             assert line in guide, line
         assert not (directory / "renders").exists()
+        # Reproducible figures (reproducibility guide): a dry run lists the snapshots.
+        manifest = directory / "snapshots.json"
+        jobs = [{"id": "SrTiO3", "input": str(fixtures / "SrTiO3.cif")}]
+        jobs.append({"id": "BaZrO3", "input": str(fixtures / "BaZrO3.cif")})
+        jobs[-1]["element_map"] = {"Ti": "Zr"}
+        defaults = {"style": str(root / "examples" / "grey-studio.ycstyle"), "view": "a"}
+        defaults.update(width=600, height=450)
+        document = {"format": "ycrystal-batch", "schema_version": 1, "save_projects": True}
+        document.update(defaults=defaults, jobs=jobs)
+        manifest.write_text(json.dumps(document), encoding="utf-8")
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(io.StringIO()):
+            args = ["--batch", str(manifest), "--output-dir", str(directory / "figures")]
+            assert ycrystal([*args, "--dry-run"]) == 0
+        line = "SrTiO3: would render SrTiO3.png and save SrTiO3.ycrystal (600 × 450, 15 atoms)"
+        guide = (root / "docs" / "guide" / "reproducibility.md").read_text(encoding="utf-8")
+        assert line in stdout.getvalue() and line in guide
+        assert not (directory / "figures").exists()
     print("Documentation examples passed (no display or renderer).")
 
 

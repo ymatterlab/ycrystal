@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 17 November 2026 (FR-BATCH-01, batch manifests; PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), and FR-BATCH-01 (batch manifests; PR #31). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 17 November 2026 (FR-REPRO-01, figure snapshots and provenance records; PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), and FR-REPRO-01 (figure snapshots and provenance; PR #32). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,82 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## FR-REPRO-01: figure snapshots and provenance records (post-0.3.0, 17 November 2026)
+
+Development after version 0.3.0 on the Linux Mint 22.1 laptop, on branch
+`feature/repro-snapshots` from `main` at `5b5791f` (PR #31 merged); submitted as PR #32
+after the user's review. The user tested it by hand (17 November 2026) and reports it
+working.
+`ycrystal FILE … --render OUT.png --save-project FIGURE.ycrystal [--overwrite]` and the
+manifest's top-level `"save_projects": true` save, next to each image, a self-contained
+snapshot (an ordinary `.ycrystal` project) and a provenance record
+`FIGURE.provenance.json`. Replay: `ycrystal FIGURE.ycrystal --render OUT.png`. Guide:
+`docs/guide/reproducibility.md`.
+
+Design: new module `src/ycrystal/provenance.py` (no Qt or VTK) over the existing
+single-figure functions; no new recipe format, no project schema change (a snapshot is
+a schema-7 project), no new dependency. `snapshot_project` returns the project with
+the camera and size that `scene_for` chooses (aspect lock reset if the shape changed)
+and drops the absolute `path` from the structure's import record. `render_snapshot`
+finds POV-Ray, saves the snapshot to a temporary file and reads it back, renders that
+reloaded project with `render_png` to a temporary image, hashes the temporary files,
+writes the record to a temporary file, then renames image, snapshot, and record into
+place, record last; on any failure the temporary files and any folder it created are
+removed. `provenance_record` (schema 1) records Ycrystal and POV-Ray versions, the
+standard include files the scene needs, SHA-256 and size of input, style, manifest,
+snapshot, and image, the image size read from the PNG, style parts, element mapping,
+camera policy and resolved camera, explicit and final sizes, displayed atoms, system
+(OS, machine, Python, NumPy, ASE), warnings, a replay command, and a reproducibility
+statement; paths relative to the record's folder, `null` outside it.
+`check_snapshot_target` refuses existing files without `--overwrite` and never lets a
+snapshot replace the input, style, image, or manifest. Input and style are hashed when
+read (`SourceFile`). `app.py`: `--save-project` (needs `--render` and a `.ycrystal`
+name; refused with `--batch`); `--overwrite` also accepted with it. `manifest.py`:
+`save_projects` (boolean, top level, manifest schema 1 kept), checked in `plan_batch`,
+rendered through `render_snapshot`; the report gains `project` and `provenance` per
+job (report schema 1, additive); the dry run lists the snapshots.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Snapshot of BaZrO3 + grey studio + Ti → Zr, view a, width 500: camera and size as `scene_for`, structure arrays identical, import path dropped (SHA-256 kept), input unchanged; after save and reload, `scene_for` without options gives the same camera, settings, positions, radii, colours, materials | Pass | `test_snapshot_fixes_camera_and_size_and_keeps_the_structure` |
+| Replay writes the same POV-Ray scene (`.pov` identical except the date line, `.ini` identical): mapped style with fixed view height, vector project refitted, saved camera with a new width, default fitted view, triclinic down c in portrait | Pass | `test_replaying_a_snapshot_writes_the_same_scene` (5) |
+| CLI: three files and nothing else (no temporary files); recorded SHA-256 and sizes equal the real bytes of image, snapshot, input, and style; relative paths, `null` outside; quoted replay command; no absolute path of the test folder, checkout, or home in record or snapshot; record keys and order (schema 1); settings, camera, renderer, structure; input and style unchanged | Pass | `test_save_project_writes_figure_snapshot_and_true_record` |
+| Existing snapshot/record refused (status 1, files unchanged), accepted with `--overwrite`; a snapshot onto the input project refused even with `--overwrite` | Pass | `test_existing_files_and_inputs_are_never_replaced` |
+| Failed render: nothing left, not even the folders created for the files | Pass | `test_failed_render_leaves_nothing_behind` |
+| Unwritable folder: error, no image, nothing written | Pass | `test_unwritable_folder_writes_nothing` |
+| Usage errors (status 2): without `--render`, with only `--export-pov`, wrong suffix, with `--batch`; `--overwrite` alone still refused | Pass | `test_save_project_usage_errors` (5) |
+| Missing and damaged snapshots refused on replay, nothing written | Pass | `test_missing_or_damaged_snapshots_are_refused` |
+| Target checks and record naming | Pass | `test_snapshot_target_checks` |
+| No window toolkit loaded (subprocess, no `DISPLAY`) | Pass | `test_headless_snapshot_needs_no_window_toolkit` |
+| Clean profile: a project with a custom material and vectors, a ZIP style with a background picture; sources deleted, registries cleared, replay in a new process with an empty home: same scene, picture staged from the snapshot package, custom material present, vectors equal | Pass | `test_snapshot_replays_without_style_picture_or_materials[False]` |
+| Batch with `save_projects`: dry run lists snapshots; report names project and record per job (subfolder too); every record's job, manifest SHA-256, image and snapshot SHA-256 correct; replay command in the record's folder; snapshots load with mapping and vectors; no temporary files; rerun refused | Pass | `test_batch_saves_a_snapshot_and_record_per_job` |
+| Batch validation: non-boolean `save_projects`; a snapshot onto an input (even with `--overwrite`); an existing record; without `save_projects` nothing changes | Pass | `test_batch_snapshot_validation` |
+| Batch: failed renders save no snapshot; report has `null`s; no images or folders | Pass | `test_batch_failed_job_saves_no_snapshot` |
+| Real POV-Ray: BaZrO3 from copies of the CIF and style, sources then deleted; replay with the recorded command in a new process: same pixels (tolerance 1 of 255 per channel); recorded image SHA-256 equals the file; PNG 240 × 180; renderer 3.7 | Pass | `test_replay_after_removing_the_sources_renders_the_same_image` |
+| Real POV-Ray: picture style, custom material, vectors, clean profile: replay has the same pixels | Pass | `test_snapshot_replays_without_style_picture_or_materials[True]` |
+| Real POV-Ray: three batch jobs with snapshots, each replayed: same pixels | Pass | `test_batch_snapshots_replay_with_povray` |
+
+Measured on the laptop (POV-Ray 3.7.0.10.unofficial from apt): every replay had exactly
+the same pixels as the original (largest difference 0 of 255): the three real POV-Ray
+tests rerun with tolerance 0 (a negative control with tolerance −1 failed all three, so
+the setting took effect), a 400 × 300 BaZrO3 figure, and four batch jobs (SrTiO3,
+BaZrO3, MgB2 down c, vectors) at 240 × 180. The PNG files were never byte-identical:
+POV-Ray writes a `tIME` chunk and a "Render Date" comment into every PNG, so the image
+SHA-256 differs between renders of the same scene. Pixel differences across systems or
+POV-Ray builds were **not** measured; macOS was **not** run for this feature.
+
+Observed, not changed: snapshots, like every project written by `save_project`, have
+mode 0600 (owner only), because `save_project` writes through `mkstemp`.
+
+Regression runs on the laptop (Linux Mint 22.1, Python 3.12.3, POV-Ray 3.7.0.10 from
+apt): `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` 643 passed, 172 GUI tests
+deselected, none skipped (137 s; 25 new tests in `tests/test_reproducibility.py`, 815
+in all); `tests/test_release.py` including its windowed workflow test passed after the
+CLI change; the CI doctest list (now with `provenance.py`); `scripts/docs_examples.py`
+(now also checks the guide's dry-run line); `pre-commit run --all-files` and on the
+new files; `zensical build --clean --strict` clean. **Not run:** the GUI tests (no GUI
+code changed; the windows would have taken over the desktop session), macOS, CI.
 
 ## FR-BATCH-01: render a series from a manifest (post-0.3.0, 17 November 2026)
 
@@ -1287,8 +1363,8 @@ Second development machine (since 16 November 2026):
 
 ## Next bounded action
 
-No feature is open: macOS support (PR #22) and FR-EXPORT-01 (PR #23) are merged and
-pass CI on Ubuntu and macOS. Remaining hands-on item from the macOS work: the checklist
+Open: FR-REPRO-01 (PR #32) is to be merged after CI passes; then a run on the Mac. Merged features after
+0.3.0 pass CI on Ubuntu and macOS. Remaining hands-on item from the macOS work: the checklist
 in [HANDOFF.md](HANDOFF.md). Still
 open from before: hands-on checks of the 0.2.0 features (Lighting Setup window, aspect
 lock, colour dialog) by a person; the maintainer decides whether to publish a GitHub

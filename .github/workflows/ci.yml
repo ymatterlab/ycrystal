@@ -131,7 +131,7 @@ jobs:
 
       - name: Display-independent documentation examples
         run: |
-          python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/colors.py src/ycrystal/core/aspect.py src/ycrystal/core/lighting.py src/ycrystal/core/measure.py src/ycrystal/core/vectors.py src/ycrystal/core/background.py src/ycrystal/presets/custom.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py src/ycrystal/io/style.py src/ycrystal/presets/__init__.py src/ycrystal/render/jobs.py src/ycrystal/render/thumbnails.py src/ycrystal/batch.py src/ycrystal/desktop.py src/ycrystal/gui/native.py src/ycrystal/core/export.py src/ycrystal/render/formats.py
+          python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/colors.py src/ycrystal/core/aspect.py src/ycrystal/core/lighting.py src/ycrystal/core/measure.py src/ycrystal/core/vectors.py src/ycrystal/core/background.py src/ycrystal/presets/custom.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py src/ycrystal/io/style.py src/ycrystal/presets/__init__.py src/ycrystal/render/jobs.py src/ycrystal/render/thumbnails.py src/ycrystal/batch.py src/ycrystal/provenance.py src/ycrystal/desktop.py src/ycrystal/gui/native.py src/ycrystal/core/export.py src/ycrystal/render/formats.py
           python scripts/docs_examples.py
 
       - name: Tests

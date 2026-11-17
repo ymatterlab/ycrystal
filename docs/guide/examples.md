@@ -304,6 +304,9 @@ and writes `renders/ycrystal-batch-report.json`.
   must stay inside the output folder (no `..`, no absolute paths).
 - Unknown keys are refused (a misspelt `"veiw"` is an error, not silently ignored). A
   `"comment"` key at the top level is allowed for notes.
+- `"save_projects": true` at the top level also saves, next to each image, the figure's
+  self-contained snapshot (`SrTiO3.ycrystal`) and its provenance record
+  (`SrTiO3.provenance.json`); see [reproducible figures](reproducibility.md#a-series-save_projects-in-a-batch-manifest).
 
 ### What happens
 
@@ -322,7 +325,8 @@ and writes `renders/ycrystal-batch-report.json`.
 4. **The report** `ycrystal-batch-report.json` lists every job in order with its
    status (`rendered` or `failed`), time, size, number of atoms, warnings, and error
    message, plus the Ycrystal and POV-Ray versions. Paths are written as given in the
-   manifest.
+   manifest. With `save_projects`, `project` and `provenance` name each job's snapshot
+   and record (otherwise they are `null`).
 5. **Exit status:** 0 when every job was rendered; 1 when any job failed (or POV-Ray is
    missing, then nothing is rendered); 2 when the manifest is invalid.
 

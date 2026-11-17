@@ -60,6 +60,12 @@ or in a job (for that job only, replacing the default):
 
 Paths in a manifest are relative to the manifest's folder (absolute input and style
 paths are allowed). Unknown keys are refused, so a misspelt setting is not ignored.
+
+``"save_projects": true`` at the top level (FR-REPRO-01) saves, next to each rendered
+image ``NAME.png``, the figure's self-contained snapshot ``NAME.ycrystal`` and its
+provenance record ``NAME.provenance.json`` (see [`ycrystal.provenance`][ycrystal.provenance]);
+the report then names both for every rendered job. They are checked like images:
+existing files only with ``--overwrite``, and never an input, style, or the manifest.
 """
 
 from __future__ import annotations
@@ -82,10 +88,19 @@ from ycrystal.batch import (
 )
 from ycrystal.core.camera import CameraPolicyError, ViewPolicy
 from ycrystal.core.scene import LARGE_DISPLAY_ATOMS, count_displayed_atoms
-from ycrystal.io.project import Project, ProjectError
+from ycrystal.io.project import PROJECT_SUFFIX, Project, ProjectError
 from ycrystal.io.readers import StructureImportError
 from ycrystal.io.style import STYLE_PARTS, ElementMapError, Style, StyleError, check_element
 from ycrystal.io.style import load_style as _load_style
+from ycrystal.provenance import (
+    PROVENANCE_SUFFIX,
+    FigureRequest,
+    SnapshotError,
+    SourceFile,
+    check_snapshot_target,
+    input_format,
+    render_snapshot,
+)
 
 MANIFEST_FORMAT = "ycrystal-batch"
 """Value of the ``format`` key that identifies a batch manifest."""
@@ -146,6 +161,11 @@ class PlannedJob:
         Number of displayed atoms.
     warnings
         Notes from the style transfer (what was not applied).
+    snapshot
+        With ``save_projects``: the snapshot path relative to the output directory
+        (POSIX form; its provenance record has the same stem); otherwise ``None``.
+    request
+        With ``save_projects``: what the provenance record states; otherwise ``None``.
     """
 
     id: str
@@ -157,11 +177,17 @@ class PlannedJob:
     height: int
     atoms: int
     warnings: tuple[str, ...] = ()
+    snapshot: str | None = None
+    request: FigureRequest | None = None
 
 
 @dataclass(frozen=True)
 class JobResult:
-    """The outcome of one job in a run."""
+    """The outcome of one job in a run.
+
+    ``project`` and ``provenance`` name the snapshot and its record (relative to the
+    output directory) when they were saved, else ``None``.
+    """
 
     id: str
     input: str
@@ -173,6 +199,8 @@ class JobResult:
     atoms: int = 0
     warnings: tuple[str, ...] = ()
     error: str = ""
+    project: str | None = None
+    provenance: str | None = None
 
 
 @dataclass
@@ -221,6 +249,8 @@ class BatchReport:
                     "atoms": job.atoms,
                     "warnings": list(job.warnings),
                     "error": job.error,
+                    "project": job.project,
+                    "provenance": job.provenance,
                 }
                 for job in self.jobs
             ],
@@ -252,13 +282,16 @@ def load_manifest(path: str | Path) -> dict[str, Any]:
         raise ManifestError(
             [f"{path.name} uses manifest schema {version}; this Ycrystal reads schema 1."]
         )
-    unknown = sorted(set(data) - {"format", "schema_version", "defaults", "jobs", "comment"})
+    top_level = {"format", "schema_version", "defaults", "jobs", "comment", "save_projects"}
+    unknown = sorted(set(data) - top_level)
     if unknown:
         raise ManifestError([f"Unknown top-level keys: {', '.join(unknown)}."])
     if not isinstance(data.get("jobs"), list) or not data["jobs"]:
         raise ManifestError(["The manifest needs a non-empty list of jobs."])
     if not isinstance(data.get("defaults", {}), dict):
         raise ManifestError(["defaults must be an object."])
+    if not isinstance(data.get("save_projects", False), bool):
+        raise ManifestError(["save_projects must be true or false."])
     return data
 
 
@@ -277,7 +310,8 @@ def plan_batch(
     output_dir
         Where the images and the report go; it need not exist yet.
     overwrite
-        Whether existing images (and an existing report) may be replaced.
+        Whether existing images, snapshots and provenance records (with
+        ``save_projects``), and an existing report may be replaced.
 
     Raises
     ------
@@ -290,6 +324,12 @@ def plan_batch(
     output_dir = Path(output_dir)
     defaults = data.get("defaults", {})
     problems: list[str] = []
+    manifest_file: SourceFile | None = None
+    if data.get("save_projects", False):
+        try:
+            manifest_file = SourceFile.of(manifest_path)
+        except OSError as exc:
+            raise ManifestError([f"Cannot read the manifest: {exc.strerror or exc}."]) from exc
     unknown = sorted(set(defaults) - set(SETTINGS))
     if unknown:
         problems.append(f"defaults: unknown settings {', '.join(unknown)}.")
@@ -329,10 +369,24 @@ def plan_batch(
                     overwrite,
                     styles,
                     seen_outputs,
+                    manifest_file,
                 )
             )
         except _JobProblem as exc:
             problems.append(f"{label}: {exc}")
+    if manifest_file is not None:
+        # Snapshots never replace what any job reads, nor the manifest itself.
+        protected = [manifest_file.path]
+        for job in planned:
+            if job.request is not None:
+                protected += [f.path for f in (job.request.input, job.request.style) if f]
+        for job in planned:
+            if job.snapshot is not None:
+                target = output_dir / job.snapshot
+                problems += [
+                    f"job {job.id}: {problem}"
+                    for problem in check_snapshot_target(target, protected, overwrite)
+                ]
     report = output_dir / REPORT_NAME
     if not overwrite and report.exists():
         problems.append(f"The report {report} exists; use --overwrite to replace it.")
@@ -361,6 +415,7 @@ def _plan_job(
     overwrite: bool,
     styles: dict[Path, Style | str],
     seen_outputs: dict[str, str],
+    manifest_file: SourceFile | None = None,
 ) -> PlannedJob:
     # Output: a relative PNG path inside the output directory, unique, not present.
     output = s.get("output", f"{job_id}.png")
@@ -424,6 +479,9 @@ def _plan_job(
     # Style and element mapping.
     warnings: tuple[str, ...] = ()
     style_value = s.get("style")
+    style_path: Path | None = None
+    parts: list[str] = []
+    element_map: dict[str, str | None] | None = None
     if style_value is not None:
         style_path = _path(style_value, base, "style").resolve()
         if style_path not in styles:
@@ -476,6 +534,26 @@ def _plan_job(
         _, _, settings = scene_for(project, width, height, view)
     except CameraPolicyError as exc:
         raise _JobProblem(str(exc)) from exc
+    snapshot: str | None = None
+    request: FigureRequest | None = None
+    if manifest_file is not None:  # save_projects
+        snapshot = str(pure.with_suffix(PROJECT_SUFFIX))
+        try:
+            request = FigureRequest(
+                input=SourceFile.of(source),
+                input_format=input_format(source, fmt, project),
+                style=None if style_path is None else SourceFile.of(style_path),
+                style_parts=tuple(parts) if style_path is not None else (),
+                element_map=element_map,
+                view=view,
+                width=width,
+                height=height,
+                notes=warnings,
+                job=job_id,
+                manifest=manifest_file,
+            )
+        except OSError as exc:
+            raise _JobProblem(f"cannot read {exc.filename}: {exc.strerror or exc}") from exc
     return PlannedJob(
         job_id,
         str(input_value),
@@ -486,6 +564,8 @@ def _plan_job(
         settings.height,
         atoms,
         warnings,
+        snapshot,
+        request,
     )
 
 
@@ -532,33 +612,53 @@ def run_batch(
     if dry_run:
         for job in jobs:
             report.jobs.append(_result(job, "planned"))
+            also = f" and save {job.snapshot}" if job.snapshot else ""
             say(
-                f"{job.id}: would render {job.output} ({job.width} × {job.height}, "
+                f"{job.id}: would render {job.output}{also} ({job.width} × {job.height}, "
                 f"{job.atoms} atoms)"
             )
         return report
     executable = find_povray(povray)
-    report.renderer = f"POV-Ray {povray_version(executable) or 'version unknown'}"
+    version = povray_version(executable)
+    report.renderer = f"POV-Ray {version or 'version unknown'}"
     output_dir.mkdir(parents=True, exist_ok=True)
     for number, job in enumerate(jobs, start=1):
         began = time.monotonic()
+        saved: dict[str, str | None] = {}
         try:
-            result = render_png(
-                job.project,
-                output_dir / job.output,
-                executable,
-                job.width,
-                job.height,
-                view=job.view,
-            )
+            if job.snapshot is not None:
+                figure = render_snapshot(
+                    job.project,
+                    output_dir / job.output,
+                    output_dir / job.snapshot,
+                    job.request,
+                    executable,
+                    renderer_version=version,
+                )
+                result = figure.result
+                if result.ok:
+                    snapshot = PurePosixPath(job.snapshot)
+                    record = snapshot.with_name(snapshot.stem + PROVENANCE_SUFFIX)
+                    saved = {"project": job.snapshot, "provenance": str(record)}
+            else:
+                result = render_png(
+                    job.project,
+                    output_dir / job.output,
+                    executable,
+                    job.width,
+                    job.height,
+                    view=job.view,
+                )
             error = "" if result.ok else result.message
+        except SnapshotError as exc:
+            error = str(exc)
         except OSError as exc:
             error = f"cannot write {job.output}: {exc.strerror or exc}"
         except Exception as exc:  # one job must not stop the series  # noqa: BLE001
             error = f"{type(exc).__name__}: {exc}"
         status = "failed" if error else "rendered"
         report.jobs.append(
-            replace(_result(job, status), seconds=time.monotonic() - began, error=error)
+            replace(_result(job, status), seconds=time.monotonic() - began, error=error, **saved)
         )
         say(f"[{number}/{len(jobs)}] {job.id}: {status}" + (f" ({error})" if error else ""))
     report.seconds = time.monotonic() - started

@@ -94,6 +94,17 @@ packages, and custom material definitions; schema 7 added atom-attached vectors)
 appearance (schema-1 projects load with bonds switched off, as they were drawn). Newer
 schemas are rejected with a message to update Ycrystal.
 
+### Figure snapshots and provenance records
+
+`ycrystal FILE … --render OUT.png --save-project FIGURE.ycrystal` (and
+`"save_projects": true` in a batch manifest) saves the rendered figure as an ordinary
+project, the *snapshot*, with the camera and output size it was rendered with, and a
+JSON provenance record `FIGURE.provenance.json` (`format: ycrystal-provenance`, schema
+1) with the versions, settings, and SHA-256 checksums of the input, style, snapshot,
+and image. In a snapshot the structure's import record has no `path` (the original
+folder); its name, format, and checksum remain. See
+[reproducible figures](guide/reproducibility.md).
+
 ## Ycrystal styles (`.ycstyle`)
 
 **File ▸ Export Style…** writes the presentation without structure and camera:
