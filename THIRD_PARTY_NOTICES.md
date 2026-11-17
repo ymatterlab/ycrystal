@@ -44,3 +44,11 @@ Images rendered by POV-Ray, including the gallery thumbnails shipped in
   material styles (LGPL-2.1-or-later); their provenance is recorded in each manifest.
 - All other material and environment recipes, the icon, and the example projects are
   Ycrystal's own (MIT).
+- `examples/publication/structures/kyanite-COD-1008755.cif` is entry 1008755 of the
+  [Crystallography Open Database](https://www.crystallography.net/cod/1008755.html),
+  kept verbatim. The COD dedicates its data to the public domain (CC0) and asks users
+  to credit the original authors: C. de Rango, G. Tsoucaris, C. Zelwer, J. Devaux,
+  "Comparaison de deux affinements de la structure de la cyanite", *Bulletin de la
+  Société Française de Minéralogie et de Cristallographie* **89**, 419–424 (1966).
+- The other structures of the publication gallery are the project's own test inputs
+  (MIT); the antiferromagnet example is synthetic, not a real material.

@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 17 November 2026 (FR-VALIDATION-01, scientific validation and benchmarks; PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), and FR-VALIDATION-01 (validation and benchmarks; PR #33). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 17 November 2026 (FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers; PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -93,11 +93,125 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## Audit: next tests on the Mac and other computers (17 November 2026)
+
+At the user's request, an audit of what has been verified on which system, and of the
+tests still to run: `docs/development/next-tests.md` (in the navigation; HANDOFF's next
+steps point to it).
+
+Inputs checked:
+- the CI workflow: Ubuntu runs all 881 tests under Xvfb; macOS runs the 709 tests
+  without windows, among them 95 of the 104 POV-Ray tests, because 9 POV-Ray tests
+  also need a window;
+- the Mac records in this file: the last local full run was 790 tests at PR #31, so
+  91 tests are new since;
+- the laptop runs of FR-VALIDATION-01 and FR-GALLERY-01;
+- HANDOFF's open hands-on items.
+
+The plan is ordered as follows. On the Mac mini:
+1. the full suite with real windows (881 expected);
+2. a check of the benchmark's memory figure on macOS (a ready snippet);
+3. the benchmark (quick set for comparison, then the full set);
+4. replays of the Linux reference sets (`artifacts/gallery/figures`,
+   `artifacts/validation/bench-linux/snapshots`, 3.5 MB, copied byte for byte);
+5. the gallery on the Mac, and replays Mac → Linux.
+
+Then hands-on items on the Mac and the laptop, and a clean-computer dry run of the
+independent evaluation. For each result, the plan says which claim it allows.
+Nothing in the plan has been run yet.
+
+## FR-GALLERY-01: reproducible publication gallery (post-0.3.0, 17 November 2026)
+
+Demonstration and documentation work after version 0.3.0 on the Linux Mint 22.1
+laptop, on branch `feature/gallery` from `main` at `0c18079` (PR #33 merged);
+submitted as PR #34 after the user's review. No application code changed.
+
+What was added:
+
+- `examples/publication/`:
+  - `README.md`: cases, files, regeneration, provenance and licences;
+  - `gallery.json`: the batch manifest, with `save_projects`;
+  - `styles/paper.ycstyle` and `styles/cover.ycstyle`;
+  - `structures/`: SrTiO3 and BaZrO3, byte-identical copies of the fixtures, and
+    kyanite.
+
+  Two inputs are the existing example projects `../MgB2-gradient.ycrystal` (3 × 3 × 1,
+  from the MgB2 fixture) and `../vectors-synthetic-afm.ycrystal`.
+- **Styles.** `scripts/make_examples.py` gains `publication_styles()`, which writes
+  both styles deterministically.
+  - *Paper:* satin, white background, soft lighting, Okabe–Ito colours for the Sr, Ti,
+    and O sites, 1600 × 1200.
+  - *Cover:* the same colours, ceramic Sr, chrome Ti, ruby-glass O, in the dark studio
+    (reflective floor, point key light).
+  - Neither changes radii, so the cover keeps a snapshot's geometry.
+- **Kyanite.** Al₂SiO₅, P-1, 32 atoms, fully ordered; COD entry 1008755, de Rango et
+  al. (1966). Downloaded and kept verbatim with its SHA-256; COD data are CC0, and the
+  original authors are credited in the README and `THIRD_PARTY_NOTICES.md`. It
+  replaces the invented triclinic cell for the low-symmetry case, because that cell
+  has arbitrary atoms and almost no bonds. Ycrystal reads it with Si–O 1.62–1.64 Å
+  and Al–O 1.81–1.99 Å bonds.
+- `scripts/make_gallery.py`:
+  1. copies the inputs to a temporary folder and runs the manifest with
+     `ycrystal --batch`;
+  2. renders the SrTiO3 snapshot with the cover style: environment only, then
+     appearance and environment (same camera and size);
+  3. deletes the inputs and replays every snapshot with `scripts/replay_check.py`;
+  4. writes `figure-methods.md`/`.json` from the provenance records and snapshots, and
+     `commands.txt`;
+  5. optionally writes thumbnails.
+- `docs/guide/gallery.md`: thumbnails, explanation, commands, and the figure-methods
+  table of the recorded run. `docs/assets/gallery/*.jpg`: seven 480 px JPEG thumbnails
+  (17–26 KB), downscaled from the real 1600 × 1200 renders.
+- `docs/development/manuscript-figures.md`: four proposed journal figures with draft
+  captions and stated limitations; which panels exist and which are to do
+  (schematic, screenshot, plots).
+- Independent evaluation checklist: now uses the supplied paper style and the gallery
+  manifest, and asks evaluators to re-open a snapshot in the window.
+- Also updated: examples guide, CONTRIBUTING (thumbnail policy), changelog,
+  third-party notices.
+- `tests/test_gallery.py` (7 tests; 1 with real POV-Ray), checking:
+  - the manifest plans the five figures, with the mapping and the shared scale, and
+    reports warnings;
+  - the structure inputs and their provenance;
+  - the styles equal what the generator writes;
+  - the cover variants keep positions, radii, camera, and size (colours change only
+    through ruby glass);
+  - the documents and thumbnails match the script;
+  - the whole script runs at 0.1 scale, with 7 of 7 replays the same, equal cameras,
+    and a full table.
+
+Choices made while looking at real renders:
+- MgB2: one cell down c showed a single B–B bond, so the 3 × 3 × 1 example project is
+  used instead.
+- Kyanite: the default view instead of down c.
+- Cover: other candidate materials made gold look pale and translucent, so the
+  materials above were chosen.
+- A first description of the cover lighting as an "area light" was wrong: the dark
+  studio preset has a point light. It was corrected after the methods table showed it.
+
+| Check | Result |
+| --- | --- |
+| `make_gallery.py --out artifacts/gallery --thumbnails docs/assets/gallery` (1600 × 1200, POV-Ray 3.7.0.10.unofficial) | 7 figures. Batch of five 9.7 s; variants 2.6 s and 9.2 s; 7 of 7 replays identical after the inputs were deleted |
+| `tests/test_gallery.py` with `YCRYSTAL_REQUIRE_INTEGRATION=1` | 7 passed (the script run 24 s) |
+| `tests/test_release.py` (examples, CLI, one windowed test) | Passed |
+
+Regression on the laptop:
+- `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q`: 709 passed, 172 GUI tests
+  deselected, none skipped (210 s);
+- `scripts/docs_examples.py`, `pre-commit` on all new and changed files, and
+  `zensical build --clean --strict`: clean;
+- the verbatim COD file is unchanged after the hooks (SHA-256 checked).
+
+**Not run:** the GUI tests (no GUI code changed), macOS, replays of the gallery on
+another machine, and CI. Figure 1 (schematic, screenshot) and the plots of Figure 4
+are proposals only.
+
 ## FR-VALIDATION-01: scientific validation and benchmarks (post-0.3.0, 17 November 2026)
 
 Evidence work after version 0.3.0 on the Linux Mint 22.1 laptop, on branch
-`feature/validation` from `main` at `e7ec99f` (PR #32 merged); submitted as PR #33
-after the user's review. No
+`feature/validation` from `main` at `e7ec99f` (PR #32 merged); committed as `77008d6`
+after the user's review, PR #33, merged at `0c18079` after CI passed (pre-commit,
+docs, Ubuntu full suite 7 min, macOS without windows 7 min). No
 application code changed: tests, two scripts, and documentation only. Evidence report:
 `docs/development/validation.md`, with the observed values and the reasons for each
 tolerance.
@@ -182,14 +296,15 @@ Runs on the laptop (all with real POV-Ray 3.7.0.10.unofficial):
 | `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` | 702 passed, 172 GUI tests deselected, none skipped (184 s); the GUI tests still collect |
 | `ruff check`/`format --check`, `pre-commit` on the new and changed files, `scripts/docs_examples.py`, `zensical build --clean --strict` | Clean |
 
-**Not run:**
+**Not run locally:**
 - the GUI tests (no GUI code changed);
 - the full benchmark (12³ and 1600 × 1200; too heavy for the laptop);
 - anything on macOS;
-- replays between two machines;
-- CI.
+- replays between two machines.
 
-The comparison rests on documentation only.
+The CI of PR #33 then passed: the Ubuntu full suite with GUI tests under Xvfb, and
+macOS without windows, both running the new POV-Ray tests. The benchmark and the
+replay check were not run on the Mac. The comparison rests on documentation only.
 
 ## FR-REPRO-01: figure snapshots and provenance records (post-0.3.0, 17 November 2026)
 
@@ -1464,7 +1579,7 @@ Second development machine (since 16 November 2026):
 
 ## Next bounded action
 
-Open: FR-VALIDATION-01 (PR #33) is to be merged after CI passes; then the validation runs on the Mac. FR-REPRO-01 is merged (PR #32). Merged features after
+Open: FR-GALLERY-01 (PR #34) is to be merged after CI passes; the tests of `docs/development/next-tests.md` are next. FR-VALIDATION-01 is merged (PR #33); its runs on the Mac are still to do. FR-REPRO-01 is merged (PR #32). Merged features after
 0.3.0 pass CI on Ubuntu and macOS. Remaining hands-on item from the macOS work: the checklist
 in [HANDOFF.md](HANDOFF.md). Still
 open from before: hands-on checks of the 0.2.0 features (Lighting Setup window, aspect

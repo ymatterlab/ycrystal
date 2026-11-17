@@ -1,0 +1,132 @@
+{
+ "format": "ycrystal-style",
+ "schema_version": 2,
+ "project_schema": 7,
+ "generator": "Ycrystal (scripts/make_examples.py)",
+ "saved_at": "2026-11-15T00:00:00+00:00",
+ "source": {
+  "composition": "SrTiO3",
+  "symbols": [
+   "Sr",
+   "Ti",
+   "O",
+   "O",
+   "O"
+  ]
+ },
+ "scene": {
+  "radius_scale": 0.5,
+  "show_cell": true,
+  "cell_edge_radius": 0.035,
+  "cell_edge_color": [
+   0.15,
+   0.15,
+   0.15
+  ],
+  "boundary_images": true,
+  "boundary_tolerance": 0.001,
+  "hidden": [],
+  "repetitions": [
+   1,
+   1,
+   1
+  ],
+  "cell_mode": "all",
+  "material": "satin",
+  "element_materials": [],
+  "atom_materials": [],
+  "element_radii": [],
+  "element_colors": [
+   {
+    "element": "O",
+    "color": [
+     0.835,
+     0.369,
+     0.0
+    ]
+   },
+   {
+    "element": "Sr",
+    "color": [
+     0.0,
+     0.62,
+     0.451
+    ]
+   },
+   {
+    "element": "Ti",
+    "color": [
+     0.0,
+     0.447,
+     0.698
+    ]
+   }
+  ],
+  "vector_style": {
+   "visible": true,
+   "placement": "centred",
+   "length_mode": "uniform",
+   "length": 2.6,
+   "scale": 0.6,
+   "shaft_radius": 0.08,
+   "head_length": 0.5,
+   "head_radius": 0.2,
+   "color": [
+    0.8,
+    0.1,
+    0.1
+   ],
+   "material": "satin"
+  },
+  "bonds": {
+   "enabled": true,
+   "tolerance": 1.1,
+   "radius": 0.12,
+   "pairs": []
+  }
+ },
+ "environment": {
+  "preset": "white",
+  "transparent": false,
+  "background": {
+   "mode": "solid",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "bottom": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "clouds": 0.0,
+   "image": null
+  },
+  "floor": {
+   "enabled": false,
+   "color": [
+    0.9,
+    0.9,
+    0.9
+   ],
+   "reflection": 0.0,
+   "offset": 0.0
+  },
+  "lighting": {
+   "preset": "soft",
+   "key_light": 1.0,
+   "fill_light": 0.35,
+   "key_azimuth": -29.0,
+   "key_elevation": 33.0,
+   "light_size": 0.0,
+   "shadows": true,
+   "reflector": false
+  }
+ },
+ "materials": [],
+ "output": {
+  "width": 1600,
+  "height": 1200
+ }
+}

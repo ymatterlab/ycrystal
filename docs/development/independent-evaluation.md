@@ -54,16 +54,20 @@ three hours. Use your own structures where you can; the repository's
       view, then render a PNG (*Render ▸ Render Image…*). Follow
       `docs/guide/first-figure.md` if you like.
 - [ ] **3. Reuse the look.** Save the look as a style (*File ▸ Export Style…*) and apply
-      it to a second structure with *File ▸ Import Style…*. If the second structure
-      has other elements, try the element mapping in that dialog.
+      it to a second structure with *File ▸ Import Style…*. Then apply the supplied
+      style `examples/publication/styles/paper.ycstyle` to a material of your own. If a
+      structure has other elements than the style, try the element mapping in that
+      dialog.
 - [ ] **4. From the command line.** Apply the same style to a third structure with
       `ycrystal FILE --style STYLE.ycstyle --render OUT.png`, with a view such as
       `--view c` (`docs/guide/examples.md`).
-- [ ] **5. A series.** Copy `examples/batch-series.json`, change it to render three of
-      your own structures with your style, and run it with `--batch … --output-dir …`.
+- [ ] **5. A series.** Copy `examples/publication/gallery.json` (or
+      `examples/batch-series.json`), change it to render three of your own structures
+      with your style, and run it with `--batch … --output-dir …`.
 - [ ] **6. Reproduce a figure.** Render one figure with `--save-project FIGURE.ycrystal`,
       move or delete its structure file and style, and render the snapshot again
-      (`docs/guide/reproducibility.md`). Compare the two images.
+      (`docs/guide/reproducibility.md`). Compare the two images. Then re-open the
+      snapshot in the window (*File ▸ Open…*) and check that it looks as rendered.
 - [ ] **7. Optional.** Send the snapshot to the other evaluator or a colleague and ask them
       to render it on their computer.
 

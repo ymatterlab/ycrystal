@@ -6,12 +6,15 @@ and timestamps are fixed, so that regenerating gives the same files.
 
     python scripts/make_examples.py
 
+It also writes the two styles of the publication gallery in ``examples/publication``.
+
 Render one without opening a window:  ycrystal examples/SrTiO3-studio.ycrystal --render out.png
 """
 
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 from ycrystal.core.camera import Camera
@@ -49,7 +52,7 @@ def write_json(path: Path, data: dict) -> None:
     data["saved_at"] = STAMP
     data["generator"] = "Ycrystal (scripts/make_examples.py)"
     path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"wrote {path.relative_to(ROOT)}")
+    print(f"wrote {path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}")
 
 
 def main() -> None:
@@ -108,6 +111,43 @@ def main() -> None:
     write_json(EXAMPLES / "triclinic-transparent.ycrystal", project_to_dict(project))
 
     vector_example()
+    publication_styles()
+
+
+# Colour-blind-safe colours (Okabe and Ito) for the perovskite sites of the gallery.
+PAPER_COLORS = {
+    "Sr": (0.0, 0.62, 0.451),  # A site: bluish green
+    "Ti": (0.0, 0.447, 0.698),  # B site: blue
+    "O": (0.835, 0.369, 0.0),  # vermillion
+}
+
+
+def publication_styles(folder: Path = EXAMPLES / "publication" / "styles") -> None:
+    """5. The two styles of the publication gallery (FR-GALLERY-01).
+
+    ``paper.ycstyle`` is a restrained look for a journal page: satin, a white background,
+    soft lighting, and the site colours of ``PAPER_COLORS``, 1600 × 1200 px.
+    ``cover.ycstyle`` keeps those colours and adds ceramic Sr, chrome Ti, and ruby-glass
+    O in a dark studio with a reflective floor and a point key light (hard shadows).
+    Neither changes element radii, so the cover can be applied to a snapshot made with
+    the paper style without changing its geometry or camera.
+    """
+    folder.mkdir(parents=True, exist_ok=True)
+    cif = EXAMPLES / "publication" / "structures" / "SrTiO3.cif"
+    srtio3 = relative_source(read_structure(cif), cif)
+    paper = SceneSettings(
+        material="satin", cell_edge_color=get_environment("white").cell_edge_color
+    )
+    for element, color in PAPER_COLORS.items():
+        paper = paper.with_element_color(element, color)
+    style = Style.from_state(srtio3, paper, environment_from_preset("white"), (1600, 1200))
+    write_json(folder / "paper.ycstyle", style_to_dict(style))
+    dark = get_environment("studio_dark")
+    cover = replace(paper, cell_edge_color=dark.cell_edge_color)
+    for element, material in (("Sr", "ceramic"), ("Ti", "chrome"), ("O", "glass_ruby")):
+        cover = cover.with_element_material(element, material)
+    style = Style.from_state(srtio3, cover, environment_from_preset("studio_dark"), (1600, 1200))
+    write_json(folder / "cover.ycstyle", style_to_dict(style))
 
 
 def vector_example() -> None:

@@ -15,12 +15,14 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   development version `0.4.0.dev0`.
   FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
   listed as "Unreleased" in `CHANGELOG.md`.
-- **Work in progress:** FR-VALIDATION-01 (validation tests, benchmark and replay-check
-  scripts, evidence report, comparison, evaluation checklist; no application change)
-  submitted from branch `feature/validation` as PR #33, to be merged after CI passes.
-  FR-STYLE-CLI-01 (PR #28), FR-STYLE-MAP-01 (PR #29), FR-CAMERA-01
-  (PR #30), FR-BATCH-01 (PR #31), and FR-REPRO-01 (PR #32, merge commit `e7ec99f`; the
-  user tested it by hand) are merged. Nothing else is open or authorized;
+- **Work in progress:** FR-GALLERY-01 (publication gallery: `examples/publication/`,
+  `scripts/make_gallery.py`, gallery and manuscript-figure pages; no application
+  change) and the audit of the next tests on other computers
+  (`docs/development/next-tests.md`) submitted from branch `feature/gallery` as PR #34,
+  to be merged after CI passes. Merged: FR-STYLE-CLI-01 (PR #28), FR-STYLE-MAP-01
+  (PR #29), FR-CAMERA-01 (PR #30), FR-BATCH-01 (PR #31), FR-REPRO-01 (PR #32; the user
+  tested it by hand), and FR-VALIDATION-01 (PR #33, merge commit `0c18079`). Nothing
+  else is open or authorized;
   see [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
@@ -41,6 +43,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-BATCH-01 `--batch MANIFEST --output-dir DIR` (`--dry-run`, `--overwrite`), report JSON | PR #31 |
 | unreleased | FR-REPRO-01 `--save-project FIGURE.ycrystal`, manifest `save_projects`, provenance records | PR #32 |
 | unreleased | FR-VALIDATION-01 validation tests, `scripts/benchmark_render.py`, `scripts/replay_check.py`, evidence report (no application change) | PR #33 |
+| unreleased | FR-GALLERY-01 publication gallery (`examples/publication/`, `scripts/make_gallery.py`), gallery and manuscript-figure pages (no application change) | PR #34 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
@@ -66,6 +69,9 @@ Known limitations and unresolved issues:
   the laptop), and replays between two machines (commands in
   `docs/development/validation.md`). The comparison with VESTA, OVITO, and CView is
   from their documentation only. No independent evaluation has taken place.
+- FR-GALLERY-01: the gallery was rendered on the Linux laptop only. Its snapshots
+  have not been replayed on another machine. Figure 1 (schematic, screenshot) and the
+  plots of Figure 4 are still to be made (`docs/development/manuscript-figures.md`).
 - JAC submission: referees need anonymous access to the program and a web page with
   documentation (per the journal's instructions; recheck them), but the repository
   is private. Decide how to provide access before submitting.
@@ -79,69 +85,77 @@ Known limitations and unresolved issues:
 - **Date and machine:** 17 November 2026, the Linux laptop (Linux Mint 22.1, Intel
   Core Ultra 5 135U, 14 logical CPUs, 7.2 GiB, Python 3.12.3, POV-Ray 3.7.0.10 from
   apt).
-- **Done first:** FR-REPRO-01 committed on `feature/repro-snapshots` (`86ba228`) after
-  the user's review and hand test, PR #32. CI passed: pre-commit, docs, Ubuntu full
-  suite, and macOS without windows. Merged at `e7ec99f`, as the user asked.
-- **Then:** FR-VALIDATION-01 on branch `feature/validation` from `e7ec99f`, submitted
-  as PR #33 after the user's review. The private plan was read but not changed.
+- **Done first:** FR-VALIDATION-01 committed on `feature/validation` (`77008d6`) after
+  the user's review, PR #33. CI passed: pre-commit, docs, Ubuntu full suite (7 min),
+  and macOS without windows (7 min). Merged at `0c18079`, as the user asked.
+- **Then:** FR-GALLERY-01, reviewed by the user, and an audit of the tests still to
+  run on the Mac and other computers (`docs/development/next-tests.md`). Committed on
+  `feature/gallery` from `0c18079` as PR #34. The private plan was read but not
+  changed.
 
-Summary of FR-VALIDATION-01 changes (no file under `src/` changed):
+Summary of FR-GALLERY-01 changes (no file under `src/` changed):
 
-- `tests/test_validation.py` (new, 55 tests; 26 with real POV-Ray), checking:
-  - the scene file against the shared geometry;
-  - ray-traced atoms, periodic images, bonds, and arrows against the camera model;
-  - that fitted views are never clipped;
-  - that styles change no scientific data;
-  - shadows, soft shadows, reflection, and refraction.
-- `tests/test_validation_scripts.py` (new, 4 tests; 1 with real POV-Ray).
-  `tests/conftest.py::fake_povray` is shared now (moved from
-  `test_reproducibility.py`, with a colour setting).
-- `scripts/benchmark_render.py` and `scripts/replay_check.py` (new).
+- `examples/publication/`:
+  - README (cases, files, provenance, licences, commands);
+  - `gallery.json` (five jobs, mapping Sr → Ba and Ti → Zr, a 9 Å scale for both
+    perovskites, `save_projects`);
+  - `styles/paper.ycstyle` and `styles/cover.ycstyle`, generated by
+    `scripts/make_examples.py::publication_styles`;
+  - `structures/`: SrTiO3 and BaZrO3 copied from the fixtures, and kyanite from the
+    COD (entry 1008755, CC0, authors credited; also in `THIRD_PARTY_NOTICES.md`).
+- `scripts/make_gallery.py`:
+  - runs the batch from a temporary copy of the inputs;
+  - renders two variants from the SrTiO3 snapshot;
+  - deletes the inputs and replays every snapshot;
+  - writes the figure-methods table and, optionally, thumbnails.
 - Documentation:
-  - new developer pages `docs/development/validation.md` (evidence, tolerances,
-    results), `comparison.md`, and `independent-evaluation.md`, all in the navigation;
-  - raw results in `docs/development/validation-results/`;
-  - fixture README (real vs synthetic), CONTRIBUTING, changelog.
+  - `docs/guide/gallery.md`, with thumbnails in `docs/assets/gallery/` (seven JPEGs,
+    17–26 KB) and the recorded methods table;
+  - `docs/development/manuscript-figures.md`;
+  - the independent evaluation checklist now uses the supplied style and manifest;
+  - examples guide, CONTRIBUTING, changelog.
+- `tests/test_gallery.py` (new, 7 tests; 1 runs the whole script with real POV-Ray).
 
 Tests and runs on the laptop:
 
 | Check | Result |
 | --- | --- |
-| New and affected test files with `YCRYSTAL_REQUIRE_INTEGRATION=1` (real POV-Ray) | 84 passed, none skipped |
-| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` | 702 passed, 172 GUI tests deselected (they still collect), none skipped |
-| `benchmark_render.py --quick --scale 0.5 --repeats 3` | 9 cases recorded (`docs/development/validation-results/`); glass is by far the costliest (65 s at 400 × 300) |
-| `replay_check.py` on the same laptop | 9 of 9 identical pixels |
-| Lint, pre-commit on the changed files, `scripts/docs_examples.py`, `zensical build --clean --strict` | Clean |
+| `scripts/make_gallery.py --out artifacts/gallery --thumbnails docs/assets/gallery` (1600 × 1200) | 7 figures rendered; 7 of 7 snapshots replayed with identical pixels after the inputs were deleted; methods table written |
+| `tests/test_gallery.py` with `YCRYSTAL_REQUIRE_INTEGRATION=1` | 7 passed |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` | 709 passed, 172 GUI tests deselected, none skipped |
+| `scripts/docs_examples.py`, `pre-commit` on the new and changed files, `zensical build --clean --strict` | Clean |
 
-Not done: GUI tests (no GUI code changed), the full benchmark, macOS, replays between
-two machines, CI; hands-on runs by a person. A first benchmark run measured memory
-wrongly (it counted the benchmark's own process); it was discarded and the method fixed
-(see PROGRESS.md).
+Not done: GUI tests (no GUI code changed), macOS, replays on another machine, CI;
+hands-on runs by a person.
 
 ## Next recommended steps
 
-1. Watch the CI of PR #33 and merge it when it passes. The new tests add about 1 min
-   of POV-Ray renders per CI job.
-2. On the Mac, run:
-   - the validation tests;
-   - `scripts/benchmark_render.py --quick --scale 0.5 --repeats 3`;
-   - `scripts/replay_check.py` on a reference set from the other machine (copy the
-     `snapshots` folder of a benchmark run).
+1. Watch the CI of PR #34 and merge it when it passes. The gallery test adds about
+   25 s of POV-Ray per CI job, and on macOS it is the first run of the gallery
+   script on that system.
+2. Run the tests of [docs/development/next-tests.md](development/next-tests.md)
+   (audited 17 November 2026), in its order:
+   - on the Mac mini: the full suite with real windows (881 expected), the memory
+     check, the benchmark, replays of the Linux reference sets, and the gallery;
+   - by hand on the Mac and the laptop;
+   - a clean-computer dry run.
 
-   Record the results in `docs/development/validation-results/` and the report (see
-   `docs/development/validation.md`).
-3. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
+   Record results only as they are obtained.
+3. For the manuscript: draw the workflow schematic and take the window screenshot
+   (Figure 1), make the plots of Figure 4 from the recorded data, and have two
+   independent evaluators work through the checklist.
+4. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
    checks so far), for example with `tests/fixtures/BaZrO3.cif` and
    `examples/grey-studio.ycstyle` as in the examples guide; and the View along buttons
    in every order (the camera fix of PR #30).
-4. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
+5. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
    1 failure that did not reproduce (PR #30's CI and three later full runs passed); its
    name was not captured.
-5. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
+6. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
    check its size there.
 
-FR-GALLERY-01 (in the private plan) is **not** authorized by this record; it needs its
-own request.
+Every request of the private plan's section 15 is now merged or in review. Nothing
+further is authorized by this record; new work needs its own request.
 
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
@@ -187,7 +201,8 @@ user's report for PR #22.
 | View and framing policies (FR-CAMERA-01) | Verified by CI (PR #30, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
 | Batch manifests (FR-BATCH-01) | Verified by CI (PR #31, Ubuntu, full suite under Xvfb) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
 | Snapshots and provenance (FR-REPRO-01) | Verified 17 Nov 2026 on the Mint laptop (automated, real POV-Ray 3.7.0.10; the user's hand test) and by CI (PR #32, full suite under Xvfb) | CI only (PR #32, tests without windows, real POV-Ray); not run on the Mac itself | Not tested |
-| Validation suite and benchmark (FR-VALIDATION-01) | Verified 17 Nov 2026 on the Mint laptop (tests with real POV-Ray; benchmark quick set at half size; replay check on the same machine); CI of PR #33 | Not tested | Not tested |
+| Validation suite and benchmark (FR-VALIDATION-01) | Verified 17 Nov 2026 on the Mint laptop (tests with real POV-Ray; benchmark quick set at half size; replay check on the same machine) and by CI (PR #33, full suite under Xvfb) | CI only (PR #33, tests without windows, real POV-Ray); benchmark and replay check not run on the Mac | Not tested |
+| Publication gallery (FR-GALLERY-01) | Verified 17 Nov 2026 on the Mint laptop (full-size render of all 7 figures, replay of all snapshots, gallery tests); CI of PR #34 | Not tested | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
@@ -281,7 +296,7 @@ Troubleshooting:
 | `IMPLEMENTATION_PLAN.md` | Private, gitignored | Copy manually (USB drive or private storage) to the repository root; keep it untracked |
 | Other private planning files at the root (older plan copies, the owner's notes) | Untracked; excluded in this checkout's `.git/info/exclude`, not in `.gitignore` | Copy manually if wanted, and add them to `.git/info/exclude` in the new checkout; never `git add -A` without checking |
 | `.venv/`, `.venv-docs/` | Gitignored | Recreate on each machine (never copy between systems) |
-| `artifacts/` | Gitignored | Local screenshots and renders; not needed |
+| `artifacts/` | Gitignored | Local screenshots and renders. Exception: the reference sets for replays between machines, `artifacts/gallery/figures/` and `artifacts/validation/bench-linux/snapshots/`, must be copied byte for byte to the other computer (see `docs/development/next-tests.md`) |
 | `build/`, `dist/`, `.cache/`, `site/` | Gitignored | Generated; recreate if needed |
 | Ycrystal settings | Outside the repository | Preferences, favourites, and personal materials are per machine (`QSettings`): `~/.config/Y-Matter Lab/` on Linux; `~/Library/Preferences/com.y-matter-lab.Ycrystal.plist` and `~/Library/Application Support/Y-Matter Lab/Ycrystal/` on macOS |
 | Claude Code memory | Outside the repository | Local to each machine; `CLAUDE.md` and this file replace it |
@@ -304,6 +319,14 @@ Troubleshooting:
 - Personal materials are stored in `QSettings` (`materials/personal`) with thumbnails in
   a `material-thumbnails/` folder (per machine, not in Git; locations above).
 - Preview resolution presets are widths (Small 480, Medium 800, Large 1200, Custom).
+- Gallery (FR-GALLERY-01):
+  - The low-symmetry case uses kyanite, COD 1008755 (real, ordered, P-1, CC0, authors
+    credited), not the invented triclinic fixture.
+  - The SrTiO3 variants are rendered from the paper figure's snapshot with the cover
+    style, so geometry, camera, and size are identical by construction.
+  - Full-size renders stay out of Git. The docs carry only 480 px JPEG thumbnails of
+    real renders, regenerated by the gallery script.
+  - The independent-user sheet is the existing checklist, extended; no second sheet.
 - Validation (FR-VALIDATION-01):
   - Images are checked by measured properties, never against stored pixels.
   - Tolerances: sphere centre 0.5 px, disc area 8 %, fitted bounds 1.5 px, scene file
