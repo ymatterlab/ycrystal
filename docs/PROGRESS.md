@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 17 November 2026 (FR-STYLE-CLI-01, styles from the command line; not yet committed). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; uncommitted). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 17 November 2026 (FR-STYLE-CLI-01, styles from the command line; branch `feature/style-cli`, not merged). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; branch `feature/style-cli`, not merged). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -95,7 +95,8 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 
 ## FR-STYLE-CLI-01: styles from the command line (post-0.3.0, 17 November 2026)
 
-Development after version 0.3.0, on `main` at `410d87e` (0.4.0.dev0); not yet committed.
+Development after version 0.3.0, on branch `feature/style-cli` from `main` at `410d87e`
+(0.4.0.dev0); commit `b8801ac`, not merged.
 `ycrystal FILE --style STYLE.ycstyle [--style-parts LIST] --render OUT.png | --export-pov
 OUT.pov` applies a style without a window. `batch.apply_style_file` loads the style
 with `load_style` and calls the existing `apply_style` on the input from `load_input`;

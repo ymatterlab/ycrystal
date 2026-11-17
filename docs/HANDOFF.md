@@ -16,7 +16,8 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
   listed as "Unreleased" in `CHANGELOG.md`.
 - **Work in progress:** FR-STYLE-CLI-01 (styles from the command line) is implemented
-  and tested on the Mac, **not yet committed**. No other feature is open or authorized;
+  and tested on the Mac, committed on branch `feature/style-cli` (pushed; no pull
+  request yet). No other feature is open or authorized;
   see [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
@@ -31,7 +32,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | 0.3.0 | Maintenance: macOS (Apple silicon) support, Ubuntu + macOS CI | PR #22, tag `v0.3.0` |
 | unreleased | FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi | PR #23 |
 | unreleased | Maintenance: new application icon and logo, logo-rendering script; Linux launcher refreshes the icon cache | PRs #25, #26 |
-| unreleased | FR-STYLE-CLI-01 `--style`/`--style-parts` apply a `.ycstyle` before `--render`/`--export-pov` | Not yet committed |
+| unreleased | FR-STYLE-CLI-01 `--style`/`--style-parts` apply a `.ycstyle` before `--render`/`--export-pov` | Branch `feature/style-cli` (not merged) |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01 and FR-EXPORT-01
@@ -53,8 +54,9 @@ Known limitations and unresolved issues:
 ## Latest development session
 
 - **Date and machine:** 17 November 2026, Mac mini (macOS 15.8, Apple silicon).
-- **Branch:** `main` at `410d87e` (working tree; no feature branch created yet).
-- **Commits:** none — the changes are uncommitted, as requested.
+- **Branch:** `feature/style-cli`, created from `main` at `410d87e`.
+- **Commits:** `b8801ac` and a follow-up correcting this record; pushed, no pull
+  request or merge yet.
 - **Task:** FR-STYLE-CLI-01 only — apply `.ycstyle` files from the command line.
   Evidence: "FR-STYLE-CLI-01" in PROGRESS.md.
 
@@ -89,8 +91,8 @@ Not done: Linux (CI will run it on a push); hands-on use by a person.
 
 ## Next recommended steps
 
-1. Review the FR-STYLE-CLI-01 changes; commit, push, and open a PR when the user asks.
-   CI then runs the new tests on Ubuntu (not yet run on Linux).
+1. Open a pull request for `feature/style-cli` when the user asks; CI then runs the new
+   tests on Ubuntu (not yet run on Linux). Merge after CI passes, when the user asks.
 2. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
    check its size there.
 
@@ -136,7 +138,7 @@ user's report for PR #22.
 | Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified (PR #22, user report) | Verified 16 Nov 2026 | Not tested |
 | GUI tests (real windows, OpenGL) | Verified (PR #22, user report; CI under Xvfb) | Verified 16 Nov 2026 (non-Retina display) | Not tested |
 | PNG/PDF/JPEG export (FR-EXPORT-01) | Verified by CI (PR #23, Ubuntu, full suite) | Verified 16 Nov 2026 (automated, real POV-Ray; CI without windows); the user reports it working | Not tested |
-| Styles from the command line (FR-STYLE-CLI-01) | Not tested (CI runs it once the branch is pushed) | Verified 17 Nov 2026 (automated, real POV-Ray; uncommitted) | Not tested |
+| Styles from the command line (FR-STYLE-CLI-01) | Not tested by hand; CI (Ubuntu) runs it on a pull request | Verified 17 Nov 2026 (automated, real POV-Ray) | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
