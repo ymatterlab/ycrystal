@@ -15,11 +15,10 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   development version `0.4.0.dev0`.
   FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
   listed as "Unreleased" in `CHANGELOG.md`.
-- **Work in progress:** FR-CAMERA-01 (view and framing policies) submitted from
-  branch `feature/camera-policy` as PR #30, to be merged after CI passes; then
-  FR-BATCH-01, which the user authorized to follow once FR-CAMERA-01 is merged.
-  FR-STYLE-CLI-01 (PR #28) and FR-STYLE-MAP-01 (PR #29) are merged. Nothing else is
-  open or authorized;
+- **Work in progress:** FR-BATCH-01 (batch manifests) submitted from branch
+  `feature/batch-manifest` as PR #31, to be merged after CI passes. FR-STYLE-CLI-01
+  (PR #28), FR-STYLE-MAP-01 (PR #29), and FR-CAMERA-01 (PR #30) are merged. Nothing
+  else is open or authorized;
   see [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
@@ -37,6 +36,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-STYLE-CLI-01 `--style`/`--style-parts` apply a `.ycstyle` before `--render`/`--export-pov` | PR #28 |
 | unreleased | FR-STYLE-MAP-01 element mapping for styles (`--element-map`, Import Style dialog) | PR #29 |
 | unreleased | FR-CAMERA-01 `--view`, `--camera-policy`, `--fit-margin`, `--view-height` (shared with View along) | PR #30 |
+| unreleased | FR-BATCH-01 `--batch MANIFEST --output-dir DIR` (`--dry-run`, `--overwrite`), report JSON | PR #31 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01 and FR-EXPORT-01
@@ -58,36 +58,34 @@ Known limitations and unresolved issues:
 ## Latest development session
 
 - **Date and machine:** 17 November 2026, Mac mini (macOS 15.8, Apple silicon).
-- **Branch:** `feature/camera-policy`, created from `main` at `445ca84` (PR #29 merged).
-- **Commits:** on `feature/camera-policy`, pull request #30 (merge after CI passes).
-- **Task:** FR-CAMERA-01, then FR-BATCH-01 (each merged after CI before the next), as
-  the user asked. Evidence: "FR-CAMERA-01" in PROGRESS.md.
+- **Branches:** `feature/camera-policy` (FR-CAMERA-01, merged in PR #30 at `a4ba148`
+  after CI passed), then `feature/batch-manifest` from `a4ba148` (FR-BATCH-01, PR #31),
+  one after the other as the user asked.
+- **Task:** FR-CAMERA-01 and FR-BATCH-01. Evidence: "FR-CAMERA-01" and "FR-BATCH-01" in
+  PROGRESS.md.
 
-Summary of changes:
+Summary of FR-BATCH-01 changes:
 
-- `core/camera.py`: `axis_view`, `ViewPolicy`, `CameraPolicyError`, `VIEWS`,
-  `CAMERA_POLICIES`, `DEFAULT_DIRECTION`, `DEFAULT_MARGIN`.
-- `batch.py`: `scene_for`, `export_scene`, `render_png` take `view=ViewPolicy(...)`;
-  `apply_style_file(..., camera_kept=True)`. `app.py`: `--view`, `--camera-policy`,
-  `--fit-margin`, `--view-height`.
-- `gui/main_window.py`: `view_along` uses `axis_view` (same behaviour).
-  `viewport/qt_viewport.py`: camera changes reported once per `set_camera` (fix).
-- Tests: 138 new in `tests/test_camera.py`, 4 in `tests/test_release.py` (one real
-  POV-Ray), 1 in `tests/test_gui_scene.py`.
-- Documentation: examples guide (new "Choose the view and framing", with the
-  motivation and four commands), controls guide (screen-up rule, real-space vs hkl),
-  README, API reference (`camera`), changelog; `scripts/docs_examples.py` runs the
-  documented commands.
+- `src/ycrystal/manifest.py` (new): `load_manifest`, `plan_batch` (complete
+  validation), `run_batch`, `write_report`, `ManifestError`, `PlannedJob`, `JobResult`,
+  `BatchReport`.
+- `app.py`: `--batch`, `--output-dir`, `--dry-run`, `--overwrite`; exit status 0/1/2.
+- `examples/batch-series.json` (new): five structures, one style, one element map.
+- Tests: `tests/test_batch_manifest.py` (19, one with real POV-Ray).
+- Documentation: examples guide ("Render a series from a manifest": motivation, the
+  manifest, a settings table with command-line equivalents, what happens, exit
+  status), README, API reference (`cli`), changelog; `scripts/docs_examples.py`
+  checks the documented dry-run output.
 
 Tests performed on the Mac:
 
 | Check | Result |
 | --- | --- |
-| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (real windows, Homebrew POV-Ray 3.7.0.10) | 771 passed, none skipped (twice; one earlier run: 1 unidentified failure, not reproduced) |
-| Doctests (`core/camera.py`, `batch.py`), `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Clean |
-| Renders: MgB2 down c; SrTiO3 and BaZrO3 down a at the same 9 Å height | As documented |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rf` (real windows, Homebrew POV-Ray 3.7.0.10) | 790 passed, none skipped |
+| Doctests, `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Clean |
+| The example series rendered and inspected (five images) | As documented |
 
-Not done: Linux (CI of PR #30); hands-on use of the View along buttons in every order.
+Not done: Linux (CI of PR #31); hands-on runs by a person.
 
 ## Next recommended steps
 
@@ -96,13 +94,13 @@ Not done: Linux (CI of PR #30); hands-on use of the View along buttons in every 
    `examples/grey-studio.ycstyle` as in the examples guide; and the View along buttons
    in every order (the camera fix of PR #30).
 2. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
-   1 failure that did not reproduce twice; its name was not captured.
+   1 failure that did not reproduce (PR #30's CI and three later full runs passed); its
+   name was not captured.
 3. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
    check its size there.
 
-FR-BATCH-01 is authorized by the user to follow FR-CAMERA-01 once that is merged after
-CI. Later features in the private plan (FR-REPRO-01, …) are **not** authorized by this
-record; each needs its own request.
+Later features in the private plan (FR-REPRO-01, FR-VALIDATION-01, FR-GALLERY-01) are
+**not** authorized by this record; each needs its own request.
 
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
@@ -145,7 +143,8 @@ user's report for PR #22.
 | PNG/PDF/JPEG export (FR-EXPORT-01) | Verified by CI (PR #23, Ubuntu, full suite) | Verified 16 Nov 2026 (automated, real POV-Ray; CI without windows); the user reports it working | Not tested |
 | Styles from the command line (FR-STYLE-CLI-01) | Verified by CI (PR #28, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
 | Element mapping for styles (FR-STYLE-MAP-01) | Verified by CI (PR #29, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray, scripted dialog screenshots; CI without windows) | Not tested |
-| View and framing policies (FR-CAMERA-01) | CI of PR #30 (Ubuntu, full suite under Xvfb) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
+| View and framing policies (FR-CAMERA-01) | Verified by CI (PR #30, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
+| Batch manifests (FR-BATCH-01) | CI of PR #31 (Ubuntu, full suite under Xvfb) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
@@ -262,6 +261,10 @@ Troubleshooting:
 - Personal materials are stored in `QSettings` (`materials/personal`) with thumbnails in
   a `material-thumbnails/` folder (per machine, not in Git; locations above).
 - Preview resolution presets are widths (Small 480, Medium 800, Large 1200, Custom).
+- Batch (FR-BATCH-01): validate the whole manifest first, report every problem, render
+  nothing if any (status 2); sequential jobs; no overwriting without `--overwrite`; a
+  failed job does not stop the others (status 1); PNG only; paths relative to the
+  manifest; unknown keys refused; `max_atoms` default 20,000.
 - Views (FR-CAMERA-01): one rule for the window and `--view` (`core/camera.py::axis_view`);
   a, b, c are real-space vectors; a saved camera is kept unless a view, a fixed height,
   or `--camera-policy fit` is asked for; fitted views include whole arrows; a fixed

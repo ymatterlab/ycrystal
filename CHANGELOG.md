@@ -43,6 +43,13 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   space around a fitted view, and `--view-height ANGSTROM` draws several structures at
   the same physical scale (an error, never a crop, if the scene does not fit). Without
   these options the camera is chosen as before.
+- **Render a series from a manifest (FR-BATCH-01).** `ycrystal --batch MANIFEST.json
+  --output-dir DIR` renders every job of a small JSON manifest (inputs, a shared style,
+  element mappings, views, sizes) to PNGs, one after the other, without a window. The
+  whole manifest is checked first and every problem reported before anything is
+  rendered; existing images are kept unless `--overwrite` is given; a failed job does
+  not stop the others; `ycrystal-batch-report.json` records every job. `--dry-run`
+  checks without rendering. Example: `examples/batch-series.json`.
 
 ### Fixes
 - Switching the view directly between some axes in the window (for example from c to

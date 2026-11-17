@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 17 November 2026 (FR-CAMERA-01, view and framing policies; PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), and FR-CAMERA-01 (view and framing policies; PR #30). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 17 November 2026 (FR-BATCH-01, batch manifests; PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), and FR-BATCH-01 (batch manifests; PR #31). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -93,10 +93,61 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## FR-BATCH-01: render a series from a manifest (post-0.3.0, 17 November 2026)
+
+Development after version 0.3.0, on branch `feature/batch-manifest` from `main` at
+`a4ba148` (PR #30 merged); submitted as PR #31. `ycrystal --batch MANIFEST.json
+--output-dir DIR [--dry-run] [--overwrite] [--povray PATH]` renders the jobs of a
+versioned JSON manifest (`format: ycrystal-batch`, schema 1) to PNGs, sequentially and
+without a window. Example: `examples/batch-series.json` (five structures, one style,
+one element mapping, two views, a project with vectors).
+
+Design: new module `src/ycrystal/manifest.py`, a thin orchestrator over the
+single-figure functions (`load_input`, `apply_style_file`, `ViewPolicy`, `scene_for`,
+`render_png`); no second renderer, style parser, or camera code, no queue or
+parallelism (POV-Ray already uses every core for one image), no new dependency.
+`plan_batch` validates everything first: top-level layout and schema, unknown keys
+(typos are errors), unique safe ids, outputs (relative `.png`, no `..` or absolute
+paths, unique case-insensitively, existing files refused without `--overwrite`),
+inputs (present and readable), styles (each loaded once), style parts, element maps
+(symbols, then targets via the style transfer), camera policies (including a fixed
+height that does not fit), sizes, and `max_atoms` (default 20,000; never truncated).
+All problems of all jobs are reported together; then nothing is rendered or written
+(exit status 2). `run_batch` finds POV-Ray before any job (missing: status 1, nothing
+written), creates the output folder, renders in manifest order, records a failed job
+and continues, and writes `ycrystal-batch-report.json` atomically (job id, input and
+output as given, status, seconds, size, atoms, warnings, error; Ycrystal and POV-Ray
+versions). Images are copied into place only after a successful render. Status 0 if
+all jobs rendered, 1 if any failed. `--batch` refuses the single-figure options; the
+batch options need `--batch`.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Example manifest: five jobs in order, outputs (one in a subfolder), 600 × 450, Ti → Zr mapping, per-job views, environment-only style parts, vectors kept; validation writes nothing | Pass | `test_example_manifest_plans_five_jobs_in_order` |
+| One manifest with 19 jobs and 18 different problems (duplicate and invalid ids, case-insensitive output clash, `../` and absolute outputs, non-PNG, missing and unreadable inputs, missing style, bad style parts, bad symbol, absent target, mapping without style, too small view height, bad width, too many atoms, misspelt key, existing output): every problem reported, nothing written | Pass | `test_every_problem_is_reported_and_nothing_is_written` |
+| Bad manifest files: not JSON, wrong format, newer schema, no jobs, unknown top-level key | Pass | `test_bad_manifest_files` (5) |
+| A failed job does not stop the others; order kept; failed job's image not written; report summary, order, relative paths; no `.part` files | Pass | `test_a_failed_job_does_not_stop_the_others` |
+| Dry run and missing POV-Ray write nothing | Pass | `test_dry_run_and_missing_povray_write_nothing` |
+| CLI: dry run output and warnings; invalid manifest status 2 with the problem list; failed jobs status 1 with a report; usage errors for mixed options | Pass | `test_batch_command_line_exit_codes`, `test_batch_usage_errors` (6) |
+| No window toolkit loaded (subprocess, no `DISPLAY`) | Pass | `test_batch_needs_no_window_toolkit` |
+| Real POV-Ray 3.7: the example series into a folder with a space and `ü`: five 600 × 450 PNGs, all `rendered`, renderer recorded, inputs/style/project byte-identical; rerun refused (status 2), `--overwrite` accepted, no `.part` files | Pass | `test_example_series_renders_with_povray` |
+| Example manifest paths are relative and exist | Pass | `test_example_manifest_is_listed_in_the_examples` |
+
+Visual check (Claude, on the Mac): the five rendered images side by side (SrTiO3 and
+BaZrO3 along a with chrome Ti/Zr, MgB2 down c, the triclinic cell, the vector example
+refitted), all in the grey studio. `scripts/docs_examples.py` (run in CI) runs the
+example's dry run and checks that every printed line appears in the guide.
+
+Regression runs on the Mac mini (macOS 15.8, Homebrew POV-Ray 3.7.0.10):
+`YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rf` 790 passed, none skipped (201 s; 19 new
+tests in `tests/test_batch_manifest.py`); doctests of `manifest.py`, `batch.py`;
+`pre-commit run --all-files`; `zensical build --clean --strict` clean. **Linux not run
+locally** (CI of PR #31).
+
 ## FR-CAMERA-01: view and framing policies (post-0.3.0, 17 November 2026)
 
 Development after version 0.3.0, on branch `feature/camera-policy` from `main` at
-`445ca84` (PR #29 merged); submitted as PR #30. Reproducible orientation and framing for
+`445ca84` (PR #29 merged); merged in PR #30 (merge commit `a4ba148`). Reproducible orientation and framing for
 figures made without a window: `--view default|a|b|c|x|y|z`, `--camera-policy
 saved|fit`, `--fit-margin FRACTION`, `--view-height ANGSTROM`.
 

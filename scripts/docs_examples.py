@@ -177,6 +177,15 @@ def main() -> None:
             args = [str(fixtures / "SrTiO3.cif"), "--view", "a", "--view-height", "1"]
             assert ycrystal([*args, "--export-pov", str(directory / "small")]) == 1
         assert "it needs at least 5.85 Å" in stderr.getvalue()
+        # Render a series (examples guide): the dry run prints what the guide quotes.
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            args = ["--batch", str(root / "examples" / "batch-series.json"), "--output-dir"]
+            assert ycrystal([*args, str(directory / "renders"), "--dry-run"]) == 0
+        guide = (root / "docs" / "guide" / "examples.md").read_text(encoding="utf-8")
+        for line in (stderr.getvalue() + stdout.getvalue()).splitlines():
+            assert line in guide, line
+        assert not (directory / "renders").exists()
     print("Documentation examples passed (no display or renderer).")
 
 

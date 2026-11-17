@@ -15,6 +15,22 @@
         - export_scene
         - render_png
 
+::: ycrystal.manifest
+    options:
+      members:
+        - MANIFEST_FORMAT
+        - MANIFEST_SCHEMA_VERSION
+        - REPORT_NAME
+        - SETTINGS
+        - ManifestError
+        - PlannedJob
+        - JobResult
+        - BatchReport
+        - load_manifest
+        - plan_batch
+        - run_batch
+        - write_report
+
 ::: ycrystal.desktop
     options:
       members:
