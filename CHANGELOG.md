@@ -95,6 +95,19 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   - New developer pages: *Validation and benchmarks* (evidence and tolerances),
     *Comparison with other programs* (VESTA, OVITO, CView, from their documentation
     only), and an *Independent evaluation checklist*.
+- Publication gallery (FR-GALLERY-01); no change to the application.
+  - `examples/publication/` contains:
+    - two styles: a restrained *paper* style with colour-blind-safe site colours, and a
+      ray-traced *cover* style;
+    - a batch manifest with an explicit element mapping, a shared physical scale, and
+      snapshots;
+    - structure inputs, including kyanite (Al₂SiO₅, P-1) from the Crystallography Open
+      Database, entry 1008755 (CC0, original authors credited).
+  - `scripts/make_gallery.py` renders the seven figures through the command line. It
+    adds two controlled variants from one snapshot (same geometry and camera), renders
+    every snapshot again after deleting the inputs, and writes a figure-methods table.
+  - New pages: *Figure gallery* (thumbnails of real renders) and *Proposed manuscript
+    figures* (arrangement and captions).
 
 ## 0.3.0 — macOS support and richer scientific figures (16 November 2026)
 

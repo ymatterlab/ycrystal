@@ -1,0 +1,42 @@
+{
+ "format": "ycrystal-batch",
+ "schema_version": 1,
+ "comment": "The publication gallery: one restrained style (styles/paper.ycstyle) for five structures, with an explicit element mapping for BaZrO3 and the same physical scale for both perovskites. MgB2 and the synthetic vector example are the example projects in the parent folder. Each figure is also saved as a snapshot with a provenance record. Paths are relative to this file. Run everything with: python scripts/make_gallery.py --out OUT",
+ "save_projects": true,
+ "defaults": {
+  "style": "styles/paper.ycstyle"
+ },
+ "jobs": [
+  {
+   "id": "srtio3",
+   "input": "structures/SrTiO3.cif",
+   "view": "default",
+   "view_height": 9.0
+  },
+  {
+   "id": "bazro3-mapped",
+   "input": "structures/BaZrO3.cif",
+   "element_map": {
+    "Sr": "Ba",
+    "Ti": "Zr"
+   },
+   "view": "default",
+   "view_height": 9.0
+  },
+  {
+   "id": "mgb2",
+   "input": "../MgB2-gradient.ycrystal",
+   "view": "c"
+  },
+  {
+   "id": "kyanite",
+   "input": "structures/kyanite-COD-1008755.cif",
+   "view": "default"
+  },
+  {
+   "id": "afm-synthetic",
+   "input": "../vectors-synthetic-afm.ycrystal",
+   "view": "a"
+  }
+ ]
+}

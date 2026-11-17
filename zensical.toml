@@ -17,6 +17,7 @@ nav = [
         { "Materials, backgrounds, and lighting" = "guide/appearance.md" },
         { "Export and rendering" = "guide/rendering.md" },
         { "Reproducible figures" = "guide/reproducibility.md" },
+        { "Figure gallery" = "guide/gallery.md" },
         { "Supported formats and platforms" = "guide/support.md" },
         { "Troubleshooting and limitations" = "guide/troubleshooting.md" },
     ] },
@@ -27,6 +28,8 @@ nav = [
         { "Validation and benchmarks" = "development/validation.md" },
         { "Comparison with other programs" = "development/comparison.md" },
         { "Independent evaluation checklist" = "development/independent-evaluation.md" },
+        { "Proposed manuscript figures" = "development/manuscript-figures.md" },
+        { "Next tests on other computers" = "development/next-tests.md" },
         { "Release procedure and checklist" = "development/release.md" },
     ] },
     { "API reference" = [

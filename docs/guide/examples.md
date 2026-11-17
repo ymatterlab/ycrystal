@@ -11,6 +11,7 @@ ordinary `.ycrystal` files with the structure embedded, so they open anywhere:
 | `examples/vectors-synthetic-afm.ycrystal` | Synthetic two-site cubic cell (not a real material) with opposite magnetic-moment arrows (±2.2 μB along z) assigned by hand, 800 × 600 |
 | `examples/grey-studio.ycstyle` | The style of the SrTiO3 example (chrome Ti, ceramic O, grey studio, 800 × 600, 2 × 2 × 1 cells), to apply to other structures in the window or [with `--style`](#apply-a-style-from-the-command-line) |
 | `examples/batch-series.json` | A batch manifest: the grey studio style for SrTiO3, BaZrO3 (Ti → Zr), MgB2 (down c), a triclinic cell, and the vector example, all 600 × 450; see [render a series](#render-a-series-from-a-manifest) |
+| `examples/publication/` | The publication gallery: two styles (paper and cover), a manifest with snapshots, and structure inputs including kyanite from the Crystallography Open Database; see the [figure gallery](gallery.md) |
 
 Open one with **File ▸ Open…**, or `.venv/bin/ycrystal examples/MgB2-gradient.ycrystal`.
 `python scripts/make_examples.py` regenerates them.
