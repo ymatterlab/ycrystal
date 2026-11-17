@@ -61,6 +61,8 @@ python3.12 -m venv .venv
 .venv/bin/ycrystal tests/fixtures/BaZrO3.cif --style examples/grey-studio.ycstyle --element-map Ti=Zr --render BaZrO3.png
 # Look down the c axis, fitted so that nothing is cut off (or --view-height 12 for a fixed scale):
 .venv/bin/ycrystal tests/fixtures/MgB2.cif --view c --render MgB2-c.png
+# Render a whole series (one style, one view, five structures) from a JSON manifest:
+.venv/bin/ycrystal --batch examples/batch-series.json --output-dir renders
 ```
 
 Latest release 0.3.0; `main` is the development version 0.4.0.dev0. See the [changelog](CHANGELOG.md), the

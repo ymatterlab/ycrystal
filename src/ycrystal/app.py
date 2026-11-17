@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from pathlib import Path
 
 from ycrystal import __version__
 from ycrystal.core.camera import CAMERA_POLICIES, DEFAULT_MARGIN, VIEWS
@@ -104,6 +105,27 @@ def _parser() -> argparse.ArgumentParser:
         type=_element_map,
         help="with --style: give the style's element settings to other elements, e.g. "
         "Sr=Ba,Ti=Zr (O=- leaves O's settings out); a presentation choice only",
+    )
+    series = parser.add_argument_group("several figures from a manifest, without a window")
+    series.add_argument(
+        "--batch",
+        metavar="MANIFEST.json",
+        help="render every job of a batch manifest to a PNG, in order (see the examples guide)",
+    )
+    series.add_argument(
+        "--output-dir",
+        metavar="DIR",
+        help="folder for the images and ycrystal-batch-report.json (needed with --batch)",
+    )
+    series.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="with --batch: check the manifest and list what would be rendered; write nothing",
+    )
+    series.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="with --batch: replace existing images and report (default: refuse)",
     )
     desktop = parser.add_argument_group("desktop integration (Linux, current user)")
     desktop.add_argument(
@@ -217,6 +239,49 @@ def _batch(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_batch(args: argparse.Namespace) -> int:
+    """Run --batch: validate everything, then render each job; return the exit status."""
+    from ycrystal.manifest import ManifestError, plan_batch, run_batch
+    from ycrystal.render.povray import PovrayNotFoundError
+
+    try:
+        jobs = plan_batch(args.batch, args.output_dir, overwrite=args.overwrite)
+    except ManifestError as exc:
+        print(
+            f"ERROR: the manifest {args.batch} is not valid; nothing was rendered:", file=sys.stderr
+        )
+        for problem in exc.problems:
+            print(f"  - {problem}", file=sys.stderr)
+        return 2
+    for job in jobs:
+        for warning in job.warnings:
+            print(f"WARNING: {job.id}: {warning}", file=sys.stderr)
+    try:
+        report = run_batch(
+            jobs,
+            args.output_dir,
+            args.povray,
+            dry_run=args.dry_run,
+            manifest=args.batch,
+            progress=print,
+        )
+    except PovrayNotFoundError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"ERROR: cannot write to {args.output_dir}: {exc.strerror or exc}", file=sys.stderr)
+        return 1
+    if args.dry_run:
+        print(f"Checked {len(jobs)} job(s); nothing was rendered (--dry-run).")
+        return 0
+    rendered = len(report.jobs) - report.failed
+    print(
+        f"Rendered {rendered} of {len(report.jobs)} job(s) in {report.seconds:.1f} s; "
+        f"report: {Path(args.output_dir) / 'ycrystal-batch-report.json'}"
+    )
+    return 1 if report.failed else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the ``ycrystal`` command.
 
@@ -255,6 +320,11 @@ def main(argv: list[str] | None = None) -> int:
     ([`ViewPolicy`][ycrystal.core.camera.ViewPolicy]); without them a project is drawn
     with its saved camera and a structure with the fitted default view, as before.
     ``--style`` without ``--render`` or ``--export-pov`` is a usage error (status 2).
+
+    ``--batch MANIFEST.json --output-dir DIR`` renders every job of a manifest
+    ([`ycrystal.manifest`][ycrystal.manifest]) and returns 0 if all succeeded, 1 if any
+    job failed (or POV-Ray is missing), and 2 if the manifest is invalid (then nothing
+    is rendered). ``--dry-run`` checks everything and renders nothing.
     ``--install-desktop`` / ``--uninstall-desktop`` manage the menu launcher on Linux
     (see [`ycrystal.desktop`][ycrystal.desktop]); on macOS and Windows they print an
     error and return 1 without writing anything.
@@ -292,6 +362,34 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--style-parts needs --style")
     if args.element_map is not None and not args.style:
         parser.error("--element-map needs --style")
+    if args.batch is not None:
+        single = [
+            name
+            for name, value in (
+                ("FILE", args.file),
+                ("--render", args.render),
+                ("--export-pov", args.export_pov),
+                ("--style", args.style),
+                ("--style-parts", args.style_parts),
+                ("--element-map", args.element_map),
+                ("--view", args.view),
+                ("--camera-policy", args.camera_policy),
+                ("--fit-margin", args.fit_margin),
+                ("--view-height", args.view_height),
+                ("--width", args.width),
+                ("--height", args.height),
+            )
+            if value is not None
+        ]
+        if single:
+            parser.error(
+                f"--batch takes its settings from the manifest; leave out {', '.join(single)}"
+            )
+        if not args.output_dir:
+            parser.error("--batch needs --output-dir DIR")
+        return _run_batch(args)
+    if args.output_dir or args.dry_run or args.overwrite:
+        parser.error("--output-dir, --dry-run, and --overwrite belong to --batch")
     camera_options = (args.view, args.camera_policy, args.fit_margin, args.view_height)
     from ycrystal.core.camera import CameraPolicyError, ViewPolicy
 

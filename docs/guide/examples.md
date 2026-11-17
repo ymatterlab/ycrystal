@@ -10,6 +10,7 @@ ordinary `.ycrystal` files with the structure embedded, so they open anywhere:
 | `examples/triclinic-transparent.ycrystal` | Low-symmetry triclinic cell, matte, transparent PNG background, 900 × 600 |
 | `examples/vectors-synthetic-afm.ycrystal` | Synthetic two-site cubic cell (not a real material) with opposite magnetic-moment arrows (±2.2 μB along z) assigned by hand, 800 × 600 |
 | `examples/grey-studio.ycstyle` | The style of the SrTiO3 example (chrome Ti, ceramic O, grey studio, 800 × 600, 2 × 2 × 1 cells), to apply to other structures in the window or [with `--style`](#apply-a-style-from-the-command-line) |
+| `examples/batch-series.json` | A batch manifest: the grey studio style for SrTiO3, BaZrO3 (Ti → Zr), MgB2 (down c), a triclinic cell, and the vector example, all 600 × 450; see [render a series](#render-a-series-from-a-manifest) |
 
 Open one with **File ▸ Open…**, or `.venv/bin/ycrystal examples/MgB2-gradient.ycrystal`.
 `python scripts/make_examples.py` regenerates them.
@@ -224,3 +225,107 @@ In the second pair the BaZrO3 cell (a = 4.19 Å) is visibly larger than the SrTi
 
 Orthographic projection is used throughout, so atoms at the back are as large as atoms
 at the front, and the visible height in Å is a true scale of the structure.
+
+## Render a series from a manifest
+
+**Why.** A paper often needs the same kind of figure for many structures: one style,
+one orientation, one size, perhaps with an element mapping for some of them. Running
+one command per structure works, but the settings end up scattered over a shell
+script. A **batch manifest** states them once, in a small JSON file that you can keep
+next to the data, check in, and rerun later. Ycrystal checks the whole manifest before
+it renders anything, renders the figures one after the other, and writes a report of
+what happened.
+
+```bash
+.venv/bin/ycrystal --batch examples/batch-series.json --output-dir renders --dry-run
+.venv/bin/ycrystal --batch examples/batch-series.json --output-dir renders
+```
+
+The first command checks everything and lists what would be rendered, without
+rendering or writing anything:
+
+```text
+WARNING: MgB2: Element overrides for O, Ti were not applied: the structure has no O, Ti.
+WARNING: afm-vectors: Element overrides for O, Ti were not applied: the structure has no O, Ti.
+SrTiO3: would render SrTiO3.png (600 × 450, 15 atoms)
+BaZrO3: would render BaZrO3.png (600 × 450, 15 atoms)
+MgB2: would render MgB2.png (600 × 450, 10 atoms)
+triclinic: would render triclinic.png (600 × 450, 5 atoms)
+afm-vectors: would render vectors/afm.png (600 × 450, 22 atoms)
+Checked 5 job(s); nothing was rendered (--dry-run).
+```
+
+The second renders the five PNGs into `renders/` (about 6 s on the development Mac)
+and writes `renders/ycrystal-batch-report.json`.
+
+### The manifest
+
+`examples/batch-series.json`, shortened:
+
+```json
+{
+ "format": "ycrystal-batch",
+ "schema_version": 1,
+ "defaults": {"style": "grey-studio.ycstyle", "view": "a", "width": 600, "height": 450},
+ "jobs": [
+  {"id": "SrTiO3", "input": "../tests/fixtures/SrTiO3.cif"},
+  {"id": "BaZrO3", "input": "../tests/fixtures/BaZrO3.cif", "element_map": {"Ti": "Zr"}},
+  {"id": "MgB2", "input": "../tests/fixtures/MgB2.cif", "view": "c"},
+  {"id": "triclinic", "input": "../tests/fixtures/triclinic.cif",
+   "style_parts": ["environment", "output"]},
+  {"id": "afm-vectors", "input": "vectors-synthetic-afm.ycrystal",
+   "output": "vectors/afm.png", "camera_policy": "fit"}
+ ]
+}
+```
+
+- `format` and `schema_version` identify the file. `jobs` lists the figures, rendered
+  in this order. Each job needs an `id` (letters, digits, `.`, `_`, `-`; unique) and an
+  `input`: a structure file or a `.ycrystal` project.
+- `defaults` holds settings for every job; a job can set any of them for itself, which
+  replaces the default. The settings are those of the single-figure options:
+
+| Setting | Meaning | Command-line equivalent |
+| --- | --- | --- |
+| `output` | PNG file in the output folder (default `<id>.png`); subfolders allowed | `--render` |
+| `format` | `poscar`, `cif`, `qe`, or `project` (default: detected) | `--format` |
+| `style` | `.ycstyle` file, or `null` for none | `--style` |
+| `style_parts` | List of parts, default `["appearance", "environment", "output"]` | `--style-parts` |
+| `element_map` | `{"Ti": "Zr"}`; `null` as a value leaves an element's settings out | `--element-map Ti=Zr` (`O=-`) |
+| `view` | `default`, `a`, `b`, `c`, `x`, `y`, `z` | `--view` |
+| `camera_policy` | `saved` or `fit` | `--camera-policy` |
+| `fit_margin` | 0–1, default 0.06 | `--fit-margin` |
+| `view_height` | Fixed visible height in Å | `--view-height` |
+| `width`, `height` | Image size, 16–8000 px (default: the input's, or the style's) | `--width`, `--height` |
+| `max_atoms` | Largest number of displayed atoms allowed, default 20,000 | (none) |
+
+- Paths are relative to the manifest's folder, so a manifest works wherever the folder
+  is copied with its data. Absolute input and style paths are accepted too; outputs
+  must stay inside the output folder (no `..`, no absolute paths).
+- Unknown keys are refused (a misspelt `"veiw"` is an error, not silently ignored). A
+  `"comment"` key at the top level is allowed for notes.
+
+### What happens
+
+1. **Everything is checked first.** Ycrystal reads every input and style, applies the
+   styles and element mappings, chooses every camera, and checks every output name. It
+   reports **all** problems of **all** jobs at once (for example a missing input, an
+   unknown element, two jobs writing the same file, `../` in an output, a scene larger
+   than `max_atoms` or than `view_height`) and then stops with status 2, before
+   rendering or writing anything.
+2. **Existing images are not replaced** unless you add `--overwrite`; without it, an
+   existing image or report is one of the problems of step 1.
+3. **Jobs run one after the other**, in manifest order. POV-Ray already uses all
+   processor cores for one image, so jobs are not run in parallel. A job that fails
+   (for example a POV-Ray error) is recorded and the others continue; an image is
+   written only when its render succeeded, never half-written.
+4. **The report** `ycrystal-batch-report.json` lists every job in order with its
+   status (`rendered` or `failed`), time, size, number of atoms, warnings, and error
+   message, plus the Ycrystal and POV-Ray versions. Paths are written as given in the
+   manifest.
+5. **Exit status:** 0 when every job was rendered; 1 when any job failed (or POV-Ray is
+   missing, then nothing is rendered); 2 when the manifest is invalid.
+
+`--batch` takes all settings from the manifest: combining it with `FILE`, `--render`,
+`--style`, `--view`, or the other single-figure options is a usage error. Batch
+rendering writes PNG files; PDF and JPEG come from **Render Image…** in the window.

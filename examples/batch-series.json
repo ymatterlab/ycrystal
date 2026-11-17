@@ -1,0 +1,38 @@
+{
+ "format": "ycrystal-batch",
+ "schema_version": 1,
+ "comment": "One look for five structures: the grey studio style, looked at along a, 600 x 450. Paths are relative to this file. Run: ycrystal --batch examples/batch-series.json --output-dir renders",
+ "defaults": {
+  "style": "grey-studio.ycstyle",
+  "view": "a",
+  "width": 600,
+  "height": 450
+ },
+ "jobs": [
+  {
+   "id": "SrTiO3",
+   "input": "../tests/fixtures/SrTiO3.cif"
+  },
+  {
+   "id": "BaZrO3",
+   "input": "../tests/fixtures/BaZrO3.cif",
+   "element_map": {"Ti": "Zr"}
+  },
+  {
+   "id": "MgB2",
+   "input": "../tests/fixtures/MgB2.cif",
+   "view": "c"
+  },
+  {
+   "id": "triclinic",
+   "input": "../tests/fixtures/triclinic.cif",
+   "style_parts": ["environment", "output"]
+  },
+  {
+   "id": "afm-vectors",
+   "input": "vectors-synthetic-afm.ycrystal",
+   "output": "vectors/afm.png",
+   "camera_policy": "fit"
+  }
+ ]
+}
