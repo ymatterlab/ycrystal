@@ -89,7 +89,8 @@ asks whether to save, discard, or cancel.
 The camera is stored for the explicit output size, so a project reopens with the same
 framing in a window of any shape.
 
-Current project schema is 5. Older projects remain readable with their original
+Current project schema is 7 (schema 6 added background pictures, stored in ZIP
+packages, and custom material definitions; schema 7 added atom-attached vectors). Older projects remain readable with their original
 appearance (schema-1 projects load with bonds switched off, as they were drawn). Newer
 schemas are rejected with a message to update Ycrystal.
 

@@ -98,9 +98,10 @@ Rules that follow from this design:
 - Implement only what the user asks for in the current task. A feature that appears in
   the plan, the roadmap, or `docs/HANDOFF.md` is not thereby authorized.
 - Feature requests have stable IDs (FR-…). Their status is one of: **implemented**
-  (evidence in `docs/PROGRESS.md`), **planned** (specified in the private plan, section
-  14), **deferred**, or **rejected** (recorded under "Decisions" in `docs/HANDOFF.md`).
-  Do not reopen completed milestones M0–M6 or rewrite 0.1.0/0.2.0 history.
+  (evidence in `docs/PROGRESS.md`), **planned** (specified in the private plan,
+  sections 14–15), **deferred**, or **rejected** (recorded under "Decisions" in
+  `docs/HANDOFF.md`). Do not reopen completed milestones M0–M6 or rewrite 0.1.0–0.3.0
+  history.
 - **FR-VECTOR-02 (CSV/TSV vector import/export) is deferred.** Do not implement,
   scaffold, or recommend it unless the user explicitly asks to reactivate FR-VECTOR-02.
   Generic requests ("continue", "finish the vector features", "implement the remaining

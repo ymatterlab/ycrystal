@@ -9,9 +9,12 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 
 ## Current project status
 
-- **Milestone:** version 0.2.0 is released (tags `v0.1.0`, `v0.2.0`). The features below
-  marked "unreleased" are merged on `main` without a changelog entry or tag. macOS
-  support (PR #22) and FR-EXPORT-01 (PR #23, merge commit `52b3e5e`) are merged.
+- **Milestone:** version 0.3.0 is tagged (tags `v0.1.0`, `v0.2.0`, `v0.3.0`; no GitHub
+  releases). `v0.3.0` marks commit `6ed6b03` (PR #22); the source there still reports
+  0.2.0; since the release housekeeping of 17 November 2026, `main` reports the
+  development version `0.4.0.dev0`.
+  FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
+  listed as "Unreleased" in `CHANGELOG.md`.
 - **Work in progress:** none. No feature is open or authorized; see
   [Next recommended steps](#next-recommended-steps).
 
@@ -19,13 +22,14 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | --- | --- | --- |
 | 0.1.0 | Milestones M0–M6: import, projects, navigation, selection, supercells, bonds, materials, environments, previews, rendering, styles, desktop launcher | tag `v0.1.0` |
 | 0.2.0 | FR-COLOR-01 colour dialog and names; FR-RENDER-01 aspect-ratio lock; FR-LIGHT-01 Lighting Setup window and live lighting | PRs #13–#15, tag `v0.2.0` |
-| unreleased | FR-MEASURE-01 distance and bond-angle measurements (Measurements panel) | PR #16 |
-| unreleased | FR-PREVIEW-01 adjustable POV-Ray preview resolution | PR #17 |
-| unreleased | FR-BGIMAGE-01 background pictures, ZIP project/style packages (project schema 6) | PR #18 |
-| unreleased | FR-MATERIAL-01 custom material variants (Customize Material…, personal materials) | PR #18 |
-| unreleased | FR-VECTOR-01 atom-attached direction/magnetic-moment vectors (project schema 7) | PR #19 |
-| unreleased | Maintenance: macOS (Apple silicon) support, Ubuntu + macOS CI | PR #22 |
+| 0.3.0 | FR-MEASURE-01 distance and bond-angle measurements (Measurements panel) | PR #16 |
+| 0.3.0 | FR-PREVIEW-01 adjustable POV-Ray preview resolution | PR #17 |
+| 0.3.0 | FR-BGIMAGE-01 background pictures, ZIP project/style packages (project schema 6) | PR #18 |
+| 0.3.0 | FR-MATERIAL-01 custom material variants (Customize Material…, personal materials) | PR #18 |
+| 0.3.0 | FR-VECTOR-01 atom-attached direction/magnetic-moment vectors (project schema 7) | PR #19 |
+| 0.3.0 | Maintenance: macOS (Apple silicon) support, Ubuntu + macOS CI | PR #22, tag `v0.3.0` |
 | unreleased | FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi | PR #23 |
+| unreleased | Maintenance: new application icon and logo, logo-rendering script; Linux launcher refreshes the icon cache | PRs #25, #26 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01 and FR-EXPORT-01
@@ -43,60 +47,47 @@ Known limitations and unresolved issues:
 - FR-EXPORT-01: the PDF holds the POV-Ray raster image (not vector graphics); PDF page
   sizes are whole points (up to 0.18 mm from the exact size); JPEG fills a transparent
   background with white. Not yet run on Linux or checked by hand.
-- `docs/guide/troubleshooting.md` ("Current limitations") still says that image
-  backgrounds and editable material parameters are unsupported; both exist since PR #18.
 
 ## Latest development session
 
-- **Date and machine:** 16 November 2026, Mac mini (macOS 15.8, Apple silicon).
-- **Branch:** `feature/export-formats`, created from `main` at `6ed6b03` (PR #22 merged;
-  the user reported the Linux Mint tests and the new CI jobs passing for it).
-- **Commits:** `a55b298`, merged into `main` by PR #23 (merge commit `52b3e5e`,
-  16 November 2026) after all four CI checks passed. The user reported that everything
-  works.
-- **Task:** FR-EXPORT-01 — PDF and JPEG export next to PNG, publication size presets,
-  and custom size/resolution, as one feature. Evidence: "FR-EXPORT-01" in PROGRESS.md.
+- **Date and machine:** 17 November 2026, Mac mini (macOS 15.8, Apple silicon).
+- **Branch:** `docs/release-0.3.0-housekeeping`, created from `main` at `98acb9c`.
+- **Task:** release housekeeping for the existing tag `v0.3.0`. No code behaviour
+  changed apart from the version number.
 
-Summary of changes:
+Changes:
 
-- `core/export.py` (new, no Qt): formats, presets (85 mm and 180 mm at 600 dpi), mm/px/dpi
-  arithmetic, limits, `ExportOptions`.
-- `render/formats.py` (new): writes POV-Ray's PNG as PNG (a `pHYs` resolution chunk is
-  inserted; pixels and compressed data untouched), JPEG (`QImageWriter`, quality, white
-  under transparency), or PDF (`QPdfWriter`, lossless, page = physical size), always via
-  a checked `.part` file.
-- `gui/export_dialog.py` (new): the Render Image dialog; `gui/main_window.py`: the action
-  is now **Render Image…** (Ctrl+R) → `export_image` → `render_image`; `render_png(path)`
-  keeps its former output (no resolution chunk). Exports never change the output size,
-  camera, or project.
-- Tests: `tests/test_export.py` (43, no window or POV-Ray), `tests/test_gui_export.py`
-  (17, one with real POV-Ray); `tests/conftest.py` blocks the new `ask_export` dialog.
-- Documentation: rendering, first-figure, controls, support, and troubleshooting guides,
-  README, index, API reference, architecture; CI doctest list. The private plan has a
-  new row and section 14.9 for FR-EXPORT-01.
+- `__version__` 0.2.0 → `0.4.0.dev0`, the development version after the 0.3.0 tag
+  (`ycrystal --version` prints `ycrystal 0.4.0.dev0`).
+- `CHANGELOG.md`: section 0.3.0 (the content of the tag) and an "Unreleased" section
+  (FR-EXPORT-01, new icon and logo, Linux icon-cache refresh).
+- `docs/development/release.md`: checklist for 0.3.0 recording that the tag came before
+  the version bump and that the release checklist was not run; CI of `6ed6b03` (all
+  four jobs) passed.
+- `docs/guide/troubleshooting.md`: "Current limitations" brought up to date
+  (custom materials and background pictures exist; PDF is raster; CLI writes PNG only;
+  vectors are manual; measurements are not saved).
+- `docs/guide/support.md`, `docs/FORMATS.md`: project schema 7 and ZIP packages
+  (previously "schema 5"); macOS CI runs on every pull request; status line for 0.3.0.
+- README and install guide: latest release 0.3.0, development version 0.4.0.dev0. This file: status table and next steps.
 
-Tests performed on the Mac (details: "FR-EXPORT-01" in PROGRESS.md):
+Tests performed on the Mac:
 
 | Check | Result |
 | --- | --- |
-| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (real windows, Homebrew POV-Ray 3.7.0.10) | 565 passed, none skipped (505 before + 60 new) |
-| `pytest -m "not gui"` (what the macOS CI job runs) | 400 passed |
-| New doctests (`core/export.py`, `render/formats.py`); ruff; `pre-commit run --all-files`; `zensical build --clean --strict` | Clean |
-| Dialog screenshots (PNG, JPEG with preset, unlocked PDF) | Layout correct on macOS |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` | 401 passed |
+| `pre-commit run --all-files`; `zensical build --clean --strict` | Clean |
 
-CI of PR #23 passed: pre-commit, docs, macOS 15 (tests without windows), and Ubuntu
-24.04 (full suite under Xvfb with POV-Ray 3.7, including the new export tests).
+The GUI tests were not rerun: the change affects no window code.
 
-Not done by Claude: the Linux laptop and hands-on use (the user reports that everything
-works); the exported PDFs were checked by their structure (page box, embedded image),
-not opened in PDF viewers by Claude.
+The previous session (FR-EXPORT-01, PR #23) is recorded under "FR-EXPORT-01" in
+PROGRESS.md.
 
 ## Next recommended steps
 
-FR-EXPORT-01 is complete and merged. Optional follow-up checks (no new work):
+No feature is in progress. Optional follow-up checks (no new work):
 
 1. Place an exported PDF in a LaTeX or Word document and check its size there.
-2. Delete the merged branch `feature/export-formats` if it is no longer needed.
 
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
@@ -106,11 +97,12 @@ Suggestions only — not approved, ask before starting any of them:
   writes PNG only.
 - A macOS application bundle or launcher (name and icon in the Dock, opening
   `.ycrystal` files from Finder).
-- Correct the outdated limitations list in `docs/guide/troubleshooting.md`.
 - Windows: a CI entry and a decision about the renderer there.
 - From earlier sessions: hide the disabled Bottom/Clouds rows for the Image background
   type; a way to manage personal materials; hands-on checks of the unreleased features,
-  then a release (changelog entry, version bump, tag) when the user decides.
+  then the next release (FR-EXPORT-01 and the branding): move the changelog's
+  "Unreleased" section under a version, bump `__version__`, and run the checklist in
+  `docs/development/release.md` before tagging, when the user decides.
 
 Dependencies and blockers:
 
@@ -194,7 +186,7 @@ Then, on either system, from the repository root:
 
 ```bash
 .venv/bin/python -m pip install -e ".[dev]" -c constraints.txt
-.venv/bin/ycrystal --version            # ycrystal 0.2.0
+.venv/bin/ycrystal --version            # ycrystal 0.4.0.dev0
 .venv/bin/ycrystal --check-renderer     # PASS: POV-Ray 3.7… passed
 .venv/bin/ycrystal --sample perovskite  # opens the window
 .venv/bin/python -m pytest -q -rs       # GUI tests open windows for about 1.5 minutes

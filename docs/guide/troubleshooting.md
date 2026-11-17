@@ -50,9 +50,16 @@ write nothing.
 - No atom editing or structure-format export. Display repetitions (numeric or with the
   supercell handles) and periodic bonds change only the display. The comparison module's
   `supercell` helper transforms scientific data for developer comparisons.
-- Materials and environments come from the built-in catalog; user include files,
-  image backgrounds, and editable material parameters (for example a custom refractive
-  index) are not supported. The live view approximates materials, floors, and skies.
+- Materials and environments come from the built-in catalog. Ycrystal recipes can be
+  customised (**Customize Material…**), but native POV-Ray materials cannot, user
+  include files are not supported, and personal materials cannot yet be renamed or
+  deleted in the window. The live view approximates materials, floors, and skies, and
+  shows a background picture only as its average colour; the POV-Ray preview shows the
+  picture itself.
+- Exported PDF files contain the POV-Ray raster image, not vector graphics. The command
+  line (`--render`) writes PNG only; PDF and JPEG come from **Render Image…**.
+- Vectors are entered by hand in Cartesian components; there is no import from tables
+  or DFT output files and no magnetic symmetry. Measurements are not saved in projects.
 - Transparent materials with area lights (Studio and Top lighting) render slowly; see
   [lighting](appearance.md#lighting).
 - Scenes with native POV-Ray materials need the standard include files
@@ -70,5 +77,5 @@ write nothing.
   Windows, Wayland, and POV-Ray 3.8 remain unverified.
 - Python interfaces are evolving and carry no stable API guarantee yet.
 
-See the [milestone table and acceptance evidence](../PROGRESS.md#milestones) for
-the roadmap. This documentation increment does not complete product milestones.
+See the [changelog](https://github.com/ymatterlab/ycrystal/blob/main/CHANGELOG.md) for
+what each version added and the [progress record](../PROGRESS.md) for the evidence.

@@ -56,7 +56,7 @@ python3.12 -m venv .venv
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png  # no window
 ```
 
-Version 0.2.0; see the [changelog](CHANGELOG.md), the
+Latest release 0.3.0; `main` is the development version 0.4.0.dev0. See the [changelog](CHANGELOG.md), the
 [support matrix](docs/guide/support.md), and the [third-party notices](THIRD_PARTY_NOTICES.md).
 
 ## Guides and reference

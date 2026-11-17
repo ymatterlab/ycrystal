@@ -1,6 +1,6 @@
 # Release procedure and checklist
 
-How a Ycrystal release is prepared, and the checklists of versions 0.2.0 and 0.1.0. Publication
+How a Ycrystal release is prepared, and the checklists of versions 0.3.0, 0.2.0, and 0.1.0. Publication
 (tag, GitHub release, making the repository public) is the maintainer's decision and
 is not part of this procedure.
 
@@ -39,6 +39,23 @@ is not part of this procedure.
     `constraints.txt`, the examples, the test fixtures, and the notices.
 5. Record the results in `docs/PROGRESS.md` and in the checklist below, marking each
    item passed, failed, or unverified.
+
+## Checklist for 0.3.0
+
+Version 0.3.0 did not follow the procedure above. The maintainer tagged `v0.3.0` on
+16 November 2026 at the merge of the macOS work (commit `6ed6b03`) after CI passed there,
+before `__version__` and the changelog were updated; both were updated afterwards on
+`main`. The features in 0.3.0 were each verified when they were merged (see
+`docs/PROGRESS.md`); the release checklist itself was not run.
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Version | Fixed after the tag | The source at `v0.3.0` reports 0.2.0; `main` reports the development version `0.4.0.dev0` and has changelog section 0.3.0 |
+| Tests at the tagged commit | Passed | CI of `6ed6b03`: pre-commit, documentation, Ubuntu 24.04 (full suite under Xvfb with POV-Ray 3.7), macOS 15 (tests without windows) |
+| Projects compatible | Passed | Schema 7; older projects open (`test_project.py`) |
+| Clean install, wheel build and install | Not run for 0.3.0 | |
+| Hands-on use of the new features by a person | Partial | The user reports FR-VECTOR-01 working; other features have scripted GUI checks only; see `docs/HANDOFF.md` |
+| Tag `v0.3.0` | Created | Annotated tag at `6ed6b03`; GitHub release not created |
 
 ## Checklist for 0.2.0
 
