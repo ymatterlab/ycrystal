@@ -63,6 +63,9 @@ python3.12 -m venv .venv
 .venv/bin/ycrystal tests/fixtures/MgB2.cif --view c --render MgB2-c.png
 # Render a whole series (one style, one view, five structures) from a JSON manifest:
 .venv/bin/ycrystal --batch examples/batch-series.json --output-dir renders
+# Also save a self-contained snapshot and a provenance record; render the snapshot again later:
+.venv/bin/ycrystal tests/fixtures/MgB2.cif --view c --render MgB2-c.png --save-project MgB2-c.ycrystal
+.venv/bin/ycrystal MgB2-c.ycrystal --render MgB2-c-again.png
 ```
 
 Latest release 0.3.0; `main` is the development version 0.4.0.dev0. See the [changelog](CHANGELOG.md), the

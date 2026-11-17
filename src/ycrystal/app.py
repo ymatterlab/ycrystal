@@ -6,10 +6,14 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ycrystal import __version__
 from ycrystal.core.camera import CAMERA_POLICIES, DEFAULT_MARGIN, VIEWS
 from ycrystal.core.samples import SAMPLES
+
+if TYPE_CHECKING:
+    from ycrystal.io.project import Project
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -106,6 +110,13 @@ def _parser() -> argparse.ArgumentParser:
         help="with --style: give the style's element settings to other elements, e.g. "
         "Sr=Ba,Ti=Zr (O=- leaves O's settings out); a presentation choice only",
     )
+    batch.add_argument(
+        "--save-project",
+        metavar="FIGURE.ycrystal",
+        help="with --render: also save the figure as a self-contained project (camera and "
+        "size as rendered) and FIGURE.provenance.json; render it again with "
+        "'ycrystal FIGURE.ycrystal --render OUT.png'",
+    )
     series = parser.add_argument_group("several figures from a manifest, without a window")
     series.add_argument(
         "--batch",
@@ -125,7 +136,8 @@ def _parser() -> argparse.ArgumentParser:
     series.add_argument(
         "--overwrite",
         action="store_true",
-        help="with --batch: replace existing images and report (default: refuse)",
+        help="with --batch: replace existing images, projects, and report; with "
+        "--save-project: replace an existing project and provenance file (default: refuse)",
     )
     desktop = parser.add_argument_group("desktop integration (Linux, current user)")
     desktop.add_argument(
@@ -183,11 +195,22 @@ def _batch(args: argparse.Namespace) -> int:
         if value is not None and not 16 <= value <= 8000:
             print(f"ERROR: {name} must be between 16 and 8000 pixels", file=sys.stderr)
             return 2
+    if args.save_project:
+        from ycrystal.provenance import check_snapshot_target
+
+        # Never replace the input, the style, or the image; other files only on request.
+        protected = [path for path in (args.file, args.style, args.render) if path]
+        problems = check_snapshot_target(args.save_project, protected, args.overwrite)
+        for problem in problems:
+            print(f"ERROR: {problem}", file=sys.stderr)
+        if problems:
+            return 1
     try:
         project = load_input(args.file, args.format)
     except (ProjectError, StructureImportError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
+    notes: tuple[str, ...] = ()
     if args.style:
         # Everything is checked before a file is written.
         try:
@@ -215,6 +238,8 @@ def _batch(args: argparse.Namespace) -> int:
             print(f"ERROR: cannot write {args.export_pov}: {exc.strerror or exc}", file=sys.stderr)
             return 1
         print(f"Exported {pov} and {ini}")
+    if args.render and args.save_project:
+        return _render_snapshot(args, project, notes)
     if args.render:
         started = time.monotonic()
         try:
@@ -236,6 +261,51 @@ def _batch(args: argparse.Namespace) -> int:
             print(f"ERROR: {result.message}", file=sys.stderr)
             return 1
         print(f"Rendered {result.image_path} in {time.monotonic() - started:.1f} s")
+    return 0
+
+
+def _render_snapshot(args: argparse.Namespace, project: Project, notes: tuple[str, ...]) -> int:
+    """Run --render with --save-project; print the result and return the exit status."""
+    import time
+
+    from ycrystal.batch import CLI_STYLE_PARTS
+    from ycrystal.core.camera import CameraPolicyError
+    from ycrystal.provenance import (
+        FigureRequest,
+        SnapshotError,
+        SourceFile,
+        input_format,
+        render_snapshot,
+    )
+    from ycrystal.render.povray import PovrayNotFoundError
+
+    started = time.monotonic()
+    try:
+        request = FigureRequest(
+            input=SourceFile.of(args.file),
+            input_format=input_format(args.file, args.format, project),
+            style=SourceFile.of(args.style) if args.style else None,
+            style_parts=(args.style_parts or CLI_STYLE_PARTS) if args.style else (),
+            element_map=args.element_map,
+            view=args.view_policy,
+            width=args.width,
+            height=args.height,
+            notes=tuple(notes),
+        )
+        figure = render_snapshot(project, args.render, args.save_project, request, args.povray)
+    except (PovrayNotFoundError, CameraPolicyError, SnapshotError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        name = exc.filename or args.render
+        print(f"ERROR: cannot read or write {name}: {exc.strerror or exc}", file=sys.stderr)
+        return 1
+    result = figure.result
+    if not result.ok:
+        print(f"ERROR: {result.message}", file=sys.stderr)
+        return 1
+    print(f"Rendered {result.image_path} in {time.monotonic() - started:.1f} s")
+    print(f"Saved {figure.snapshot} and {figure.provenance}")
     return 0
 
 
@@ -321,6 +391,15 @@ def main(argv: list[str] | None = None) -> int:
     with its saved camera and a structure with the fitted default view, as before.
     ``--style`` without ``--render`` or ``--export-pov`` is a usage error (status 2).
 
+    ``--save-project FIGURE.ycrystal`` (with ``--render``) also saves the figure as a
+    self-contained project with the camera and size it was rendered with, and a
+    provenance record ``FIGURE.provenance.json``, through
+    [`render_snapshot`][ycrystal.provenance.render_snapshot]; the image is rendered
+    from that project, and the three files are written only if the render succeeds.
+    Existing project or provenance files are replaced only with ``--overwrite``; the
+    input, the style, and the image are never replaced (status 1 in both cases,
+    nothing written).
+
     ``--batch MANIFEST.json --output-dir DIR`` renders every job of a manifest
     ([`ycrystal.manifest`][ycrystal.manifest]) and returns 0 if all succeeded, 1 if any
     job failed (or POV-Ray is missing), and 2 if the manifest is invalid (then nothing
@@ -378,6 +457,7 @@ def main(argv: list[str] | None = None) -> int:
                 ("--view-height", args.view_height),
                 ("--width", args.width),
                 ("--height", args.height),
+                ("--save-project", args.save_project),
             )
             if value is not None
         ]
@@ -388,8 +468,19 @@ def main(argv: list[str] | None = None) -> int:
         if not args.output_dir:
             parser.error("--batch needs --output-dir DIR")
         return _run_batch(args)
-    if args.output_dir or args.dry_run or args.overwrite:
-        parser.error("--output-dir, --dry-run, and --overwrite belong to --batch")
+    if args.output_dir or args.dry_run or (args.overwrite and not args.save_project):
+        parser.error(
+            "--output-dir, --dry-run, and --overwrite belong to --batch (--overwrite also to "
+            "--save-project)"
+        )
+    if args.save_project is not None:
+        if not args.render:
+            parser.error(
+                "--save-project saves the figure of --render and needs --render OUT.png "
+                "(to save a project in the window, use File > Save Project)"
+            )
+        if Path(args.save_project).suffix.lower() != ".ycrystal":
+            parser.error("--save-project needs a file name ending in .ycrystal")
     camera_options = (args.view, args.camera_policy, args.fit_margin, args.view_height)
     from ycrystal.core.camera import CameraPolicyError, ViewPolicy
 

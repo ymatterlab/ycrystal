@@ -31,6 +31,27 @@
         - run_batch
         - write_report
 
+::: ycrystal.provenance
+    options:
+      members:
+        - PROVENANCE_FORMAT
+        - PROVENANCE_SCHEMA_VERSION
+        - PROVENANCE_SUFFIX
+        - REPRODUCIBILITY_NOTE
+        - SnapshotError
+        - SourceFile
+        - FigureRequest
+        - SnapshotRender
+        - provenance_path
+        - file_sha256
+        - png_size
+        - input_format
+        - same_file
+        - check_snapshot_target
+        - snapshot_project
+        - provenance_record
+        - render_snapshot
+
 ::: ycrystal.desktop
     options:
       members:

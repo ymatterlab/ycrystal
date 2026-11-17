@@ -15,10 +15,12 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   development version `0.4.0.dev0`.
   FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
   listed as "Unreleased" in `CHANGELOG.md`.
-- **Work in progress:** FR-BATCH-01 (batch manifests) submitted from branch
-  `feature/batch-manifest` as PR #31, to be merged after CI passes. FR-STYLE-CLI-01
-  (PR #28), FR-STYLE-MAP-01 (PR #29), and FR-CAMERA-01 (PR #30) are merged. Nothing
-  else is open or authorized;
+- **Work in progress:** FR-REPRO-01 (figure snapshots and provenance records)
+  submitted from branch `feature/repro-snapshots` as PR #32, to be merged after CI
+  passes; the user tested it by hand (17 November 2026) and reports it working.
+  FR-STYLE-CLI-01 (PR #28),
+  FR-STYLE-MAP-01 (PR #29), FR-CAMERA-01 (PR #30), and FR-BATCH-01 (PR #31, merge
+  commit `5b5791f`) are merged. Nothing else is open or authorized;
   see [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
@@ -37,10 +39,11 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-STYLE-MAP-01 element mapping for styles (`--element-map`, Import Style dialog) | PR #29 |
 | unreleased | FR-CAMERA-01 `--view`, `--camera-policy`, `--fit-margin`, `--view-height` (shared with View along) | PR #30 |
 | unreleased | FR-BATCH-01 `--batch MANIFEST --output-dir DIR` (`--dry-run`, `--overwrite`), report JSON | PR #31 |
+| unreleased | FR-REPRO-01 `--save-project FIGURE.ycrystal`, manifest `save_projects`, provenance records | PR #32 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
-person are still open for most of them; the user reports FR-VECTOR-01 and FR-EXPORT-01
-working.
+person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
+and FR-REPRO-01 working.
 
 Known limitations and unresolved issues:
 
@@ -54,53 +57,65 @@ Known limitations and unresolved issues:
 - FR-EXPORT-01: the PDF holds the POV-Ray raster image (not vector graphics); PDF page
   sizes are whole points (up to 0.18 mm from the exact size); JPEG fills a transparent
   background with white. Not yet run on Linux or checked by hand.
+- FR-REPRO-01: pixel differences of snapshot replays between systems or POV-Ray builds
+  are unmeasured (same machine: identical pixels, never identical PNG bytes); not run
+  on macOS; snapshots only for PNG renders from the command line.
+- Found during FR-REPRO-01, not changed: `save_project` (and so every project and
+  snapshot) is written through `mkstemp` and ends up readable by the owner only (mode
+  0600 on Linux/macOS), which matters for shared folders. The new provenance records
+  behave the same. Decide whether to change it (a separate task).
 
 ## Latest development session
 
-- **Date and machine:** 17 November 2026, Mac mini (macOS 15.8, Apple silicon).
-- **Branches:** `feature/camera-policy` (FR-CAMERA-01, merged in PR #30 at `a4ba148`
-  after CI passed), then `feature/batch-manifest` from `a4ba148` (FR-BATCH-01, PR #31),
-  one after the other as the user asked.
-- **Task:** FR-CAMERA-01 and FR-BATCH-01. Evidence: "FR-CAMERA-01" and "FR-BATCH-01" in
-  PROGRESS.md.
+- **Date and machine:** 17 November 2026, the Linux laptop (Linux Mint 22.1, Intel
+  Core Ultra 5 135U, Python 3.12.3, POV-Ray 3.7.0.10 from apt).
+- **Branch:** `feature/repro-snapshots` from `main` at `5b5791f`, submitted as PR #32
+  after the user's review and hand test.
+- **Task:** FR-REPRO-01 only, as the user asked. Evidence: "FR-REPRO-01" in
+  PROGRESS.md. The private plan was read but not changed (its status row still says
+  "Planned").
 
-Summary of FR-BATCH-01 changes:
+Summary of FR-REPRO-01 changes:
 
-- `src/ycrystal/manifest.py` (new): `load_manifest`, `plan_batch` (complete
-  validation), `run_batch`, `write_report`, `ManifestError`, `PlannedJob`, `JobResult`,
-  `BatchReport`.
-- `app.py`: `--batch`, `--output-dir`, `--dry-run`, `--overwrite`; exit status 0/1/2.
-- `examples/batch-series.json` (new): five structures, one style, one element map.
-- Tests: `tests/test_batch_manifest.py` (19, one with real POV-Ray).
-- Documentation: examples guide ("Render a series from a manifest": motivation, the
-  manifest, a settings table with command-line equivalents, what happens, exit
-  status), README, API reference (`cli`), changelog; `scripts/docs_examples.py`
-  checks the documented dry-run output.
+- `src/ycrystal/provenance.py` (new): `snapshot_project`, `render_snapshot`,
+  `provenance_record` (schema 1), `check_snapshot_target`, `SourceFile`,
+  `FigureRequest`, `SnapshotRender`, `SnapshotError`, helpers.
+- `app.py`: `--save-project FIGURE.ycrystal` with `--render`; `--overwrite` also for it.
+- `manifest.py`: top-level `save_projects`; report fields `project`, `provenance`;
+  dry-run lines name the snapshots.
+- Tests: `tests/test_reproducibility.py` (25; 3 with real POV-Ray).
+- Documentation: new guide `docs/guide/reproducibility.md` (in the navigation), examples
+  guide, formats page, home page, README, changelog, API reference (`cli`);
+  `scripts/docs_examples.py` checks the guide's dry-run line; CI doctests include
+  `provenance.py`.
 
-Tests performed on the Mac:
+Tests performed on the laptop:
 
 | Check | Result |
 | --- | --- |
-| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rf` (real windows, Homebrew POV-Ray 3.7.0.10) | 790 passed, none skipped |
-| Doctests, `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Clean |
-| The example series rendered and inspected (five images) | As documented |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q` (real POV-Ray) | 643 passed, 172 GUI tests deselected, none skipped |
+| `tests/test_release.py` (includes one windowed test) after the CLI change | 51 passed |
+| CI doctest list, `scripts/docs_examples.py`, `pre-commit` (all files and the new files), `zensical build --clean --strict` | Clean |
+| Replays of snapshots compared with the originals (real POV-Ray) | Identical pixels; PNG bytes always differ (render date in the file) |
 
-Not done: Linux (CI of PR #31); hands-on runs by a person.
+Not done: GUI tests (no GUI code changed), macOS, CI; hands-on runs by a person.
 
 ## Next recommended steps
 
-1. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
+1. Watch the CI of PR #32 (Ubuntu full suite, macOS without windows) and merge it when
+   it passes; then run the suite on the Mac.
+2. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
    checks so far), for example with `tests/fixtures/BaZrO3.cif` and
    `examples/grey-studio.ycstyle` as in the examples guide; and the View along buttons
    in every order (the camera fix of PR #30).
-2. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
+3. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
    1 failure that did not reproduce (PR #30's CI and three later full runs passed); its
    name was not captured.
-3. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
+4. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
    check its size there.
 
-Later features in the private plan (FR-REPRO-01, FR-VALIDATION-01, FR-GALLERY-01) are
-**not** authorized by this record; each needs its own request.
+Later features in the private plan (FR-VALIDATION-01, FR-GALLERY-01) are **not**
+authorized by this record; each needs its own request.
 
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
@@ -144,7 +159,8 @@ user's report for PR #22.
 | Styles from the command line (FR-STYLE-CLI-01) | Verified by CI (PR #28, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
 | Element mapping for styles (FR-STYLE-MAP-01) | Verified by CI (PR #29, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray, scripted dialog screenshots; CI without windows) | Not tested |
 | View and framing policies (FR-CAMERA-01) | Verified by CI (PR #30, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
-| Batch manifests (FR-BATCH-01) | CI of PR #31 (Ubuntu, full suite under Xvfb) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
+| Batch manifests (FR-BATCH-01) | Verified by CI (PR #31, Ubuntu, full suite under Xvfb) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
+| Snapshots and provenance (FR-REPRO-01) | Verified 17 Nov 2026 on the Mint laptop (automated, real POV-Ray 3.7.0.10; tests without windows; the user's hand test); CI of PR #32 | Not tested | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
@@ -261,6 +277,17 @@ Troubleshooting:
 - Personal materials are stored in `QSettings` (`materials/personal`) with thumbnails in
   a `material-thumbnails/` folder (per machine, not in Git; locations above).
 - Preview resolution presets are widths (Small 480, Medium 800, Large 1200, Custom).
+- Snapshots (FR-REPRO-01): the snapshot is an ordinary `.ycrystal` project (no new
+  recipe format, no project schema change) holding the resolved scene, camera, and
+  output size; the image is rendered from the saved snapshot; image, snapshot, and
+  record are moved into place only after a successful render, the record last.
+  Snapshots drop the absolute `path` from the structure's import record; provenance
+  paths are relative to the record's folder, files outside it get `path: null` (name and
+  SHA-256 only). Existing snapshot/record files need `--overwrite`; the input, style,
+  image, or manifest are never replaced; `--render` still replaces its PNG. Manifest key
+  `save_projects` is top-level (schema 1 kept; older Ycrystal refuses the unknown key);
+  report schema 1 gains `project`/`provenance` per job. The image SHA-256 is a
+  fingerprint only: POV-Ray writes the render time into every PNG.
 - Batch (FR-BATCH-01): validate the whole manifest first, report every problem, render
   nothing if any (status 2); sequential jobs; no overwriting without `--overwrite`; a
   failed job does not stop the others (status 1); PNG only; paths relative to the

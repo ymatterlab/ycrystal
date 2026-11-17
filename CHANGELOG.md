@@ -50,6 +50,21 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   rendered; existing images are kept unless `--overwrite` is given; a failed job does
   not stop the others; `ycrystal-batch-report.json` records every job. `--dry-run`
   checks without rendering. Example: `examples/batch-series.json`.
+- **Reproducible figures: snapshots and provenance (FR-REPRO-01).** `--save-project
+  FIGURE.ycrystal` with `--render` (and `"save_projects": true` in a batch manifest)
+  also saves the figure as a self-contained project, with the camera and image size it
+  was rendered with, the style and element mapping already applied, and any background
+  picture and custom materials inside; `ycrystal FIGURE.ycrystal --render OUT.png`
+  renders it again without the original structure, style, or picture. A JSON
+  provenance record `FIGURE.provenance.json` states the Ycrystal and POV-Ray versions,
+  the settings (style parts, element mapping, camera policy and camera, sizes), the
+  standard POV-Ray include files needed, and the SHA-256 of the input, style, snapshot,
+  and image, with relative paths only. The image is rendered from the saved snapshot;
+  the three files are written only if the render succeeds. Existing snapshots and
+  records are replaced only with `--overwrite`. Replays give the same POV-Ray scene;
+  on one machine they also gave identical pixels, but never identical PNG bytes
+  (POV-Ray stores the render time in the file). The batch report names each job's
+  snapshot and record. New guide: *Reproducible figures*.
 
 ### Fixes
 - Switching the view directly between some axes in the window (for example from c to

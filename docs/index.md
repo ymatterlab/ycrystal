@@ -22,7 +22,8 @@ every figure change is undoable.
 - [Install and launch](guide/install.md) on Linux Mint or macOS.
 - Follow [Your first crystal figure](guide/first-figure.md) using the built-in SrTiO3 sample.
 - Find [controls](guide/controls.md), [supported formats](FORMATS.md), and
-  [rendering instructions](guide/rendering.md).
+  [rendering instructions](guide/rendering.md); save a figure with a self-contained
+  snapshot and a provenance record for [reproducible figures](guide/reproducibility.md).
 - Read the [architecture](development/architecture.md), try the
   [Python examples](development/examples.md), or consult the [API reference](reference/index.md).
 - See [troubleshooting and limitations](guide/troubleshooting.md) and the
