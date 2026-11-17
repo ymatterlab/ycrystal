@@ -52,7 +52,14 @@ from ycrystal.core.scene import (
 )
 from ycrystal.io.project import PROJECT_SUFFIX, Project, load_project
 from ycrystal.io.readers import read_structure
-from ycrystal.io.style import STYLE_PARTS, Style, apply_style, load_style
+from ycrystal.io.style import (
+    STYLE_PARTS,
+    ElementMapError,
+    Style,
+    apply_style,
+    check_element,
+    load_style,
+)
 from ycrystal.render.jobs import RenderResult, copy_result, prepare_job, run_job
 from ycrystal.render.pov_writer import RenderSettings, write_scene_files
 from ycrystal.render.povray import find_povray, povray_version
@@ -99,11 +106,51 @@ def parse_style_parts(text: str) -> tuple[str, ...]:
     return tuple(part for part in STYLE_PARTS if part in names)
 
 
+def parse_element_map(text: str) -> dict[str, str | None]:
+    """Parse an element mapping, as given to ``--element-map`` (FR-STYLE-MAP-01).
+
+    ``SOURCE=TARGET`` pairs separated by commas: the style's settings for ``SOURCE`` go
+    to ``TARGET``. ``SOURCE=-`` leaves them out. Symbols are case-sensitive; spaces
+    around them are ignored. Whether the targets exist in the structure is checked
+    when the style is applied.
+
+    >>> parse_element_map("Sr=Ba, Ti=Zr, O=-")
+    {'Sr': 'Ba', 'Ti': 'Zr', 'O': None}
+
+    Raises
+    ------
+    ValueError
+        If an entry is empty or has no ``=``, a symbol is not a chemical element, or a
+        source element appears twice.
+    """
+    mapping: dict[str, str | None] = {}
+    if not text.strip():
+        raise ValueError("expected SOURCE=TARGET pairs, for example 'Sr=Ba,Ti=Zr'")
+    for entry in text.split(","):
+        source, sep, target = (part.strip() for part in entry.partition("="))
+        if not sep or not source or not target:
+            raise ValueError(
+                f"{entry.strip()!r} is not SOURCE=TARGET; write for example 'Ti=Zr', or "
+                "'O=-' to leave the settings of O out"
+            )
+        try:
+            check_element(source, "a source element")
+            if target != "-":
+                check_element(target, "a target element")
+        except ElementMapError as exc:
+            raise ValueError(str(exc)) from exc
+        if source in mapping:
+            raise ValueError(f"{source} is mapped twice")
+        mapping[source] = None if target == "-" else target
+    return mapping
+
+
 def apply_style_file(
     project: Project,
     style: str | Path | Style,
     parts: Iterable[str] = CLI_STYLE_PARTS,
     max_atoms: int = LARGE_DISPLAY_ATOMS,
+    element_map: dict[str, str | None] | None = None,
 ) -> tuple[Project, tuple[str, ...]]:
     """Return a new project with a style applied, and notes on what was left out.
 
@@ -121,6 +168,11 @@ def apply_style_file(
         default [`CLI_STYLE_PARTS`][ycrystal.batch.CLI_STYLE_PARTS].
     max_atoms
         Limit on displayed atoms when the style's display settings raise the count.
+    element_map
+        Optional ``{source element: target element or None}`` for styles made for
+        another composition (see
+        [`resolve_element_map`][ycrystal.io.style.resolve_element_map]); ``None``
+        transfers by matching symbols.
 
     Returns
     -------
@@ -134,8 +186,9 @@ def apply_style_file(
     ycrystal.io.style.StyleError
         If the style file cannot be read.
     StyleTransferError
-        If `parts` is empty or names an unknown part, or if the style's display
-        settings would raise the number of displayed atoms above `max_atoms`.
+        If `parts` is empty or names an unknown part, if `element_map` is invalid or
+        ambiguous for this structure, or if the style's display settings would raise
+        the number of displayed atoms above `max_atoms`.
 
     Notes
     -----
@@ -156,14 +209,18 @@ def apply_style_file(
         style = load_style(style)
     structure = project.structure
     output = project.output
-    result = apply_style(
-        style,
-        structure,
-        project.scene,
-        project.environment,
-        (output.width, output.height),
-        parts,
-    )
+    try:
+        result = apply_style(
+            style,
+            structure,
+            project.scene,
+            project.environment,
+            (output.width, output.height),
+            parts,
+            element_map,
+        )
+    except ElementMapError as exc:
+        raise StyleTransferError(f"Element mapping: {exc}") from exc
     notes = list(result.notes)
     scene = result.scene
     before = count_displayed_atoms(structure, project.scene)

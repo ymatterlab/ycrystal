@@ -75,6 +75,8 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
+from ase.data import chemical_symbols
+
 from ycrystal import __version__
 from ycrystal.core.bonds import BondSettings
 from ycrystal.core.scene import Environment, SceneSettings
@@ -94,6 +96,11 @@ STYLE_SUFFIX = ".ycstyle"
 
 STYLE_PARTS = ("appearance", "display", "environment", "output")
 """Parts of a style that can be applied separately (see the module notes)."""
+
+_ELEMENTS = frozenset(chemical_symbols[1:])  # index 0 is ASE's placeholder "X"
+
+LEAVE_OUT_LABEL = "Do not transfer"
+"""Name of the choice that leaves an element's settings out, in the import dialog."""
 
 
 class StyleError(Exception):
@@ -169,6 +176,201 @@ class StyleResult:
     notes: tuple[str, ...]
 
 
+class ElementMapError(ValueError):
+    """An element mapping is invalid or ambiguous; ``str(error)`` is a message for the user."""
+
+
+@dataclass(frozen=True)
+class ElementTransfer:
+    """Where a style's element settings go in a target structure (FR-STYLE-MAP-01).
+
+    Attributes
+    ----------
+    targets
+        ``(source element, target element)`` for every element whose settings are
+        applied, sorted by source element. Identity pairs (``("O", "O")``) are included.
+    left_out
+        Source elements whose settings are not applied: absent from the structure
+        without a mapping, or left out on purpose (mapped to ``None``).
+    notes
+        One sentence per decision the user should know about.
+    """
+
+    targets: tuple[tuple[str, str], ...]
+    left_out: tuple[str, ...]
+    notes: tuple[str, ...]
+
+    def target_of(self, element: str) -> str | None:
+        """Return the target element of a source element, or ``None`` if left out."""
+        return dict(self.targets).get(element)
+
+
+def check_element(symbol: object, role: str = "element") -> str:
+    """Return ``symbol`` if it is a chemical element symbol, as structures use them.
+
+    >>> check_element("Ti")
+    'Ti'
+
+    Raises
+    ------
+    ElementMapError
+        If it is not one (symbols are case-sensitive: ``Ti``, not ``TI``).
+    """
+    if isinstance(symbol, str) and symbol in _ELEMENTS:
+        return symbol
+    hint = ""
+    if isinstance(symbol, str) and symbol.strip().capitalize() in _ELEMENTS:
+        hint = f" (did you mean {symbol.strip().capitalize()}?)"
+    raise ElementMapError(f"{symbol!r} is not a chemical element symbol{hint}; {role} expected.")
+
+
+def style_elements(
+    style: Style, parts: tuple[str, ...] | list[str] = STYLE_PARTS
+) -> tuple[str, ...]:
+    """Return the elements that a style has settings for, in the given parts, sorted.
+
+    ``appearance`` contributes the element materials, colours, and radii; ``display``
+    the elements of bond-pair rules. Other parts have no element settings.
+    """
+    source = style.scene
+    elements: set[str] = set()
+    if "appearance" in parts:
+        for entries in (source.element_materials, source.element_colors, source.element_radii):
+            elements.update(entry[0] for entry in entries)
+    if "display" in parts:
+        for a, b, _ in source.bonds.overrides:
+            elements.update((a, b))
+    return tuple(sorted(elements))
+
+
+def resolve_element_map(
+    style: Style,
+    structure: Structure,
+    element_map: dict[str, str | None] | None = None,
+    parts: tuple[str, ...] | list[str] = STYLE_PARTS,
+) -> ElementTransfer:
+    """Decide where each of a style's element settings goes in a structure.
+
+    Without a mapping every element keeps its symbol: its settings apply if the
+    structure contains it (the transfer rule of earlier versions). A mapping sends the
+    settings of a source element to another element of the structure, or leaves them
+    out (``None``); the mapping is a presentation choice, not a statement of chemical
+    or crystallographic equivalence.
+
+    Parameters
+    ----------
+    style
+        Style whose element settings are transferred.
+    structure
+        Target structure; it is read, never modified.
+    element_map
+        ``{source element: target element or None}``. Elements that are not keys keep
+        their symbol. ``{"Ti": "Ti"}`` is allowed and changes nothing.
+    parts
+        Parts that will be applied (decides which element settings count).
+
+    Returns
+    -------
+    ElementTransfer
+
+    Raises
+    ------
+    ElementMapError
+        If a key or value is not an element symbol, a target element is not in the
+        structure, two source elements are mapped to the same target, or a mapped
+        element would land on an element that keeps its own settings by symbol.
+        Ambiguity is an error, never resolved by order.
+
+    Examples
+    --------
+    >>> from ycrystal.core.samples import perovskite_srtio3
+    >>> from ycrystal.core.scene import Environment, SceneSettings
+    >>> source = perovskite_srtio3()
+    >>> scene = (
+    ...     SceneSettings()
+    ...     .with_element_material("Ti", "gold")
+    ...     .with_element_color("O", (1.0, 0.0, 0.0))
+    ... )
+    >>> style = Style.from_state(source, scene, Environment(), (800, 600))
+    >>> resolve_element_map(style, source, {"Ti": None}).targets
+    (('O', 'O'),)
+    >>> try:
+    ...     resolve_element_map(style, source, {"Ti": "O"})
+    ... except ElementMapError as error:
+    ...     print(str(error)[:45])
+    O would receive the settings of both O and Ti
+    """
+    element_map = dict(element_map or {})
+    present = set(structure.symbols)
+    for source_element, target in element_map.items():
+        check_element(source_element, "a source element")
+        if target is not None:
+            check_element(target, "a target element")
+            if target not in present:
+                raise ElementMapError(
+                    f"{source_element} is mapped to {target}, but the structure has no "
+                    f"{target} (it contains {', '.join(sorted(present))})."
+                )
+    by_target: dict[str, list[str]] = {}
+    for source_element, target in element_map.items():
+        if target is not None:
+            by_target.setdefault(target, []).append(source_element)
+    for target, sources in sorted(by_target.items()):
+        if len(sources) > 1:
+            raise ElementMapError(
+                f"{' and '.join(sorted(sources))} are all mapped to {target}; each element "
+                "of the structure can receive the settings of one element only."
+            )
+
+    elements = style_elements(style, parts)
+    notes: list[str] = []
+    targets: dict[str, str] = {}
+    left_out: list[str] = []
+    for element in elements:
+        target = element_map.get(element, element)
+        if target is not None and target in present:
+            targets[element] = target
+        else:
+            left_out.append(element)
+    receivers: dict[str, list[str]] = {}
+    for element, target in targets.items():
+        receivers.setdefault(target, []).append(element)
+    for target, sources in sorted(receivers.items()):
+        if len(sources) > 1:
+            others = [s for s in sources if s != target]
+            raise ElementMapError(
+                f"{target} would receive the settings of both {' and '.join(sorted(sources))}: "
+                f"{', '.join(others)} {'is' if len(others) == 1 else 'are'} mapped to {target}, "
+                f"and the style has settings for {target} itself. Map {target} to another "
+                f"element, or leave its settings out ('{LEAVE_OUT_LABEL}' in the window, "
+                f"{target}=- on the command line)."
+            )
+
+    unused = sorted(set(element_map) - set(elements))
+    if unused:
+        names = ", ".join(unused)
+        notes.append(
+            f"The style has no element settings for {names}; "
+            f"{'its' if len(unused) == 1 else 'their'} mapping changes nothing."
+        )
+    dropped = sorted(e for e in left_out if e in element_map)
+    if dropped:
+        names = ", ".join(dropped)
+        notes.append(f"Element settings for {names} were left out by the element mapping.")
+    moved = sorted(e for e, t in targets.items() if t != e and e in present)
+    if moved:
+        notes.append(
+            "Atoms of "
+            + ", ".join(moved)
+            + " in this structure do not receive the style's settings for "
+            + ("that element" if len(moved) == 1 else "these elements")
+            + ": they are mapped to "
+            + ", ".join(targets[e] for e in moved)
+            + "."
+        )
+    return ElementTransfer(tuple(sorted(targets.items())), tuple(left_out), tuple(notes))
+
+
 def apply_style(
     style: Style,
     structure: Structure,
@@ -176,6 +378,7 @@ def apply_style(
     environment: Environment,
     output_size: tuple[int, int],
     parts: tuple[str, ...] | list[str] = STYLE_PARTS,
+    element_map: dict[str, str | None] | None = None,
 ) -> StyleResult:
     """Apply a style to a structure's current presentation.
 
@@ -189,6 +392,14 @@ def apply_style(
         Current presentation of the target; parts that are not applied stay as they are.
     parts
         Parts to apply, a subset of [`STYLE_PARTS`][ycrystal.io.style.STYLE_PARTS].
+    element_map
+        Optional ``{source element: target element or None}`` that sends the element
+        materials, colours, and radii, and the bond-pair rules, of a source element to
+        another element of the structure, or leaves them out (``None``); see
+        [`resolve_element_map`][ycrystal.io.style.resolve_element_map]. ``None`` (the
+        default) transfers by matching symbols, as before. Atoms, coordinates, vectors,
+        and bonds themselves are never mapped, and per-atom settings still transfer
+        only to the same structure.
 
     Returns
     -------
@@ -199,23 +410,31 @@ def apply_style(
     ------
     ValueError
         If `parts` contains an unknown name.
+    ElementMapError
+        If `element_map` is invalid or ambiguous (a subclass of ``ValueError``).
     """
     unknown = set(parts) - set(STYLE_PARTS)
     if unknown:
         raise ValueError(f"unknown style parts: {sorted(unknown)}")
     source = style.scene
-    present = set(structure.symbols)
     compatible = style.is_compatible(structure)
-    notes: list[str] = []
+    element_map = dict(element_map or {})
+    transfer = resolve_element_map(style, structure, element_map, parts)
+    notes: list[str] = list(transfer.notes)
     new = scene
 
     if "appearance" in parts:
         missing: set[str] = set()
 
         def keep(entries: tuple) -> tuple:
-            kept = tuple(entry for entry in entries if entry[0] in present)
-            missing.update(entry[0] for entry in entries if entry[0] not in present)
-            return kept
+            kept = []
+            for element, value in entries:
+                target = transfer.target_of(element)
+                if target is not None:
+                    kept.append((target, value))
+                elif element not in element_map:  # left out on purpose: noted already
+                    missing.add(element)
+            return tuple(sorted(kept))
 
         new = replace(
             new,
@@ -242,9 +461,14 @@ def apply_style(
             )
 
     if "display" in parts:
-        pairs = tuple(
-            (a, b, on) for a, b, on in source.bonds.overrides if a in present and b in present
-        )
+        pairs = []
+        mapped_out = False  # a dropped rule involves an element the mapping leaves out
+        for a, b, on in source.bonds.overrides:
+            ta, tb = transfer.target_of(a), transfer.target_of(b)
+            if ta is not None and tb is not None:
+                pairs.append((*sorted((ta, tb)), on))  # alphabetical, as BondSettings expects
+            elif any(element_map.get(e, "") is None for e in (a, b)):
+                mapped_out = True
         dropped_pairs = len(source.bonds.overrides) - len(pairs)
         new = replace(
             new,
@@ -265,9 +489,11 @@ def apply_style(
         )
         if dropped_pairs:
             noun = "rule" if dropped_pairs == 1 else "rules"
+            reason = "the structure does not contain"
+            if mapped_out:
+                reason += " or the element mapping leaves out"
             notes.append(
-                f"{dropped_pairs} bond-pair {noun} for elements the structure does not "
-                "contain were not applied."
+                f"{dropped_pairs} bond-pair {noun} for elements {reason} were not applied."
             )
         if source.hidden and not compatible:
             notes.append(

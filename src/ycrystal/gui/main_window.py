@@ -22,7 +22,6 @@ from PySide6.QtCore import QSettings, Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap, QUndoStack
 from PySide6.QtWidgets import (
     QApplication,
-    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -70,6 +69,11 @@ from ycrystal.gui.panels.appearance_panel import AppearancePanel
 from ycrystal.gui.panels.measurement_panel import MeasurementPanel, MeasurementRow
 from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
 from ycrystal.gui.panels.scene_panel import MAX_REPETITIONS, ScenePanel
+from ycrystal.gui.style_dialog import (  # noqa: F401 (labels re-exported)
+    STYLE_PART_LABELS,
+    StyleImportChoice,
+    StyleImportDialog,
+)
 from ycrystal.gui.vector_dialog import VectorEditDialog, VectorPanel
 from ycrystal.io.project import (
     PROJECT_SUFFIX,
@@ -89,8 +93,8 @@ from ycrystal.io.readers import (
     read_structure,
 )
 from ycrystal.io.style import (
-    STYLE_PARTS,
     STYLE_SUFFIX,
+    ElementMapError,
     Style,
     StyleError,
     apply_style,
@@ -132,13 +136,6 @@ ROTATION_AXES = ("free", "a", "b", "c", "x", "y", "z")
 ROTATION_STEPS = (5, 15, 30, 45, 90)
 """Angles in degrees offered for the rotate buttons."""
 
-STYLE_PART_LABELS = {
-    "appearance": "Materials, colours, and radii",
-    "display": "Display: atom size, repetitions, boundary atoms, cell edges, bonds",
-    "environment": "Environment: background, floor, lighting, cell-edge colour",
-    "output": "Output image size",
-}
-"""Labels of the style parts in the import dialog."""
 """``QSettings`` key of the *Update automatically* choice of the preview panel."""
 
 AUTO_PREVIEW_DEFAULT = True
@@ -1683,42 +1680,22 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"Style saved to {path}", 8000)
         return path
 
-    def ask_style_parts(self, style: Style) -> list[str] | None:
-        """Ask which parts of ``style`` to apply; ``None`` if cancelled."""
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Import Style")
-        layout = QVBoxLayout(dialog)
-        compatible = style.is_compatible(self.structure)
-        info = QLabel(
-            f"Style from {style.source_name} ({len(style.source_symbols)} atoms). "
-            + (
-                "Same atoms as this structure: per-atom settings are applied too."
-                if compatible
-                else "Per-atom materials and hidden atoms refer to that structure and are "
-                "not applied here."
-            )
-        )
-        info.setWordWrap(True)
-        layout.addWidget(info)
-        boxes = {}
-        for part in STYLE_PARTS:
-            box = QCheckBox(STYLE_PART_LABELS[part])
-            box.setChecked(True)
-            boxes[part] = box
-            layout.addWidget(box)
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Apply")
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-        layout.addWidget(buttons)
+    def ask_style_import(self, style: Style) -> StyleImportChoice | None:
+        """Ask which parts of ``style`` to apply and how to map its elements.
+
+        Returns ``None`` if cancelled. See
+        [`StyleImportDialog`][ycrystal.gui.style_dialog.StyleImportDialog].
+        """
+        dialog = StyleImportDialog(style, self.structure, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return None
-        return [part for part, box in boxes.items() if box.isChecked()]
+        return dialog.choice()
 
     def import_style(
-        self, path: str | Path | None = None, parts: list[str] | tuple[str, ...] | None = None
+        self,
+        path: str | Path | None = None,
+        parts: list[str] | tuple[str, ...] | None = None,
+        element_map: dict[str, str | None] | None = None,
     ) -> bool:
         """Apply a style file to this structure as one undoable step (*File ▸ Import Style…*).
 
@@ -1728,7 +1705,11 @@ class MainWindow(QMainWindow):
             Style file; ``None`` asks with a file dialog.
         parts
             Parts to apply (see [`STYLE_PARTS`][ycrystal.io.style.STYLE_PARTS]);
-            ``None`` asks with a dialog that offers all of them.
+            ``None`` asks with a dialog that offers all of them and the element mapping.
+        element_map
+            ``{source element: target element or None}`` when `parts` is given (see
+            [`resolve_element_map`][ycrystal.io.style.resolve_element_map]); ``None``
+            transfers by matching symbols. Ignored when the dialog asks.
 
         Returns
         -------
@@ -1755,17 +1736,23 @@ class MainWindow(QMainWindow):
             self.show_error("Import Style Failed", str(exc))
             return False
         if parts is None:
-            parts = self.ask_style_parts(style)
-            if parts is None:
+            choice = self.ask_style_import(style)
+            if choice is None:
                 return False
-        result = apply_style(
-            style,
-            self.structure,
-            self.scene_settings,
-            self.environment,
-            self._output_size,
-            tuple(parts),
-        )
+            parts, element_map = choice.parts, choice.element_map
+        try:
+            result = apply_style(
+                style,
+                self.structure,
+                self.scene_settings,
+                self.environment,
+                self._output_size,
+                tuple(parts),
+                element_map,
+            )
+        except ElementMapError as exc:
+            self.show_error("Import Style Failed", f"Element mapping: {exc}")
+            return False
         new = result.scene
         count = count_displayed_atoms(self.structure, new)
         if (

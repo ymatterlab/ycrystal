@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QApplication
 
 from ycrystal.core.samples import perovskite_srtio3, triclinic_marker
 from ycrystal.gui.main_window import MainWindow
+from ycrystal.gui.style_dialog import StyleImportChoice
 from ycrystal.io.project import Project, load_project
 from ycrystal.io.style import STYLE_PARTS, load_style
 
@@ -198,7 +199,7 @@ def test_style_export_import_to_another_structure(window, qtbot, tmp_path):
 
     target = make_window(qtbot, triclinic_marker())
     asked = []
-    target.ask_style_parts = lambda style: asked.append(style) or list(style_parts())
+    target.ask_style_import = lambda style: asked.append(style) or StyleImportChoice(style_parts())
     try:
         positions = target.structure.positions.copy()
         steps = target.undo_stack.count()

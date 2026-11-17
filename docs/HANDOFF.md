@@ -15,9 +15,9 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   development version `0.4.0.dev0`.
   FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
   listed as "Unreleased" in `CHANGELOG.md`.
-- **Work in progress:** FR-STYLE-CLI-01 (styles from the command line) is implemented
-  and tested on the Mac, committed on branch `feature/style-cli` (pushed; no pull
-  request yet). No other feature is open or authorized;
+- **Work in progress:** none. FR-STYLE-MAP-01 (element mapping for styles) was
+  submitted from branch `feature/style-map` as PR #29, to be merged after CI passes;
+  FR-STYLE-CLI-01 is merged (PR #28). No other feature is open or authorized;
   see [Next recommended steps](#next-recommended-steps).
 
 | Version | Feature | Merged |
@@ -32,7 +32,8 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | 0.3.0 | Maintenance: macOS (Apple silicon) support, Ubuntu + macOS CI | PR #22, tag `v0.3.0` |
 | unreleased | FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi | PR #23 |
 | unreleased | Maintenance: new application icon and logo, logo-rendering script; Linux launcher refreshes the icon cache | PRs #25, #26 |
-| unreleased | FR-STYLE-CLI-01 `--style`/`--style-parts` apply a `.ycstyle` before `--render`/`--export-pov` | Branch `feature/style-cli` (not merged) |
+| unreleased | FR-STYLE-CLI-01 `--style`/`--style-parts` apply a `.ycstyle` before `--render`/`--export-pov` | PR #28 |
+| unreleased | FR-STYLE-MAP-01 element mapping for styles (`--element-map`, Import Style dialog) | PR #29 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01 and FR-EXPORT-01
@@ -54,49 +55,56 @@ Known limitations and unresolved issues:
 ## Latest development session
 
 - **Date and machine:** 17 November 2026, Mac mini (macOS 15.8, Apple silicon).
-- **Branch:** `feature/style-cli`, created from `main` at `410d87e`.
-- **Commits:** `b8801ac` and a follow-up correcting this record; pushed, no pull
-  request or merge yet.
-- **Task:** FR-STYLE-CLI-01 only — apply `.ycstyle` files from the command line.
-  Evidence: "FR-STYLE-CLI-01" in PROGRESS.md.
+- **Branch:** `feature/style-map`, created from `main` at `f77e163` (PR #28,
+  FR-STYLE-CLI-01, merged).
+- **Commits:** on `feature/style-map`, pull request #29 (merge after CI passes).
+- **Task:** FR-STYLE-MAP-01 only — explicit element mapping when applying a style to
+  another composition. Evidence: "FR-STYLE-MAP-01" in PROGRESS.md.
 
 Summary of changes:
 
-- `batch.py`: `CLI_STYLE_PARTS`, `StyleTransferError`, `parse_style_parts`,
-  `apply_style_file` (load the style, call `apply_style`, return a new `Project` and the
-  notes; large-display check). Rendering and export are unchanged.
-- `app.py`: `--style STYLE.ycstyle` and `--style-parts LIST` in the "without a window"
-  group; notes as `WARNING:` lines; `--style` without `--render`/`--export-pov` and
-  `--style-parts` without `--style` are usage errors.
-- `core/scene.py`: `LARGE_DISPLAY_ATOMS = 20000`; `gui/main_window.py` uses it
-  (`SOFT_LIMIT_ATOMS` stays as an alias).
-- Tests: 15 new in `tests/test_style.py`, 14 new in `tests/test_release.py` (one with
-  real POV-Ray, one in a subprocess without `DISPLAY`).
-- Documentation: examples guide (new section "Apply a style from the command line",
-  example table), appearance guide (styles), README and documentation home (command
-  example), API reference (`batch`, `scene`), changelog ("Unreleased"), PROGRESS.md.
-  `scripts/docs_examples.py` (run in CI) now runs the documented MgB2 `--style` command
-  with `--export-pov` and checks its warning, size, and studio.
+- `io/style.py`: `ElementMapError`, `ElementTransfer`, `LEAVE_OUT_LABEL`,
+  `check_element`, `style_elements`, `resolve_element_map`; `apply_style` takes an
+  optional `element_map` (default `None`: unchanged behaviour).
+- `batch.py`: `parse_element_map`; `apply_style_file(…, element_map=None)`.
+  `app.py`: `--element-map MAP` (needs `--style`).
+- `gui/style_dialog.py` (new): `StyleImportDialog` with the part check boxes (moved
+  from the main window) and the mapping rows; `StyleImportChoice`; `STYLE_PART_LABELS`
+  moved here (still importable from `gui/main_window.py`).
+  `gui/main_window.py`: `ask_style_import` replaces `ask_style_parts`;
+  `import_style(…, element_map=None)`.
+- `tests/fixtures/BaZrO3.cif` (new, illustrative, a = 4.19 Å rounded).
+- Tests: 24 new in `tests/test_style.py`, 3 in `tests/test_release.py` (one real
+  POV-Ray), 6 in the new `tests/test_gui_style_map.py` (one follows the guide's window
+  walkthrough); `tests/conftest.py` and
+  `tests/test_gui_interactions.py` use the renamed dialog hook.
+- Documentation: appearance guide (new "Element mapping" section), examples guide
+  (window walkthrough with BaZrO3; "Map elements to another composition" with three
+  commands and their exact warnings), README, FORMATS (mapping not stored), API
+  reference (`io`, `cli`, `gui`), changelog, fixtures README; `scripts/docs_examples.py`
+  runs the three documented commands.
 
 Tests performed on the Mac:
 
 | Check | Result |
 | --- | --- |
-| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (real windows, Homebrew POV-Ray 3.7.0.10) | 595 passed, none skipped |
-| `pytest -m "not gui"` (what the macOS CI job runs) | 430 passed |
-| Doctests (`core/scene.py`, `io/style.py`, `batch.py`), `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Clean |
-| The documented commands (MgB2 with the grey studio, with all parts, the vector example) rendered and inspected | As described in the guide |
+| `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (real windows, Homebrew POV-Ray 3.7.0.10) | 627 passed, none skipped |
+| `pytest -m "not gui"` (what the macOS CI job runs) | 457 passed |
+| Doctests (`io/style.py`, `batch.py`, `core/scene.py`), `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Clean |
+| Import Style dialog screenshots (default, mapped, ambiguous) and the guide's BaZrO3 render | Layout and result as documented |
 
-Not done: Linux (CI will run it on a push); hands-on use by a person.
+Not done: Linux (CI will run it on a pull request); hands-on use of the dialog by a
+person.
 
 ## Next recommended steps
 
-1. Open a pull request for `feature/style-cli` when the user asks; CI then runs the new
-   tests on Ubuntu (not yet run on Linux). Merge after CI passes, when the user asks.
+1. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
+   checks so far), for example with `tests/fixtures/BaZrO3.cif` and
+   `examples/grey-studio.ycstyle` as in the examples guide.
 2. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
    check its size there.
 
-The next features in the private plan (FR-STYLE-MAP-01, FR-CAMERA-01, FR-BATCH-01, …)
+The next features in the private plan (FR-CAMERA-01, FR-BATCH-01, …)
 are **not** authorized by this record; each needs its own request.
 
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
@@ -138,7 +146,8 @@ user's report for PR #22.
 | Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified (PR #22, user report) | Verified 16 Nov 2026 | Not tested |
 | GUI tests (real windows, OpenGL) | Verified (PR #22, user report; CI under Xvfb) | Verified 16 Nov 2026 (non-Retina display) | Not tested |
 | PNG/PDF/JPEG export (FR-EXPORT-01) | Verified by CI (PR #23, Ubuntu, full suite) | Verified 16 Nov 2026 (automated, real POV-Ray; CI without windows); the user reports it working | Not tested |
-| Styles from the command line (FR-STYLE-CLI-01) | Not tested by hand; CI (Ubuntu) runs it on a pull request | Verified 17 Nov 2026 (automated, real POV-Ray) | Not tested |
+| Styles from the command line (FR-STYLE-CLI-01) | Verified by CI (PR #28, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Not tested |
+| Element mapping for styles (FR-STYLE-MAP-01) | CI of PR #29 (Ubuntu, full suite under Xvfb) | Verified 17 Nov 2026 (automated, real POV-Ray, scripted dialog screenshots; CI without windows) | Not tested |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | Not tested |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Not tested |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
@@ -255,6 +264,12 @@ Troubleshooting:
 - Personal materials are stored in `QSettings` (`materials/personal`) with thumbnails in
   a `material-thumbnails/` folder (per machine, not in Git; locations above).
 - Preview resolution presets are widths (Small 480, Medium 800, Large 1200, Custom).
+- Element mapping (FR-STYLE-MAP-01): explicit only, never inferred; unmapped elements
+  match by symbol; ambiguity (shared targets, a mapped element landing on one with its
+  own settings) is an error, never resolved by order; per-atom settings never follow a
+  mapping; the mapping is not stored in the style. CLI syntax `SOURCE=TARGET`, `-` to
+  leave out. The dialog hook is now `MainWindow.ask_style_import` (was
+  `ask_style_parts`).
 - Styles from the command line (FR-STYLE-CLI-01): default parts
   `appearance,environment,output` (`ycrystal.batch.CLI_STYLE_PARTS`), `display` on
   request; the GUI's Import Style dialog is unchanged. A saved project keeps its camera.

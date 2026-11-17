@@ -63,6 +63,12 @@ See the [user-facing format restrictions](../FORMATS.md) before importing data.
         - StyleResult
         - StyleError
         - apply_style
+        - ElementMapError
+        - ElementTransfer
+        - LEAVE_OUT_LABEL
+        - check_element
+        - style_elements
+        - resolve_element_map
         - style_to_dict
         - style_from_dict
         - save_style

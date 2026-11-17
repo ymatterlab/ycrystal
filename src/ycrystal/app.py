@@ -72,6 +72,13 @@ def _parser() -> argparse.ArgumentParser:
         help="comma-separated parts of the style to apply: appearance, display, environment, "
         "output (default: appearance,environment,output)",
     )
+    batch.add_argument(
+        "--element-map",
+        metavar="MAP",
+        type=_element_map,
+        help="with --style: give the style's element settings to other elements, e.g. "
+        "Sr=Ba,Ti=Zr (O=- leaves O's settings out); a presentation choice only",
+    )
     desktop = parser.add_argument_group("desktop integration (Linux, current user)")
     desktop.add_argument(
         "--install-desktop",
@@ -92,6 +99,16 @@ def _style_parts(text: str) -> tuple[str, ...]:
 
     try:
         return parse_style_parts(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+
+
+def _element_map(text: str) -> dict[str, str | None]:
+    """Parse ``--element-map`` (an argparse type: errors become usage errors)."""
+    from ycrystal.batch import parse_element_map
+
+    try:
+        return parse_element_map(text)
     except ValueError as exc:
         raise argparse.ArgumentTypeError(str(exc)) from exc
 
@@ -126,7 +143,10 @@ def _batch(args: argparse.Namespace) -> int:
         # Everything is checked before a file is written.
         try:
             project, notes = apply_style_file(
-                project, args.style, args.style_parts or CLI_STYLE_PARTS
+                project,
+                args.style,
+                args.style_parts or CLI_STYLE_PARTS,
+                element_map=args.element_map,
             )
         except (StyleError, StyleTransferError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
@@ -188,6 +208,9 @@ def main(argv: list[str] | None = None) -> int:
     could not apply is printed as ``WARNING:`` lines on standard error; an unreadable
     style, or display settings that would show too many atoms, is an error and nothing
     is written. ``--width`` and ``--height`` override the style's output size.
+    ``--element-map Sr=Ba,Ti=Zr`` sends the style's element settings to other elements
+    ([`parse_element_map`][ycrystal.batch.parse_element_map]); an invalid or ambiguous
+    mapping is an error before anything is written.
     ``--style`` without ``--render`` or ``--export-pov`` is a usage error (status 2).
     ``--install-desktop`` / ``--uninstall-desktop`` manage the menu launcher on Linux
     (see [`ycrystal.desktop`][ycrystal.desktop]); on macOS and Windows they print an
@@ -224,6 +247,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.style_parts is not None and not args.style:
         parser.error("--style-parts needs --style")
+    if args.element_map is not None and not args.style:
+        parser.error("--element-map needs --style")
     if args.render or args.export_pov:
         if not args.file:
             parser.error("--render and --export-pov need a FILE")

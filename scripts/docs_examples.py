@@ -108,6 +108,40 @@ def main() -> None:
         ini = (directory / "MgB2.ini").read_text()
         assert "Width=800" in ini and "Height=600" in ini  # the style's output size
         assert "// Floor:" in (directory / "MgB2.pov").read_text()  # its grey studio
+
+        # Element mapping (examples guide): Ti's chrome goes to Zr in BaZrO3, no warning.
+        args = [str(root / "tests" / "fixtures" / "BaZrO3.cif"), "--style"]
+        args += [str(root / "examples" / "grey-studio.ycstyle"), "--element-map", "Ti=Zr"]
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            assert ycrystal([*args, "--export-pov", str(directory / "BaZrO3")]) == 0
+        assert stderr.getvalue() == ""
+        zr = next(
+            line
+            for line in (directory / "BaZrO3.pov").read_text().splitlines()
+            if line.startswith("sphere") and "// atom #2 Zr" in line
+        )
+        assert "Ycr_Texture_chrome" in zr
+        # The two further mapping examples and the warnings the guide quotes.
+        style = str(root / "examples" / "grey-studio.ycstyle")
+        for structure, mapping, warning in (
+            (
+                "MgB2.cif",
+                "Ti=Mg",
+                "Element overrides for O were not applied: the structure has no O.",
+            ),
+            (
+                "BaZrO3.cif",
+                "Ti=Zr,O=-",
+                "Element settings for O were left out by the element mapping.",
+            ),
+        ):
+            args = [str(root / "tests" / "fixtures" / structure), "--style", style]
+            args += ["--element-map", mapping, "--export-pov", str(directory / "mapped")]
+            stderr = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+                assert ycrystal(args) == 0
+            assert stderr.getvalue() == f"WARNING: {warning}\n"
     print("Documentation examples passed (no display or renderer).")
 
 

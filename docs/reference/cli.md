@@ -9,6 +9,7 @@
         - CLI_STYLE_PARTS
         - StyleTransferError
         - parse_style_parts
+        - parse_element_map
         - apply_style_file
         - scene_for
         - export_scene

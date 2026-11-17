@@ -155,7 +155,7 @@ def no_blocking_dialogs(monkeypatch):
         "ask_choice",
         "ask_text",
         "ask_confirm",
-        "ask_style_parts",
+        "ask_style_import",
         "ask_export",
     ):
         monkeypatch.setattr(MainWindow, name, unexpected)

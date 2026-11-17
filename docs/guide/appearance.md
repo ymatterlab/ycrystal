@@ -359,8 +359,10 @@ both forms by their content. Damaged or unsafe packages, and packages that miss 
 picture, are refused with a message and nothing changes. Ycrystal 0.2.0 and older cannot
 open schema-6 or later projects or packages.
 
-To give another structure the same look, save a **style**: **File ▸ Export Style…**
-writes a `.ycstyle` file, and **File ▸ Import Style…** applies one to the open structure.
+Figures that belong together (in one paper, poster, or talk) should look alike: the
+same background, lighting, image size, and materials. A **style** keeps that look apart
+from any structure, so you design it once and reuse it. **File ▸ Export Style…** writes
+a `.ycstyle` file, and **File ▸ Import Style…** applies one to the open structure.
 The import dialog lets you choose the parts to apply:
 
 | Part | Contents |
@@ -375,7 +377,8 @@ one undoable step. Settings that refer to something the new structure does not h
 left out, and a message lists them:
 
 - Element settings (material, colour, radius) and bond-pair rules apply to the elements
-  the structure contains; those of other elements are left out.
+  the structure contains; those of other elements are left out, unless you map them
+  (see [element mapping](#element-mapping-a-style-for-another-composition)).
 - Per-atom materials and hidden atoms refer to individual atoms of the original
   structure. They are applied only if the new structure has the same number of atoms
   with the same element at every position (for example the same structure from another
@@ -386,3 +389,47 @@ A style can also be applied without a window, for example to render many structu
 with the same look from a script: `ycrystal FILE --style STYLE.ycstyle --render OUT.png`
 (see [styles from the command line](examples.md#apply-a-style-from-the-command-line)).
 There, the display part is left out unless you ask for it.
+
+### Element mapping: a style for another composition
+
+Element settings in a style are stored by element symbol. That works for the same
+compound, but not for a related one: a style made for SrTiO3 has settings for Sr, Ti,
+and O, and applied to BaZrO3 only the O settings find their element. Yet the two
+perovskites have the same structure, with Ba where Sr is and Zr where Ti is, and a
+series of figures is easiest to compare when corresponding atoms look the same. An
+element mapping states that correspondence for drawing: give the Ti settings (for
+example chrome) to Zr, and the Sr settings to Ba. Map the elements while importing:
+
+- **In the window:** the Import Style dialog lists every element the style has
+  settings for, under **Element settings go to**, with the element of the open
+  structure that receives them. Each row starts at the same symbol, or **Do not
+  transfer** if the structure does not contain it, so pressing **Apply** without
+  changing anything works as before. Choose another element of the structure for a
+  row, or **Do not transfer** to leave its settings out. **Match Symbols** returns to
+  the start. Below the rows the dialog shows what will be applied and what is left out
+  (for example `Element settings applied: O, Sr → Ba, Ti → Zr.`) before you press
+  **Apply**. The import stays one undoable step.
+- **From the command line:** `--element-map Sr=Ba,Ti=Zr`, with `O=-` to leave the
+  settings of O out (see
+  [styles from the command line](examples.md#apply-a-style-from-the-command-line)).
+
+The mapping moves the element materials, colours, and radii, and the bond-pair rules
+(an O–Ti rule becomes O–Zr). Elements you do not map keep matching by symbol. The
+choices must be unambiguous, or Ycrystal refuses them and says why:
+
+- Each element of the structure receives the settings of one element at most:
+  mapping both Sr and Ti to Ba is refused.
+- If the style also has settings for the target element itself, mapping another
+  element onto it is refused (Ti → O when the style has O settings). Map O elsewhere,
+  or leave its settings out, to make the choice explicit.
+- Targets must be elements of the open structure; symbols are case-sensitive (`Zr`,
+  not `ZR`).
+- An element mapped elsewhere does not also keep its own settings: with Sr → Ti in a
+  structure that contains Sr, the Sr atoms get no Sr settings (a note says so).
+
+The mapping is a **presentation choice**: it decides which colours and materials an
+element is drawn with. It does not claim chemical equivalence or that the sites of the
+two structures correspond, and it never changes atoms, element labels, coordinates,
+vectors, or which bonds exist. Per-atom materials and hidden atoms still transfer only
+to the same structure, mapping or not. The mapping is not stored in the style file;
+saving the project keeps the resulting appearance.

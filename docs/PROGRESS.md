@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 17 November 2026 (FR-STYLE-CLI-01, styles from the command line; branch `feature/style-cli`, not merged). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; branch `feature/style-cli`, not merged). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 17 November 2026 (FR-STYLE-MAP-01, element mapping for styles; PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -93,10 +93,72 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## FR-STYLE-MAP-01: element mapping for styles (post-0.3.0, 17 November 2026)
+
+Development after version 0.3.0, on branch `feature/style-map` from `main` at `f77e163`
+(PR #28 merged); submitted as PR #29. A style made for one composition can give its
+element settings to other elements of the target structure: `--element-map
+Sr=Ba,Ti=Zr` (`O=-` leaves O's settings out) with `--style`, or the rows **Element
+settings go to** in the Import Style dialog (`gui/style_dialog.py`). The mapping is a
+presentation choice; it is never stored in the style.
+
+Design: `io/style.py::resolve_element_map` decides, without Qt, where each element
+setting goes (`ElementTransfer`); `apply_style(…, element_map=None)` uses it for element
+materials, colours, radii (appearance) and bond-pair rules (display, re-sorted
+alphabetically). Elements that are not mapped keep matching by symbol, so `None`, `{}`,
+and identity mappings give exactly the previous result. Validation, all errors before
+anything is written: symbols must be chemical elements (ASE's list, case-sensitive,
+with a hint such as "did you mean Ti?"); targets must be in the structure; two sources
+may not share a target; a mapped element may not land on an element that keeps its own
+settings (Ti → O while the style has O settings), and only the parts being applied
+count. Notes: mapped elements without settings in the style, settings left out with
+`None`/`-`, and structure atoms whose element was mapped elsewhere. Per-atom materials
+and hidden atoms still transfer only to the same structure; atoms, labels, coordinates,
+vectors, and bond topology are never changed. CLI parsing (`batch.parse_element_map`)
+gives usage errors (status 2) for syntax, symbols, and duplicate sources; structure-
+dependent errors are `ERROR: Element mapping: …` (status 1). In the window,
+`MainWindow.ask_style_import` replaces `ask_style_parts` and returns a
+`StyleImportChoice` (parts and mapping); rows start at the matching symbol (or *Do not
+transfer*), the summary shows what is applied and left out, an ambiguous choice
+disables *Apply*, and the import stays one undo step. No schema change, no new
+dependency. New fixture `tests/fixtures/BaZrO3.cif`: an illustrative cubic perovskite
+with a rounded a = 4.19 Å, not reference data.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| No mapping, `{}`, and identity mappings give results identical to before (settings and notes), on the same and on another structure | Pass | `test_no_mapping_and_identity_mapping_change_nothing`; all earlier style tests unchanged |
+| SrTiO3 → BaZrO3 with Sr→Ba, Ti→Zr: materials, colour, radius, and both bond rules (O–Zr, Ba–O) mapped; O by symbol; per-atom material and hidden atom not transferred; coordinates, cell, and element labels unchanged; Zr drawn with Ti's material | Pass | `test_srtio3_style_maps_onto_bazro3` |
+| Deliberately partial SrTiO3 → MgB2 (Ti→Mg): Ti settings on Mg; O and Sr settings and both O rules dropped with the usual notes; nothing invented for B | Pass | `test_partial_mapping_onto_mgb2_explains_what_is_dropped` |
+| Invalid symbols (`Xx`, `ti`, `mg`, a number), absent target, duplicate targets, identity conflict (Ti→O); resolved by O→None or a swap (rules follow their elements); conflicts only for applied parts | Pass | `test_invalid_mappings_are_refused` (6), `test_mapping_onto_an_element_with_its_own_settings_is_ambiguous` |
+| Notes for unused mappings and moved elements; `resolve_element_map`, `style_elements` | Pass | `test_mapping_notes_unused_and_moved_elements`; doctests in `ycrystal.io.style`, `ycrystal.batch` |
+| `--element-map` parsing: pairs, spaces, `-`, identity; empty, missing `=`, empty entries, duplicates, wrong case, unknown symbols refused | Pass | `test_element_maps_are_parsed` (4), `test_bad_element_maps_are_refused` (8) |
+| ZIP style with picture and custom material, original picture deleted and registries cleared: custom material mapped Ti→Zr, picture kept, style file bytes unchanged, saved project keeps the resolved appearance | Pass | `test_mapped_packaged_style_and_saved_project` |
+| CLI: BaZrO3 + grey studio with `Sr=Ba,Ti=Zr`: Zr gets the chrome texture, O the ceramic one, a warning for Sr (no settings), inputs byte-identical; ambiguous and absent targets status 1, syntax errors status 2, `--element-map` without `--style` status 2, nothing written | Pass | `test_element_map_from_command_line`, `test_bad_element_maps_write_nothing` |
+| Real POV-Ray 3.7 render with the mapping: 160 × 120, differs from the unmapped render | Pass | `test_render_with_element_map` |
+| Dialog: defaults (matching symbol / *Do not transfer*), live summary, ambiguity disables *Apply* with the reason, *Match Symbols*, parts change the check, hidden when the style has no element settings, accessible names; *Apply* and *Cancel* buttons | Pass | `test_dialog_defaults_preview_and_ambiguity`, `test_dialog_without_element_settings_hides_the_mapping`, `test_dialog_apply_and_cancel_buttons` |
+| Window: mapped import is one undo step (undo and redo exact), coordinates and labels unchanged; Cancel and an invalid mapping change nothing and add no undo step | Pass | `test_mapped_import_is_one_undo_step`, `test_cancelled_or_invalid_import_changes_nothing` |
+
+Visual checks (Claude, on the Mac): dialog screenshots in the default, mapped, and
+ambiguous states (the summary reserves room so the wrapped text is not squeezed); the
+guide's `BaZrO3 … --element-map Ti=Zr --render` shows a chrome Zr in the grey studio,
+unlike the unmapped render. `scripts/docs_examples.py` (run in CI) runs the guide's
+three mapping commands with `--export-pov` and checks Zr's chrome and the exact quoted
+warnings; `test_documented_walkthrough_with_the_example_style` follows the guide's
+window steps (dialog texts, Apply, one undo step) with the example style.
+
+Regression runs on the Mac mini (macOS 15.8, Homebrew POV-Ray 3.7.0.10):
+`YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` 627 passed, none skipped (184 s), then
+the documentation walkthrough test (6 passed in `tests/test_gui_style_map.py`); 33 new
+tests: 24 in `tests/test_style.py`, 3 in `tests/test_release.py`, 6 in
+`tests/test_gui_style_map.py`; `pytest -m "not gui"` 457 passed; doctests of
+`io/style.py`, `batch.py`, `core/scene.py`; `pre-commit run --all-files`;
+`zensical build --clean --strict` clean. **Linux not run**; hands-on use of the dialog
+by a person not done.
+
 ## FR-STYLE-CLI-01: styles from the command line (post-0.3.0, 17 November 2026)
 
 Development after version 0.3.0, on branch `feature/style-cli` from `main` at `410d87e`
-(0.4.0.dev0); commit `b8801ac`, not merged.
+(0.4.0.dev0); merged in PR #28 (merge commit `f77e163`).
 `ycrystal FILE --style STYLE.ycstyle [--style-parts LIST] --render OUT.png | --export-pov
 OUT.pov` applies a style without a window. `batch.apply_style_file` loads the style
 with `load_style` and calls the existing `apply_style` on the input from `load_input`;

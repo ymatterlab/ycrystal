@@ -55,7 +55,10 @@ python3.12 -m venv .venv
 ```bash
 .venv/bin/ycrystal --install-desktop                                    # menu launcher (Linux)
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png  # no window
+# Reuse a style (studio, lighting, image size) for another structure, without a window:
 .venv/bin/ycrystal tests/fixtures/MgB2.cif --style examples/grey-studio.ycstyle --render MgB2.png
+# Also give the style's Ti settings (chrome) to Zr, so both perovskites look alike:
+.venv/bin/ycrystal tests/fixtures/BaZrO3.cif --style examples/grey-studio.ycstyle --element-map Ti=Zr --render BaZrO3.png
 ```
 
 Latest release 0.3.0; `main` is the development version 0.4.0.dev0. See the [changelog](CHANGELOG.md), the

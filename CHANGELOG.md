@@ -26,6 +26,15 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   `WARNING:` lines. The input's coordinates, vectors, and a saved project's camera are
   kept, and `--width`/`--height` override the style's size. A style may not raise the
   display above 20,000 atoms from the command line.
+- **Element mapping for styles (FR-STYLE-MAP-01).** A style made for one composition
+  can give its element settings to other elements: `--element-map Sr=Ba,Ti=Zr` on the
+  command line (`O=-` leaves an element's settings out), or the new **Element settings
+  go to** rows in the Import Style dialog, which show what will be applied and left out
+  before **Apply**. Materials, colours, radii, and bond-pair rules move; atoms,
+  coordinates, vectors, and bonds do not, and per-atom settings still transfer only to
+  the same structure. Ambiguous mappings are refused with an explanation. The mapping
+  is a presentation choice, not chemistry, and is not stored in the style. New fixture
+  `tests/fixtures/BaZrO3.cif` (illustrative cubic perovskite).
 
 ### Details
 - New application icon (a Y-shaped molecule on a dark tile on the macOS icon grid) and

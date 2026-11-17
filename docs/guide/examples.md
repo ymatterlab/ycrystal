@@ -41,10 +41,42 @@ Open your own structure, choose **File ▸ Import Style…**, and pick
 `examples/grey-studio.ycstyle`. Element settings apply to the elements your structure
 contains; see [styles](appearance.md#reusing-the-look-styles).
 
+For a structure with other elements, map them in the same dialog. For example, to give
+BaZrO3 the chrome that the style gives Ti:
+
+1. Open `tests/fixtures/BaZrO3.cif` (**File ▸ Open…**).
+2. Choose **File ▸ Import Style…** and pick `examples/grey-studio.ycstyle`.
+3. Under **Element settings go to**, the row `O →` shows `O` (matching symbol) and the
+   row `Ti →` shows **Do not transfer** (BaZrO3 has no Ti). The text below reads
+   `Element settings applied: O.` and `Left out: Ti.`
+4. Set the `Ti →` row to `Zr`. The text changes to
+   `Element settings applied: O, Ti → Zr.`
+5. Press **Apply**. Zr is now chrome and O ceramic, in the grey studio; **Edit ▸ Undo**
+   removes the whole import in one step.
+
+Setting the `Ti →` row to `O` instead is refused before **Apply**: the dialog explains
+that O would receive the settings of both O and Ti, and **Apply** stays disabled until
+you choose differently (or set the `O →` row to **Do not transfer**).
+
 ## Apply a style from the command line
 
+**Why.** Figures in one paper or talk usually share a look: the same background,
+lighting, floor, image size, and materials. Design that look once in the window, save it
+as a style (**File ▸ Export Style…**), and give it to every other structure from the
+command line, for example from a script that renders a whole series. The figures stay
+consistent, and nobody has to repeat the same clicks for each structure.
+
 `--style` applies a `.ycstyle` file to `FILE` before `--render` or `--export-pov`, without
-a window. The style designed for SrTiO3 gives MgB2 the same grey studio:
+a window. A style has two kinds of settings:
+
+- settings that suit **any structure**: the environment (background, floor, lighting),
+  the output size, and the default material;
+- settings **for particular elements**: element materials, colours, and radii, and
+  bond-pair rules (for example "Ti is chrome").
+
+The first kind always applies. The second kind applies to the elements the structure
+contains. The style designed for SrTiO3 therefore gives MgB2 the same grey studio, even
+though MgB2 has neither Ti nor O (a warning says that those settings were not used):
 
 ```bash
 .venv/bin/ycrystal tests/fixtures/MgB2.cif --style examples/grey-studio.ycstyle --render MgB2.png
@@ -85,3 +117,57 @@ on standard error and renders an 800 × 600 PNG (the style's size).
   works on a machine where the picture and the personal materials do not exist.
 
 `--render` still writes PNG only; PDF and JPEG come from **Render Image…** in the window.
+
+### Map elements to another composition
+
+**Why.** Element settings are stored by element symbol, so they are lost when the
+composition changes, even when the figures should match. SrTiO3 and BaZrO3 are both
+ABO3 perovskites: Zr sits where Ti sits, at the centre of the oxygen octahedron. In a
+series of perovskite figures you will usually want the B-site atom drawn the same way in
+every figure, so readers can compare them at a glance. A mapping says which element of
+the new structure takes over which element's look. You decide the correspondence;
+Ycrystal never guesses it.
+
+The grey studio style has settings for Ti (chrome) and O (ceramic). BaZrO3
+(`tests/fixtures/BaZrO3.cif`, an illustrative cubic perovskite) has O but no Ti, so
+without a mapping its Zr atoms keep the default material. `--element-map` gives the Ti
+settings to Zr:
+
+```bash
+.venv/bin/ycrystal tests/fixtures/BaZrO3.cif --style examples/grey-studio.ycstyle --element-map Ti=Zr --render BaZrO3.png
+```
+
+This renders chrome Zr and ceramic O in the grey studio, with no warning. Two more
+examples, with the messages they print:
+
+```bash
+# A deliberately partial mapping: Ti's chrome goes to Mg; MgB2 has no O.
+.venv/bin/ycrystal tests/fixtures/MgB2.cif --style examples/grey-studio.ycstyle --element-map Ti=Mg --render MgB2-chrome.png
+# WARNING: Element overrides for O were not applied: the structure has no O.
+
+# Ti's chrome to Zr, and leave the style's O settings out (O keeps its default look).
+.venv/bin/ycrystal tests/fixtures/BaZrO3.cif --style examples/grey-studio.ycstyle --element-map Ti=Zr,O=- --render BaZrO3-no-O.png
+# WARNING: Element settings for O were left out by the element mapping.
+```
+
+Nothing is guessed: B in MgB2 gets no settings, because no element is mapped to it.
+
+- **Syntax.** `SOURCE=TARGET` pairs separated by commas: `--element-map Sr=Ba,Ti=Zr`.
+  `SOURCE=-` leaves the style's settings for `SOURCE` out: `--element-map O=-`.
+  Symbols are case-sensitive; spaces around them are ignored. Elements that are not
+  listed keep matching by symbol. `--element-map` needs `--style`.
+- **What moves.** The element materials, colours, and radii of the `appearance` part,
+  and the bond-pair rules of the `display` part (when requested with `--style-parts`).
+  Atoms, element labels, coordinates, vectors, and which bonds exist are never changed,
+  and per-atom settings still transfer only to the same structure.
+- **Warnings.** A source element the style has no settings for is reported (with
+  `--element-map Sr=Ba` the grey studio prints `WARNING: The style has no element
+  settings for Sr; its mapping changes nothing.`), as are settings left out with `=-`.
+- **Errors.** A malformed entry, an unknown or wrongly capitalised symbol (`ti`), or an
+  element mapped twice is a usage error (status 2). A target the structure does not
+  contain (`Ti=Mg` for BaZrO3), two elements mapped to one target, or a mapping onto an
+  element that keeps its own settings (`Ti=O`, while the style also has O settings) is
+  an error (status 1). In every case nothing is written and POV-Ray does not start.
+
+The mapping is a presentation choice, not a statement of chemical equivalence or site
+correspondence; see [element mapping](appearance.md#element-mapping-a-style-for-another-composition).

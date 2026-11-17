@@ -1,6 +1,7 @@
 """Reusable styles: capture, files, transfer rules, and scientific data."""
 
 import json
+import re
 from dataclasses import replace
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from ycrystal.batch import (
     apply_style_file,
     export_scene,
     load_input,
+    parse_element_map,
     parse_style_parts,
 )
 from ycrystal.core.bonds import BondSettings
@@ -28,14 +30,17 @@ from ycrystal.core.scene import (
 )
 from ycrystal.io import images
 from ycrystal.io.images import import_image
-from ycrystal.io.project import Project
+from ycrystal.io.project import Project, load_project, save_project
 from ycrystal.io.style import (
     STYLE_PARTS,
+    ElementMapError,
     Style,
     StyleError,
     apply_style,
     load_style,
+    resolve_element_map,
     save_style,
+    style_elements,
     style_to_dict,
 )
 from ycrystal.presets import apply_lighting, environment_from_preset
@@ -274,3 +279,203 @@ def test_packaged_style_with_picture_and_custom_material(tmp_path, clean_registr
     staged = [p for p in out.iterdir() if p.suffix == ".png"]
     assert len(staged) == 1 and staged[0].name in text  # picture copied next to the scene
     assert "Shiny" in text and "Width=320" in ini.read_text()
+
+
+# ----- element mapping between compositions (FR-STYLE-MAP-01) ------------------------------
+FIXTURES = ROOT / "tests" / "fixtures"
+
+
+def srtio3_style():
+    """A style with settings for every SrTiO3 element and two bond-pair rules."""
+    structure = perovskite_srtio3()
+    scene = (
+        SceneSettings(
+            material="glossy",
+            bonds=BondSettings(overrides=frozenset({("O", "Ti", False), ("O", "Sr", True)})),
+        )
+        .with_element_material("Sr", "gold")
+        .with_element_material("Ti", "chrome")
+        .with_element_material("O", "glass")
+        .with_element_color("Sr", (0.9, 0.2, 0.1))
+        .with_element_radius("Ti", 0.55)
+        .with_atom_materials([(0, (0, 0, 0))], "copper")
+    )
+    scene = replace(scene, hidden=frozenset({(1, (0, 0, 0))}))
+    return Style.from_state(structure, scene, Environment(), (800, 600))
+
+
+def test_no_mapping_and_identity_mapping_change_nothing():
+    _, style = rich_style()
+    for target in (perovskite_srtio3(), triclinic_marker()):
+        args = (style, target, SceneSettings(), Environment(), (1200, 800))
+        plain = apply_style(*args)
+        assert apply_style(*args, element_map=None) == plain
+        assert apply_style(*args, element_map={}) == plain
+        identity = {e: e for e in {"O", "Sr", "Ti"} & set(target.symbols)}
+        assert apply_style(*args, element_map=identity) == plain
+
+
+def test_srtio3_style_maps_onto_bazro3():
+    style = srtio3_style()
+    target = load_input(FIXTURES / "BaZrO3.cif").structure
+    positions, cell = target.positions.copy(), target.cell.copy()
+    result = apply_style(
+        style,
+        target,
+        SceneSettings(),
+        Environment(),
+        (1200, 800),
+        element_map={"Sr": "Ba", "Ti": "Zr"},
+    )
+    scene = result.scene
+    assert scene.element_materials == (("Ba", "gold"), ("O", "glass"), ("Zr", "chrome"))
+    assert scene.element_colors == (("Ba", (0.9, 0.2, 0.1)),)
+    assert scene.element_radii == (("Zr", 0.55),)
+    assert scene.bonds.overrides == frozenset({("O", "Zr", False), ("Ba", "O", True)})
+    # Per-atom settings refer to SrTiO3's atoms: never transferred, mapping or not.
+    assert scene.atom_materials == () and scene.hidden == frozenset()
+    assert any("per-atom material override" in note for note in result.notes)
+    assert not any("were not applied: the structure has no" in n for n in result.notes)
+    np.testing.assert_array_equal(target.positions, positions)
+    np.testing.assert_array_equal(target.cell, cell)
+    assert target.symbols == ("Ba", "Zr", "O", "O", "O")  # atoms are never relabelled
+    geometry = build_geometry(target, scene)
+    assert geometry.materials[geometry.index_of((1, (0, 0, 0)))] == "chrome"  # Zr
+
+
+def test_partial_mapping_onto_mgb2_explains_what_is_dropped():
+    style = srtio3_style()
+    target = load_input(FIXTURES / "MgB2.cif").structure
+    result = apply_style(
+        style, target, SceneSettings(), Environment(), (1, 1), element_map={"Ti": "Mg"}
+    )
+    scene = result.scene
+    assert scene.element_materials == (("Mg", "chrome"),) and scene.element_radii == (("Mg", 0.55),)
+    assert scene.element_colors == ()  # Sr's colour has nowhere to go; nothing invented
+    assert scene.bonds.overrides == frozenset()  # both rules involve O, absent from MgB2
+    notes = "\n".join(result.notes)
+    assert "Element overrides for O, Sr were not applied: the structure has no O, Sr." in notes
+    assert (
+        "2 bond-pair rules for elements the structure does not contain were not applied." in notes
+    )
+    assert "B" not in {e for e, _ in scene.element_materials}  # no guessed B settings
+
+
+@pytest.mark.parametrize(
+    "mapping, message",
+    [
+        ({"Xx": "Mg"}, "'Xx' is not a chemical element symbol"),
+        ({"ti": "Mg"}, "did you mean Ti"),
+        ({"Ti": "mg"}, "did you mean Mg"),
+        ({"Ti": 12}, "not a chemical element symbol"),
+        ({"Ti": "Zr"}, "the structure has no Zr (it contains B, Mg)"),
+        ({"Sr": "Mg", "Ti": "Mg"}, "Sr and Ti are all mapped to Mg"),
+    ],
+)
+def test_invalid_mappings_are_refused(mapping, message):
+    target = load_input(FIXTURES / "MgB2.cif").structure
+    with pytest.raises(ElementMapError, match=re.escape(message)):
+        apply_style(
+            srtio3_style(), target, SceneSettings(), Environment(), (1, 1), element_map=mapping
+        )
+
+
+def test_mapping_onto_an_element_with_its_own_settings_is_ambiguous():
+    style = srtio3_style()
+    target = perovskite_srtio3()
+    args = (style, target, SceneSettings(), Environment(), (1, 1))
+    with pytest.raises(ElementMapError, match="O would receive the settings of both O and Ti"):
+        apply_style(*args, element_map={"Ti": "O"})
+    # Resolved explicitly: O's own settings left out, or swapped with Ti.
+    left_out = apply_style(*args, element_map={"Ti": "O", "O": None})
+    assert dict(left_out.scene.element_materials) == {"O": "chrome", "Sr": "gold"}
+    assert any(
+        "Element settings for O were left out by the element mapping" in n for n in left_out.notes
+    )
+    assert left_out.scene.bonds.overrides == frozenset()  # both rules involve O
+    assert any("or the element mapping leaves out" in n for n in left_out.notes)
+    swapped = apply_style(*args, element_map={"Ti": "O", "O": "Ti"})
+    assert dict(swapped.scene.element_materials) == {"O": "chrome", "Sr": "gold", "Ti": "glass"}
+    # Rules follow their elements: O-Ti stays O-Ti (swapped), O-Sr becomes Sr-Ti.
+    assert swapped.scene.bonds.overrides == frozenset({("O", "Ti", False), ("Sr", "Ti", True)})
+    # Only applied parts count: without appearance and display no element settings apply.
+    only_env = apply_style(*args, parts=("environment",), element_map={"Ti": "O"})
+    assert any("no element settings for Ti" in note for note in only_env.notes)
+
+
+def test_mapping_notes_unused_and_moved_elements():
+    structure = perovskite_srtio3()
+    style = Style.from_state(
+        structure, SceneSettings().with_element_material("Sr", "gold"), Environment(), (1, 1)
+    )
+    result = apply_style(
+        style, structure, SceneSettings(), Environment(), (1, 1), element_map={"Sr": "Ti", "O": "O"}
+    )
+    assert result.scene.element_materials == (("Ti", "gold"),)
+    notes = "\n".join(result.notes)
+    assert "no element settings for O; its mapping changes nothing" in notes
+    assert "Atoms of Sr in this structure do not receive the style's settings" in notes
+    transfer = resolve_element_map(style, structure, {"Sr": "Ti"})
+    assert transfer.targets == (("Sr", "Ti"),) and transfer.target_of("Sr") == "Ti"
+    assert style_elements(srtio3_style(), ("appearance",)) == ("O", "Sr", "Ti")
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("Sr=Ba", {"Sr": "Ba"}),
+        (" Sr = Ba , Ti=Zr ", {"Sr": "Ba", "Ti": "Zr"}),
+        ("O=-", {"O": None}),
+        ("Ti=Ti", {"Ti": "Ti"}),
+    ],
+)
+def test_element_maps_are_parsed(text, expected):
+    assert parse_element_map(text) == expected
+
+
+@pytest.mark.parametrize(
+    "text, message",
+    [
+        ("", "SOURCE=TARGET"),
+        ("Sr", "not SOURCE=TARGET"),
+        ("Sr=", "not SOURCE=TARGET"),
+        ("=Ba", "not SOURCE=TARGET"),
+        ("Sr=Ba,,Ti=Zr", "not SOURCE=TARGET"),
+        ("Sr=Ba,Sr=Ca", "Sr is mapped twice"),
+        ("Sr=BA", "did you mean Ba"),
+        ("Q=Ba", "'Q' is not a chemical element symbol"),
+    ],
+)
+def test_bad_element_maps_are_refused(text, message):
+    with pytest.raises(ValueError, match=re.escape(message)):
+        parse_element_map(text)
+
+
+def test_mapped_packaged_style_and_saved_project(tmp_path, clean_registries):
+    folder = tmp_path / "Stil ü"
+    folder.mkdir()
+    Image.new("RGB", (40, 30), (30, 30, 200)).save(folder / "back.png")
+    asset = import_image(folder / "back.png")
+    dense = presets.register_definition(
+        base_definition("glass").with_values(ior=1.7).renamed("Dense glass")
+    )
+    scene = SceneSettings().with_element_material("Ti", dense.id)
+    environment = Environment(background_mode="image", image=asset.reference())
+    style = Style.from_state(perovskite_srtio3(), scene, environment, (320, 240))
+    path = save_style(folder / "look.ycstyle", style)
+    stored = path.read_bytes()
+    (folder / "back.png").unlink()
+    images._REGISTRY.clear()
+    presets._CUSTOM.clear()
+    presets._DEFINITIONS.clear()
+    presets._LISTED.clear()
+    target = load_input(FIXTURES / "BaZrO3.cif")
+    styled, notes = apply_style_file(target, path, element_map={"Ti": "Zr"})
+    assert dict(styled.scene.element_materials) == {"Zr": dense.id}
+    assert styled.environment.image is not None and notes == ()
+    assert path.read_bytes() == stored  # the style file is never rewritten
+    with pytest.raises(StyleTransferError, match="Element mapping: .*no Ti"):
+        apply_style_file(target, path, element_map={"Zr": "Ti"})
+    # Saving the result keeps the resolved appearance, not the mapping.
+    saved = save_project(tmp_path / "BaZrO3 ü.ycrystal", styled)
+    assert dict(load_project(saved).scene.element_materials) == {"Zr": dense.id}

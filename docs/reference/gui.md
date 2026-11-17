@@ -42,6 +42,7 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - current_style
         - export_style
         - import_style
+        - ask_style_import
         - set_output_size
         - output_size
         - aspect_locked
@@ -88,6 +89,14 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - SIZE_MODES
         - ExportChoice
         - ExportDialog
+
+::: ycrystal.gui.style_dialog
+    options:
+      members:
+        - STYLE_PART_LABELS
+        - LEAVE_OUT
+        - StyleImportChoice
+        - StyleImportDialog
 
 ::: ycrystal.gui.color_dialog.ColorDialog
     options:
