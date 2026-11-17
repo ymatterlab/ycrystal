@@ -79,6 +79,22 @@ Merged after the `v0.3.0` tag; not yet part of a release.
 - Linux: `--install-desktop` now refreshes the icon theme, so a reinstalled launcher
   shows the current icon in GTK and Cinnamon menus.
 - `ycrystal --version` reports `0.4.0.dev0`, the development version after 0.3.0.
+- Validation and benchmarks (FR-VALIDATION-01); no change to the application.
+  - `tests/test_validation.py` checks the following, by measured image properties
+    rather than stored pictures:
+    - the scene file against the shared geometry;
+    - ray-traced atoms, periodic images, bonds, and vector arrows against the camera
+      model;
+    - that fitted views are never cut off;
+    - that styles leave the scientific data unchanged;
+    - shadows, soft shadows, reflection, and refraction.
+  - `scripts/benchmark_render.py` times renders through the command line (median and
+    range, peak memory).
+  - `scripts/replay_check.py` renders saved snapshots again, also on another machine,
+    and compares the pixels.
+  - New developer pages: *Validation and benchmarks* (evidence and tolerances),
+    *Comparison with other programs* (VESTA, OVITO, CView, from their documentation
+    only), and an *Independent evaluation checklist*.
 
 ## 0.3.0 — macOS support and richer scientific figures (16 November 2026)
 

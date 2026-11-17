@@ -1,8 +1,19 @@
 # Test fixtures
 
-Small synthetic structures written by hand from textbook lattice constants. Expected
-cells and positions in the tests are computed from the same constants with explicit
-formulas, independently of the readers under test.
+Small structure files written by hand for this project from textbook lattice constants
+(MIT licence, like the rest of the repository; no third-party data). Expected cells and
+positions in the tests are computed from the same constants with explicit formulas,
+independently of the readers under test.
+
+Which are real compounds and which are synthetic (FR-VALIDATION-01):
+
+- **Real compounds, idealised:** Si, MgB2, SrTiO3, and BaZrO3 describe real crystal
+  structures with rounded textbook constants. They are test and demonstration inputs,
+  not refined reference data.
+- **Synthetic:** the triclinic P1 cell is invented (arbitrary cell, five arbitrary
+  atoms; not a compound). `examples/vectors-synthetic-afm.ycrystal` is a synthetic
+  two-site cubic cell with magnetic moments of ±2.2 μB assigned by hand; it is not a
+  real material.
 
 | Structure | Constants | Files |
 | --- | --- | --- |

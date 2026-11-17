@@ -7,7 +7,6 @@ import shlex
 import shutil
 import subprocess
 import sys
-import textwrap
 from dataclasses import replace
 from pathlib import Path
 
@@ -15,6 +14,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from conftest import fake_povray
 from ycrystal import presets
 from ycrystal.app import main
 from ycrystal.batch import apply_style_file, export_scene, load_input, scene_for
@@ -50,34 +50,6 @@ PIXEL_TOLERANCE = 1
 
 def sha(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-
-
-def fake_povray(folder: Path, fail: bool = False) -> str:
-    """A stand-in for POV-Ray: writes a PNG of the size in the .ini file, or fails."""
-    name = "fake_povray_fail" if fail else "fake_povray"
-    script = folder / f"{name}.py"
-    script.write_text(
-        textwrap.dedent(
-            f"""
-            import re, sys
-            from pathlib import Path
-            if "--version" in sys.argv:
-                print("POV-Ray 3.7.0.fake")
-                sys.exit(0)
-            if {fail!r}:
-                print("Parse Error: this renderer always fails")
-                sys.exit(1)
-            ini = Path(sys.argv[1]).read_text()
-            size = [int(re.search(k + r"=(\\d+)", ini).group(1)) for k in ("Width", "Height")]
-            from PIL import Image
-            Image.new("RGB", tuple(size), (40, 60, 80)).save("scene.png")
-            """
-        )
-    )
-    launcher = folder / name
-    launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n')
-    launcher.chmod(0o755)
-    return str(launcher)
 
 
 def pov_body(path: Path) -> list[str]:
