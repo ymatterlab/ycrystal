@@ -162,6 +162,16 @@ Known limitations and unresolved issues:
   at 1.8× the job time (details in
   [PROGRESS.md](PROGRESS.md#python-312-313-and-314-18-november-2026)). Not run: 3.13
   and 3.14 on Windows and on a real Linux machine, the script's `py` search for them.
+- **Then, on the Windows laptop (Python 3.13 and 3.14 on Windows):** the user asked to
+  test them there. Python 3.13.17 and 3.14.10 (python.org builds, `winget`, per user)
+  were installed next to 3.12.10. For each, the installation script in Windows
+  PowerShell 5.1 (`-Python`, `-Dev`, `-NoStartMenu`) on a fresh copy of the checkout:
+  "Ycrystal is ready.", renderer check passed, every pin from wheels. Then the full
+  suite with real windows and POV-Ray for Windows: **906 passed, 3 skipped** on both,
+  as on 3.12 (details in
+  [PROGRESS.md](PROGRESS.md#python-313-and-314-on-windows-18-november-2026)). Still not
+  run: the script's `py` search finding 3.13 or 3.14 when no 3.12 is installed; 3.14 on
+  macOS; 3.13 and 3.14 on a real Linux machine.
 
 Earlier, on 17 November 2026:
 
@@ -441,7 +451,9 @@ py -3.12 -m venv .venv-docs; .venv-docs\Scripts\python.exe -m pip install -r doc
 - macOS CI runs without GUI tests; the GUI is verified on a real Mac.
 - Python: 3.12, 3.13, and 3.14 are supported; `requires-python >=3.12` (18 November
   2026). CI runs 3.12 on every system and 3.13 and 3.14 on Ubuntu only, within the
-  user's limit of twice the 3.12-only CI cost; check this when adding jobs.
+  user's limit of twice the 3.12-only CI cost; check this when adding jobs. Windows
+  with 3.13 and 3.14 was verified by hand on the laptop (full suite, 18 November 2026),
+  not in CI.
 - Vectors: Cartesian components in the structure frame; magnetic moments in μB,
   directions dimensionless; source defaults plus image overrides/suppressions; no
   inferred signs or magnetic symmetry; styles carry arrow appearance, never vectors.

@@ -55,7 +55,8 @@ The Python interface may still change before version 1.0.
 
 ## Install
 
-You need Git, Python 3.12 or newer (3.12, 3.13, and 3.14 are tested), and POV-Ray 3.7
+You need Git, Python 3.12 or newer (3.12, 3.13, and 3.14 are tested on Linux and
+Windows; 3.12 and 3.13 on macOS), and POV-Ray 3.7
 for rendering images (the window and `.pov` export work without it). Ycrystal is
 installed into a folder `.venv` inside the checkout. Choose your system:
 

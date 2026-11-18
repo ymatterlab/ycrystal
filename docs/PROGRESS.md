@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 18 November 2026 (Windows installation in one command, PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 18 November 2026 (Python 3.13 and 3.14 on Windows, verified on the laptop; PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -93,6 +93,36 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## Python 3.13 and 3.14 on Windows (18 November 2026)
+
+Requested by the user: test the Windows version of Ycrystal with Python 3.13 and 3.14,
+on the Windows 11 laptop (x64, 125 % scale, POV-Ray for Windows 3.7.0). No code change.
+Python 3.13.17 and 3.14.10 (python.org builds) were installed with
+`winget install --id Python.Python.3.13 / 3.14 --exact --scope user`, next to 3.12.10;
+`py --list` shows all three. For each version, a fresh copy of the checkout of
+`feature/windows-install` (at `f221cba`) in `%TEMP%`, then:
+
+1. `powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1 -Python <python.exe> -Dev -NoStartMenu`
+   in Windows PowerShell 5.1;
+2. `YCRYSTAL_REQUIRE_INTEGRATION=1 .venv\Scripts\python.exe -m pytest -q -rs` (GUI tests
+   with real windows, POV-Ray tests with POV-Ray for Windows), one version after the
+   other because POV-Ray for Windows renders one copy at a time.
+
+| Check | Python 3.13.17 | Python 3.14.10 |
+| --- | --- | --- |
+| Installation script | `.venv` created with 3.13; renderer check `PASS: … within 0.14 px`; "Ycrystal is ready.", exit status 0; 308 s | The same with 3.14; 295 s |
+| Packages | Every pin of `constraints.txt` from a wheel, nothing built from source: NumPy 2.5.4, SciPy 1.18.1, VTK 9.7.2, PySide6 6.12.0, Matplotlib 3.11.2, Pillow 13.0.0, ASE 3.29.0 | The same versions, from wheels |
+| Full suite | **906 passed, 3 skipped**, 12.2 min | **906 passed, 3 skipped**, 12.4 min |
+
+The 3 skipped tests are the POSIX-only ones (symbolic links, execute bit, POSIX
+permissions), as on 3.12 (906 passed, 3 skipped on the same laptop). The Start-menu
+shortcut and file type were exercised by `tests/test_windows_desktop.py` under each
+version (temporary folders and registry key); the laptop's real Start-menu entry was
+left pointing at its 3.12 `.venv`.
+
+Not verified: the script's `py` search choosing 3.13 or 3.14 when no 3.12 is installed
+(3.12 is on the laptop and comes first); hands-on use of the window with 3.13 or 3.14.
+
 ## Python 3.12, 3.13, and 3.14 (18 November 2026)
 
 Requested by the user after reviewing PR #39: Ycrystal should work at least with Python
@@ -127,8 +157,9 @@ does not become twice as heavy as with 3.12 alone, otherwise record them by hand
 | Same run: Windows Server 2022, Python 3.12.10, no GUI tests; then the installation script with `-Python` | 735 passed, 2 skipped; script: `.venv` created with Python 3.12, "Ycrystal is ready." |
 | CI cost, same run | 36.8 job-minutes against 20.3 for the 3.12 jobs alone (1.8×; under the user's 2× limit); wall time 9.6 min (the 3.14 job) against 7.0 min |
 
-Not verified: Python 3.13 and 3.14 on Windows and on a real Linux machine, 3.14 on
-macOS; the script's search through `py` for 3.13 and 3.14 and its refusal of an old
+Not verified: Python 3.13 and 3.14 on Windows (since verified on the laptop, see
+[the section above](#python-313-and-314-on-windows-18-november-2026)) and on a real
+Linux machine, 3.14 on macOS; the script's search through `py` for 3.13 and 3.14 and its refusal of an old
 `.venv` (CI passes `-Python`; no PowerShell on the Linux laptop).
 
 ## Windows installation in one command (18 November 2026)

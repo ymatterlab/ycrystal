@@ -43,14 +43,14 @@ Details: [structure files and projects](../FORMATS.md).
 | Linux Mint 22.1 Cinnamon, X11, Intel Meteor Lake graphics (Mesa 25.2) | Verified on the development laptop |
 | Ubuntu 24.04 under Xvfb (software OpenGL) | Verified by CI on every change |
 | System Python 3.12 | Verified |
-| Python 3.13 | Verified on macOS 15.8, Apple silicon (Homebrew Python 3.13.18, full suite including the GUI tests and POV-Ray, 18 November 2026); full suite in CI on Ubuntu 24.04 (Xvfb, POV-Ray 3.7) on every change; unverified on Windows |
-| Python 3.14 | Full suite in CI on Ubuntu 24.04 (Xvfb, POV-Ray 3.7) on every change; unverified on real machines, macOS, and Windows |
+| Python 3.13 | Verified on macOS 15.8, Apple silicon (Homebrew Python 3.13.18, full suite including the GUI tests and POV-Ray, 18 November 2026); full suite in CI on Ubuntu 24.04 (Xvfb, POV-Ray 3.7) on every change; verified on the Windows 11 laptop (python.org Python 3.13.17, installation script and full suite including the GUI tests with POV-Ray for Windows, 18 November 2026) |
+| Python 3.14 | Full suite in CI on Ubuntu 24.04 (Xvfb, POV-Ray 3.7) on every change; verified on the Windows 11 laptop (python.org Python 3.14.10, installation script and full suite including the GUI tests with POV-Ray for Windows, 18 November 2026); unverified on macOS and on a real Linux machine |
 | Python 3.10 and 3.11 | Not supported: the tested NumPy and SciPy need Python 3.12 (`requires-python = ">=3.12"`) |
 | macOS 15.8, Apple silicon, Homebrew Python 3.12 and POV-Ray, non-Retina display | Automated tests verified on a Mac mini (full suite including the GUI tests, 16 November 2026); hands-on use not yet checked |
 | macOS on a Retina display, Intel Macs, other macOS versions | Unverified (the GUI tests also pass with an emulated 2× display scale) |
 | macOS in CI (GitHub-hosted, no GPU) | Tests that open no window only, on every pull request and push to `main` |
 | Wayland sessions | Unverified (Qt uses XWayland if available) |
-| Windows 11 (x64), Python 3.12 from python.org, POV-Ray for Windows 3.7, 125 % display scale | Verified on one laptop (full suite including the GUI tests, and tested by hand, 18 November 2026) |
+| Windows 11 (x64), Python 3.12, 3.13, or 3.14 from python.org, POV-Ray for Windows 3.7, 125 % display scale | Verified on one laptop (full suite including the GUI tests on each of the three versions; tested by hand with 3.12; 18 November 2026) |
 | Windows installation script (`scripts\install-windows.ps1`, Windows PowerShell 5.1), Start-menu entry, `.ycrystal` file type | Verified on the same laptop, with Python and POV-Ray already installed: fresh `.venv`, Start-menu entry and project opened from it, renderer check; run by Windows CI on every pull request. Installing Python and POV-Ray through it with `winget` is unverified |
 | Windows in CI (GitHub-hosted, Windows Server 2022) | Tests that open no window, with POV-Ray for Windows 3.7, on every pull request (since 18 November 2026) |
 | Windows 10, Windows on ARM, other Windows display scales | Unverified |

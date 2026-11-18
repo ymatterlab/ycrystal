@@ -264,6 +264,7 @@ Evidence on the laptop (18 November 2026):
 | `examples\SrTiO3-studio.ycrystal` opened as a double-click does | Opened in Ycrystal ("SrTiO3-studio.ycrystal — Ycrystal", `pythonw.exe`) |
 | New tests: `tests/test_windows_desktop.py` (launch command, icon sizes, the shortcut's fields and application id written and read back with a non-ASCII path, Start-menu entry and file type installed and removed in a test registry key, another program's file type left alone, the two command-line options); `tests/test_windows_povray.py` (the editor question: settings, both library folders, other programs; reported before starting) | Passed |
 | Full suite, `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` | 906 passed, 3 skipped (POSIX-only), 12.4 min |
+| Python 3.13.17 and 3.14.10 (python.org, `winget`): the script with `-Python … -Dev -NoStartMenu` on fresh copies, then the full suite | Both "Ycrystal is ready." (pins from wheels); 906 passed, 3 skipped on each ([PROGRESS.md](../PROGRESS.md#python-313-and-314-on-windows-18-november-2026)) |
 
 Not verified: installing Python and POV-Ray through the script (both were already on
 the laptop); the script's editor prompt (the editor is installed here); pinning the
