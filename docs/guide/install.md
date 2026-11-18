@@ -4,7 +4,8 @@ The integration baseline is Linux Mint 22.1 / Ubuntu 24.04 with the system Pytho
 3.12, an X11 desktop, and working OpenGL. macOS 15 on Apple silicon is supported from
 the same source and passes the same automated tests. Windows 11 with POV-Ray for
 Windows 3.7 is supported from the same source too: it passes the automated tests and
-was tested by hand on one computer. Python 3.12, 3.13, and 3.14 are supported; where
+was tested by hand on one computer; there, a graphical installer is the recommended
+way ([Windows](#windows)). Python 3.12, 3.13, and 3.14 are supported; where
 each was tested is in the [support matrix](support.md). Ycrystal is installed from its
 source folder into its own virtual environment; no `sudo` is needed except for the
 system packages.
@@ -85,7 +86,46 @@ between Linux and macOS: create it on each machine.
 
 ## Windows
 
-On Windows 11 (x64), in PowerShell. Install [Git for Windows](https://git-scm.com/download/win)
+There are two installations for Windows 11 (x64). Most users want the first:
+
+- **the installer** (recommended): a graphical setup program that installs Ycrystal
+  with everything it needs except POV-Ray; no Python, Git, or PowerShell;
+- **the developer installation**: Ycrystal from its source folder, set up by a
+  PowerShell script, for working on Ycrystal or running its newest source.
+
+Both can be on one computer: they have separate Start-menu entries (**Ycrystal** and
+**Ycrystal (development)**), and uninstalling one leaves the other working (see
+[both installations](#both-installations-on-one-computer)). Both need POV-Ray for
+Windows 3.7 for previews and images ([below](#pov-ray-for-windows)).
+
+### Windows: the installer (recommended)
+
+1. Download `Ycrystal-<version>-windows-x64-setup.exe` from the
+   [Releases page](https://github.com/ymatterlab/ycrystal/releases). The first release
+   that carries it will be the next one after 0.3.0. Until then, the installer of the
+   newest source can be downloaded, with a GitHub account, from the latest run of the
+   [*Windows installer* workflow](https://github.com/ymatterlab/ycrystal/actions/workflows/windows-installer.yml)
+   (artifact `ycrystal-windows-installer`: a ZIP file with the installer inside).
+2. Run it. The installer is not signed yet, so Windows may show "Windows protected your
+   PC": choose *More info*, then *Run anyway*.
+3. Follow the wizard. By default it installs for you alone, without administrator
+   rights, into `%LOCALAPPDATA%\Programs\Ycrystal`; an administrator can choose an
+   installation for all users (`Program Files`). It adds **Ycrystal** to the Start
+   menu and, unless you untick it, opens `.ycrystal` projects with Ycrystal from File
+   Explorer. If it does not find POV-Ray for Windows, it says so and offers its
+   download page at the end.
+4. Start **Ycrystal** from the Start menu.
+
+The installed folder also holds `ycrystal-cli.exe`, the command line (the `ycrystal`
+command of the other installations), for example in PowerShell:
+`& "$env:LOCALAPPDATA\Programs\Ycrystal\ycrystal-cli.exe" --check-renderer`. To
+update, run the installer of the new version: it replaces the old one. To uninstall,
+use *Settings ▸ Apps ▸ Installed apps ▸ Ycrystal ▸ Uninstall*. Settings, favourites,
+and personal materials are kept in both cases.
+
+### Windows: developer installation (PowerShell)
+
+In PowerShell. Install [Git for Windows](https://git-scm.com/download/win)
 first if it is missing (`winget install --id Git.Git --exact`, then open a new
 PowerShell window), or get the source [without Git](#without-git) and skip the first
 two lines:
@@ -107,11 +147,12 @@ The script installs what is missing and checks the result:
 4. if POV-Ray for Windows would ask at every start whether to download its editor,
    it opens once so that you can answer for good: *No*, then untick
    *Options ▸ Other Settings ▸ Use Editor*, and close it (details below);
-5. **Ycrystal** in the Start menu, and `.ycrystal` projects opening with it from File
-   Explorer ([menu entry](#menu-entry));
+5. **Ycrystal (development)** in the Start menu, and `.ycrystal` projects opening
+   with it from File Explorer unless the installed Ycrystal already opens them
+   ([menu entry](#menu-entry));
 6. the renderer check (`--check-renderer`).
 
-Then start Ycrystal from the Start menu. The script can run again at any time: after
+Then start **Ycrystal (development)** from the Start menu. The script can run again at any time: after
 `git pull` it updates the installation. It ends with "Ycrystal is ready." (exit status
 0), or with a list of what is not ready yet. Its options: `-Python C:\path\to\python.exe`
 (another Python, 3.12 or newer, for `.venv`; newer than 3.14 with a warning; ignored
@@ -126,7 +167,7 @@ It cannot render for Ycrystal while you have POV-Ray for Windows open yourself: 
 first, or turn off *Options ▸ Keep Single Instance* in POV-Ray (see
 [troubleshooting](troubleshooting.md#renderer)).
 
-### Windows, step by step
+#### Developer installation, step by step
 
 The same installation without the script:
 
@@ -149,6 +190,16 @@ is not recognized". In a new terminal, `py --list` shows the installed versions.
 `.venv\Scripts\ycrystal.exe`); they need nothing on `PATH`. The Windows Store `python`
 command (an alias that opens the Store) is not used.
 
+### POV-Ray for Windows
+
+Both installations render with POV-Ray for Windows 3.7, installed separately. The
+developer script installs it with `winget` if it is missing; for the installer version,
+install it yourself:
+
+```powershell
+winget install --id PersistenceOfVisionRaytracer.POVRay --exact   # or povray.org's installer
+```
+
 The `winget` package of POV-Ray for Windows 3.7 runs its official installer from
 [povray.org](https://www.povray.org/download/) (`povwin-3.7-agpl3-setup.exe`, the same
 file and checksum), which can also be run by hand; keep its user files: they include
@@ -163,6 +214,22 @@ AGPL installer does not include it. Either install the editor from the page that
 opens, or answer *No* and untick *Options ▸ Other Settings ▸ Use Editor*. Otherwise it
 asks at every start; Ycrystal then refuses to render and says so, because each render
 would wait for that answer. Then close POV-Ray.
+
+### Both installations on one computer
+
+| | Installer version | Developer installation |
+| --- | --- | --- |
+| Start-menu entry | **Ycrystal** (`Ycrystal.exe` in the installation folder) | **Ycrystal (development)** (the checkout's `.venv\Scripts\pythonw.exe`) |
+| Taskbar | its own button and identity | its own: the windows of the two never group together |
+| `.ycrystal` file type | registered by the installer, which opens projects | added to *Open with*; opens projects only if no other program does |
+| Removed by | *Settings ▸ Apps* (its uninstaller) | `.venv\Scripts\ycrystal.exe --uninstall-desktop` |
+| POV-Ray, settings, personal materials | shared | shared |
+
+Each removes only what it added, so uninstalling one leaves the other working.
+`--install-desktop` belongs to the developer installation; the installed
+`ycrystal-cli.exe` refuses it. A Start-menu entry named **Ycrystal** made by an earlier
+developer installation is renamed **Ycrystal (development)** when the script or
+`--install-desktop` runs again.
 
 ## Check the installation
 
@@ -201,22 +268,27 @@ starts this checkout's `.venv/bin/ycrystal` by absolute path: run the command ag
 you move the checkout. `.venv/bin/ycrystal --uninstall-desktop` removes the files. The
 menu may need a moment (or a new login) to show the entry.
 
-On Windows, `.venv\Scripts\ycrystal.exe --install-desktop` (the installation script
-runs it) adds **Ycrystal** to the Start menu, for the current user, without
-administrator rights:
+On Windows, in the developer installation, `.venv\Scripts\ycrystal.exe
+--install-desktop` (the installation script runs it) adds **Ycrystal (development)** to
+the Start menu, for the current user, without administrator rights. The installer
+version has its own entry, **Ycrystal**, made by its installer (see
+[both installations](#both-installations-on-one-computer)).
 
-- the shortcut `Ycrystal.lnk` in the user's Start-menu folder. It starts this
-  checkout's `.venv\Scripts\pythonw.exe` with `-I -m ycrystal.app`, so that no console
-  window opens, and it carries Ycrystal's application id, the one its window uses on
-  the taskbar;
+- the shortcut `Ycrystal (development).lnk` in the user's Start-menu folder. It starts
+  this checkout's `.venv\Scripts\pythonw.exe` with `-I -m ycrystal.app`, so that no
+  console window opens, and it carries the application id that this installation's
+  window uses on the taskbar (`YMatterLab.Ycrystal`; the installer version uses
+  another one);
 - its icon, `%LOCALAPPDATA%\Y-Matter Lab\Ycrystal\ycrystal.ico`, drawn from the
   application's SVG icon;
-- the file type of `.ycrystal` projects, under `HKEY_CURRENT_USER\Software\Classes`, so
-  that projects open in Ycrystal from File Explorer. A program that you chose for
-  `.ycrystal` files in Windows' *Open with* dialog stays your choice.
+- the file type `Ycrystal.Project` of `.ycrystal` projects, under
+  `HKEY_CURRENT_USER\Software\Classes`. It is added to the *Open with* list, and opens
+  projects from File Explorer if no other program does: when the installer version
+  is installed, it keeps opening them. A program that you chose for `.ycrystal` files
+  in Windows' *Open with* dialog stays your choice.
 
 Run the command again if you move the checkout. `--uninstall-desktop` removes the
-shortcut, the icon, and the file type. Started this way, Ycrystal has no console for
+shortcut, the icon, and the file type, and nothing of the installer version. Started this way, Ycrystal has no console for
 messages; to see them, start it from PowerShell with `.venv\Scripts\ycrystal.exe`.
 
 ## Update and uninstall
@@ -236,6 +308,10 @@ On Linux, if you installed the menu launcher, refresh it after updating:
 The launcher uses a separate copy of the application icon under `~/.local/share`;
 `git pull` updates the source SVG but does not replace that installed copy.
 
+The installer version on Windows is updated by running the installer of the new
+version, and uninstalled in *Settings ▸ Apps*; the rest of this section is about
+installations from source.
+
 On Windows, update with `git pull`, then run the installation script again
 (`powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1`): it updates
 `.venv` and the Start-menu entry. Without the script, run the `pip install` line with
@@ -252,7 +328,8 @@ Settings (POV-Ray path, favourites, last folder) are in
 `~/Library/Preferences/com.y-matter-lab.Ycrystal.plist` on macOS, where the thumbnails
 of personal materials are in `~/Library/Application Support/Y-Matter Lab/Ycrystal`. On
 Windows the settings are in the registry (`HKEY_CURRENT_USER\Software\Y-Matter
-Lab\Ycrystal`) and the thumbnails in `%APPDATA%\Y-Matter Lab\Ycrystal`.
+Lab\Ycrystal`) and the thumbnails in `%APPDATA%\Y-Matter Lab\Ycrystal`, for both
+Windows installations; neither uninstallation deletes them.
 
 ## Launch options
 

@@ -54,6 +54,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-GALLERY-01 publication gallery (`examples/publication/`, `scripts/make_gallery.py`), gallery and manuscript-figure pages (no application change) | PR #34 |
 | unreleased | Maintenance: Windows 11 support with POV-Ray for Windows 3.7 (no FR ID) | PR #35 (`ae01f43`) |
 | unreleased | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 (`8051f04`) |
+| unreleased | Graphical Windows installer (PyInstaller + Inno Setup), coexisting with the developer installation (no FR ID) | branch `feature/windows-installer` |
 | unreleased | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | PR #39 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
@@ -177,6 +178,25 @@ Known limitations and unresolved issues:
   `ycrystal-main`. Tried on the Windows laptop: a downloaded ZIP of the branch, no `.git`,
   the installation script passed ("Ycrystal is ready."). Not tried on Linux or macOS
   (see [PROGRESS.md](PROGRESS.md#installation-without-git-18-november-2026)).
+- **Then (graphical Windows installer, branch `feature/windows-installer`):** after PR
+  #39 was merged (`5c37201`), the user asked for a graphical installer (PyInstaller,
+  Inno Setup), recommended for users, with the PowerShell installation kept for
+  developers and the two coexisting.
+  - Built: `packaging/windows` and the *Windows installer* workflow.
+  - Changed for coexistence: the source Start-menu entry is now **Ycrystal
+    (development)**; the packaged program has its own application id and file type;
+    each side removes only its own parts; the source installation no longer takes the
+    `.ycrystal` default from another file type.
+  - Tried on the laptop: build, packaged command line and window, the coexistence check
+    (27 checks), and opening from the Start menu and a project file (details in
+    [PROGRESS.md](PROGRESS.md#windows-installer-18-november-2026)).
+  - The laptop now has both: **Ycrystal** (installed per user, in
+    `%LOCALAPPDATA%\Programs\Ycrystal`, the `.ycrystal` default) and **Ycrystal
+    (development)** (this checkout's `.venv`). Inno Setup 6.7.3 (per user) and Python
+    3.13 and 3.14 are installed too.
+  - Not done: the wizard clicked through by a person; an all-users installation; the
+    GUI and POV-Ray tests of this branch on the laptop (the user was working at it);
+    code signing.
 
 Earlier, on 17 November 2026:
 
@@ -275,8 +295,8 @@ Suggestions only — not approved, ask before starting any of them:
 - A macOS application bundle or launcher (name and icon in the Dock, opening
   `.ycrystal` files from Finder).
 - Windows: progress percentages from POV-Ray for Windows' window title (see
-  windows-port.md); a packaged installer with its own Python (needs a freezing tool and
-  code signing).
+  windows-port.md); code signing of the graphical installer (needs a certificate);
+  attaching the installer to the next release (release procedure, step 5).
 - From earlier sessions: hide the disabled Bottom/Clouds rows for the Image background
   type; a way to manage personal materials; hands-on checks of the unreleased features,
   then the next release (FR-EXPORT-01 and the branding): move the changelog's
@@ -320,6 +340,7 @@ user's report for PR #22.
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Partial: 125 % scale (device pixel ratio 1.25), GUI tests and a scripted run |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Verified 18 Nov 2026 on one laptop: Start-menu entry starts the window without a console, a `.ycrystal` file opens from File Explorer (scripted clicks); pinning to the taskbar not tried |
 | Installation script | Not applicable | Not applicable | Verified 18 Nov 2026 on one laptop with Python and POV-Ray already installed (Windows PowerShell 5.1, fresh `.venv`, rerun); the `winget` installs of Python and POV-Ray and the editor prompt not run |
+| Graphical installer (packaged) | Not applicable | Not applicable | Partial, 18 Nov 2026 on one laptop: built, installed per user, window and command line, Start menu and file type, coexistence with the developer installation (27 checks); wizard not clicked through by a person, all-users installation not tried, not signed |
 | Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | Verified: tests without windows with POV-Ray for Windows on every pull request (PR #36, 18 Nov 2026) |
 
 ### Hands-on checks on a Mac

@@ -14,7 +14,10 @@ POV-Ray for Windows 3.7. On one laptop it passes every automated test (below), a
 user tested it by hand there and reports that it works well. Since PR #36, Windows CI
 renders with the real POV-Ray for Windows too (see [CI](#pov-ray-for-windows-on-ci)).
 Since PR #39, one script installs it, with a Start-menu
-entry (see [installation](#installation-in-one-command)).
+entry (see [installation](#installation-in-one-command)); that is now the developer
+installation. For users, a graphical installer (PyInstaller + Inno Setup) installs it
+without Python, Git, or PowerShell, side by side with the developer installation (see
+[Windows installer](windows-installer.md)).
 
 ## Decision
 
@@ -293,8 +296,9 @@ running window to the taskbar by hand; the entry on another Windows computer.
    installed, so that the `winget` steps and the editor prompt run; then *Pin to
    taskbar* on the running window.
 4. **Out of scope until decided:**
-   - a packaged installer (a single `.exe` or MSI with its own Python), which would need
-     a freezing tool and code signing;
+   - code signing of the graphical installer, which exists since branch
+     `feature/windows-installer` (PyInstaller + Inno Setup; see
+     [Windows installer](windows-installer.md)) but is not signed;
    - Windows on ARM; Windows 10;
    - progress percentages during renders with POV-Ray for Windows. It prints none, but
      its window title carries them (`POV-Ray for Windows [Rendering scene.pov: 37%]`),

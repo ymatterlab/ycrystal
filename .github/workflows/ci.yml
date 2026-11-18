@@ -135,38 +135,7 @@ jobs:
 
       - name: System packages (Windows; POV-Ray for Windows 3.7, official installer)
         if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # The official installer (the same file as the Chocolatey package pov-ray
-          # 3.7.0.20161121), kept unmodified as an asset of this repository's
-          # "ci-assets" release: povray.org answers runners with a Cloudflare browser
-          # challenge (17 Nov 2026). Licence and source: see that release's notes.
-          $expected = "2B1331641B6F96113C2DBA951BE80D99EB548639480399CABB5E3A60DCE5BDC8"
-          gh release download ci-assets --repo "${{ github.repository }}" --pattern povwin-3.7-agpl3-setup.exe --output povwin-setup.exe
-          $hash = (Get-FileHash povwin-setup.exe -Algorithm SHA256).Hash
-          if ($hash -ne $expected) { throw "Unexpected installer checksum $hash" }
-          Start-Process -FilePath .\povwin-setup.exe -ArgumentList "/S" -Wait
-          # Two dialogs of POV-Ray for Windows would wait for an answer on this runner
-          # (screenshots, 18 Nov 2026), so its settings are written before its first start:
-          # - without its separately licensed editor DLL it asks on every start whether to
-          #   download it: turn editor loading off (Options > Other Settings > Use Editor);
-          # - from its second start on it shows its About box when ItsAboutTime has passed
-          #   (unset: at once; then every 14 days): set the latest time its 32-bit clock
-          #   comparison allows.
-          $docs = (Get-ItemProperty "HKCU:\Software\POV-Ray\v3.7\Windows").DocPath
-          New-Item -ItemType Directory -Force (Join-Path $docs "ini") | Out-Null
-          Add-Type -Namespace Win32 -Name Ini -MemberDefinition '[DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern bool WritePrivateProfileString(string section, string key, string value, string file);'
-          $ini = Join-Path $docs "ini\pvengine.ini"
-          foreach ($pair in @(@("UseEditors", "0"), @("ItsAboutTime", "2147483647"))) {
-            if (-not [Win32.Ini]::WritePrivateProfileString("General", $pair[0], $pair[1], $ini)) { throw "Could not write $ini" }
-          }
-          Get-Content (Join-Path $docs "ini\pvengine.ini")
-          Get-ChildItem "$env:ProgramFiles\POV-Ray" -Recurse -Depth 3 | Select-Object -ExpandProperty FullName
-          Get-ChildItem "$env:USERPROFILE\Documents\POV-Ray" -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
-          Get-ItemProperty "HKCU:\Software\POV-Ray\v3.7\Windows" -ErrorAction SilentlyContinue
-          Get-ItemProperty "HKLM:\Software\POV-Ray\v3.7\Windows" -ErrorAction SilentlyContinue
+        uses: ./.github/actions/povray-windows
 
       - uses: actions/setup-python@v7
         with:
@@ -219,4 +188,4 @@ jobs:
         run: |
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-windows.ps1 -Python "$env:pythonLocation\python.exe"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          .venv\Scripts\python.exe -c "from ycrystal.windows_shortcut import programs_folder, read_shortcut; print(read_shortcut(programs_folder() / 'Ycrystal.lnk'))"
+          .venv\Scripts\python.exe -c "from ycrystal.windows_shortcut import programs_folder, read_shortcut; print(read_shortcut(programs_folder() / 'Ycrystal (development).lnk'))"

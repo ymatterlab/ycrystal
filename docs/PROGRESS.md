@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 18 November 2026 (Python 3.13 and 3.14 on Windows, verified on the laptop; PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 18 November 2026 (graphical Windows installer, branch `feature/windows-installer`). Before that: Python 3.13 and 3.14 on Windows, verified on the laptop (PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,66 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## Windows installer (18 November 2026)
+
+Requested by the user: a graphical Windows installer (PyInstaller, Inno Setup) in its
+own branch and PR, recommended for users, with the PowerShell installation kept as the
+developer installation, and the two coexisting without interfering. Branch
+`feature/windows-installer`. Design and rules:
+[Windows installer](development/windows-installer.md).
+
+- `packaging/windows/`:
+  - `ycrystal.spec`: PyInstaller, one folder with `Ycrystal.exe` (window) and
+    `ycrystal-cli.exe` (console), ASE as source files, licence texts collected;
+  - `ycrystal.iss`: Inno Setup, per-user by default, optional all-users;
+  - `build.ps1`, with the build tools pinned in `requirements.txt`;
+  - `coexistence-check.ps1`.
+- Separate identities:
+  - the packaged program: `Ycrystal.lnk`, AppUserModelID `YMatterLab.Ycrystal.App`
+    (chosen when `sys.frozen` is set), file type `YMatterLab.Ycrystal.Project`;
+  - the source installation: `Ycrystal (development).lnk`, `YMatterLab.Ycrystal`,
+    `Ycrystal.Project`, unchanged apart from the shortcut's name.
+- Each side removes only its own parts:
+  - `--install-desktop` renames an older source `Ycrystal.lnk`, and `--uninstall-desktop`
+    removes one, only if it starts Python with `-m ycrystal.app`;
+  - the source installation no longer takes the `.ycrystal` default from an existing file
+    type;
+  - the installer removes the default only while it names its own type;
+  - the packaged program refuses `--install-desktop`.
+- `windows_shortcut.read_shortcut` also reads an application id stored as `VT_BSTR`, as
+  Inno Setup stores it (found by the coexistence check).
+- POV-Ray: not bundled. The packaged program finds and drives it with the same
+  `ycrystal.render.povray` code. The installer only looks for it, in the same places,
+  to tell the user.
+- CI: new workflow `windows-installer.yml` (build, packaged renderer check and render,
+  source installation, coexistence check, installer as an artifact). The POV-Ray for
+  Windows set-up moved into a composite action shared with `ci.yml`.
+- Docs: README and install guide recommend the installer; developer installation,
+  troubleshooting, notices (the installer bundles Python and the packages),
+  architecture, release procedure, windows-port, CLAUDE.md, CONTRIBUTING, changelog.
+
+| Check (Windows 11 laptop, Python 3.12.10 for the build) | Result |
+| --- | --- |
+| `packaging\windows\build.ps1` in Windows PowerShell 5.1 | Passed in 642 s: folder 552 MB, installer `Ycrystal-0.4.0.dev0-windows-x64-setup.exe` 129 MB; ASE as 15 top-level `.py` files; licence folders for Python and 38 distributions. One PyInstaller warning, `scipy.special._cdflib` not found (a hidden import of the SciPy hook) |
+| `dist\windows\Ycrystal\ycrystal-cli.exe`: `--version`, `--check-renderer`, a project render, CIF with `--style`, VASP and Quantum ESPRESSO export, `--install-desktop` | Version right; `PASS … 0.14 px`; rendered (4.1 s, 3.2 s); read and exported; the VASP 4 file asks for its elements as from source; `--install-desktop` refused with exit status 1 |
+| `Ycrystal.exe` opened as a click does (first build) | One window, no console and no VTK window; own taskbar button with the icon; automatic preview rendered (3.2 s) |
+| `.venv\Scripts\ycrystal.exe --install-desktop` with the old `Ycrystal.lnk` of the source installation present | Replaced by `Ycrystal (development).lnk` |
+| `packaging\windows\coexistence-check.ps1` (real Start menu and registry of the user) | First run: 2 failures, the installer's shortcut id read as missing (stored as `VT_BSTR`; Windows itself read it). After the reader fix: **all 27 checks passed** |
+| Installed per user, then the Start-menu entry and `examples\SrTiO3-studio.ycrystal` opened as clicks do | Both opened `…\AppData\Local\Programs\Ycrystal\Ycrystal.exe`; `Get-StartApps`: `Ycrystal` with `YMatterLab.Ycrystal.App` and `Ycrystal (development)` with `YMatterLab.Ycrystal` |
+| Installer started without `/SILENT` | The wizard window "Setup - Ycrystal 0.4.0.dev0" opened; closed at once, not clicked through |
+| `pytest -m "not gui and not povray"`; Windows desktop and installer tests; doctests of the changed modules | 649 passed, 3 skipped (POSIX-only); 19 passed; clean |
+
+Not verified:
+- the wizard clicked through by a person;
+- an installation for all users (administrator);
+- the installer's page shown when POV-Ray is missing;
+- the SmartScreen warning on another computer;
+- the GUI tests and POV-Ray tests of this branch on the laptop. They were left out
+  because the user was working at the computer; Ubuntu CI runs them, and Windows CI the
+  POV-Ray ones.
+
+The installer is not signed.
 
 ## Installation without Git (18 November 2026)
 

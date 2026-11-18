@@ -37,7 +37,13 @@ is not part of this procedure.
 
     The wheel contains the presets, thumbnails, and icon; the source distribution adds
     `constraints.txt`, the examples, the test fixtures, and the notices.
-5. Record the results in `docs/PROGRESS.md` and in the checklist below, marking each
+5. The Windows installer (on a Windows computer, or the `ycrystal-windows-installer`
+   artifact of the *Windows installer* workflow run of the release commit): build it
+   with `packaging\windows\build.ps1`, run `packaging\windows\coexistence-check.ps1`,
+   install it once by hand (wizard, Start menu, a preview), and attach
+   `Ycrystal-X.Y.Z-windows-x64-setup.exe` to the GitHub release. It is not signed; see
+   [Windows installer](windows-installer.md#releasing).
+6. Record the results in `docs/PROGRESS.md` and in the checklist below, marking each
    item passed, failed, or unverified.
 
 ## Checklist for 0.3.0

@@ -58,6 +58,8 @@
         - DESKTOP_ID
         - PROJECT_MIME_TYPE
         - desktop_supported
+        - is_packaged
+        - PACKAGED_MENU_MESSAGE
         - data_home
         - icon_path
         - launcher_installed
@@ -71,13 +73,16 @@
         - WINDOWS_PROG_ID
         - CLASSES_KEY
         - SHORTCUT_NAME
+        - LEGACY_SHORTCUT_NAME
         - ICON_SIZES
         - windows_data_folder
         - windows_launch_command
         - write_windows_icon
+        - project_type_handler
         - register_project_type
         - unregister_project_type
         - install_start_menu
+        - is_source_shortcut
         - uninstall_start_menu
 
 ::: ycrystal.windows_shortcut

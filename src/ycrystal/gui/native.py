@@ -15,23 +15,57 @@ THUMBNAIL_FOLDER = "material-thumbnails"
 """Name of the folder that holds the thumbnails of personal materials."""
 
 WINDOWS_APP_ID = "YMatterLab.Ycrystal"
-"""Application id (AppUserModelID) that gives Ycrystal its own taskbar button on Windows."""
+"""Application id (AppUserModelID) of Ycrystal installed from source on Windows.
+
+Its Start-menu entry ``Ycrystal (development)`` (``ycrystal --install-desktop``) carries
+the same id, so that the window's taskbar button belongs to that entry.
+"""
+
+WINDOWS_PACKAGED_APP_ID = "YMatterLab.Ycrystal.App"
+"""Application id of the packaged Ycrystal (the Windows installer's ``Ycrystal.exe``).
+
+Different from [`WINDOWS_APP_ID`][ycrystal.gui.native.WINDOWS_APP_ID], so that both
+installations can be on one computer: each window groups under its own Start-menu
+entry, and pinning one never starts the other. The installer's shortcut
+(``packaging/windows/ycrystal.iss``) carries this id.
+"""
 
 
-def set_taskbar_identity(platform: str = sys.platform) -> bool:
+def windows_app_id(frozen: bool | None = None) -> str:
+    """Return the application id of this installation of Ycrystal.
+
+    Parameters
+    ----------
+    frozen
+        Whether this is the packaged program; ``None`` asks the running one
+        ([`is_packaged`][ycrystal.desktop.is_packaged]).
+
+    Examples
+    --------
+    >>> windows_app_id(frozen=False), windows_app_id(frozen=True)
+    ('YMatterLab.Ycrystal', 'YMatterLab.Ycrystal.App')
+    """
+    from ycrystal.desktop import is_packaged
+
+    return WINDOWS_PACKAGED_APP_ID if is_packaged(frozen) else WINDOWS_APP_ID
+
+
+def set_taskbar_identity(platform: str = sys.platform, frozen: bool | None = None) -> bool:
     """Give Ycrystal its own taskbar button and icon on Windows.
 
-    Ycrystal runs in the Python interpreter, so Windows would group its window under
-    Python's taskbar button and show Python's icon. An explicit application id
-    (``WINDOWS_APP_ID``) makes the taskbar use the window's own icon. Call it before the
-    first window is shown. Does nothing on other
-    systems (Linux uses the desktop file name, macOS has no equivalent without an
-    application bundle).
+    Installed from source, Ycrystal runs in the Python interpreter, so Windows would
+    group its window under Python's taskbar button and show Python's icon. An explicit
+    application id ([`windows_app_id`][ycrystal.gui.native.windows_app_id]) makes the
+    taskbar use the window's own icon, and ties the window to its Start-menu entry. Call
+    it before the first window is shown. Does nothing on other systems (Linux uses the
+    desktop file name, macOS has no equivalent without an application bundle).
 
     Parameters
     ----------
     platform
         ``sys.platform`` value to decide for; the default is the running system.
+    frozen
+        Whether this is the packaged program; ``None`` asks the running one.
 
     Returns
     -------
@@ -44,7 +78,8 @@ def set_taskbar_identity(platform: str = sys.platform) -> bool:
         import ctypes
 
         shell32 = ctypes.WinDLL("shell32")
-        return shell32.SetCurrentProcessExplicitAppUserModelID(WINDOWS_APP_ID) == 0  # S_OK
+        app_id = windows_app_id(frozen)
+        return shell32.SetCurrentProcessExplicitAppUserModelID(app_id) == 0  # S_OK
     except (OSError, AttributeError):
         return False
 

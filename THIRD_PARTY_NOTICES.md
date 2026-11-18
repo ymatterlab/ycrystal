@@ -1,11 +1,22 @@
 # Third-party software and data
 
-Ycrystal is distributed under the MIT License (see `LICENSE`). It does not bundle
-third-party code: the Python packages below are installed separately by `pip` from
-PyPI (versions as tested, pinned in `constraints.txt`), and POV-Ray is a separate
-program installed from the distribution (on Windows, from POV-Ray's own installer). This file summarises their licences for the
+Ycrystal is distributed under the MIT License (see `LICENSE`). Its source does not
+bundle third-party code: installed from source, the Python packages below are
+installed separately by `pip` from PyPI (versions as tested, pinned in
+`constraints.txt`), and POV-Ray is a separate program installed from the distribution
+(on Windows, from POV-Ray's own installer). This file summarises their licences for the
 0.1.0 release review (0.2.0 adds no dependencies); consult each project for the
 authoritative terms.
+
+**The Windows installer** (`Ycrystal-<version>-windows-x64-setup.exe`, built from
+`packaging/windows` with PyInstaller and Inno Setup) does bundle third-party code: the
+Python interpreter (Python Software Foundation License) and the packages below, at the
+versions of `constraints.txt`, unmodified. Their licence texts are installed with it, in
+`_internal\licenses` of the installation folder, next to this file. Qt for Python and ASE
+(LGPL) stay separate, replaceable library files in that folder, as the LGPL requires;
+the PyInstaller bootloader is under the GPL with an exception that allows its use in
+programs under other licences, and Inno Setup's licence allows distributing installers
+made with it. POV-Ray is not included in the installer.
 
 ## Python runtime dependencies (installed with `pip install .`)
 

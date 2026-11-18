@@ -84,6 +84,13 @@ pre-commit.ci is not used; the Actions job runs the same pinned hooks.
   from CI runners), and it also runs `scripts\install-windows.ps1` into a new `.venv`;
   run the GUI tests on a Windows computer before relying on a GUI change there. To add
   an operating system, add a matrix entry and a system-packages step to the `test` job.
+- The Windows installer for users (PyInstaller + Inno Setup) is built by
+  `packaging\windows\build.ps1` and checked next to a source installation by
+  `packaging\windows\coexistence-check.ps1`. The *Windows installer* workflow runs both
+  on pull requests that change `src/` or the packaging, and keeps the installer as an
+  artifact. Changes to Start-menu entries, application ids, or file types must keep the
+  two Windows installations apart: see
+  [Windows installer](docs/development/windows-installer.md).
 - `scripts/m0_evidence.py` regenerates screenshots and alignment measurements.
 - `scripts/benchmark_scene.py` measures display cost for growing supercells; rerun it
   when changing the viewport, and record the hardware with the numbers.

@@ -67,6 +67,15 @@ Rules that follow from this design:
   instance: never start two at once, and route every run through `render/jobs.py` or
   `render/process.py`, which start it minimised, hold the foreground, and take turns
   (`docs/development/windows-port.md`).
+- Windows has two installations that must coexist: the graphical installer
+  (`packaging/windows`: PyInstaller + Inno Setup; recommended for users) and the
+  PowerShell installation from source (`scripts/install-windows.ps1`; supported for
+  developers). Never give them a shared shortcut name, AppUserModelID, ProgID, or icon
+  file, never let one remove the other's parts, and keep `tests/test_windows_installer.py`
+  and `packaging/windows/coexistence-check.ps1` passing
+  (`docs/development/windows-installer.md`). The packaged program uses the same
+  `ycrystal` code; `sys.frozen` only selects its application id and refuses
+  `--install-desktop`.
 - No hardcoded executable or installation paths. Find programs with `shutil.which` or
   `find_povray`, derive data locations from the executable or from Qt (`QSettings`,
   `QStandardPaths`), build paths with `pathlib`, and use `tempfile` for temporary files.
@@ -166,6 +175,10 @@ python3.12 -m venv .venv-docs
 .venv/bin/ycrystal --check-renderer
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render out.png
 ```
+
+The Windows installer: `powershell -ExecutionPolicy Bypass -File packaging\windows\build.ps1`
+(needs Inno Setup 6; output in `dist\windows`), then
+`packaging\windows\coexistence-check.ps1 -Setup dist\windows\Ycrystal-…-setup.exe`.
 
 On Windows (PowerShell): create the development environment with
 `powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1 -Dev` (it installs
