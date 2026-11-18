@@ -7,7 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Status: early development](https://img.shields.io/badge/status-early%20development-orange.svg)](docs/PROGRESS.md)
 
-Ycrystal is a desktop application for Linux and macOS (PySide6 + VTK) for preparing
+Ycrystal is a desktop application for Linux, macOS, and Windows (PySide6 + VTK) for
+preparing
 reproducible crystal-structure figures and rendering them with
 [POV-Ray](https://www.povray.org/).
 
@@ -51,6 +52,27 @@ python3.12 -m venv .venv
 .venv/bin/python -m pip install -e . -c constraints.txt
 .venv/bin/ycrystal --sample perovskite
 ```
+
+Windows 11, with Python 3.12 from python.org and POV-Ray for Windows 3.7 from its
+official installer, in PowerShell:
+
+```powershell
+winget install --id Python.Python.3.12 --exact --scope user   # or python.org's installer
+# Then open a NEW PowerShell window (restart VS Code for its terminal), so that py is found.
+git clone https://github.com/ymatterlab/ycrystal.git
+cd ycrystal
+py -3.12 -m venv .venv
+.venv\Scripts\python.exe -m pip install -e . -c constraints.txt
+.venv\Scripts\ycrystal.exe --sample perovskite
+```
+
+`py` is the Python launcher that python.org's installer puts on `PATH`; "py is not
+recognized" means Python 3.12 is not installed or the terminal was opened before it
+was. Ycrystal finds POV-Ray for Windows in its installation folder; it cannot render while
+POV-Ray for Windows is open by hand (see the
+[install guide](docs/guide/install.md#windows)). The commands below are written for
+Linux and macOS; on Windows, run `.venv\Scripts\ycrystal.exe` and write paths with
+backslashes.
 
 ```bash
 .venv/bin/ycrystal --install-desktop                                    # menu launcher (Linux)
@@ -103,9 +125,10 @@ docs-only installation, NumPy-style writing conventions, and asset regeneration.
 .venv/bin/python -m pytest -q -rs
 ```
 
+On Windows the programs are `.venv\Scripts\python.exe` and `.venv\Scripts\pre-commit.exe`.
 GUI tests need a display; renderer tests need POV-Ray. CI runs the full application
-suite on Ubuntu under Xvfb with POV-Ray, the tests that need no window on macOS, and
-builds documentation separately. See
+suite on Ubuntu under Xvfb with POV-Ray, the tests that need no window on macOS and
+(experimentally, without POV-Ray) on Windows, and builds documentation separately. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for strict integration checks and maintenance setup.
 
 ## License

@@ -14,6 +14,56 @@ from PySide6.QtCore import QSettings, QStandardPaths
 THUMBNAIL_FOLDER = "material-thumbnails"
 """Name of the folder that holds the thumbnails of personal materials."""
 
+WINDOWS_APP_ID = "YMatterLab.Ycrystal"
+"""Application id (AppUserModelID) that gives Ycrystal its own taskbar button on Windows."""
+
+
+def set_taskbar_identity(platform: str = sys.platform) -> bool:
+    """Give Ycrystal its own taskbar button and icon on Windows.
+
+    Ycrystal runs in the Python interpreter, so Windows would group its window under
+    Python's taskbar button and show Python's icon. An explicit application id
+    (``WINDOWS_APP_ID``) makes the taskbar use the window's own icon. Call it before the
+    first window is shown. Does nothing on other
+    systems (Linux uses the desktop file name, macOS has no equivalent without an
+    application bundle).
+
+    Parameters
+    ----------
+    platform
+        ``sys.platform`` value to decide for; the default is the running system.
+
+    Returns
+    -------
+    bool
+        Whether the id was set.
+    """
+    if platform != "win32":
+        return False
+    try:
+        import ctypes
+
+        shell32 = ctypes.WinDLL("shell32")
+        return shell32.SetCurrentProcessExplicitAppUserModelID(WINDOWS_APP_ID) == 0  # S_OK
+    except (OSError, AttributeError):
+        return False
+
+
+def executable_filter(platform: str = sys.platform) -> str:
+    """Return the file-dialog filter for choosing a program such as POV-Ray.
+
+    Windows programs are ``.exe`` files (POV-Ray for Windows: ``pvengine64.exe``);
+    elsewhere a program has no particular extension, so every file is listed.
+
+    Examples
+    --------
+    >>> executable_filter("linux")
+    ''
+    >>> executable_filter("win32")
+    'Programs (*.exe);;All files (*)'
+    """
+    return "Programs (*.exe);;All files (*)" if platform == "win32" else ""
+
 
 def native_keys(text: str, platform: str = sys.platform) -> str:
     """Return a help text with the modifier key named as this platform shows it.

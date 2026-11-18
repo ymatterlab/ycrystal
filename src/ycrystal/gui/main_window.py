@@ -12,7 +12,6 @@ saving to [`ycrystal.io.readers`][ycrystal.io.readers] and
 
 from __future__ import annotations
 
-import shutil
 from dataclasses import replace
 from pathlib import Path
 from typing import NamedTuple
@@ -64,7 +63,7 @@ from ycrystal.gui.material_editor import (
     load_personal_materials,
     save_personal_material,
 )
-from ycrystal.gui.native import native_keys, personal_thumbnail_directory
+from ycrystal.gui.native import executable_filter, native_keys, personal_thumbnail_directory
 from ycrystal.gui.panels.appearance_panel import AppearancePanel
 from ycrystal.gui.panels.measurement_panel import MeasurementPanel, MeasurementRow
 from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
@@ -3130,9 +3129,20 @@ class MainWindow(QMainWindow):
             self._update_cancel_action()
 
     def choose_povray(self) -> None:
-        """Ask for a POV-Ray executable, store it, and check it."""
-        start = self.configured_povray() or shutil.which("povray") or str(Path.home())
-        path, _ = QFileDialog.getOpenFileName(self, "Select POV-Ray Executable", start)
+        """Ask for a POV-Ray executable, store it, and check it.
+
+        The dialog starts at the configured executable, else at the POV-Ray that would
+        be used (on Windows, POV-Ray for Windows in its installation folder).
+        """
+        start = self.configured_povray()
+        if not start:
+            try:
+                start = find_povray()
+            except PovrayNotFoundError:
+                start = str(Path.home())
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select POV-Ray Executable", start, executable_filter()
+        )
         if path:
             self.settings.setValue(SETTINGS_POVRAY, path)
             self.check_renderer()

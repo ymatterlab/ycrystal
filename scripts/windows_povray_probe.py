@@ -1,8 +1,8 @@
-"""Report how POV-Ray for Windows behaves when Ycrystal drives it (Windows port helper).
+r"""Report how POV-Ray for Windows behaves when Ycrystal drives it (Windows port helper).
 
 Run on Windows from the repository root, with Ycrystal installed in the environment::
 
-    python scripts/windows_povray_probe.py [--povray PATH] [--timeout SECONDS]
+    .venv\Scripts\python.exe scripts\windows_povray_probe.py [--povray PATH] [--timeout SECONDS]
 
 It prints, without changing anything outside temporary folders:
 
@@ -10,7 +10,9 @@ It prints, without changing anything outside temporary folders:
    version read from the file;
 2. the include directories Ycrystal sees and whether the standard include files used
    by Ycrystal's materials are among them;
-3. for each candidate command line, the exit status, the time, whether ``scene.png``
+3. for POV-Ray for Windows, its settings file and whether it keeps a single instance;
+   if a copy of it is open, the probe stops there (a second copy could not render);
+4. for each candidate command line, the exit status, the time, whether ``scene.png``
    and the log file appeared, the files left in the job folder, and the log.
 
 A render that does not finish within the timeout usually means that POV-Ray for
@@ -30,14 +32,17 @@ from ycrystal.render.jobs import prepare_job
 from ycrystal.render.pov_writer import RenderSettings
 from ycrystal.render.povray import (
     LOG_NAME,
+    _engine_settings_file,
     background_startupinfo,
     find_povray,
     include_directories,
     is_windows_engine,
+    keeps_single_instance,
     missing_includes,
     povray_version,
     read_log,
     render_arguments,
+    windows_engine_conflict,
 )
 from ycrystal.render.selftest import self_test_camera, self_test_geometry
 
@@ -104,6 +109,14 @@ def main(argv: list[str] | None = None) -> int:
     print("version:", povray_version(executable))
     print("include directories:", [str(d) for d in include_directories(executable)])
     print("missing include files:", missing_includes(INCLUDES, executable))
+    if is_windows_engine(executable):
+        settings = _engine_settings_file()
+        print("settings file:", settings)
+        print("keeps a single instance:", settings is None or keeps_single_instance(settings))
+        conflict = windows_engine_conflict(executable)
+        if conflict:
+            print("not rendering:", conflict)
+            return 1
     for name, arguments in candidates(executable).items():
         probe(executable, name, arguments, args.timeout)
     return 0

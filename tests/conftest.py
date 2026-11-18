@@ -94,11 +94,20 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 @pytest.fixture(scope="session")
 def povray_executable() -> str:
-    """A POV-Ray executable that passes the renderer self-test, or skip."""
+    """A POV-Ray executable that passes the renderer self-test, or skip.
+
+    Candidates: ``$YCRYSTAL_POVRAY``, ``povray`` on ``PATH``, and on Windows an installed
+    POV-Ray for Windows (which is not on ``PATH``).
+    """
+    from ycrystal.render.povray import installed_windows_engine
     from ycrystal.render.selftest import run_self_test
 
     candidates = []
-    for candidate in (os.environ.get("YCRYSTAL_POVRAY"), shutil.which("povray")):
+    for candidate in (
+        os.environ.get("YCRYSTAL_POVRAY"),
+        shutil.which("povray"),
+        installed_windows_engine(),
+    ):
         if candidate and candidate not in candidates:
             candidates.append(candidate)
     reasons = []

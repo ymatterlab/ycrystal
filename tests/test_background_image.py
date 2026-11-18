@@ -430,8 +430,16 @@ def test_glass_shows_the_picture_and_project_renders_after_relocation(
     moved = shutil.move(str(folder), str(tmp_path / "moved elsewhere"))
     import subprocess
 
+    from ycrystal.render.povray import background_startupinfo, render_arguments
+
+    # ``povray scene.ini``; POV-Ray for Windows also needs /EXIT, or it stays open.
     run = subprocess.run(
-        [povray_executable, "scene.ini"], cwd=moved, capture_output=True, text=True, timeout=120
+        [povray_executable, *render_arguments(povray_executable, "scene.ini")],
+        cwd=moved,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        startupinfo=background_startupinfo(povray_executable),
     )
     assert run.returncode == 0, run.stderr[-500:]
     image = np.asarray(Image.open(Path(moved) / "scene.png").convert("RGB"), dtype=int)

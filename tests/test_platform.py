@@ -11,7 +11,13 @@ from PySide6.QtCore import QSettings, QStandardPaths
 import conftest
 from ycrystal.app import main
 from ycrystal.desktop import desktop_supported
-from ycrystal.gui.native import THUMBNAIL_FOLDER, native_keys, personal_thumbnail_directory
+from ycrystal.gui.native import (
+    THUMBNAIL_FOLDER,
+    executable_filter,
+    native_keys,
+    personal_thumbnail_directory,
+    set_taskbar_identity,
+)
 from ycrystal.render.povray import POVRAY_ENV, include_directories, missing_includes
 
 ONLY_HERE = "ycrystal-test-only.inc"  # no real installation has this include file
@@ -79,6 +85,14 @@ def test_include_lookup_without_povray(tmp_path, monkeypatch):
 
 
 # ----- interface choices ---------------------------------------------------------------------
+def test_windows_only_interface_choices():
+    assert executable_filter("linux") == "" and executable_filter("darwin") == ""
+    assert executable_filter("win32").startswith("Programs (*.exe)")
+    assert not set_taskbar_identity("linux") and not set_taskbar_identity("darwin")
+    if sys.platform == "win32":  # sets the id of this test process; harmless
+        assert set_taskbar_identity()
+
+
 def test_native_key_names():
     text = "Undo (Ctrl+Z) · Ctrl + click"
     assert native_keys(text, "linux") == text and native_keys(text, "win32") == text

@@ -65,6 +65,16 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   on one machine they also gave identical pixels, but never identical PNG bytes
   (POV-Ray stores the render time in the file). The batch report names each job's
   snapshot and record. New guide: *Reproducible figures*.
+- **Windows.** Ycrystal runs from a source checkout on Windows 11 with Python 3.12
+  (`.venv\Scripts\ycrystal.exe`) and renders with POV-Ray for Windows 3.7
+  (`pvengine64.exe`), which it finds in its installation folder. POV-Ray for Windows
+  starts minimised for each render, writes its messages to a log that failures are
+  explained from, and is kept from taking the keyboard focus away from the window.
+  Since it runs one copy at a time, Ycrystal's own renders take turns, and a copy the
+  user has open is reported with an explanation instead of POV-Ray's error dialog. The
+  window has its own taskbar button and icon. Tested on one Windows 11 laptop (all
+  automated tests, and by hand); Windows CI runs without POV-Ray. Installation steps
+  in the install guide.
 
 ### Fixes
 - Switching the view directly between some axes in the window (for example from c to

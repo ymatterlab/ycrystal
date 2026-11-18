@@ -190,6 +190,8 @@ def test_missing_renderer_shows_guidance_and_export_still_works(window, monkeypa
     empty.mkdir()
     monkeypatch.setenv("PATH", str(empty))
     monkeypatch.delenv(POVRAY_ENV, raising=False)
+    # An installed POV-Ray for Windows would otherwise be found outside PATH.
+    monkeypatch.setattr("ycrystal.render.povray.installed_windows_engine", lambda: None)
     window.settings.remove(SETTINGS_POVRAY)
     assert window.render_png(tmp_path / "out.png") is False
     title, text = window.last_error

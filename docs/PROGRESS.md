@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 17 November 2026 (Windows port in progress, draft PR #35). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 18 November 2026 (Windows port continued on a Windows computer, draft PR #35). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,57 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## Windows port, continued on a Windows computer (18 November 2026)
+
+Requested by the user: run Ycrystal natively on Windows, keeping Linux Mint and macOS
+working, on branch `feature/windows`. Machine: Windows 11 Enterprise (build 26300) laptop,
+x64, 125 % display scale, UTF-8 system code page; Python 3.12.10 (python.org, installed
+with `winget` for this work); POV-Ray for Windows 3.7.0 installed by the user. Details,
+sources (POV-Ray's own source code for its command line and single-instance rules), and
+the answers to the ten questions: `docs/development/windows-port.md`. The user then
+tested Ycrystal by hand on the laptop and reports that it works well; Windows is
+supported from a source checkout (`CLAUDE.md` targets updated), with Windows CI still
+running without POV-Ray.
+
+- **Found on the real system, and handled:**
+  - POV-Ray for Windows makes itself the foreground window even when started
+    minimised: the window holds the foreground (`LockSetForegroundWindow`) while it runs.
+  - It keeps a single instance by default: a second copy shows a modal error box and
+    waits. Ycrystal now checks first and explains (`windows_engine_conflict`), and its
+    own renders take turns (`render/process.py`).
+  - PySide6's `QProcess` cannot start it minimised: the window's renders run it through
+    `subprocess.Popen` with a timer.
+  - Its user files (include folder, `pvengine.ini`) are found through the registry's
+    `DocPath`.
+  - Exit status 0 also after a parse error (no image): already handled by
+    `finish_job()`; messages come from its log.
+- **Bug found and fixed during the work:** the first version of the `Popen` backend kept
+  a "running" marker after a window closed with a render in progress, so every later
+  render waited for ever (12 GUI tests failed). Cancelling now reports at once, and the
+  process itself decides whether one runs; a regression test covers it.
+- **Interface:** taskbar identity (own button and icon) and an `.exe` filter for *Set
+  POV-Ray Executable…*, in `gui/native.py`.
+- **Tests:** new contract tests in `tests/test_windows_povray.py`; tests that simulate a
+  missing POV-Ray also hide an installed POV-Ray for Windows; the exported-scene test
+  uses `render_arguments()`; a time-stamp flake in `test_preview_resolution.py` fixed.
+- **Documentation:** install guide and README (Windows section), support matrix,
+  troubleshooting, rendering guide, architecture, changelog, HANDOFF.
+
+| Check | Result |
+| --- | --- |
+| `scripts/windows_povray_probe.py` | Finds `pvengine64.exe` outside `PATH`, version 3.7.0.0, include files present; renders with Ycrystal's command line in 2.3–2.8 s per small scene after the first start |
+| Tests without windows, real POV-Ray, before the changes | 715 passed, 3 skipped, 1 failed (a test ran `pvengine64.exe scene.ini` without `/EXIT`; fixed) |
+| GUI tests, first run with the changes | 160 passed, 12 failed (the `Popen` backend bug above; fixed) |
+| Targeted files after the fixes (`test_windows_povray`, `test_render_queue`, `test_povray_jobs`, `test_platform`; the six GUI files that had failed) | 42 passed, 2 skipped; 68 passed then 1 (time-stamp flake, fixed) |
+| Second copy of POV-Ray for Windows while one is open | Raw: modal "Commandline processing error", no image. `.venv\Scripts\python.exe -m ycrystal --check-renderer`: `FAIL` with the explanation in 0.7 s |
+| Full suite, `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (GUI tests with real windows at 125 % scale; all POV-Ray tests with POV-Ray for Windows) | **898 passed, 3 skipped** (symbolic links, execute bit, POSIX permissions: by design), none failed; 12 min |
+| CI's doctest list, `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | All passed |
+| `.venv\Scripts\ycrystal.exe --version`, `--check-renderer`, `--render` of `examples\SrTiO3-studio.ycrystal`, `--export-pov`, and the guide's PowerShell command for an exported scene | As documented; `PASS: POV-Ray 3.7.0.0 … 0.14 px`; the exported scene needs `Start-Process -Wait` (`&` does not wait for a window program) |
+| Scripted run of the main window: capture, 3 previews, 1 final render, foreground watched | Draws correctly at scale 1.25; previews 2.6–2.7 s; render saved; the foreground never left Ycrystal |
+| Hands-on test by the user on the laptop | "It works well" (the items tried were not recorded) |
+| Documentation audit after the hands-on test (user's request) | Windows commands name the programs `.venv\Scripts\ycrystal.exe` and `python.exe`; the `py` launcher needs a terminal opened after Python's installation (checked: with the `PATH` a new terminal gets, `py -3.12 --version` gives Python 3.12.10); new troubleshooting rows; status wording; `CLAUDE.md`, CONTRIBUTING, pyproject classifiers |
+| Not run | Linux and macOS in this session (their code paths are unchanged; CI of PR #35 checks them); a `%TEMP%` outside a legacy code page (this computer's code page is UTF-8) |
 
 ## Windows port, in progress (17 November 2026)
 
@@ -1615,7 +1666,7 @@ Second development machine (since 16 November 2026):
 
 ## Next bounded action
 
-Open: the Windows port (draft PR #35, `docs/development/windows-port.md`), to be continued on a Windows computer; the tests of `docs/development/next-tests.md`. FR-GALLERY-01 is merged (PR #34). FR-VALIDATION-01 is merged (PR #33); its runs on the Mac are still to do. FR-REPRO-01 is merged (PR #32). Merged features after
+Open: Windows CI with POV-Ray (Windows support itself: PR #35, `docs/development/windows-port.md`); the tests of `docs/development/next-tests.md`. FR-GALLERY-01 is merged (PR #34). FR-VALIDATION-01 is merged (PR #33); its runs on the Mac are still to do. FR-REPRO-01 is merged (PR #32). Merged features after
 0.3.0 pass CI on Ubuntu and macOS. Remaining hands-on item from the macOS work: the checklist
 in [HANDOFF.md](HANDOFF.md). Still
 open from before: hands-on checks of the 0.2.0 features (Lighting Setup window, aspect

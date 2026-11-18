@@ -190,6 +190,8 @@ def test_preview_without_povray_explains_without_dialog(window, monkeypatch, tmp
     empty.mkdir()
     monkeypatch.setenv("PATH", str(empty))
     monkeypatch.delenv(POVRAY_ENV, raising=False)
+    # An installed POV-Ray for Windows would otherwise be found outside PATH.
+    monkeypatch.setattr("ycrystal.render.povray.installed_windows_engine", lambda: None)
     window.settings.remove(SETTINGS_POVRAY)
     assert window.request_preview() is False
     assert window.preview_panel.state == "error"

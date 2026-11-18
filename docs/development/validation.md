@@ -264,7 +264,8 @@ them.
 - **Platforms.** Everything here was measured on one Linux laptop. Unverified:
   - macOS (the CI job runs the tests without windows and with real POV-Ray, but not
     the benchmark);
-  - Windows (not supported);
+  - Windows (the validation tests pass there with POV-Ray for Windows on one laptop,
+    18 November 2026, but the benchmark and the replay check were not run);
   - other POV-Ray builds;
   - pixel differences between machines.
 - **Not checked by hand.** These checks are automated and involve no window. Hands-on

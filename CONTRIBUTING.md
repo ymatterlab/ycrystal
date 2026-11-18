@@ -62,18 +62,24 @@ used; the Actions job runs the same pinned hooks.
 .venv/bin/python -m pytest -q -rs
 ```
 
-- GUI tests (`gui` marker) need a display with OpenGL: a desktop session (Linux or
-  macOS; the windows appear on screen) or, on Linux,
+- GUI tests (`gui` marker) need a display with OpenGL: a desktop session (Linux,
+  macOS, or Windows; the windows appear on screen) or, on Linux,
   `xvfb-run -a python -m pytest -q -rs`.
 - Rendering tests (`povray` marker) need a POV-Ray 3.7 executable that passes
-  `ycrystal --check-renderer`; it is found on `PATH`, or set `YCRYSTAL_POVRAY` to it.
+  `ycrystal --check-renderer`; it is found on `PATH` (on Windows, POV-Ray for Windows
+  in its installation folder), or set `YCRYSTAL_POVRAY` to it. POV-Ray for Windows runs
+  one copy at a time: keep it closed and render nothing else while the tests run.
+- On Windows, run the tools as `.venv\Scripts\python.exe -m pytest -q -rs`,
+  `.venv\Scripts\pre-commit.exe`, and so on.
 - Locally, missing prerequisites skip those tests (`-rs` lists them). CI sets
   `YCRYSTAL_REQUIRE_INTEGRATION=1`, which turns a missing display or renderer into an
   error; set it yourself to make sure nothing was skipped.
 - CI runs every test on Ubuntu 24.04 under Xvfb. On macOS it runs the tests that open
   no window (`-m "not gui"`), because GitHub's hosted Macs have no GPU for Qt's
   OpenGL widget; run the GUI tests on a real Mac before relying on a GUI change
-  there. To add an operating system, add a matrix entry and a system-packages step
+  there. On Windows it runs the same tests experimentally (failures do not fail the
+  run) and without POV-Ray, whose installer cannot be downloaded on CI; run the
+  rendering and GUI tests on a Windows computer before relying on a change there. To add an operating system, add a matrix entry and a system-packages step
   to the `test` job.
 - `scripts/m0_evidence.py` regenerates screenshots and alignment measurements.
 - `scripts/benchmark_scene.py` measures display cost for growing supercells; rerun it

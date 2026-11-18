@@ -115,6 +115,12 @@
         - installed_windows_engine
         - render_arguments
         - background_startupinfo
+        - hold_foreground
+        - release_foreground
+        - foreground_held
+        - ENGINE_OPEN_MESSAGE
+        - keeps_single_instance
+        - windows_engine_conflict
         - read_log
         - windows_file_version
 

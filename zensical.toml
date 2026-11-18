@@ -30,7 +30,7 @@ nav = [
         { "Independent evaluation checklist" = "development/independent-evaluation.md" },
         { "Proposed manuscript figures" = "development/manuscript-figures.md" },
         { "Next tests on other computers" = "development/next-tests.md" },
-        { "Windows port (in progress)" = "development/windows-port.md" },
+        { "Windows port" = "development/windows-port.md" },
         { "Release procedure and checklist" = "development/release.md" },
     ] },
     { "API reference" = [

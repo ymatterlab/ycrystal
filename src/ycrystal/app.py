@@ -521,10 +521,12 @@ def main(argv: list[str] | None = None) -> int:
 
     from ycrystal.desktop import DESKTOP_ID, launcher_installed
     from ycrystal.gui.main_window import MainWindow
+    from ycrystal.gui.native import set_taskbar_identity
 
     if launcher_installed():
         # Before the application object exists, so that the desktop portal gets this id.
         QApplication.setDesktopFileName(DESKTOP_ID)
+    set_taskbar_identity()  # Windows: own taskbar button and icon, not Python's
     app = QApplication.instance() or QApplication(sys.argv[:1])
     app.setApplicationName("Ycrystal")
     app.setOrganizationName("Y-Matter Lab")

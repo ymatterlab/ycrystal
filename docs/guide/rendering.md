@@ -3,19 +3,24 @@
 ## Configure and check POV-Ray
 
 On Linux Mint, install the distribution renderer with `sudo apt install povray`; on
-macOS, `brew install povray`. The tested baseline is POV-Ray 3.7. In the GUI,
-discovery uses the first source that is set:
+macOS, `brew install povray`; on Windows, POV-Ray for Windows 3.7 with its official
+installer (see [installation](install.md#windows)). The tested baseline is POV-Ray 3.7.
+In the GUI, discovery uses the first source that is set:
 
 1. **Render ▸ Set POV-Ray Executable…** (saved on this machine).
 2. The `YCRYSTAL_POVRAY` environment variable.
 3. `povray` on `PATH`.
+4. On Windows, POV-Ray for Windows in its installation folder (from the registry, or
+   `Program Files\POV-Ray\v3.7\bin\pvengine64.exe`); it is not on `PATH`.
 
 An invalid configured path fails immediately; discovery does not fall back. Choose
 the executable in the menu to replace a stale setting (`/usr/bin/povray` on Linux
-Mint, `/opt/homebrew/bin/povray` with Homebrew on Apple silicon; `command -v povray`
-prints it). GUI settings are separate from projects. On Linux they normally live in
+Mint, `/opt/homebrew/bin/povray` with Homebrew on Apple silicon, where
+`command -v povray` prints it; `C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe` on
+Windows). GUI settings are separate from projects. On Linux they normally live in
 `~/.config/Y-Matter Lab/Ycrystal.conf`, on macOS in
-`~/Library/Preferences/com.y-matter-lab.Ycrystal.plist`.
+`~/Library/Preferences/com.y-matter-lab.Ycrystal.plist`, and on Windows in the registry
+under `HKEY_CURRENT_USER\Software\Y-Matter Lab\Ycrystal`.
 
 **Render ▸ Check Renderer** renders a small known scene, verifies dimensions,
 positions, and colours, and shows a verdict. It runs synchronously and briefly
@@ -26,8 +31,16 @@ blocks the window. The command-line check needs no display:
 .venv/bin/ycrystal --check-renderer --povray /usr/bin/povray
 ```
 
+On Windows, in PowerShell:
+
+```powershell
+.venv\Scripts\ycrystal.exe --check-renderer
+.venv\Scripts\ycrystal.exe --check-renderer --povray "C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe"
+```
+
 `--povray` applies only to `--check-renderer`; that command does not read the path
-saved by the GUI. Without the option it uses the environment, then `PATH`. A pass
+saved by the GUI. Without the option it uses the environment, then `PATH`, then (on
+Windows) the installation of POV-Ray for Windows. A pass
 prints `PASS: …`; a renderer failure prints `FAIL: …` and exits 1. The check creates
 temporary files and removes the completed job. It launches POV-Ray, but no Qt window.
 
@@ -54,6 +67,17 @@ For the tutorial's exported files, run from the scene directory:
 cd artifacts/first-figure
 povray SrTiO3.ini
 ```
+
+With POV-Ray for Windows, in PowerShell from the scene directory:
+
+```powershell
+Start-Process -Wait "C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe" "/EXIT /NR SrTiO3.ini"
+```
+
+`-Wait` makes PowerShell wait for the image: POV-Ray for Windows is a window program,
+which PowerShell otherwise leaves running in the background. Without `/EXIT`, it stays
+open after the render; it also cannot start while another copy of it is open (its
+*Keep Single Instance* option).
 
 This produces or replaces `SrTiO3.png` there and retains the exported text files.
 Keep the `.pov` and `.ini` together. If you change the output aspect in the `.ini`,

@@ -60,8 +60,13 @@ Rules that follow from this design:
 
 ## Cross-platform development rules
 
-- One repository and one codebase. Targets now: Linux Mint 22 / Ubuntu 24.04 and macOS
-  (Apple silicon). Keep Windows feasible; it is not verified.
+- One repository and one codebase. Targets now: Linux Mint 22 / Ubuntu 24.04, macOS
+  (Apple silicon), and Windows 11 (x64) with POV-Ray for Windows 3.7 (verified on one
+  laptop, 18 November 2026; Windows CI runs without POV-Ray).
+- POV-Ray for Windows (`pvengine64.exe`) is a window program that keeps a single
+  instance: never start two at once, and route every run through `render/jobs.py` or
+  `render/process.py`, which start it minimised, hold the foreground, and take turns
+  (`docs/development/windows-port.md`).
 - No hardcoded executable or installation paths. Find programs with `shutil.which` or
   `find_povray`, derive data locations from the executable or from Qt (`QSettings`,
   `QStandardPaths`), build paths with `pathlib`, and use `tempfile` for temporary files.
@@ -161,19 +166,30 @@ python3.12 -m venv .venv-docs
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render out.png
 ```
 
+On Windows (PowerShell): create environments with `py -3.12 -m venv .venv` and run the
+programs as `.venv\Scripts\python.exe`, `.venv\Scripts\ycrystal.exe`,
+`.venv\Scripts\ruff.exe`, `.venv\Scripts\pre-commit.exe`, and
+`.venv-docs\Scripts\zensical.exe`; set variables with `$env:NAME = "1"`. The `python`
+on a fresh Windows `PATH` is a Microsoft Store alias: do not use it.
+
 ## Testing notes
 
 - Markers: `gui` (needs a display with OpenGL) and `povray` (needs a working POV-Ray).
   Without them the tests skip, or fail with `YCRYSTAL_REQUIRE_INTEGRATION=1`.
   `tests/conftest.py` isolates `QSettings` per session.
-- GUI tests open real windows: on Linux under X11, Wayland, or Xvfb; on macOS in the
-  desktop session (windows appear on screen for about a minute and a half).
+- GUI tests open real windows: on Linux under X11, Wayland, or Xvfb; on macOS and
+  Windows in the desktop session (windows appear on screen for several minutes).
+- Windows: render tests use the real POV-Ray for Windows, which runs one copy at a
+  time; do not run anything else that renders while the suite runs, and keep
+  POV-Ray for Windows closed.
 - GUI tests: wait for `win._saved_camera is not None` (not `_camera_initialised`)
   before closing a window. Under Xvfb (CI) the window is not active, so Qt shortcuts
   may not fire; send key events to the widget and handle them there.
 - Compare cameras after refitting with a tolerance (`main_window._same_camera`), not
   exact equality.
 - CI (`.github/workflows/ci.yml`): Ubuntu runs everything under Xvfb; macOS runs the
-  tests that need no window (hosted Macs have no GPU for Qt's OpenGL widget).
+  tests that need no window (hosted Macs have no GPU for Qt's OpenGL widget); Windows
+  runs them too, experimentally and without POV-Ray (its installer cannot be
+  downloaded on CI).
 - The developer's Linux laptop is slow: avoid heavy benchmarks; run targeted test files
   first, the full suite when integration changes justify it.

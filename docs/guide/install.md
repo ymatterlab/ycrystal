@@ -2,10 +2,11 @@
 
 The integration baseline is Linux Mint 22.1 / Ubuntu 24.04 with the system Python
 3.12, an X11 desktop, and working OpenGL. macOS 15 on Apple silicon is supported from
-the same source and passes the same automated tests; Windows and other Python versions
-have not been verified (see the [support matrix](support.md)). Ycrystal is installed
-from a source checkout into its own virtual environment; no `sudo` is needed except for
-the system packages.
+the same source and passes the same automated tests. Windows 11 with POV-Ray for
+Windows 3.7 is supported from the same source too: it passes the automated tests and
+was tested by hand on one computer. Other Python versions have not been verified (see
+the [support matrix](support.md)). Ycrystal is installed from a source checkout into
+its own virtual environment; no `sudo` is needed except for the system packages.
 
 ## Linux Mint
 
@@ -59,6 +60,44 @@ menu bar show “Python”, and `--install-desktop` (below) applies to Linux onl
 Shortcuts use ⌘ where this guide says Ctrl. A virtual environment cannot be copied
 between Linux and macOS: create it on each machine.
 
+## Windows
+
+On Windows 11 (x64), with [Git for Windows](https://git-scm.com/download/win), Python
+3.12 from [python.org](https://www.python.org/downloads/windows/) (its installer adds the
+`py` launcher), and POV-Ray for Windows 3.7, in PowerShell:
+
+```powershell
+winget install --id Python.Python.3.12 --exact --scope user   # or python.org's installer
+# Then open a NEW PowerShell window (restart VS Code for its terminal), so that py is found.
+git clone https://github.com/ymatterlab/ycrystal.git
+cd ycrystal
+py -3.12 -m venv .venv
+.venv\Scripts\python.exe -m pip install -e . -c constraints.txt
+.venv\Scripts\ycrystal.exe
+```
+
+`py` is the Python launcher that python.org's installer (and `winget`) puts on `PATH`. A
+terminal that was open before the installation keeps its old `PATH`, also VS Code's
+integrated terminal until VS Code is restarted; there PowerShell answers "The term 'py'
+is not recognized". In a new terminal, `py --list` shows the installed versions. Once
+`.venv` exists, use its own programs (`.venv\Scripts\python.exe`,
+`.venv\Scripts\ycrystal.exe`); they need nothing on `PATH`. There is no Start-menu entry
+yet: start Ycrystal from PowerShell in the checkout with `.venv\Scripts\ycrystal.exe`.
+Install
+POV-Ray for Windows 3.7 with the official installer from
+[povray.org](https://www.povray.org/download/) (`povwin-3.7-agpl3-setup.exe`), keeping
+its user files: they include the standard include files, which go to
+`Documents\POV-Ray\v3.7\include`. Ycrystal finds `pvengine64.exe` in POV-Ray's
+installation folder by itself (POV-Ray for Windows has no `povray` command and is not on
+`PATH`); **Render ▸ Set POV-Ray Executable…** or `YCRYSTAL_POVRAY` choose another one.
+
+POV-Ray for Windows is a window program. For each preview and render, Ycrystal starts
+it minimised (its button appears on the taskbar while it runs) and it closes by itself.
+It cannot render for Ycrystal while you have POV-Ray for Windows open yourself: close it
+first, or turn off *Options ▸ Keep Single Instance* in POV-Ray (see
+[troubleshooting](troubleshooting.md#renderer)). The Windows Store `python` command
+(an alias that opens the Store) is not used; `py -3.12` runs the installed Python.
+
 ## Check the installation
 
 ```bash
@@ -67,7 +106,18 @@ between Linux and macOS: create it on each machine.
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png
 ```
 
+On Windows, in PowerShell:
+
+```powershell
+.venv\Scripts\ycrystal.exe --version          # ycrystal 0.4.0.dev0
+.venv\Scripts\ycrystal.exe --check-renderer   # PASS: POV-Ray 3.7.0.0 at C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe passed…
+.venv\Scripts\ycrystal.exe examples\SrTiO3-studio.ycrystal --render SrTiO3.png
+```
+
 The last command renders an [example project](examples.md) without opening a window.
+The other commands of this guide work the same way on Windows, with
+`.venv\Scripts\ycrystal.exe` for `.venv/bin/ycrystal`, `.venv\Scripts\python.exe` for
+`.venv/bin/python`, and backslashes in paths.
 
 ## Menu launcher (Linux)
 
@@ -106,7 +156,9 @@ by older versions with a message to update. To uninstall, run
 Settings (POV-Ray path, favourites, last folder) are in
 `~/.config/Y-Matter Lab/Ycrystal.conf` on Linux and in
 `~/Library/Preferences/com.y-matter-lab.Ycrystal.plist` on macOS, where the thumbnails
-of personal materials are in `~/Library/Application Support/Y-Matter Lab/Ycrystal`.
+of personal materials are in `~/Library/Application Support/Y-Matter Lab/Ycrystal`. On
+Windows the settings are in the registry (`HKEY_CURRENT_USER\Software\Y-Matter
+Lab\Ycrystal`) and the thumbnails in `%APPDATA%\Y-Matter Lab\Ycrystal`.
 
 ## Launch options
 

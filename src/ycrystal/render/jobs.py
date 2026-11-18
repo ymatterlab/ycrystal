@@ -37,8 +37,10 @@ from ycrystal.render.pov_writer import RenderSettings, write_scene_files
 from ycrystal.render.povray import (
     background_startupinfo,
     explain_failure,
+    foreground_held,
     read_log,
     render_arguments,
+    windows_engine_conflict,
 )
 
 JOB_BASENAME = "scene"
@@ -269,18 +271,27 @@ def run_job(job: RenderJob, executable: str, timeout: float | None = 600.0) -> R
     -----
     The job directory is not removed; call
     [`RenderJob.cleanup`][ycrystal.render.jobs.RenderJob.cleanup] afterwards.
+
+    POV-Ray for Windows is not started while another copy of it that keeps a single
+    instance is open (see
+    [`windows_engine_conflict`][ycrystal.render.povray.windows_engine_conflict]); the
+    result then explains why.
     """
+    conflict = windows_engine_conflict(executable)
+    if conflict:
+        return RenderResult(False, None, "", None, conflict)
     try:
-        completed = subprocess.run(
-            [executable, *job.arguments(executable)],
-            cwd=job.directory,
-            capture_output=True,
-            text=True,
-            errors="replace",
-            timeout=timeout,
-            check=False,
-            startupinfo=background_startupinfo(executable),
-        )
+        with foreground_held(executable):
+            completed = subprocess.run(
+                [executable, *job.arguments(executable)],
+                cwd=job.directory,
+                capture_output=True,
+                text=True,
+                errors="replace",
+                timeout=timeout,
+                check=False,
+                startupinfo=background_startupinfo(executable),
+            )
     except subprocess.TimeoutExpired as exc:
         log = (exc.stdout or "") + (exc.stderr or "") if isinstance(exc.stdout, str) else ""
         log += read_log(job.directory)
