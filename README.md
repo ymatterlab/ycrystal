@@ -63,9 +63,7 @@ Download `Ycrystal-<version>-windows-x64-setup.exe` from the
 administrator rights. Ycrystal renders with POV-Ray for Windows 3.7, installed
 separately (the installer says so if it is missing). The installer is not signed yet:
 if Windows shows "Windows protected your PC", choose *More info*, then *Run anyway*.
-Until a GitHub release carries the installer file, the installer of the newest source is the artifact of the latest
-[*Windows installer* workflow run](https://github.com/ymatterlab/ycrystal/actions/workflows/windows-installer.yml)
-(GitHub account needed). Details: [install guide](docs/guide/install.md#windows).
+Details: [install guide](docs/guide/install.md#windows).
 
 ### From source: Linux, macOS, and Windows for developers
 

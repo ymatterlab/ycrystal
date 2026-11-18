@@ -61,10 +61,11 @@ tag; each feature was verified when merged (see `docs/PROGRESS.md`).
 | Tests at the last feature merge | Passed | CI run 44401632629 on PR #40: Ubuntu 24.04 with Python 3.12, 3.13, 3.14 (910 passed, 10 skipped each, GUI tests under Xvfb), macOS 15 (738 passed, 10 skipped), Windows Server 2022 (746 passed, 2 skipped), docs, pre-commit; *Windows installer* run 44401632704 (installer built, packaged render, 27 coexistence checks) |
 | Tests at the tagged commit | See the version pull request's CI | |
 | Projects compatible | Passed | Schema 7 unchanged since 0.3.0; older projects open (`test_project.py`) |
-| Windows installer | Built by CI (artifact `ycrystal-windows-installer`); built and installed on the Windows laptop | Not signed; not attached to a GitHub release |
+| Windows installer | Built by CI (artifact `ycrystal-windows-installer`); built and installed on the Windows laptop | Not signed; built from the tag on the laptop (541 s, 129 MB), installed as an upgrade (reports 0.4.0), and attached to the GitHub release. SHA-256 `B67AF22B46E3B1DCE3A6F646496BBAFDBC64F42F26423C6FC80A5CB9F5ED40FB` |
 | Clean install by a person, wheel build | Not run for 0.4.0 | |
-| README audit by the user | Pending | Before a GitHub release |
-| Tag `v0.4.0` | See `docs/HANDOFF.md` | Annotated tag at the merge of the version pull request; GitHub release not created |
+| README audit by the user | Done | The user asked for the GitHub release after it |
+| Tag `v0.4.0` | Created | Annotated tag at `34c803d` (merge of PR #41) |
+| GitHub release | Published 18 November 2026 | [Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0), with the Windows installer; not a pre-release |
 
 ## Checklist for 0.3.0
 
