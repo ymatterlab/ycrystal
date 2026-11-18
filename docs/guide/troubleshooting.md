@@ -7,6 +7,8 @@
 | Qt reports an xcb platform-plugin error | Install `libxcb-cursor0` and run in the X11 desktop session used by the supported Mint setup. |
 | “Could not initialize GLX” / Mesa cannot load | Recreate the environment with `/usr/bin/python3`, outside Conda. Check the desktop's OpenGL driver. |
 | macOS: the Dock and the menu bar show “Python” | Expected: Ycrystal runs from a source checkout, not from an application bundle. Start it with `.venv/bin/ycrystal`; there is no launcher for the Applications folder yet. |
+| Windows: “The term 'py' is not recognized” | Install Python 3.12 from python.org (or `winget install --id Python.Python.3.12 --exact --scope user`), then open a new PowerShell window; a terminal opened before the installation, also VS Code's until VS Code restarts, keeps the old `PATH`. `py --list` shows the installed versions. After `py -3.12 -m venv .venv`, run `.venv\Scripts\python.exe` and `.venv\Scripts\ycrystal.exe`, which need nothing on `PATH`. |
+| Windows: `python` opens the Microsoft Store | That `python` is a Store alias, not an installed Python. Use `py -3.12` (above) or the virtual environment's `.venv\Scripts\python.exe`. |
 | No display on a server | The GUI needs a display and OpenGL. Use display-independent Python examples or `--check-renderer`; GUI tests can use Xvfb as described in the contributor guide. |
 | Structure open fails | Read the error and [format restrictions](../FORMATS.md). The previous scene stays. Use Open As… if the format was misdetected. |
 | A multi-block CIF or VASP 4 file asks a question | Choose the CIF block or supply the requested species elements. Cancelling keeps the current scene. |
@@ -15,7 +17,10 @@
 
 | Symptom | Action |
 | --- | --- |
-| POV-Ray not found | Install `povray` (Linux Mint: `sudo apt install povray`; macOS: `brew install povray`), then choose the executable with Render ▸ Set POV-Ray Executable… (`/usr/bin/povray`, or `/opt/homebrew/bin/povray` with Homebrew on Apple silicon). A stale saved path takes precedence over the environment and `PATH`. |
+| POV-Ray not found | Install `povray` (Linux Mint: `sudo apt install povray`; macOS: `brew install povray`; Windows: POV-Ray for Windows 3.7 from povray.org), then choose the executable with Render ▸ Set POV-Ray Executable… (`/usr/bin/povray`, `/opt/homebrew/bin/povray` with Homebrew on Apple silicon, or `C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe`). A stale saved path takes precedence over the environment and `PATH`. |
+| Windows: “POV-Ray for Windows is already open … Keep Single Instance” | POV-Ray for Windows runs only one copy at a time unless its option *Options ▸ Keep Single Instance* is off, so it cannot render for Ycrystal while you have it open (also minimised). Close it, or turn the option off in POV-Ray, and render again. Ycrystal's own previews and renders take turns by themselves. |
+| Windows: a render from the command line does not finish | POV-Ray for Windows may be waiting for an answer in a dialog of its own, for example on its first start. Start POV-Ray for Windows once from the Start menu, answer its questions, close it, and run the command again. |
+| Windows: a POV-Ray button appears on the taskbar during previews | Expected: POV-Ray for Windows is a window program; Ycrystal starts it minimised and it closes when the image is done. In the window, Ycrystal keeps it from taking the keyboard focus. A render started from a terminal (`--render`) cannot prevent that, so the terminal loses the keyboard focus while POV-Ray runs. |
 | CLI check passes, GUI rendering fails to find POV-Ray | The CLI does not use the saved GUI setting. Re-select the executable in the application. |
 | “Viewing angle has to be smaller than 180” | A known self-built 3.8 build with `-ffast-math` rejects unset camera fields. Use the distribution 3.7 package and run Check Renderer. Rebuild custom binaries without that optimisation if necessary. |
 | I/O restriction / permission denied | Ycrystal's jobs write in a temporary working directory. Check its permissions and whether `povray.conf` permits the working directory. Run an exported `.ini` from its own directory. |
@@ -29,8 +34,8 @@ that every scene or output directory will work.
 
 ## Menu launcher
 
-The menu launcher exists on Linux only; on macOS the two options print an error and
-write nothing.
+The menu launcher exists on Linux only; on macOS and Windows the two options print an
+error and write nothing.
 
 - *Ycrystal does not appear in the menu*: run `.venv/bin/ycrystal --install-desktop`
   again from the checkout; Cinnamon may need a few seconds or a new login. The launcher
@@ -63,8 +68,11 @@ write nothing.
 - Transparent materials with area lights (Studio and Top lighting) render slowly; see
   [lighting](appearance.md#lighting).
 - Scenes with native POV-Ray materials need the standard include files
-  (`sudo apt install povray-includes`; Homebrew's `povray` on macOS contains them); a
-  missing file is reported on export and render.
+  (`sudo apt install povray-includes`; Homebrew's `povray` on macOS and POV-Ray for
+  Windows contain them); a missing file is reported on export and render.
+- Windows: POV-Ray for Windows reports no progress, so previews and renders show a busy
+  indicator instead of a percentage, and a final render makes later previews wait until
+  it has finished.
 - The current reader accepts ordered structures only: partial/mixed CIF occupancy,
   overlapping sites, QE `ibrav != 0`, and QE `crystal_sg` are rejected.
 - Camera navigation is outside undo/redo (it still marks the project modified); use
@@ -72,9 +80,10 @@ write nothing.
 - Styles transfer per-atom settings only between structures with the same atoms in the
   same order.
 - Linux Mint 22.1 / Ubuntu 24.04, system Python 3.12, X11, and POV-Ray 3.7 are the
-  integration baseline. macOS 15 on Apple silicon passes the same automated tests;
-  hands-on checks there are still open (see the [support matrix](support.md)).
-  Windows, Wayland, and POV-Ray 3.8 remain unverified.
+  integration baseline. macOS 15 on Apple silicon and Windows 11 with POV-Ray for
+  Windows 3.7 pass the same automated tests; Windows was also tested by hand on one
+  computer, and hands-on checks on the Mac are still open (see the
+  [support matrix](support.md)). Wayland and POV-Ray 3.8 remain unverified.
 - Python interfaces are evolving and carry no stable API guarantee yet.
 
 See the [changelog](https://github.com/ymatterlab/ycrystal/blob/main/CHANGELOG.md) for

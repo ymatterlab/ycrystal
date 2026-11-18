@@ -11,6 +11,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from conftest import python_program
 from ycrystal import manifest as batch_manifest
 from ycrystal.app import main
 from ycrystal.manifest import (
@@ -39,10 +40,7 @@ def write_manifest(folder: Path, jobs, defaults=None, **extra) -> Path:
 
 def fake_povray(folder: Path) -> str:
     """An executable that exists (find_povray only checks that) but renders nothing."""
-    path = folder / "fake-povray"
-    path.write_text("#!/bin/sh\nexit 0\n")
-    path.chmod(0o755)
-    return str(path)
+    return python_program(folder / "fake-povray", "pass\n")
 
 
 def sha(path: Path) -> str:

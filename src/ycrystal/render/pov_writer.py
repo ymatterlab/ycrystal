@@ -826,7 +826,9 @@ def write_scene_files(
     -----
     Both files are written as UTF-8 and replace existing files of the same name without
     asking. The ``.ini`` file refers to the scene and the image by relative names, so
-    run ``povray basename.ini`` with `directory` as the working directory. The I/O
+    run ``povray basename.ini`` with `directory` as the working directory (POV-Ray for
+    Windows: ``pvengine64.exe /EXIT /NR basename.ini``, see
+    [`render_arguments`][ycrystal.render.povray.render_arguments]). The I/O
     restrictions of the Ubuntu and Linux Mint ``povray`` package also allow writing
     the image only there (or under ``/tmp``). A background picture is copied next to
     the scene ([`stage_assets`][ycrystal.render.pov_writer.stage_assets]) and named

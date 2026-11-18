@@ -1,6 +1,7 @@
 """FR-PREVIEW-01: user-adjustable POV-Ray preview resolution."""
 
 import itertools
+import re
 
 import pytest
 from PySide6.QtCore import QSettings
@@ -116,11 +117,13 @@ def window(qtbot):
 def final_state(win):
     camera = win.current_camera()
     settings = win.current_render_settings()
+    scene = scene_to_pov(win.geometry, camera, win.environment, settings)
     return (
         win.output_size(),
         settings,
         camera,
-        scene_to_pov(win.geometry, camera, win.environment, settings),
+        # The header's generation time aside: a minute may pass between two states.
+        re.sub(r"\d{4}-\d\d-\d\d \d\d:\d\d UTC", "<time>", scene),
         win.undo_stack.count(),
         win.is_modified(),
     )

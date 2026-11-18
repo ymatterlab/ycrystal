@@ -108,6 +108,21 @@
         - INCLUDE_FALLBACK_DIRS
         - include_directories
         - missing_includes
+        - WINDOWS_ENGINES
+        - LOG_NAME
+        - is_windows_engine
+        - windows_engine_candidates
+        - installed_windows_engine
+        - render_arguments
+        - background_startupinfo
+        - hold_foreground
+        - release_foreground
+        - foreground_held
+        - ENGINE_OPEN_MESSAGE
+        - keeps_single_instance
+        - windows_engine_conflict
+        - read_log
+        - windows_file_version
 
 ::: ycrystal.render.jobs
     options:

@@ -42,7 +42,7 @@ come **only from documentation** and nothing in them was tested.
 | Atom-attached vectors (magnetic moments) | Yes, entered in the window; no import from calculation output (Y8) | Yes (V7) | Yes, arrow glyphs, centred option (O8) | Planned (C7) |
 | One file with structure and all view settings | Yes: `.ycrystal`, self-contained (structure, pictures, custom materials) (Y9) | Yes: `.vesta` holds structure and graphic settings; volumetric data stay external (V8) | Session state with pipeline, viewport, render settings; whether atom data are inside is not stated (O9) | Only for charge-density figures (`.cview.json`) (C8) |
 | Provenance record of a rendered image (versions, checksums) | Yes (Y10) | Not found | Not found | Not found |
-| Licence; systems | MIT; Linux and macOS (Apple silicon) from source, Windows not verified; repository private at the time of writing (Y11) | Free for academic and non-commercial use, closed source; Windows, macOS, Linux (V9) | OVITO Basic and the Python module MIT, OVITO Pro proprietary; Windows, Linux, macOS (Apple silicon) (O10) | MIT; Windows, macOS, Linux (Flatpak) (C9) |
+| Licence; systems | MIT; Linux, macOS (Apple silicon), and Windows 11 from source (Windows tested on one computer); repository private at the time of writing (Y11) | Free for academic and non-commercial use, closed source; Windows, macOS, Linux (V9) | OVITO Basic and the Python module MIT, OVITO Pro proprietary; Windows, Linux, macOS (Apple silicon) (O10) | MIT; Windows, macOS, Linux (Flatpak) (C9) |
 
 Things Ycrystal does **not** do, in contrast to at least one of the others according to
 their documentation: vector graphics, polyhedra, volumetric data and isosurfaces

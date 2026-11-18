@@ -15,8 +15,10 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
     "Environment :: X11 Applications :: Qt",
     "Environment :: MacOS X",
+    "Environment :: Win32 (MS Windows)",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Visualization",
 ]

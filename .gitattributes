@@ -1,0 +1,3 @@
+# Text files keep LF line endings on every system, also in Windows checkouts:
+# several tests compare SHA-256 digests of tracked inputs (for example the gallery CIF).
+* text=auto eol=lf

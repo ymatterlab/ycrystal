@@ -37,8 +37,10 @@ had Ycrystal. It is a plan, not a record: results go to
 6. **A clean installation** by someone following the documentation alone, on a
    computer that never had Ycrystal. This is also the first task of the independent
    evaluators; the authors should do a dry run first.
-7. **Windows** is not supported; nothing is planned there unless the user decides
-   otherwise.
+7. **Windows** was added after this audit (PR #35, 18 November 2026): the full suite
+   passes on one Windows 11 laptop with POV-Ray for Windows, and the user tested it by
+   hand. Not done there: the benchmark, the full-size gallery, and replays between
+   machines; see `docs/development/windows-port.md`.
 
 ## 1. Mac mini, automated (Claude Code or a terminal)
 

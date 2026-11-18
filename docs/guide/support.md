@@ -1,6 +1,7 @@
 # Supported formats, renderers, and platforms
 
-Status for Ycrystal 0.3.0 and the development version after it (PDF and JPEG export).
+Status for Ycrystal 0.3.0 and the development version after it (PDF and JPEG export,
+Windows).
 *Verified* means tested on the stated system (automatically or by hand); *unverified*
 means not tested, not that it fails.
 
@@ -29,6 +30,7 @@ Details: [structure files and projects](../FORMATS.md).
 | --- | --- |
 | 3.7.0.10, Linux Mint 22.1 / Ubuntu 24.04 package (`povray`, `povray-includes`) | Verified (development machine and CI) |
 | 3.7.0.10, Homebrew `povray` on macOS 15 (Apple silicon) | Verified (renderer check and all rendering tests, 16 November 2026) |
+| POV-Ray for Windows 3.7.0 (official installer, `pvengine64.exe`) on Windows 11 | Verified on one laptop (renderer check and all rendering tests, 18 November 2026). Runs minimised for each render; cannot render while a copy of it is open with *Keep Single Instance* on (its default) |
 | Other 3.7.x builds | Expected to work; `ycrystal --check-renderer` decides |
 | 3.7 built from source with `-ffast-math` (POV-Ray's default GCC flags) | Fails: misreported camera angle; the check explains how to rebuild |
 | 3.8 betas, UberPOV, other forks | Unverified |
@@ -46,7 +48,10 @@ Details: [structure files and projects](../FORMATS.md).
 | macOS on a Retina display, Intel Macs, other macOS versions | Unverified (the GUI tests also pass with an emulated 2× display scale) |
 | macOS in CI (GitHub-hosted, no GPU) | Tests that open no window only, on every pull request and push to `main` |
 | Wayland sessions | Unverified (Qt uses XWayland if available) |
-| Other Linux distributions, Windows | Unverified; no packages |
+| Windows 11 (x64), Python 3.12 from python.org, POV-Ray for Windows 3.7, 125 % display scale | Verified on one laptop (full suite including the GUI tests, and tested by hand, 18 November 2026); no Start-menu entry or file association |
+| Windows in CI (GitHub-hosted) | Experimental: tests that open no window, without POV-Ray (its installer cannot be downloaded there) |
+| Windows 10, Windows on ARM, other Windows display scales | Unverified |
+| Other Linux distributions | Unverified; no packages |
 | Miniconda/Anaconda Python | Not recommended on Linux (OpenGL loading problems); unverified on macOS |
 
 ## Size and performance
