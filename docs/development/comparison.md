@@ -22,7 +22,7 @@ come **only from documentation** and nothing in them was tested.
   - **planned**: the project lists it as future work;
   - **removed**: the change log says so.
 - **Ycrystal entries** were verified by the tests named, on the version in this
-  repository (0.4.0.dev0).
+  repository at the time (0.4.0.dev0, 17 November 2026; released as 0.5.0).
 - Features change between versions. This table describes the versions listed above
   and must be checked again before publication.
 
