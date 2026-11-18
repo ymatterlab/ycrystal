@@ -93,6 +93,23 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## Installation without Git (18 November 2026)
+
+The user pointed out that Git is not needed: the public repository can be downloaded as
+a ZIP file and installed from the unpacked folder. The README and the install guide now
+say "Git is optional" and give the download (`…/archive/refs/heads/main.zip`, unpacked
+to `ycrystal-main`) with `curl`/`unzip` and with PowerShell's `Invoke-WebRequest` and
+`Expand-Archive`; updating without Git means unpacking the new ZIP and installing again.
+No code change: the version comes from `ycrystal.__version__`, not from Git.
+
+| Check | Result |
+| --- | --- |
+| Windows laptop: the ZIP of `feature/windows-install` downloaded with `Invoke-WebRequest`, unpacked with `Expand-Archive` (no `.git` folder), then `scripts\install-windows.ps1 -NoStartMenu` in Windows PowerShell 5.1 | `.venv` created with Python 3.12, Ycrystal installed, renderer check passed, "Ycrystal is ready.", 244 s |
+| The README's `curl -L … main.zip` and `unzip` commands (Git Bash on the laptop) | Download and unpacking work; the folder is `ycrystal-main` with `pyproject.toml` and `constraints.txt` |
+
+Not verified: installing from the ZIP on Linux and macOS (the same `pip install -e .`
+as from a clone).
+
 ## Python 3.13 and 3.14 on Windows (18 November 2026)
 
 Requested by the user: test the Windows version of Ycrystal with Python 3.13 and 3.14,

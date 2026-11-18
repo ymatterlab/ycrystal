@@ -172,6 +172,11 @@ Known limitations and unresolved issues:
   [PROGRESS.md](PROGRESS.md#python-313-and-314-on-windows-18-november-2026)). Still not
   run: the script's `py` search finding 3.13 or 3.14 when no 3.12 is installed; 3.14 on
   macOS; 3.13 and 3.14 on a real Linux machine.
+- **Then (installation without Git):** at the user's remark, the README and the install
+  guide make Git optional: download the ZIP from GitHub, unpack, install in
+  `ycrystal-main`. Tried on the Windows laptop: a downloaded ZIP of the branch, no `.git`,
+  the installation script passed ("Ycrystal is ready."). Not tried on Linux or macOS
+  (see [PROGRESS.md](PROGRESS.md#installation-without-git-18-november-2026)).
 
 Earlier, on 17 November 2026:
 

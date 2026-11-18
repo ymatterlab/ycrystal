@@ -4,9 +4,35 @@ The integration baseline is Linux Mint 22.1 / Ubuntu 24.04 with the system Pytho
 3.12, an X11 desktop, and working OpenGL. macOS 15 on Apple silicon is supported from
 the same source and passes the same automated tests. Windows 11 with POV-Ray for
 Windows 3.7 is supported from the same source too: it passes the automated tests and
-was tested by hand on one computer. Other Python versions have not been verified (see
-the [support matrix](support.md)). Ycrystal is installed from a source checkout into
-its own virtual environment; no `sudo` is needed except for the system packages.
+was tested by hand on one computer. Python 3.12, 3.13, and 3.14 are supported; where
+each was tested is in the [support matrix](support.md). Ycrystal is installed from its
+source folder into its own virtual environment; no `sudo` is needed except for the
+system packages.
+
+## Without Git
+
+The sections below get the source with `git clone`, which makes updating a `git pull`.
+Git is not needed otherwise: download
+[the source as a ZIP file](https://github.com/ymatterlab/ycrystal/archive/refs/heads/main.zip)
+(also under the green **Code** button on GitHub), unpack it, and run the remaining
+commands of your system in the unpacked folder `ycrystal-main` instead of `ycrystal`:
+
+```bash
+curl -L -o ycrystal.zip https://github.com/ymatterlab/ycrystal/archive/refs/heads/main.zip
+unzip ycrystal.zip && cd ycrystal-main
+```
+
+On Windows, in PowerShell (or unpack with File Explorer's *Extract All*):
+
+```powershell
+Invoke-WebRequest https://github.com/ymatterlab/ycrystal/archive/refs/heads/main.zip -OutFile ycrystal.zip
+Expand-Archive ycrystal.zip . ; cd ycrystal-main
+```
+
+To update without Git, download and unpack the new ZIP file, install again in the new
+folder (on Linux also `--install-desktop` again if you use the menu launcher; on
+Windows run the installation script there, which also moves the Start-menu entry to
+it), and delete the old folder.
 
 ## Linux Mint
 
@@ -61,7 +87,8 @@ between Linux and macOS: create it on each machine.
 
 On Windows 11 (x64), in PowerShell. Install [Git for Windows](https://git-scm.com/download/win)
 first if it is missing (`winget install --id Git.Git --exact`, then open a new
-PowerShell window), then:
+PowerShell window), or get the source [without Git](#without-git) and skip the first
+two lines:
 
 ```powershell
 git clone https://github.com/ymatterlab/ycrystal.git
