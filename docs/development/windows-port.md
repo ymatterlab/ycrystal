@@ -108,8 +108,9 @@ before and still runs as a `QProcess`; every existing test passes on Linux.
 - **`scripts/windows_povray_probe.py`** reports how POV-Ray for Windows behaves under
   Ycrystal; it also prints the settings file and the single-instance setting and stops
   when another copy is open.
-- **CI** (`.github/workflows/ci.yml`): a third, **experimental** test job
-  (`continue-on-error`) on Windows Server 2022 with Python 3.12; see below.
+- **CI** (`.github/workflows/ci.yml`): a third test job on Windows Server 2022 with
+  Python 3.12; experimental in PR #35, required and rendering with POV-Ray for Windows
+  since PR #36 (see [CI](#pov-ray-for-windows-on-ci)).
 - **Documentation:** a Windows section in the install guide and the README, rows in the
   support matrix and troubleshooting, the architecture page, and the changelog.
 

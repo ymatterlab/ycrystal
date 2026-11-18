@@ -127,6 +127,10 @@ Known limitations and unresolved issues:
   pre-sets `UseEditors=0` and `ItsAboutTime`. The Windows job is no longer
   experimental: 727 passed, 2 skipped (POSIX-only), with
   `YCRYSTAL_REQUIRE_INTEGRATION=1`.
+- **State at the end:** PR #36's CI passed on its last commit `3535387` (run
+  44255680680: Ubuntu 900 passed, 1 skipped; macOS 728 passed, 1 skipped; Windows 727
+  passed, 2 skipped; docs and pre-commit pass). It was not yet merged when the session
+  ended; the user returns to the Mac mini next.
 - **Not done:** nothing run on Linux or macOS on a real machine in this session (CI ran
   them); GUI tests on Windows CI (run them on a Windows computer).
 
@@ -184,29 +188,35 @@ hands-on runs by a person.
 
 ## Next recommended steps
 
-1. Windows: merge PR #36 when its CI passes (the user's request); a fuller hands-on
-   check on a second Windows computer when one is available; decide whether Ycrystal
-   should notice POV-Ray for Windows' About box (see
+1. On the Mac mini, first: `git checkout main && git pull`, then check whether PR #36
+   is merged (`gh pr view 36`); if not, merge it when the user asks (its CI passed).
+   Reinstall into the existing `.venv` (`.venv/bin/python -m pip install -e ".[dev]" -c
+   constraints.txt`; no dependency changed) and run the full suite with real windows
+   (900 passed, 1 skipped expected). The Windows changes keep `povray` on macOS on the
+   same `QProcess` path as before, but nothing of them has run on a real Mac yet.
+2. Windows, later: a fuller hands-on check on a second Windows computer when one is
+   available; decide whether Ycrystal should notice POV-Ray for Windows' About box (see
    [windows-port.md](development/windows-port.md#still-open)).
-2. Run the tests of [docs/development/next-tests.md](development/next-tests.md)
-   (audited 17 November 2026), in its order:
-   - on the Mac mini: the full suite with real windows (881 expected), the memory
+3. Run the tests of [docs/development/next-tests.md](development/next-tests.md)
+   (audited 17 November 2026, counts updated 18 November), in its order:
+   - on the Mac mini: the full suite with real windows (900 passed and 1 skipped
+     expected, as on Ubuntu CI for PR #36), the memory
      check, the benchmark, replays of the Linux reference sets, and the gallery;
    - by hand on the Mac and the laptop;
    - a clean-computer dry run.
 
    Record results only as they are obtained.
-3. For the manuscript: draw the workflow schematic and take the window screenshot
+4. For the manuscript: draw the workflow schematic and take the window screenshot
    (Figure 1), make the plots of Figure 4 from the recorded data, and have two
    independent evaluators work through the checklist.
-4. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
+5. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
    checks so far), for example with `tests/fixtures/BaZrO3.cif` and
    `examples/grey-studio.ycstyle` as in the examples guide; and the View along buttons
    in every order (the camera fix of PR #30).
-5. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
+6. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
    1 failure that did not reproduce (PR #30's CI and three later full runs passed); its
    name was not captured.
-6. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
+7. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
    check its size there.
 
 Every request of the private plan's section 15 is now merged or in review. Nothing
