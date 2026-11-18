@@ -134,13 +134,20 @@ jobs:
           $hash = (Get-FileHash povwin-setup.exe -Algorithm SHA256).Hash
           if ($hash -ne $expected) { throw "Unexpected installer checksum $hash" }
           Start-Process -FilePath .\povwin-setup.exe -ArgumentList "/S" -Wait
-          # Without its separately licensed editor DLL, POV-Ray for Windows asks on every
-          # start whether to download it, and waits (seen on this runner, 18 Nov 2026).
-          # Turn editor loading off, as its Options > Other Settings > Use Editor does.
+          # Two dialogs of POV-Ray for Windows would wait for an answer on this runner
+          # (screenshots, 18 Nov 2026), so its settings are written before its first start:
+          # - without its separately licensed editor DLL it asks on every start whether to
+          #   download it: turn editor loading off (Options > Other Settings > Use Editor);
+          # - from its second start on it shows its About box when ItsAboutTime has passed
+          #   (unset: at once; then every 14 days): set the latest time its 32-bit clock
+          #   comparison allows.
           $docs = (Get-ItemProperty "HKCU:\Software\POV-Ray\v3.7\Windows").DocPath
           New-Item -ItemType Directory -Force (Join-Path $docs "ini") | Out-Null
           Add-Type -Namespace Win32 -Name Ini -MemberDefinition '[DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern bool WritePrivateProfileString(string section, string key, string value, string file);'
-          if (-not [Win32.Ini]::WritePrivateProfileString("General", "UseEditors", "0", (Join-Path $docs "ini\pvengine.ini"))) { throw "Could not write pvengine.ini" }
+          $ini = Join-Path $docs "ini\pvengine.ini"
+          foreach ($pair in @(@("UseEditors", "0"), @("ItsAboutTime", "2147483647"))) {
+            if (-not [Win32.Ini]::WritePrivateProfileString("General", $pair[0], $pair[1], $ini)) { throw "Could not write $ini" }
+          }
           Get-Content (Join-Path $docs "ini\pvengine.ini")
           Get-ChildItem "$env:ProgramFiles\POV-Ray" -Recurse -Depth 3 | Select-Object -ExpandProperty FullName
           Get-ChildItem "$env:USERPROFILE\Documents\POV-Ray" -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
