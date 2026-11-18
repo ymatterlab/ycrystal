@@ -101,9 +101,9 @@ Windows 3.7 for previews and images ([below](#pov-ray-for-windows)).
 ### Windows: the installer (recommended)
 
 1. Download `Ycrystal-<version>-windows-x64-setup.exe` from the
-   [Releases page](https://github.com/ymatterlab/ycrystal/releases). Version 0.4.0 is
-   the first with it; until its GitHub release carries the file, the installer of the
-   newest source can be downloaded, with a GitHub account, from the latest run of the
+   [Releases page](https://github.com/ymatterlab/ycrystal/releases) (version 0.4.0 is
+   the first with it). The installer of the newest source, between releases, can be
+   downloaded with a GitHub account from the latest run of the
    [*Windows installer* workflow](https://github.com/ymatterlab/ycrystal/actions/workflows/windows-installer.yml)
    (artifact `ycrystal-windows-installer`: a ZIP file with the installer inside).
 2. Run it. The installer is not signed yet, so Windows may show "Windows protected your

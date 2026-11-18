@@ -13,8 +13,11 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   source reports `0.4.0`, and `CHANGELOG.md` lists everything since `v0.3.0` (PRs
   #23–#40) under 0.4.0 (`main` reported `0.4.0.dev0` until then).
   The tag `v0.4.0` is set on the merge of the version change (see
-  [the 0.4.0 checklist](development/release.md#checklist-for-040)); no GitHub release
-  yet: the user decides after auditing the README. Earlier tags: `v0.1.0`, `v0.2.0`,
+  [the 0.4.0 checklist](development/release.md#checklist-for-040)). The GitHub release
+  [Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0) was
+  published on 18 November 2026, at the user's request, with
+  `Ycrystal-0.4.0-windows-x64-setup.exe` (built from the tag on the Windows laptop,
+  SHA-256 `B67AF22B…5ED40FB`). Earlier tags (no GitHub releases): `v0.1.0`, `v0.2.0`,
   `v0.3.0` (commit `6ed6b03`, PR #22; the source there still reports 0.2.0).
 - **Windows support** (requested by the user on 17 November 2026), branch
   `feature/windows`, PR #35: completed on a Windows 11 laptop on 18 November 2026. All

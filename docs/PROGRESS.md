@@ -107,6 +107,15 @@ pre-commit; *Windows installer* run 44401632704 passed). Branch `release/v0.5.0`
 - sample outputs in the guides, HANDOFF, next-tests;
 - the 0.4.0 checklist in `docs/development/release.md`.
 
+Then, at the user's request: PR #40 merged (`2f427ac`), PR #41 merged after its CI and
+the installer workflow passed (`34c803d`), annotated tag `v0.4.0` on `34c803d`. The
+installer was built from the tag on the Windows laptop (`build.ps1`, 541 s, 129 MB,
+`ycrystal-cli.exe --version` gives `ycrystal 0.4.0`) and installed silently over the
+earlier 0.4.0.dev0 installation (it then reports 0.4.0). The GitHub release
+[Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0) was
+published with `Ycrystal-0.4.0-windows-x64-setup.exe` attached. GitHub's digest of the
+asset equals the local SHA-256 `B67AF22B46E3B1DCE3A6F646496BBAFDBC64F42F26423C6FC80A5CB9F5ED40FB`.
+
 The version was first set to 0.5.0; the user corrected it to 0.4.0 before the merge, and
 asked to drop the mentions of earlier versions from the README. Dated records
 (benchmark and replay results, the gallery run, the Windows-port evidence) keep
