@@ -134,6 +134,14 @@ jobs:
           $hash = (Get-FileHash povwin-setup.exe -Algorithm SHA256).Hash
           if ($hash -ne $expected) { throw "Unexpected installer checksum $hash" }
           Start-Process -FilePath .\povwin-setup.exe -ArgumentList "/S" -Wait
+          # Without its separately licensed editor DLL, POV-Ray for Windows asks on every
+          # start whether to download it, and waits (seen on this runner, 18 Nov 2026).
+          # Turn editor loading off, as its Options > Other Settings > Use Editor does.
+          $docs = (Get-ItemProperty "HKCU:\Software\POV-Ray\v3.7\Windows").DocPath
+          New-Item -ItemType Directory -Force (Join-Path $docs "ini") | Out-Null
+          Add-Type -Namespace Win32 -Name Ini -MemberDefinition '[DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern bool WritePrivateProfileString(string section, string key, string value, string file);'
+          if (-not [Win32.Ini]::WritePrivateProfileString("General", "UseEditors", "0", (Join-Path $docs "ini\pvengine.ini"))) { throw "Could not write pvengine.ini" }
+          Get-Content (Join-Path $docs "ini\pvengine.ini")
           Get-ChildItem "$env:ProgramFiles\POV-Ray" -Recurse -Depth 3 | Select-Object -ExpandProperty FullName
           Get-ChildItem "$env:USERPROFILE\Documents\POV-Ray" -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
           Get-ItemProperty "HKCU:\Software\POV-Ray\v3.7\Windows" -ErrorAction SilentlyContinue
