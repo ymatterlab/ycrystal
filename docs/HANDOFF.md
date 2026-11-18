@@ -22,7 +22,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   commit `ae01f43`). PR #36 (branch `ci/windows-povray`) makes Windows CI render with
   the real POV-Ray for Windows, installed from the `ci-assets` release (see
   [docs/development/windows-port.md](development/windows-port.md#pov-ray-for-windows-on-ci));
-  merged. Branch `feature/windows-install` (the user's request for a simpler Windows
+  merged. PR #39, branch `feature/windows-install` (the user's request for a simpler Windows
   installation): `scripts\install-windows.ps1`, a Start-menu entry and `.ycrystal`
   file type through `--install-desktop`, and POV-Ray's editor question reported
   instead of waited for (see
@@ -54,7 +54,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-GALLERY-01 publication gallery (`examples/publication/`, `scripts/make_gallery.py`), gallery and manuscript-figure pages (no application change) | PR #34 |
 | unreleased | Maintenance: Windows 11 support with POV-Ray for Windows 3.7 (no FR ID) | PR #35 (`ae01f43`) |
 | unreleased | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 (`8051f04`) |
-| unreleased | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | branch `feature/windows-install` |
+| unreleased | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | PR #39 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
@@ -137,7 +137,7 @@ Known limitations and unresolved issues:
 - **Then:** PR #36's CI passed on its last commit `3535387` (run 44255680680: Ubuntu
   900 passed, 1 skipped; macOS 728 passed, 1 skipped; Windows 727 passed, 2 skipped;
   docs and pre-commit pass), and the user merged it (`8051f04`).
-- **Then (branch `feature/windows-install`):** the user asked whether Windows could be
+- **Then (PR #39, branch `feature/windows-install`):** the user asked whether Windows could be
   installed more simply, and to implement it like the other work. Done (details in
   [PROGRESS.md](PROGRESS.md#windows-installation-in-one-command-18-november-2026)):
   - `scripts\install-windows.ps1`: Python 3.12 and POV-Ray for Windows through

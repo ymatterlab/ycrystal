@@ -13,7 +13,7 @@ laptop (18 November 2026). This page records:
 POV-Ray for Windows 3.7. On one laptop it passes every automated test (below), and the
 user tested it by hand there and reports that it works well. Since PR #36, Windows CI
 renders with the real POV-Ray for Windows too (see [CI](#pov-ray-for-windows-on-ci)).
-Since branch `feature/windows-install`, one script installs it, with a Start-menu
+Since PR #39, one script installs it, with a Start-menu
 entry (see [installation](#installation-in-one-command)).
 
 ## Decision
