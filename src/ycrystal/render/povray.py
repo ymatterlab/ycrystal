@@ -272,15 +272,16 @@ def _engine_window_open(classes: tuple[str, ...]) -> bool:
         return False
 
 
-def keeps_single_instance(settings_file: str | os.PathLike[str]) -> bool:
-    r"""Return whether POV-Ray for Windows keeps a single instance, from its settings file.
+def _general_option(settings_file: str | os.PathLike[str] | None, name: str) -> bool:
+    """Return whether an on/off option of POV-Ray for Windows is on, as POV-Ray reads it.
 
-    The option *Options ▸ Keep Single Instance* is stored as ``OneInstance`` in the
-    ``[General]`` section of ``pvengine.ini`` (in ``Documents\POV-Ray\v3.7\ini``). It is
-    read as POV-Ray reads it (``GetPrivateProfileInt``): absent means on (the default),
-    and a value counts by its leading integer, so that ``0`` or a value without one
-    means off. A missing or unreadable file counts as on.
+    Reads `name` in the ``[General]`` section of ``pvengine.ini`` like
+    ``GetPrivateProfileInt``: absent means on (the default of the options read here), and
+    a value counts by its leading integer, so that ``0`` or a value without one means off.
+    A missing or unreadable file counts as on.
     """
+    if settings_file is None:
+        return True
     try:
         text = Path(settings_file).read_text(encoding="latin-1")
     except OSError:
@@ -292,10 +293,85 @@ def keeps_single_instance(settings_file: str | os.PathLike[str]) -> bool:
             section = line[1:-1].strip().lower()
         elif section == "general" and "=" in line:
             key, value = (part.strip() for part in line.split("=", 1))
-            if key.lower() == "oneinstance":
+            if key.lower() == name.lower():
                 match = re.match(r"[+-]?\d+", value)
                 return match is not None and int(match.group()) != 0
     return True
+
+
+def keeps_single_instance(settings_file: str | os.PathLike[str]) -> bool:
+    r"""Return whether POV-Ray for Windows keeps a single instance, from its settings file.
+
+    The option *Options ▸ Keep Single Instance* is stored as ``OneInstance`` in the
+    ``[General]`` section of ``pvengine.ini`` (in ``Documents\POV-Ray\v3.7\ini``). It is
+    read as POV-Ray reads it (``GetPrivateProfileInt``): absent means on (the default),
+    and a value counts by its leading integer, so that ``0`` or a value without one
+    means off. A missing or unreadable file counts as on.
+    """
+    return _general_option(settings_file, "OneInstance")
+
+
+EDITOR_QUESTION_MESSAGE = (
+    'POV-Ray for Windows would stop before rendering to ask "Could not load internal '
+    'editor - download it?": its editor is not installed, and its option Options > Other '
+    "Settings > Use Editor is on. Start POV-Ray for Windows once from the Start menu, "
+    "answer No, untick Options > Other Settings > Use Editor (or answer Yes and install "
+    "the editor from the page that opens), close POV-Ray, and try again."
+)
+"""Explanation when POV-Ray for Windows would ask about its missing editor and wait."""
+
+
+def editor_library(executable: str | os.PathLike[str]) -> str:
+    r"""Return the file name of the editor library that POV-Ray for Windows loads.
+
+    The editor is a separately licensed library, not included in the AGPL installer.
+    Each build of the program loads its own (``EDITDLLNAME`` in POV-Ray's source).
+
+    >>> editor_library(r"C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe")
+    'cmedit64.dll'
+    >>> editor_library("pvengine32-sse2.exe"), editor_library("pvengine.exe")
+    ('cmedit32-sse2.dll', 'cmedit32.dll')
+    """
+    name = str(executable).replace("\\", "/").rsplit("/", 1)[-1].lower()
+    if "64" in name:
+        return "cmedit64.dll"
+    return "cmedit32-sse2.dll" if "sse2" in name else "cmedit32.dll"
+
+
+def editor_question_pending(
+    executable: str | os.PathLike[str],
+    settings_file: str | os.PathLike[str] | None,
+    homes: Iterable[str] = (),
+) -> bool:
+    r"""Return whether POV-Ray for Windows will ask about its editor when it starts.
+
+    At every start, also with ``/EXIT``, POV-Ray for Windows loads its editor library
+    ([`editor_library`][ycrystal.render.povray.editor_library]) from its own folder,
+    then from the ``bin`` folder of its installation (``Home`` in the registry). If both
+    fail and *Options ▸ Other Settings ▸ Use Editor* is on (``UseEditors`` in the
+    ``[General]`` section of ``pvengine.ini``, on by default), it asks whether to download
+    the editor and waits for the answer: a render started by Ycrystal would wait too.
+
+    Only program files (``pvengine*.exe``) are checked; other programs never ask.
+
+    Parameters
+    ----------
+    executable
+        The POV-Ray for Windows program.
+    settings_file
+        Its ``pvengine.ini``; ``None`` if it has none yet (it has never run), which
+        leaves the option on.
+    homes
+        Installation folders recorded in the registry.
+    """
+    path = Path(executable)
+    if not is_windows_engine(path) or path.suffix.lower() != ".exe":
+        return False
+    if not _general_option(settings_file, "UseEditors"):
+        return False
+    library = editor_library(path)
+    folders = [path.parent, *(Path(home) / "bin" for home in homes if home)]
+    return not any((folder / library).is_file() for folder in folders)
 
 
 def windows_engine_conflict(
@@ -303,11 +379,16 @@ def windows_engine_conflict(
 ) -> str | None:
     """Return why POV-Ray for Windows cannot start a render now, or ``None``.
 
-    With *Keep Single Instance* on (its default), POV-Ray for Windows does not render
-    when another copy is open: it brings that copy forward, shows an error dialog for
-    the switch ``/EXIT``, and exits without an image. Ycrystal checks the same
-    condition first and reports
-    [`ENGINE_OPEN_MESSAGE`][ycrystal.render.povray.ENGINE_OPEN_MESSAGE] instead.
+    Two reasons are checked before POV-Ray starts, so that a render fails at once with
+    an explanation instead of waiting for a dialog in a minimised window:
+
+    - its question about a missing editor
+      ([`editor_question_pending`][ycrystal.render.povray.editor_question_pending]):
+      [`EDITOR_QUESTION_MESSAGE`][ycrystal.render.povray.EDITOR_QUESTION_MESSAGE];
+    - with *Keep Single Instance* on (its default), POV-Ray for Windows does not render
+      when another copy is open: it brings that copy forward, shows an error dialog for
+      the switch ``/EXIT``, and exits without an image:
+      [`ENGINE_OPEN_MESSAGE`][ycrystal.render.povray.ENGINE_OPEN_MESSAGE].
 
     Parameters
     ----------
@@ -319,9 +400,11 @@ def windows_engine_conflict(
     """
     if platform != "win32" or not is_windows_engine(executable):
         return None
+    settings = _engine_settings_file()
+    if editor_question_pending(executable, settings, _registry_homes()):
+        return EDITOR_QUESTION_MESSAGE
     if not _engine_window_open(_engine_window_classes(executable)):
         return None
-    settings = _engine_settings_file()
     if settings is not None and not keeps_single_instance(settings):
         return None
     return ENGINE_OPEN_MESSAGE

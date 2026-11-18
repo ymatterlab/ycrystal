@@ -193,3 +193,16 @@ jobs:
 
       - name: Tests
         run: ${{ matrix.pytest }}
+
+      # The installation script of the install guide, in Windows PowerShell 5.1 as on a
+      # new Windows 11, into a new .venv: Ycrystal, the Start-menu entry, the renderer
+      # check. Python comes from setup-python ("py -3.12" is not guaranteed on runners),
+      # and POV-Ray for Windows is already installed (povray.org refuses runners).
+      - name: Installation script (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 15
+        shell: powershell
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-windows.ps1 -Python "$env:pythonLocation\python.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv\Scripts\python.exe -c "from ycrystal.windows_shortcut import programs_folder, read_shortcut; print(read_shortcut(programs_folder() / 'Ycrystal.lnk'))"

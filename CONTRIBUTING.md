@@ -69,8 +69,11 @@ used; the Actions job runs the same pinned hooks.
   `ycrystal --check-renderer`; it is found on `PATH` (on Windows, POV-Ray for Windows
   in its installation folder), or set `YCRYSTAL_POVRAY` to it. POV-Ray for Windows runs
   one copy at a time: keep it closed and render nothing else while the tests run.
-- On Windows, run the tools as `.venv\Scripts\python.exe -m pytest -q -rs`,
-  `.venv\Scripts\pre-commit.exe`, and so on.
+- On Windows, `powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1
+  -Dev` sets up `.venv` with the developer tools (and Python and POV-Ray for Windows
+  with `winget`, if missing). Run the tools as
+  `.venv\Scripts\python.exe -m pytest -q -rs`, `.venv\Scripts\pre-commit.exe`, and so
+  on.
 - Locally, missing prerequisites skip those tests (`-rs` lists them). CI sets
   `YCRYSTAL_REQUIRE_INTEGRATION=1`, which turns a missing display or renderer into an
   error; set it yourself to make sure nothing was skipped.
@@ -79,9 +82,9 @@ used; the Actions job runs the same pinned hooks.
   OpenGL widget; run the GUI tests on a real Mac before relying on a GUI change
   there. On Windows it runs the same tests, with the official POV-Ray for Windows 3.7
   installer kept as an asset of the `ci-assets` release (povray.org blocks downloads
-  from CI runners); run the GUI tests on a Windows computer before relying on a GUI
-  change there. To add an operating system, add a matrix entry and a system-packages
-  step to the `test` job.
+  from CI runners), and it also runs `scripts\install-windows.ps1` into a new `.venv`;
+  run the GUI tests on a Windows computer before relying on a GUI change there. To add
+  an operating system, add a matrix entry and a system-packages step to the `test` job.
 - `scripts/m0_evidence.py` regenerates screenshots and alignment measurements.
 - `scripts/benchmark_scene.py` measures display cost for growing supercells; rerun it
   when changing the viewport, and record the hardware with the numbers.

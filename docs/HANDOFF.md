@@ -21,7 +21,12 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   hand and reports that it works well. PR #35 was merged after CI passed (merge
   commit `ae01f43`). PR #36 (branch `ci/windows-povray`) makes Windows CI render with
   the real POV-Ray for Windows, installed from the `ci-assets` release (see
-  [docs/development/windows-port.md](development/windows-port.md#pov-ray-for-windows-on-ci)).
+  [docs/development/windows-port.md](development/windows-port.md#pov-ray-for-windows-on-ci));
+  merged. Branch `feature/windows-install` (the user's request for a simpler Windows
+  installation): `scripts\install-windows.ps1`, a Start-menu entry and `.ycrystal`
+  file type through `--install-desktop`, and POV-Ray's editor question reported
+  instead of waited for (see
+  [windows-port.md](development/windows-port.md#installation-in-one-command)).
   Merged before: FR-STYLE-CLI-01 (PR #28), FR-STYLE-MAP-01 (PR #29), FR-CAMERA-01
   (PR #30), FR-BATCH-01 (PR #31), FR-REPRO-01 (PR #32; the user tested it by hand),
   FR-VALIDATION-01 (PR #33), and FR-GALLERY-01 with the next-tests audit (PR #34,
@@ -48,7 +53,8 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-VALIDATION-01 validation tests, `scripts/benchmark_render.py`, `scripts/replay_check.py`, evidence report (no application change) | PR #33 |
 | unreleased | FR-GALLERY-01 publication gallery (`examples/publication/`, `scripts/make_gallery.py`), gallery and manuscript-figure pages (no application change) | PR #34 |
 | unreleased | Maintenance: Windows 11 support with POV-Ray for Windows 3.7 (no FR ID) | PR #35 (`ae01f43`) |
-| unreleased | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 |
+| unreleased | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 (`8051f04`) |
+| unreleased | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | branch `feature/windows-install` |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
@@ -63,14 +69,15 @@ Known limitations and unresolved issues:
   Dock and the menu bar show "Python", and `.ycrystal` files do not open by double click.
 - macOS: nothing has been checked by hand yet, and no Retina display was available (see
   [Cross-platform status](#cross-platform-status)).
-- Windows: Ycrystal runs from the source checkout (`.venv\Scripts\ycrystal.exe`); there
-  is no Start-menu entry or `.ycrystal` file association. POV-Ray for Windows renders
+- Windows: Ycrystal runs from the source checkout, installed by
+  `scripts\install-windows.ps1` and started from the Start menu (or
+  `.venv\Scripts\ycrystal.exe`). POV-Ray for Windows renders
   one copy at a time (Ycrystal reports a copy the user has open), reports no progress
   percentage, and takes the keyboard focus during renders started from a terminal.
-  POV-Ray for Windows shows its About box at its second start and then every 14 days,
-  and asks about its editor at every start unless the editor is installed or turned
-  off; renders wait until the user answers (documented; Ycrystal changes no POV-Ray
-  setting). Rendering with a `%TEMP%` path outside a legacy
+  POV-Ray for Windows shows its About box at its second start and then every 14 days;
+  renders wait until the user clicks OK (documented; Ycrystal changes no POV-Ray
+  setting). Its question about a missing editor at every start is now reported by
+  Ycrystal instead of waited for. Rendering with a `%TEMP%` path outside a legacy
   code page (for example a Chinese user name on a Western-European Windows) is
   unverified.
 - FR-EXPORT-01: the PDF holds the POV-Ray raster image (not vector graphics); PDF page
@@ -127,10 +134,23 @@ Known limitations and unresolved issues:
   pre-sets `UseEditors=0` and `ItsAboutTime`. The Windows job is no longer
   experimental: 727 passed, 2 skipped (POSIX-only), with
   `YCRYSTAL_REQUIRE_INTEGRATION=1`.
-- **State at the end:** PR #36's CI passed on its last commit `3535387` (run
-  44255680680: Ubuntu 900 passed, 1 skipped; macOS 728 passed, 1 skipped; Windows 727
-  passed, 2 skipped; docs and pre-commit pass). It was not yet merged when the session
-  ended; the user returns to the Mac mini next.
+- **Then:** PR #36's CI passed on its last commit `3535387` (run 44255680680: Ubuntu
+  900 passed, 1 skipped; macOS 728 passed, 1 skipped; Windows 727 passed, 2 skipped;
+  docs and pre-commit pass), and the user merged it (`8051f04`).
+- **Then (branch `feature/windows-install`):** the user asked whether Windows could be
+  installed more simply, and to implement it like the other work. Done (details in
+  [PROGRESS.md](PROGRESS.md#windows-installation-in-one-command-18-november-2026)):
+  - `scripts\install-windows.ps1`: Python 3.12 and POV-Ray for Windows through
+    `winget` (whose POV-Ray package is the official installer), `.venv`, the
+    Start-menu entry, and the renderer check, in one command;
+  - `--install-desktop` on Windows: a Start-menu shortcut with Ycrystal's
+    application id, an icon, and the `.ycrystal` file type;
+  - POV-Ray's question about its missing editor is reported at once instead of
+    waited for.
+
+  Tried on the laptop: the script on a fresh copy of the checkout, and the Start-menu
+  entry and a project opened by scripted clicks. The laptop's Start menu now has
+  **Ycrystal**, pointing at its checkout's `.venv` (`--uninstall-desktop` removes it).
 - **Not done:** nothing run on Linux or macOS on a real machine in this session (CI ran
   them); GUI tests on Windows CI (run them on a Windows computer).
 
@@ -230,8 +250,9 @@ Suggestions only — not approved, ask before starting any of them:
   writes PNG only.
 - A macOS application bundle or launcher (name and icon in the Dock, opening
   `.ycrystal` files from Finder).
-- Windows: a Start-menu entry and `.ycrystal` file association (none exist); progress
-  percentages from POV-Ray for Windows' window title (see windows-port.md).
+- Windows: progress percentages from POV-Ray for Windows' window title (see
+  windows-port.md); a packaged installer with its own Python (needs a freezing tool and
+  code signing).
 - From earlier sessions: hide the disabled Bottom/Clouds rows for the Image background
   type; a way to manage personal materials; hands-on checks of the unreleased features,
   then the next release (FR-EXPORT-01 and the branding): move the changelog's
@@ -273,7 +294,8 @@ user's report for PR #22.
 | Publication gallery (FR-GALLERY-01) | Verified 17 Nov 2026 on the Mint laptop (full-size render of all 7 figures, replay of all snapshots, gallery tests); CI of PR #34 | Not tested | Gallery test verified 18 Nov 2026 (the script at test size); full-size gallery not rendered |
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | The user reports it working well (hands-on test, 18 Nov 2026); a scripted run of the window passed |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Partial: 125 % scale (device pixel ratio 1.25), GUI tests and a scripted run |
-| Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
+| Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Verified 18 Nov 2026 on one laptop: Start-menu entry starts the window without a console, a `.ycrystal` file opens from File Explorer (scripted clicks); pinning to the taskbar not tried |
+| Installation script | Not applicable | Not applicable | Verified 18 Nov 2026 on one laptop with Python and POV-Ray already installed (Windows PowerShell 5.1, fresh `.venv`, rerun); the `winget` installs of Python and POV-Ray and the editor prompt not run |
 | Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | Verified: tests without windows with POV-Ray for Windows on every pull request (PR #36, 18 Nov 2026) |
 
 ### Hands-on checks on a Mac
@@ -356,14 +378,15 @@ Troubleshooting:
   run `pytest -m "not gui"`.
 
 Windows 11 (set up 18 November 2026 on a laptop with a 125 % display scale; PowerShell
-from the repository root):
+from the repository root). The installation script installs Python 3.12 and POV-Ray for
+Windows with `winget` where missing, `.venv` with the developer tools (`-Dev`), the
+Start-menu entry, and checks the renderer:
 
 ```powershell
-winget install --id Python.Python.3.12 --exact --scope user   # python.org build, py launcher
-# Open a new terminal (restart VS Code for its own) so that py is on PATH, then:
-py -3.12 -m venv .venv
-.venv\Scripts\python.exe -m pip install -e ".[dev]" -c constraints.txt
-# POV-Ray for Windows 3.7: official installer from povray.org, with the user files.
+powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1 -Dev
+# By hand instead: winget install --id Python.Python.3.12 --exact --scope user;
+# winget install --id PersistenceOfVisionRaytracer.POVRay --exact; a new terminal;
+# py -3.12 -m venv .venv; .venv\Scripts\python.exe -m pip install -e ".[dev]" -c constraints.txt
 .venv\Scripts\ycrystal.exe --check-renderer
 $env:YCRYSTAL_REQUIRE_INTEGRATION = "1"
 .venv\Scripts\python.exe -m pytest -q -rs      # GUI tests open windows for several minutes

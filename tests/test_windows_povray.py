@@ -277,6 +277,7 @@ def test_open_povray_for_windows_is_reported_before_starting(qtbot, tmp_path, mo
     seen = []
     monkeypatch.setattr(povray, "_engine_window_open", lambda classes: seen.append(classes) or True)
     monkeypatch.setattr(povray, "_engine_settings_file", lambda: None)  # default: single
+    monkeypatch.setattr(povray, "editor_question_pending", lambda *args: False)  # settled
     assert windows_engine_conflict("pvengine64.exe", "linux") is None
     assert windows_engine_conflict("/usr/bin/povray", "win32") is None
     assert seen == []
@@ -310,6 +311,49 @@ def test_open_povray_for_windows_is_reported_before_starting(qtbot, tmp_path, mo
         process.start()
     assert blocker.args[0].message == "open!" and not blocker.args[0].ok
     assert not marker.exists() and povray._foreground_holds == 0
+
+
+def test_editor_question_is_reported_before_starting(tmp_path, monkeypatch):
+    """POV-Ray for Windows would wait at its question about a missing editor."""
+    from ycrystal.render.povray import (
+        EDITOR_QUESTION_MESSAGE,
+        editor_question_pending,
+        windows_engine_conflict,
+    )
+
+    home = tmp_path / "POV-Ray" / "v3.7"
+    executable = home / "bin" / "pvengine64.exe"
+    executable.parent.mkdir(parents=True)
+    executable.write_bytes(b"MZ")
+    ini = tmp_path / "Documents" / "pvengine.ini"
+    ini.parent.mkdir()
+    assert editor_question_pending(executable, None)  # never started: the option is on
+    assert editor_question_pending(executable, ini)  # no settings file yet: the same
+    ini.write_text("[General]\nUseEditors=0\n")  # Options > Other Settings > Use Editor off
+    assert not editor_question_pending(executable, ini)
+    ini.write_text("[General]\nUseEditors=1\n")
+    assert editor_question_pending(executable, ini)
+    elsewhere = tmp_path / "Recorded" / "bin"  # the installation folder in the registry
+    elsewhere.mkdir(parents=True)
+    (elsewhere / "cmedit64.dll").write_bytes(b"MZ")
+    assert not editor_question_pending(executable, ini, [str(elsewhere.parent)])
+    (executable.parent / "cmedit32.dll").write_bytes(b"MZ")  # the 32-bit build's
+    assert editor_question_pending(executable, ini)
+    (executable.parent / "cmedit64.dll").write_bytes(b"MZ")  # the editor is installed
+    assert not editor_question_pending(executable, ini)
+    # Programs that are not POV-Ray for Windows, and stand-ins in tests, never ask.
+    for other in ("/usr/bin/povray", tmp_path / "pvengine.cmd"):
+        assert not editor_question_pending(other, None)
+
+    # Rendering: reported before POV-Ray starts, on Windows only.
+    (executable.parent / "cmedit64.dll").unlink()
+    monkeypatch.setattr(povray, "_engine_settings_file", lambda: ini)
+    monkeypatch.setattr(povray, "_registry_homes", lambda: [])
+    monkeypatch.setattr(povray, "_engine_window_open", lambda classes: False)
+    assert windows_engine_conflict(executable, "win32") == EDITOR_QUESTION_MESSAGE
+    assert windows_engine_conflict(executable, "linux") is None
+    ini.write_text("[General]\nUseEditors=0\n")
+    assert windows_engine_conflict(executable, "win32") is None
 
 
 def test_single_instance_setting_is_read_as_povray_reads_it(tmp_path):

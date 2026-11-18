@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 18 November 2026 (Windows CI with the real POV-Ray for Windows, PR #36). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 18 November 2026 (Windows installation in one command, branch `feature/windows-install`). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,45 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## Windows installation in one command (18 November 2026)
+
+Requested by the user after PR #36 was merged (`8051f04`): "is there a simpler method
+for installation?", and to implement it like the other work. Branch
+`feature/windows-install`. Details and the findings behind it:
+[windows-port.md](development/windows-port.md#installation-in-one-command).
+
+- `scripts/install-windows.ps1`: after `git clone`, one command installs Python 3.12
+  and POV-Ray for Windows 3.7 with `winget` where missing (`winget` has the official
+  installer, same checksum), `.venv` with the pinned packages, the Start-menu entry,
+  and runs the renderer check. When POV-Ray would ask about its editor, it opens POV-Ray
+  once with instructions. Rerunnable for updates.
+- `ycrystal --install-desktop` on Windows (`desktop.py`, new `windows_shortcut.py`):
+  - a Start-menu shortcut to `.venv\Scripts\pythonw.exe -I -m ycrystal.app` (no
+    console window) with the application id `YMatterLab.Ycrystal`;
+  - an `.ico` drawn from the SVG;
+  - the `.ycrystal` file type under `HKEY_CURRENT_USER\Software\Classes`;
+  - `--uninstall-desktop` removes all three.
+- POV-Ray for Windows' question about a missing editor (`UseEditors` on and no
+  `cmedit64.dll`, per its source) is now reported by `windows_engine_conflict()` with
+  the remedy, so `--check-renderer`, previews, and renders fail at once instead of
+  waiting at a dialog in a minimised window.
+- Windows CI runs the script in Windows PowerShell 5.1 into a new `.venv`.
+- Install guide (script first; the same steps by hand), README, troubleshooting,
+  support matrix, rendering guide, architecture, reference, CLAUDE.md, CONTRIBUTING,
+  changelog.
+
+| Check | Result |
+| --- | --- |
+| The script in Windows PowerShell 5.1 on a copy of the checkout in a folder with a space, without `.venv` (Python 3.12 and POV-Ray already installed) | `.venv` created, packages installed, POV-Ray found, Start-menu entry installed, `PASS: … within 0.14 px`, "Ycrystal is ready.", exit status 0; a second run took 29 s |
+| The Start-menu shortcut and a `.ycrystal` file opened as clicks do (`os.startfile`) | Each opened one Ycrystal window run by `pythonw.exe`, no console window; own taskbar button with the Ycrystal icon; the automatic preview rendered. `Get-StartApps`: AppID `YMatterLab.Ycrystal` |
+| `tests/test_windows_desktop.py` (7 tests, 4 of them Windows-only) and the editor-question test; the updated platform and conflict tests | Passed on the laptop |
+| Full suite on the laptop, `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` (GUI tests with real windows, POV-Ray for Windows) | **906 passed, 3 skipped** (the POSIX-only tests), 12.4 min |
+| `pre-commit run --all-files`; `zensical build --clean --strict` | Passed; no issues |
+
+Not verified: the `winget` installs of Python and POV-Ray through the script and its
+editor prompt (both programs and the editor were already on the laptop); pinning the
+running window to the taskbar by hand.
 
 ## Windows CI with the real POV-Ray for Windows (18 November 2026)
 

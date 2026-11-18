@@ -118,16 +118,18 @@ def test_personal_thumbnails_stay_out_of_shared_folders(tmp_path):
 
 
 # ----- Linux menu launcher -------------------------------------------------------------------
-def test_launcher_command_applies_to_freedesktop_systems_only(tmp_path, monkeypatch, capsys):
+def test_launcher_command_applies_to_linux_and_windows_only(tmp_path, monkeypatch, capsys):
     assert desktop_supported("linux") and desktop_supported("freebsd14")
-    assert not desktop_supported("darwin") and not desktop_supported("win32")
+    assert desktop_supported("win32")  # the Start menu (tests/test_windows_desktop.py)
+    assert not desktop_supported("darwin")
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     monkeypatch.setattr("ycrystal.desktop.desktop_supported", lambda: False)
     for option in ("--install-desktop", "--uninstall-desktop"):
         assert main([option]) == 1
-        assert "Linux menu launcher" in capsys.readouterr().err
+        assert "applications menu of Linux" in capsys.readouterr().err
     assert list(tmp_path.iterdir()) == []  # nothing was written
     monkeypatch.setattr("ycrystal.desktop.desktop_supported", lambda: True)
+    monkeypatch.setattr(sys, "platform", "linux")  # the Linux launcher, on any system
     assert main(["--install-desktop"]) == 0
     assert (tmp_path / "applications" / "ycrystal.desktop").is_file()
     assert main(["--uninstall-desktop"]) == 0

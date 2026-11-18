@@ -139,11 +139,12 @@ def _parser() -> argparse.ArgumentParser:
         help="with --batch: replace existing images, projects, and report; with "
         "--save-project: replace an existing project and provenance file (default: refuse)",
     )
-    desktop = parser.add_argument_group("desktop integration (Linux, current user)")
+    desktop = parser.add_argument_group("desktop integration (Linux and Windows, current user)")
     desktop.add_argument(
         "--install-desktop",
         action="store_true",
-        help="add Ycrystal to the applications menu and open .ycrystal projects with it",
+        help="add Ycrystal to the applications menu (Windows: the Start menu) and open "
+        ".ycrystal projects with it",
     )
     desktop.add_argument(
         "--uninstall-desktop",
@@ -405,8 +406,8 @@ def main(argv: list[str] | None = None) -> int:
     job failed (or POV-Ray is missing), and 2 if the manifest is invalid (then nothing
     is rendered). ``--dry-run`` checks everything and renders nothing.
     ``--install-desktop`` / ``--uninstall-desktop`` manage the menu launcher on Linux
-    (see [`ycrystal.desktop`][ycrystal.desktop]); on macOS and Windows they print an
-    error and return 1 without writing anything.
+    and the Start-menu entry on Windows (see [`ycrystal.desktop`][ycrystal.desktop]); on
+    macOS they print an error and return 1 without writing anything.
 
     Otherwise a window opens with the ``--sample`` structure. A ``FILE`` argument is
     opened once the event loop runs; if it cannot be read, a message appears and the
@@ -418,23 +419,32 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.install_desktop or args.uninstall_desktop:
-        from ycrystal.desktop import desktop_supported, install_desktop, uninstall_desktop
+        from ycrystal.desktop import (
+            desktop_supported,
+            install_menu_entry,
+            menu_entry_note,
+            uninstall_menu_entry,
+        )
 
         if not desktop_supported():
             print(
-                "ERROR: --install-desktop and --uninstall-desktop manage a Linux menu "
-                "launcher and do not apply to this system; start Ycrystal with the "
-                "ycrystal command.",
+                "ERROR: --install-desktop and --uninstall-desktop manage the applications "
+                "menu of Linux (a menu launcher) and the Start menu of Windows, and do not "
+                "apply to this system; start Ycrystal with the ycrystal command.",
                 file=sys.stderr,
             )
             return 1
-        if args.install_desktop:
-            for path in install_desktop():
-                print(f"Installed {path}")
-            print("Ycrystal is now in the applications menu (Science).")
-        else:
-            removed = uninstall_desktop()
-            print("\n".join(f"Removed {path}" for path in removed) or "Nothing to remove.")
+        try:
+            if args.install_desktop:
+                for path in install_menu_entry():
+                    print(f"Installed {path}")
+                print(menu_entry_note())
+            else:
+                removed = uninstall_menu_entry()
+                print("\n".join(f"Removed {path}" for path in removed) or "Nothing to remove.")
+        except OSError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
         return 0
 
     if args.style_parts is not None and not args.style:

@@ -166,7 +166,10 @@ python3.12 -m venv .venv-docs
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render out.png
 ```
 
-On Windows (PowerShell): create environments with `py -3.12 -m venv .venv` and run the
+On Windows (PowerShell): create the development environment with
+`powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1 -Dev` (it installs
+Python 3.12 and POV-Ray for Windows with `winget` if missing, and adds a Start-menu
+entry), or with `py -3.12 -m venv .venv` and the `pip` line above, and run the
 programs as `.venv\Scripts\python.exe`, `.venv\Scripts\ycrystal.exe`,
 `.venv\Scripts\ruff.exe`, `.venv\Scripts\pre-commit.exe`, and
 `.venv-docs\Scripts\zensical.exe`; set variables with `$env:NAME = "1"`. The `python`

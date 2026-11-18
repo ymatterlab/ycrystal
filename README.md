@@ -53,29 +53,25 @@ python3.12 -m venv .venv
 .venv/bin/ycrystal --sample perovskite
 ```
 
-Windows 11, with Python 3.12 from python.org and POV-Ray for Windows 3.7 from its
-official installer, in PowerShell:
+Windows 11, in PowerShell, with [Git for Windows](https://git-scm.com/download/win):
 
 ```powershell
-winget install --id Python.Python.3.12 --exact --scope user   # or python.org's installer
-# Then open a NEW PowerShell window (restart VS Code for its terminal), so that py is found.
+winget install --id Git.Git --exact   # if Git is missing; then open a NEW PowerShell window
 git clone https://github.com/ymatterlab/ycrystal.git
 cd ycrystal
-py -3.12 -m venv .venv
-.venv\Scripts\python.exe -m pip install -e . -c constraints.txt
-.venv\Scripts\ycrystal.exe --sample perovskite
+powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1
 ```
 
-`py` is the Python launcher that python.org's installer puts on `PATH`; "py is not
-recognized" means Python 3.12 is not installed or the terminal was opened before it
-was. Ycrystal finds POV-Ray for Windows in its installation folder; it cannot render while
-POV-Ray for Windows is open by hand (see the
-[install guide](docs/guide/install.md#windows)). The commands below are written for
-Linux and macOS; on Windows, run `.venv\Scripts\ycrystal.exe` and write paths with
-backslashes.
+The script installs Python 3.12 and POV-Ray for Windows 3.7 with `winget` where they
+are missing, sets up `.venv`, adds **Ycrystal** to the Start menu (`.ycrystal` projects
+then open with it from File Explorer), and checks the renderer; run it again after
+`git pull` to update. Ycrystal cannot render while POV-Ray for Windows is open by hand.
+The [install guide](docs/guide/install.md#windows) has the details and the same steps
+by hand. The commands below are written for Linux and macOS; on Windows, run
+`.venv\Scripts\ycrystal.exe` and write paths with backslashes.
 
 ```bash
-.venv/bin/ycrystal --install-desktop                                    # menu launcher (Linux)
+.venv/bin/ycrystal --install-desktop                                    # menu entry (Linux, Windows)
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png  # no window
 # Reuse a style (studio, lighting, image size) for another structure, without a window:
 .venv/bin/ycrystal tests/fixtures/MgB2.cif --style examples/grey-studio.ycstyle --render MgB2.png

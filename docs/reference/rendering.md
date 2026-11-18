@@ -120,6 +120,9 @@
         - foreground_held
         - ENGINE_OPEN_MESSAGE
         - keeps_single_instance
+        - EDITOR_QUESTION_MESSAGE
+        - editor_library
+        - editor_question_pending
         - windows_engine_conflict
         - read_log
         - windows_file_version

@@ -48,7 +48,8 @@ Details: [structure files and projects](../FORMATS.md).
 | macOS on a Retina display, Intel Macs, other macOS versions | Unverified (the GUI tests also pass with an emulated 2× display scale) |
 | macOS in CI (GitHub-hosted, no GPU) | Tests that open no window only, on every pull request and push to `main` |
 | Wayland sessions | Unverified (Qt uses XWayland if available) |
-| Windows 11 (x64), Python 3.12 from python.org, POV-Ray for Windows 3.7, 125 % display scale | Verified on one laptop (full suite including the GUI tests, and tested by hand, 18 November 2026); no Start-menu entry or file association |
+| Windows 11 (x64), Python 3.12 from python.org, POV-Ray for Windows 3.7, 125 % display scale | Verified on one laptop (full suite including the GUI tests, and tested by hand, 18 November 2026) |
+| Windows installation script (`scripts\install-windows.ps1`, Windows PowerShell 5.1), Start-menu entry, `.ycrystal` file type | Verified on the same laptop, with Python and POV-Ray already installed: fresh `.venv`, Start-menu entry and project opened from it, renderer check; run by Windows CI on every pull request. Installing Python and POV-Ray through it with `winget` is unverified |
 | Windows in CI (GitHub-hosted, Windows Server 2022) | Tests that open no window, with POV-Ray for Windows 3.7, on every pull request (since 18 November 2026) |
 | Windows 10, Windows on ARM, other Windows display scales | Unverified |
 | Other Linux distributions | Unverified; no packages |

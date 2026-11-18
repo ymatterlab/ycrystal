@@ -65,3 +65,25 @@
         - desktop_entry
         - install_desktop
         - uninstall_desktop
+        - install_menu_entry
+        - uninstall_menu_entry
+        - menu_entry_note
+        - WINDOWS_PROG_ID
+        - CLASSES_KEY
+        - SHORTCUT_NAME
+        - ICON_SIZES
+        - windows_data_folder
+        - windows_launch_command
+        - write_windows_icon
+        - register_project_type
+        - unregister_project_type
+        - install_start_menu
+        - uninstall_start_menu
+
+::: ycrystal.windows_shortcut
+    options:
+      members:
+        - Shortcut
+        - write_shortcut
+        - read_shortcut
+        - programs_folder
