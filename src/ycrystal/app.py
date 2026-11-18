@@ -407,7 +407,8 @@ def main(argv: list[str] | None = None) -> int:
     is rendered). ``--dry-run`` checks everything and renders nothing.
     ``--install-desktop`` / ``--uninstall-desktop`` manage the menu launcher on Linux
     and the Start-menu entry on Windows (see [`ycrystal.desktop`][ycrystal.desktop]); on
-    macOS they print an error and return 1 without writing anything.
+    macOS, and in the packaged Windows program (whose installer manages its entry), they
+    print an error and return 1 without writing anything.
 
     Otherwise a window opens with the ``--sample`` structure. A ``FILE`` argument is
     opened once the event loop runs; if it cannot be read, a message appears and the
@@ -420,12 +421,17 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.install_desktop or args.uninstall_desktop:
         from ycrystal.desktop import (
+            PACKAGED_MENU_MESSAGE,
             desktop_supported,
             install_menu_entry,
+            is_packaged,
             menu_entry_note,
             uninstall_menu_entry,
         )
 
+        if is_packaged():
+            print(f"ERROR: {PACKAGED_MENU_MESSAGE}", file=sys.stderr)
+            return 1
         if not desktop_supported():
             print(
                 "ERROR: --install-desktop and --uninstall-desktop manage the applications "

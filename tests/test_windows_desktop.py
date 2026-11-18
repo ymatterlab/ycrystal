@@ -16,14 +16,18 @@ from ycrystal import desktop
 from ycrystal.app import main
 from ycrystal.desktop import (
     ICON_SIZES,
+    LEGACY_SHORTCUT_NAME,
     SHORTCUT_NAME,
     WINDOWS_PROG_ID,
     install_start_menu,
+    project_type_handler,
     uninstall_start_menu,
     windows_launch_command,
     write_windows_icon,
 )
-from ycrystal.gui.native import WINDOWS_APP_ID
+from ycrystal.gui.native import WINDOWS_APP_ID, WINDOWS_PACKAGED_APP_ID
+
+PACKAGED_PROG_ID = "YMatterLab.Ycrystal.Project"  # packaging/windows/ycrystal.iss
 
 windows_only = pytest.mark.skipif(sys.platform != "win32", reason="Windows shell and registry")
 
@@ -165,3 +169,134 @@ def test_install_desktop_command_on_windows(tmp_path, monkeypatch, capsys, regis
     assert main(["--uninstall-desktop"]) == 0
     assert "Removed" in capsys.readouterr().out
     assert not (tmp_path / "menu" / SHORTCUT_NAME).exists()
+
+
+# ----- coexistence with the packaged Ycrystal (packaging/windows) ---------------------------
+def _packaged_shortcut(path, tmp_path):
+    """Write a shortcut like the Windows installer's: Ycrystal.exe, the packaged id."""
+    from ycrystal.windows_shortcut import write_shortcut
+
+    program = tmp_path / "Programs" / "Ycrystal" / "Ycrystal.exe"
+    program.parent.mkdir(parents=True, exist_ok=True)
+    program.write_bytes(b"MZ")
+    return write_shortcut(path, program, app_id=WINDOWS_PACKAGED_APP_ID)
+
+
+def _register_packaged_type(classes, tmp_path):
+    """Register the file type as the Windows installer does, and make it the default."""
+    import winreg
+
+    command = f'"{tmp_path / "Ycrystal.exe"}" "%1"'
+    for path, name, value in (
+        (rf"{PACKAGED_PROG_ID}\shell\open\command", "", command),
+        (r".ycrystal\OpenWithProgids", PACKAGED_PROG_ID, ""),
+        (".ycrystal", "", PACKAGED_PROG_ID),
+    ):
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{classes}\{path}") as key:
+            winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
+
+
+@windows_only
+def test_source_entry_is_named_apart_from_the_packaged_one(tmp_path, registry_classes):
+    """``Ycrystal.lnk`` belongs to the installer; the source entry has its own name."""
+    from ycrystal.windows_shortcut import read_shortcut
+
+    assert SHORTCUT_NAME == "Ycrystal (development).lnk" and LEGACY_SHORTCUT_NAME == "Ycrystal.lnk"
+    menu = tmp_path / "Programs"
+    packaged = _packaged_shortcut(menu / LEGACY_SHORTCUT_NAME, tmp_path)
+    command = (str(tmp_path / "env" / "pythonw.exe"), "-I -m ycrystal.app")
+    shortcut, _ = install_start_menu(menu, tmp_path / "data", registry_classes, command)
+    assert shortcut.name == "Ycrystal (development).lnk"
+    assert read_shortcut(packaged).app_id == WINDOWS_PACKAGED_APP_ID  # untouched
+    assert read_shortcut(shortcut).app_id == WINDOWS_APP_ID != WINDOWS_PACKAGED_APP_ID
+    uninstall_start_menu(menu, tmp_path / "data", registry_classes)
+    assert not shortcut.exists()
+    assert read_shortcut(packaged).target.endswith("Ycrystal.exe")  # still there
+
+
+@windows_only
+def test_old_source_shortcut_is_replaced_by_the_new_name(tmp_path, registry_classes):
+    """Before the installer existed, the source entry was ``Ycrystal.lnk``."""
+    from ycrystal.windows_shortcut import write_shortcut
+
+    menu = tmp_path / "Programs"
+    program = str(tmp_path / "env" / "pythonw.exe")
+    old = write_shortcut(menu / LEGACY_SHORTCUT_NAME, program, "-I -m ycrystal.app")
+    command = (program, "-I -m ycrystal.app")
+    install_start_menu(menu, tmp_path / "data", registry_classes, command)
+    assert not old.exists() and (menu / SHORTCUT_NAME).is_file()
+    write_shortcut(old, program, "-I -m ycrystal.app")  # an old one left behind again
+    removed = uninstall_start_menu(menu, tmp_path / "data", registry_classes)
+    assert old in removed and not old.exists()
+
+
+@windows_only
+def test_source_entry_leaves_the_packaged_file_type_alone(tmp_path, registry_classes):
+    """The installed program keeps opening .ycrystal files; uninstalling changes nothing."""
+    import winreg
+
+    _register_packaged_type(registry_classes, tmp_path)
+    assert project_type_handler(registry_classes) == PACKAGED_PROG_ID
+    command = (str(tmp_path / "env" / "pythonw.exe"), "-I -m ycrystal.app")
+    install_start_menu(tmp_path / "menu", tmp_path / "data", registry_classes, command)
+    assert _value(rf"{registry_classes}\.ycrystal") == PACKAGED_PROG_ID  # not taken
+    with winreg.OpenKey(
+        winreg.HKEY_CURRENT_USER, rf"{registry_classes}\.ycrystal\OpenWithProgids"
+    ) as key:
+        names = {winreg.EnumValue(key, i)[0] for i in range(winreg.QueryInfoKey(key)[1])}
+    assert names == {PACKAGED_PROG_ID, WINDOWS_PROG_ID}  # both in Open with
+    uninstall_start_menu(tmp_path / "menu", tmp_path / "data", registry_classes)
+    assert _value(rf"{registry_classes}\.ycrystal") == PACKAGED_PROG_ID
+    assert _value(rf"{registry_classes}\.ycrystal\OpenWithProgids", PACKAGED_PROG_ID) == ""
+    assert _value(rf"{registry_classes}\{PACKAGED_PROG_ID}\shell\open\command").endswith('"%1"')
+    with pytest.raises(FileNotFoundError):
+        _value(rf"{registry_classes}\{WINDOWS_PROG_ID}")
+
+
+@windows_only
+def test_source_entry_opens_projects_when_no_other_program_does(tmp_path, registry_classes):
+    """A default naming a file type that no longer exists does not count."""
+    import winreg
+
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{registry_classes}\.ycrystal") as key:
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "Gone.Program")
+    assert project_type_handler(registry_classes) is None
+    command = (str(tmp_path / "env" / "pythonw.exe"), "-I -m ycrystal.app")
+    install_start_menu(tmp_path / "menu", tmp_path / "data", registry_classes, command)
+    assert project_type_handler(registry_classes) == WINDOWS_PROG_ID
+
+
+@windows_only
+def test_application_id_stored_as_bstr_is_read(tmp_path):
+    """Inno Setup stores the id as VT_BSTR (the shell and this module: VT_LPWSTR)."""
+    import ctypes
+
+    from ycrystal import windows_shortcut as ws
+
+    path = ws.write_shortcut(tmp_path / "Installer.lnk", tmp_path / "Ycrystal.exe")
+    oleaut32 = ctypes.WinDLL("oleaut32")
+    oleaut32.SysAllocString.restype = ctypes.c_void_p
+    oleaut32.SysAllocString.argtypes = [ctypes.c_wchar_p]
+    oleaut32.SysFreeString.argtypes = [ctypes.c_void_p]
+    text = oleaut32.SysAllocString(WINDOWS_PACKAGED_APP_ID)
+    try:
+        with ws._shell_link() as (link, _):
+            persist = ws._query(link, ws._IID_PERSIST_FILE)
+            ws._method(persist, ws._PERSIST_LOAD, ctypes.c_wchar_p, ctypes.c_uint32)(str(path), 2)
+            store = ws._query(link, ws._IID_PROPERTY_STORE)
+            variant = ws._PROPVARIANT(vt=8)  # VT_BSTR
+            variant.pointer = text
+            set_value = ws._method(
+                store,
+                ws._STORE_SET_VALUE,
+                ctypes.POINTER(ws._PROPERTYKEY),
+                ctypes.POINTER(ws._PROPVARIANT),
+            )
+            set_value(ctypes.byref(ws._app_id_key()), ctypes.byref(variant))
+            ws._method(store, ws._STORE_COMMIT)()
+            ws._release(store)
+            ws._method(persist, ws._PERSIST_SAVE, ctypes.c_wchar_p, ctypes.c_int)(str(path), 1)
+            ws._release(persist)
+    finally:
+        oleaut32.SysFreeString(text)
+    assert ws.read_shortcut(path).app_id == WINDOWS_PACKAGED_APP_ID

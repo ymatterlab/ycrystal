@@ -9,6 +9,9 @@
 | macOS: the Dock and the menu bar show “Python” | Expected: Ycrystal runs from a source checkout, not from an application bundle. Start it with `.venv/bin/ycrystal`; there is no launcher for the Applications folder yet. |
 | Windows: “The term 'py' is not recognized” | Install Python 3.12 from python.org (or `winget install --id Python.Python.3.12 --exact --scope user`), then open a new PowerShell window; a terminal opened before the installation, also VS Code's until VS Code restarts, keeps the old `PATH`. `py --list` shows the installed versions. After `py -3.12 -m venv .venv`, run `.venv\Scripts\python.exe` and `.venv\Scripts\ycrystal.exe`, which need nothing on `PATH`. |
 | Windows: `python` opens the Microsoft Store | That `python` is a Store alias, not an installed Python. Use `py -3.12` (above) or the virtual environment's `.venv\Scripts\python.exe`. |
+| Windows: the installer shows “Windows protected your PC” | The installer is not signed yet, so SmartScreen does not know it. Choose *More info*, then *Run anyway*, if it came from Ycrystal's Releases page or workflow. |
+| Windows: two Ycrystal entries in the Start menu | **Ycrystal** is the installer version, **Ycrystal (development)** the developer installation from a source folder; they are independent (see [both installations](install.md#both-installations-on-one-computer)). Remove the development entry with `.venv\Scripts\ycrystal.exe --uninstall-desktop` in that folder, the installer version in *Settings ▸ Apps*. |
+| Windows, installer version: `Ycrystal.exe --render …` prints nothing | `Ycrystal.exe` is the window program, without a console. Use `ycrystal-cli.exe` in the same folder for the command line. Its `--install-desktop` reports that the installer manages the Start menu: that option is for installations from source. |
 | Windows: “running scripts is disabled on this system” | Windows' default policy refuses PowerShell scripts. Start the installation script as the [install guide](install.md#windows) writes it, `powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1`, which allows it for that one run and changes no setting. |
 | Windows: the installation script ends with “Not ready yet” | Each line says what is missing and what to do; fix it and run the script again (it repeats only what is needed). If `pip` failed with a broken `.venv`, delete the `.venv` folder first. |
 | No display on a server | The GUI needs a display and OpenGL. Use display-independent Python examples or `--check-renderer`; GUI tests can use Xvfb as described in the contributor guide. |
@@ -37,8 +40,9 @@ that every scene or output directory will work.
 
 ## Menu launcher
 
-The menu entry exists on Linux (a menu launcher) and Windows (a Start-menu shortcut);
-on macOS the two options print an error and write nothing.
+The menu entry of `--install-desktop` exists on Linux (a menu launcher) and Windows (a
+Start-menu shortcut, **Ycrystal (development)**); on macOS, and in the Windows installer
+version, the two options print an error and write nothing.
 
 - *Windows: Ycrystal in the Start menu does not start, or a `.ycrystal` file does not
   open*: started from the Start menu, Ycrystal has no console that could show an error.

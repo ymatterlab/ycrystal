@@ -20,13 +20,21 @@ refreshed when ``update-desktop-database`` and ``update-mime-database`` exist.
 
 On Windows ([`install_start_menu`][ycrystal.desktop.install_start_menu]):
 
-- ``Ycrystal.lnk`` in the user's Start-menu folder of programs: it starts the
-  environment's ``pythonw.exe`` (no console window) with ``-m ycrystal.app`` and carries
-  Ycrystal's application id, so that the running window can be pinned to the taskbar;
+- ``Ycrystal (development).lnk`` in the user's Start-menu folder of programs: it starts
+  the environment's ``pythonw.exe`` (no console window) with ``-m ycrystal.app`` and
+  carries the application id of installations from source, so that the running window
+  can be pinned to the taskbar;
 - ``ycrystal.ico`` in ``%LOCALAPPDATA%\Y-Matter Lab\Ycrystal``, drawn from the SVG icon;
 - the file type ``Ycrystal.Project`` for ``*.ycrystal`` projects in
   ``HKEY_CURRENT_USER\Software\Classes``, so that projects open in Ycrystal from File
   Explorer.
+
+These belong to the installation from source only. The packaged Ycrystal (the Windows
+installer, ``packaging/windows``) has its own shortcut ``Ycrystal``, application id,
+and file type, written and removed by its installer; ``--install-desktop`` refuses to
+run in it ([`is_packaged`][ycrystal.desktop.is_packaged]). Each side removes only what
+it wrote, and the source installation never takes the opening of ``.ycrystal`` files
+from another program, so either can be uninstalled without harming the other.
 
 Examples
 --------
@@ -73,6 +81,28 @@ def desktop_supported(platform: str = sys.platform) -> bool:
     installed there yet).
     """
     return platform != "darwin"
+
+
+def is_packaged(frozen: bool | None = None) -> bool:
+    """Return whether this is the packaged Ycrystal (built by PyInstaller), not a source install.
+
+    Parameters
+    ----------
+    frozen
+        The answer to give; ``None`` asks the running program (``sys.frozen``, set by
+        PyInstaller).
+    """
+    if frozen is None:
+        frozen = bool(getattr(sys, "frozen", False))
+    return frozen
+
+
+PACKAGED_MENU_MESSAGE = (
+    "This is the installed Ycrystal: its installer manages its Start-menu entry and the "
+    ".ycrystal file type, and its uninstaller (Settings > Apps) removes them. "
+    "--install-desktop and --uninstall-desktop apply to installations from source."
+)
+"""Explanation printed when ``--install-desktop`` is run in the packaged program."""
 
 
 def data_home() -> Path:
@@ -212,13 +242,29 @@ def uninstall_desktop(base: Path | None = None) -> list[Path]:
 # ----- Windows: Start menu, icon, and project file type --------------------------------------
 
 WINDOWS_PROG_ID = "Ycrystal.Project"
-"""Name of the file type of ``.ycrystal`` projects in the Windows registry."""
+"""Name of the file type of ``.ycrystal`` projects in the Windows registry (source install).
+
+The packaged Ycrystal registers its own, ``YMatterLab.Ycrystal.Project``.
+"""
 
 CLASSES_KEY = r"Software\Classes"
 """Registry key, under ``HKEY_CURRENT_USER``, of the current user's file types."""
 
-SHORTCUT_NAME = "Ycrystal.lnk"
-"""File name of the Start-menu shortcut."""
+SHORTCUT_NAME = "Ycrystal (development).lnk"
+"""File name of the Start-menu shortcut of an installation from source.
+
+``Ycrystal.lnk`` is the packaged program's; the source installation does not use it.
+"""
+
+LEGACY_SHORTCUT_NAME = "Ycrystal.lnk"
+"""File name the source installation's shortcut had before the packaged installer existed.
+
+[`install_start_menu`][ycrystal.desktop.install_start_menu] and
+[`uninstall_start_menu`][ycrystal.desktop.uninstall_start_menu] remove such a shortcut
+only if it starts Python with ``-m ycrystal.app``
+([`is_source_shortcut`][ycrystal.desktop.is_source_shortcut]): the packaged program's
+shortcut of the same name is left alone.
+"""
 
 ICON_SIZES = (16, 20, 24, 32, 40, 48, 64, 256)
 """Pixel sizes drawn into the Windows icon file (taskbar, Start menu, File Explorer)."""
@@ -308,14 +354,56 @@ def _notify_file_types() -> None:
     ctypes.WinDLL("shell32").SHChangeNotify(0x08000000, 0, None, None)  # SHCNE_ASSOCCHANGED
 
 
-def register_project_type(command_line: str, icon: Path, classes: str | None = None) -> None:
+def _class_view(classes: str) -> tuple[int, str]:
+    r"""Return where File Explorer looks up file types: ``HKEY_CLASSES_ROOT``.
+
+    That view merges the user's types (``HKEY_CURRENT_USER\Software\Classes``) with the
+    computer's, so a type that another installation registered for all users counts.
+    Tests with their own `classes` key read that key instead.
+    """
+    import winreg
+
+    if classes == CLASSES_KEY:
+        return winreg.HKEY_CLASSES_ROOT, ""
+    return winreg.HKEY_CURRENT_USER, f"{classes}\\"
+
+
+def project_type_handler(classes: str | None = None) -> str | None:
+    """Return the file type that ``.ycrystal`` files open with, if it is registered.
+
+    The default value of ``.ycrystal``, as File Explorer sees it; ``None`` if there is
+    none, or if it names a file type that no longer exists.
+    """
+    import winreg
+
+    root, prefix = _class_view(classes or CLASSES_KEY)
+    try:
+        with winreg.OpenKey(root, f"{prefix}.ycrystal") as key:
+            value, _ = winreg.QueryValueEx(key, "")
+        if not isinstance(value, str) or not value:
+            return None
+        with winreg.OpenKey(root, f"{prefix}{value}"):
+            return value
+    except OSError:
+        return None
+
+
+def register_project_type(command_line: str, icon: Path, classes: str | None = None) -> bool:
     r"""Register ``.ycrystal`` projects for the current user, to open with `command_line`.
 
     Writes the file type [`WINDOWS_PROG_ID`][ycrystal.desktop.WINDOWS_PROG_ID] (name,
-    icon, and ``shell\open\command``) and points ``.ycrystal`` to it, under
-    ``HKEY_CURRENT_USER\<classes>`` (``None``:
-    [`CLASSES_KEY`][ycrystal.desktop.CLASSES_KEY]). An application that the user chose
-    for these files in Windows' *Open with* dialog stays their choice.
+    icon, and ``shell\open\command``) and adds it to the *Open with* list of
+    ``.ycrystal``, under ``HKEY_CURRENT_USER\<classes>`` (``None``:
+    [`CLASSES_KEY`][ycrystal.desktop.CLASSES_KEY]). It becomes the program that opens
+    ``.ycrystal`` files only if no other one does
+    ([`project_type_handler`][ycrystal.desktop.project_type_handler]): an installed
+    packaged Ycrystal keeps opening them. An application that the user chose in Windows'
+    *Open with* dialog also stays their choice.
+
+    Returns
+    -------
+    bool
+        Whether ``.ycrystal`` files now open with this registration.
     """
     import winreg
 
@@ -325,12 +413,16 @@ def register_project_type(command_line: str, icon: Path, classes: str | None = N
         with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{classes}\{path}") as key:
             winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
 
+    handler = project_type_handler(classes)
     write(WINDOWS_PROG_ID, "", "Ycrystal project")
     write(rf"{WINDOWS_PROG_ID}\DefaultIcon", "", f"{icon},0")
     write(rf"{WINDOWS_PROG_ID}\shell\open\command", "", command_line)
-    write(".ycrystal", "", WINDOWS_PROG_ID)
+    owner = handler in (None, WINDOWS_PROG_ID)
+    if owner:
+        write(".ycrystal", "", WINDOWS_PROG_ID)
     write(r".ycrystal\OpenWithProgids", WINDOWS_PROG_ID, "")
     _notify_file_types()
+    return owner
 
 
 def _delete_key_tree(path: str) -> bool:
@@ -422,24 +514,49 @@ def install_start_menu(
     Returns
     -------
     list of pathlib.Path
-        The shortcut and the icon file. Existing ones are replaced.
+        The shortcut and the icon file. Existing ones are replaced. A shortcut of the
+        old name ``Ycrystal.lnk`` that an installation from source wrote is removed
+        ([`LEGACY_SHORTCUT_NAME`][ycrystal.desktop.LEGACY_SHORTCUT_NAME]).
     """
     from ycrystal.gui.native import WINDOWS_APP_ID
     from ycrystal.windows_shortcut import programs_folder, write_shortcut
 
     program, arguments = command or windows_launch_command()
+    menu = folder or programs_folder()
     icon = write_windows_icon((data or windows_data_folder()) / f"{DESKTOP_ID}.ico")
     shortcut = write_shortcut(
-        (folder or programs_folder()) / SHORTCUT_NAME,
+        menu / SHORTCUT_NAME,
         program,
         arguments,
         working_directory=Path.home(),
         icon=icon,
-        description="Prepare crystal-structure figures and render them with POV-Ray",
+        description="Ycrystal from its source folder (developer installation)",
         app_id=WINDOWS_APP_ID,
     )
+    legacy = menu / LEGACY_SHORTCUT_NAME
+    if is_source_shortcut(legacy):
+        legacy.unlink()
     register_project_type(f'"{program}" {arguments} "%1"', icon, classes)
     return [shortcut, icon]
+
+
+def is_source_shortcut(path: Path) -> bool:
+    """Return whether a shortcut starts Ycrystal from source (Python with ``-m ycrystal.app``).
+
+    Such shortcuts are the ones ``--install-desktop`` writes; the packaged program's
+    shortcut starts ``Ycrystal.exe`` and is never one of them. A missing or unreadable
+    file is not one either.
+    """
+    from ycrystal.windows_shortcut import read_shortcut
+
+    if not path.is_file():
+        return False
+    try:
+        shortcut = read_shortcut(path)
+    except OSError:
+        return False
+    program = Path(shortcut.target.replace("\\", "/")).name.lower()
+    return program in ("python.exe", "pythonw.exe") and "-m ycrystal.app" in shortcut.arguments
 
 
 def uninstall_start_menu(
@@ -447,21 +564,29 @@ def uninstall_start_menu(
 ) -> list[Path]:
     """Remove what [`install_start_menu`][ycrystal.desktop.install_start_menu] added.
 
+    Shortcuts are removed only if they start Ycrystal from source
+    ([`is_source_shortcut`][ycrystal.desktop.is_source_shortcut]), and only this
+    installation's file type is removed
+    ([`unregister_project_type`][ycrystal.desktop.unregister_project_type]): a packaged
+    Ycrystal stays intact.
+
     Returns
     -------
     list of pathlib.Path
-        The files that existed and were removed (the file type is removed too).
+        The files that existed and were removed.
     """
     from ycrystal.windows_shortcut import programs_folder
 
+    menu = folder or programs_folder()
     removed = []
-    for path in (
-        (folder or programs_folder()) / SHORTCUT_NAME,
-        (data or windows_data_folder()) / f"{DESKTOP_ID}.ico",
-    ):
-        if path.is_file():
+    for path in (menu / SHORTCUT_NAME, menu / LEGACY_SHORTCUT_NAME):
+        if is_source_shortcut(path):
             path.unlink()
             removed.append(path)
+    icon = (data or windows_data_folder()) / f"{DESKTOP_ID}.ico"
+    if icon.is_file():
+        icon.unlink()
+        removed.append(icon)
     unregister_project_type(classes)
     return removed
 
@@ -498,7 +623,8 @@ def menu_entry_note(platform: str | None = None) -> str:
     """
     if (platform or sys.platform) == "win32":
         return (
-            "Ycrystal is now in the Start menu, and .ycrystal projects open with it from "
-            "File Explorer."
+            "Ycrystal (development) is now in the Start menu, and .ycrystal projects open "
+            "with it from File Explorer, unless an installed Ycrystal or another program "
+            "already opens them (then it is in their Open with menu)."
         )
     return "Ycrystal is now in the applications menu (Science)."

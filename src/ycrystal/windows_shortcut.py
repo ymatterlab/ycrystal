@@ -27,7 +27,7 @@ _IID_PROPERTY_STORE = "886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"
 _PKEY_APP_ID = ("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3", 5)  # System.AppUserModel.ID
 _FOLDERID_PROGRAMS = "A77F5D77-2E2B-44C3-A6A2-ABA601054A51"  # the user's Start menu
 
-_VT_LPWSTR = 31
+_VT_BSTR, _VT_LPWSTR = 8, 31
 _TEXT_SIZE = 1024  # INFOTIPSIZE: the longest text a shortcut stores
 
 # Positions in the method tables (after IUnknown's QueryInterface, AddRef, Release).
@@ -270,7 +270,9 @@ def read_shortcut(path: str | Path) -> Shortcut:
                 store, _STORE_GET_VALUE, ctypes.POINTER(_PROPERTYKEY), ctypes.POINTER(_PROPVARIANT)
             )(ctypes.byref(_app_id_key()), ctypes.byref(variant))
             app_id = None
-            if variant.vt == _VT_LPWSTR and variant.pointer:
+            # Written as VT_LPWSTR here and by the shell, as VT_BSTR by Inno Setup; both
+            # point to a wide-character string.
+            if variant.vt in (_VT_LPWSTR, _VT_BSTR) and variant.pointer:
                 app_id = ctypes.wstring_at(variant.pointer)
             ole32.PropVariantClear(ctypes.byref(variant))
         finally:

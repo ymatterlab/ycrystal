@@ -55,12 +55,27 @@ The Python interface may still change before version 1.0.
 
 ## Install
 
+### Windows: the installer (recommended)
+
+Download `Ycrystal-<version>-windows-x64-setup.exe` from the
+[Releases page](https://github.com/ymatterlab/ycrystal/releases), run it, and start
+**Ycrystal** from the Start menu. It needs no Python, Git, or PowerShell, and no
+administrator rights. Ycrystal renders with POV-Ray for Windows 3.7, installed
+separately (the installer says so if it is missing). The installer is not signed yet:
+if Windows shows "Windows protected your PC", choose *More info*, then *Run anyway*.
+The first release with the installer will be the next one after 0.3.0; until then, the
+installer of the newest source is the artifact of the latest
+[*Windows installer* workflow run](https://github.com/ymatterlab/ycrystal/actions/workflows/windows-installer.yml)
+(GitHub account needed). Details: [install guide](docs/guide/install.md#windows).
+
+### From source: Linux, macOS, and Windows for developers
+
 You need Python 3.12 or newer (3.12, 3.13, and 3.14 are tested on Linux and Windows;
 3.12 and 3.13 on macOS), and POV-Ray 3.7 for rendering images (the window and `.pov`
 export work without it). Git is optional. Ycrystal is installed into a folder `.venv`
 inside the Ycrystal folder.
 
-### Get the code
+#### Get the code
 
 With Git, which makes updating easy (to install Git: `sudo apt install git` on Linux,
 `xcode-select --install` on macOS, and on Windows see below):
@@ -89,7 +104,7 @@ Expand-Archive ycrystal.zip . ; cd ycrystal-main
 
 Then follow your system, in that folder.
 
-### Linux (Mint 22 / Ubuntu 24.04)
+#### Linux (Mint 22 / Ubuntu 24.04)
 
 ```bash
 sudo apt install povray povray-includes libxcb-cursor0 python3.12-venv
@@ -102,7 +117,7 @@ Use the system Python (`/usr/bin/python3`), not Conda's: Conda's libraries can s
 3D view from starting. To add Ycrystal to the applications menu, run
 `.venv/bin/ycrystal --install-desktop`.
 
-### macOS (15, Apple silicon)
+#### macOS (15, Apple silicon)
 
 With [Homebrew](https://brew.sh/):
 
@@ -113,21 +128,27 @@ python3.12 -m venv .venv
 .venv/bin/ycrystal --sample perovskite   # opens the window with a sample structure
 ```
 
-### Windows 11
+#### Windows 11 (developer installation)
 
-In PowerShell, in the Ycrystal folder (for Git: `winget install --id Git.Git --exact`,
-then open a new PowerShell window before cloning):
+For working on Ycrystal or running its newest source; other users take
+[the installer](#windows-the-installer-recommended). In PowerShell, in the Ycrystal
+folder (for Git: `winget install --id Git.Git --exact`, then open a new PowerShell
+window before cloning):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1
 ```
 
 The script installs Python and POV-Ray for Windows if they are missing, sets up
-Ycrystal, and adds it to the Start menu. Then start **Ycrystal** from the Start menu.
+Ycrystal, and adds **Ycrystal (development)** to the Start menu. It can live next to
+the installed Ycrystal: each has its own Start-menu entry, and uninstalling one leaves
+the other working.
 
-### Check and update
+#### Check and update
 
-Check that rendering works (on Windows: `.venv\Scripts\ycrystal.exe --check-renderer`):
+For installations from source, check that rendering works (on Windows:
+`.venv\Scripts\ycrystal.exe --check-renderer`; in the installer version: *Render ▸
+Check Renderer*):
 
 ```bash
 .venv/bin/ycrystal --check-renderer

@@ -52,6 +52,7 @@ Details: [structure files and projects](../FORMATS.md).
 | Wayland sessions | Unverified (Qt uses XWayland if available) |
 | Windows 11 (x64), Python 3.12, 3.13, or 3.14 from python.org, POV-Ray for Windows 3.7, 125 % display scale | Verified on one laptop (full suite including the GUI tests on each of the three versions; tested by hand with 3.12; 18 November 2026) |
 | Windows installation script (`scripts\install-windows.ps1`, Windows PowerShell 5.1), Start-menu entry, `.ycrystal` file type | Verified on the same laptop, with Python and POV-Ray already installed: fresh `.venv`, Start-menu entry and project opened from it, renderer check; run by Windows CI on every pull request. Installing Python and POV-Ray through it with `winget` is unverified |
+| Windows installer (`Ycrystal-<version>-windows-x64-setup.exe`, PyInstaller + Inno Setup), next to a developer installation | Built and installed per user on the same laptop (18 November 2026): packaged command line and window, Start-menu entry and `.ycrystal` file type, and the coexistence check (27 checks) passed. Not yet clicked through by a person, installed for all users, or tried on another computer; not signed |
 | Windows in CI (GitHub-hosted, Windows Server 2022) | Tests that open no window, with POV-Ray for Windows 3.7, on every pull request (since 18 November 2026) |
 | Windows 10, Windows on ARM, other Windows display scales | Unverified |
 | Other Linux distributions | Unverified; no packages |

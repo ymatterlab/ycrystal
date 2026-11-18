@@ -74,6 +74,18 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   user has open is reported with an explanation instead of POV-Ray's error dialog. The
   window has its own taskbar button and icon. Tested on one Windows 11 laptop (all
   automated tests, and by hand); Windows CI renders with POV-Ray for Windows too.
+- **Graphical Windows installer.** `Ycrystal-<version>-windows-x64-setup.exe` installs
+  Ycrystal without Python, Git, or PowerShell (per user without administrator rights, or
+  for all users): a Start-menu entry **Ycrystal**, the `.ycrystal` file type, the window
+  program `Ycrystal.exe` and the command line `ycrystal-cli.exe`. It is the recommended
+  Windows installation; POV-Ray for Windows is still installed separately, and the
+  installer says so when it is missing. Built with PyInstaller and Inno Setup
+  (`packaging/windows`); not signed yet. The PowerShell installation from source stays
+  the developer installation. The two coexist: the developer entry is now called
+  **Ycrystal (development)** (an older entry named **Ycrystal** is renamed when the
+  script runs again), each has its own application id and file type, the developer
+  installation no longer takes the opening of `.ycrystal` files from another program,
+  and each uninstallation removes only its own parts.
 - **Windows installation in one command.** After `git clone`,
   `powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1` installs Python
   3.12 and POV-Ray for Windows 3.7 with `winget` where they are missing (the latter is
