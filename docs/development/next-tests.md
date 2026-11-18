@@ -2,7 +2,8 @@
 
 An audit, on 17 November 2026, of what has been verified where, and which tests should
 run next on the Mac mini, on the Linux laptop by hand, and on a computer that has never
-had Ycrystal. It is a plan, not a record: results go to
+had Ycrystal. Test counts updated on 18 November 2026, after the Windows work (PRs #35
+and #36) added tests. It is a plan, not a record: results go to
 [PROGRESS.md](../PROGRESS.md), [HANDOFF.md](../HANDOFF.md), and
 [validation results](validation.md#results-files) once a test has actually run.
 
@@ -10,8 +11,10 @@ had Ycrystal. It is a plan, not a record: results go to
 
 | Evidence | Where | Covers |
 | --- | --- | --- |
-| CI, Ubuntu 24.04 (every pull request) | Hosted runner, real POV-Ray 3.7 (apt), virtual display (Xvfb) | All 881 tests, GUI tests included, with `YCRYSTAL_REQUIRE_INTEGRATION=1` (nothing may be skipped) |
-| CI, macOS 15 arm64 (every pull request) | Hosted runner, real POV-Ray 3.7 (Homebrew) | 709 tests without windows, among them 95 of the 104 POV-Ray tests: validation images, snapshot replays on the same runner, the gallery script at small size. The other 9 POV-Ray tests (preview and release workflow) need a window and run only on Ubuntu and on the Mac by hand |
+| CI, Ubuntu 24.04 (every pull request) | Hosted runner, real POV-Ray 3.7 (apt), virtual display (Xvfb) | All 901 tests, GUI tests included, with `YCRYSTAL_REQUIRE_INTEGRATION=1`: 900 passed, 1 skipped (the test of an installed POV-Ray for Windows; PR #36's run, 18 Nov 2026) |
+| CI, Windows Server 2022 (every pull request, since PR #36) | Hosted runner, POV-Ray for Windows 3.7 | Tests without windows: 727 passed, 2 skipped (POSIX-only) |
+| Windows 11 laptop (18 Nov 2026) | PROGRESS.md, `docs/development/windows-port.md` | Full suite with real windows, 898 passed, 3 skipped by design; the user's hand test |
+| CI, macOS 15 arm64 (every pull request) | Hosted runner, real POV-Ray 3.7 (Homebrew) | Tests without windows (728 passed, 1 skipped on 18 Nov 2026; 709 when this audit was written), among them 95 of the 104 POV-Ray tests: validation images, snapshot replays on the same runner, the gallery script at small size. The other 9 POV-Ray tests (preview and release workflow) need a window and run only on Ubuntu and on the Mac by hand |
 | Linux laptop runs (Linux Mint 22.1) | `docs/development/validation.md`, PROGRESS.md | Full suite without GUI tests (709 passed); benchmark quick set; same-machine replay check (9 of 9 identical); full-size gallery (7 of 7 identical) |
 | Mac mini runs (macOS 15.8, Apple silicon) | PROGRESS.md, up to FR-BATCH-01 (PR #31) | Full suite with real windows, 790 passed at that time |
 | The user's hand tests | HANDOFF.md | FR-VECTOR-01, FR-EXPORT-01, FR-REPRO-01 reported working |
@@ -61,8 +64,9 @@ for a few minutes.
 YCRYSTAL_REQUIRE_INTEGRATION=1 .venv/bin/python -m pytest -q -rf
 ```
 
-Expected: 881 passed, none skipped. Record the count, the time, and any failure by
-name. An intermittent failure seen once in PR #30 was never captured, so note the
+Expected (18 November 2026): 900 passed, 1 skipped — the skipped one checks an
+installed POV-Ray for Windows and runs only on Windows. Record the count, the time,
+and any failure by name. An intermittent failure seen once in PR #30 was never captured, so note the
 test name if one appears and does not reproduce.
 
 **1b. Is the benchmark's memory figure right on macOS?** On macOS `ru_maxrss` is in

@@ -91,6 +91,13 @@ its user files: they include the standard include files, which go to
 installation folder by itself (POV-Ray for Windows has no `povray` command and is not on
 `PATH`); **Render ▸ Set POV-Ray Executable…** or `YCRYSTAL_POVRAY` choose another one.
 
+After installing it, **start POV-Ray for Windows once from the Start menu**. It asks
+whether to download its editor ("Could not load internal editor – download it?"): the
+AGPL installer does not include it. Either install the editor from the page that *Yes*
+opens, or answer *No* and untick *Options ▸ Other Settings ▸ Use Editor*. Otherwise it
+asks at every start, and each Ycrystal render waits for the answer. Then close
+POV-Ray.
+
 POV-Ray for Windows is a window program. For each preview and render, Ycrystal starts
 it minimised (its button appears on the taskbar while it runs) and it closes by itself.
 It cannot render for Ycrystal while you have POV-Ray for Windows open yourself: close it

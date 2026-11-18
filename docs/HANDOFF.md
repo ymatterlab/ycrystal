@@ -18,9 +18,10 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 - **Windows support** (requested by the user on 17 November 2026), branch
   `feature/windows`, PR #35: completed on a Windows 11 laptop on 18 November 2026. All
   automated tests pass there with POV-Ray for Windows, and the user tested Ycrystal by
-  hand and reports that it works well. The user asked to merge PR #35 once CI passes.
-  Still open: how Windows CI gets POV-Ray (see
-  [docs/development/windows-port.md](development/windows-port.md#still-open)).
+  hand and reports that it works well. PR #35 was merged after CI passed (merge
+  commit `ae01f43`). PR #36 (branch `ci/windows-povray`) makes Windows CI render with
+  the real POV-Ray for Windows, installed from the `ci-assets` release (see
+  [docs/development/windows-port.md](development/windows-port.md#pov-ray-for-windows-on-ci)).
   Merged before: FR-STYLE-CLI-01 (PR #28), FR-STYLE-MAP-01 (PR #29), FR-CAMERA-01
   (PR #30), FR-BATCH-01 (PR #31), FR-REPRO-01 (PR #32; the user tested it by hand),
   FR-VALIDATION-01 (PR #33), and FR-GALLERY-01 with the next-tests audit (PR #34,
@@ -46,7 +47,8 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | FR-REPRO-01 `--save-project FIGURE.ycrystal`, manifest `save_projects`, provenance records | PR #32 |
 | unreleased | FR-VALIDATION-01 validation tests, `scripts/benchmark_render.py`, `scripts/replay_check.py`, evidence report (no application change) | PR #33 |
 | unreleased | FR-GALLERY-01 publication gallery (`examples/publication/`, `scripts/make_gallery.py`), gallery and manuscript-figure pages (no application change) | PR #34 |
-| unreleased | Maintenance: Windows 11 support with POV-Ray for Windows 3.7 (no FR ID) | PR #35 |
+| unreleased | Maintenance: Windows 11 support with POV-Ray for Windows 3.7 (no FR ID) | PR #35 (`ae01f43`) |
+| unreleased | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
@@ -65,7 +67,10 @@ Known limitations and unresolved issues:
   is no Start-menu entry or `.ycrystal` file association. POV-Ray for Windows renders
   one copy at a time (Ycrystal reports a copy the user has open), reports no progress
   percentage, and takes the keyboard focus during renders started from a terminal.
-  Windows CI runs without POV-Ray. Rendering with a `%TEMP%` path outside a legacy
+  POV-Ray for Windows shows its About box at its second start and then every 14 days,
+  and asks about its editor at every start unless the editor is installed or turned
+  off; renders wait until the user answers (documented; Ycrystal changes no POV-Ray
+  setting). Rendering with a `%TEMP%` path outside a legacy
   code page (for example a Chinese user name on a Western-European Windows) is
   unverified.
 - FR-EXPORT-01: the PDF holds the POV-Ray raster image (not vector graphics); PDF page
@@ -112,9 +117,22 @@ Known limitations and unresolved issues:
 - **Then:** the user tested Ycrystal by hand on the laptop ("it works well") and asked
   for a documentation audit (Windows commands name `ycrystal.exe` and `python.exe`; the
   `py` launcher needs a terminal opened after Python's installation), a commit, and the
-  merge of PR #35 once CI passes.
-- **Not done:** nothing run on Linux or macOS in this session (their code paths are
-  unchanged; CI of PR #35 checks them); the CI decision for POV-Ray on Windows.
+  merge of PR #35 once CI passes. CI passed (Ubuntu, macOS, Windows, docs,
+  pre-commit) after one test fix (`metals.inc` exists in Ubuntu's system include
+  folder); merged at `ae01f43`.
+- **Then (PR #36):** the user chose to keep the official POV-Ray for Windows installer
+  as an asset of a `ci-assets` release (povray.org blocks CI downloads). Screenshots
+  taken by the probe on the runner showed two POV-Ray dialogs that wait even with
+  `/EXIT` (the editor question; the About box from the second start on); the job now
+  pre-sets `UseEditors=0` and `ItsAboutTime`. The Windows job is no longer
+  experimental: 727 passed, 2 skipped (POSIX-only), with
+  `YCRYSTAL_REQUIRE_INTEGRATION=1`.
+- **State at the end:** PR #36's CI passed on its last commit `3535387` (run
+  44255680680: Ubuntu 900 passed, 1 skipped; macOS 728 passed, 1 skipped; Windows 727
+  passed, 2 skipped; docs and pre-commit pass). It was not yet merged when the session
+  ended; the user returns to the Mac mini next.
+- **Not done:** nothing run on Linux or macOS on a real machine in this session (CI ran
+  them); GUI tests on Windows CI (run them on a Windows computer).
 
 Earlier, on 17 November 2026:
 
@@ -170,29 +188,35 @@ hands-on runs by a person.
 
 ## Next recommended steps
 
-1. Windows (PR #35, to be merged once CI passes, as the user asked): decide how
-   Windows CI gets POV-Ray (options in
-   [docs/development/windows-port.md](development/windows-port.md#still-open)); a
-   fuller hands-on check on a second Windows computer when one is available.
-2. Run the tests of [docs/development/next-tests.md](development/next-tests.md)
-   (audited 17 November 2026), in its order:
-   - on the Mac mini: the full suite with real windows (881 expected), the memory
+1. On the Mac mini, first: `git checkout main && git pull`, then check whether PR #36
+   is merged (`gh pr view 36`); if not, merge it when the user asks (its CI passed).
+   Reinstall into the existing `.venv` (`.venv/bin/python -m pip install -e ".[dev]" -c
+   constraints.txt`; no dependency changed) and run the full suite with real windows
+   (900 passed, 1 skipped expected). The Windows changes keep `povray` on macOS on the
+   same `QProcess` path as before, but nothing of them has run on a real Mac yet.
+2. Windows, later: a fuller hands-on check on a second Windows computer when one is
+   available; decide whether Ycrystal should notice POV-Ray for Windows' About box (see
+   [windows-port.md](development/windows-port.md#still-open)).
+3. Run the tests of [docs/development/next-tests.md](development/next-tests.md)
+   (audited 17 November 2026, counts updated 18 November), in its order:
+   - on the Mac mini: the full suite with real windows (900 passed and 1 skipped
+     expected, as on Ubuntu CI for PR #36), the memory
      check, the benchmark, replays of the Linux reference sets, and the gallery;
    - by hand on the Mac and the laptop;
    - a clean-computer dry run.
 
    Record results only as they are obtained.
-3. For the manuscript: draw the workflow schematic and take the window screenshot
+4. For the manuscript: draw the workflow schematic and take the window screenshot
    (Figure 1), make the plots of Figure 4 from the recorded data, and have two
    independent evaluators work through the checklist.
-4. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
+5. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
    checks so far), for example with `tests/fixtures/BaZrO3.cif` and
    `examples/grey-studio.ycstyle` as in the examples guide; and the View along buttons
    in every order (the camera fix of PR #30).
-5. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
+6. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
    1 failure that did not reproduce (PR #30's CI and three later full runs passed); its
    name was not captured.
-6. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
+7. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
    check its size there.
 
 Every request of the private plan's section 15 is now merged or in review. Nothing
@@ -236,8 +260,8 @@ user's report for PR #22.
 | --- | --- | --- | --- |
 | Install from source with `constraints.txt` | Verified on `main` (CI, PR #19) | Verified 16 Nov 2026 | Verified 18 Nov 2026 (Windows 11 laptop, Python 3.12.10 from python.org); also CI (PR #35) |
 | Command line: `--version`, `--check-renderer`, `--render`, `--export-pov` | Verified (PR #22, user report) | Verified 16 Nov 2026 | Verified 18 Nov 2026 (POV-Ray for Windows 3.7.0) |
-| POV-Ray discovery and include files | Verified (PR #22, user report) | Verified 16 Nov 2026 (Homebrew) | Verified 18 Nov 2026: `pvengine64.exe` found outside `PATH` (registry, Program Files), include files in `Documents\POV-Ray\v3.7` (registry `DocPath`); CI cannot install it (Cloudflare) |
-| Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified (PR #22, user report) | Verified 16 Nov 2026 | Verified 18 Nov 2026 with POV-Ray for Windows (full suite: 898 passed, 3 skipped by design); CI without POV-Ray |
+| POV-Ray discovery and include files | Verified (PR #22, user report) | Verified 16 Nov 2026 (Homebrew) | Verified 18 Nov 2026: `pvengine64.exe` found outside `PATH` (registry, Program Files), include files in `Documents\POV-Ray\v3.7` (registry `DocPath`); CI installs it from the `ci-assets` release (PR #36) |
+| Tests without windows (structures, projects, export, rendering, `QProcess`) | Verified (PR #22, user report) | Verified 16 Nov 2026 | Verified 18 Nov 2026 with POV-Ray for Windows (full suite: 898 passed, 3 skipped by design); CI with POV-Ray for Windows since PR #36 |
 | GUI tests (real windows, OpenGL) | Verified (PR #22, user report; CI under Xvfb) | Verified 16 Nov 2026 (non-Retina display) | Verified 18 Nov 2026 (172 GUI tests in the full suite, 125 % display scale) |
 | PNG/PDF/JPEG export (FR-EXPORT-01) | Verified by CI (PR #23, Ubuntu, full suite) | Verified 16 Nov 2026 (automated, real POV-Ray; CI without windows); the user reports it working | Verified 18 Nov 2026 (automated, POV-Ray for Windows, one laptop) |
 | Styles from the command line (FR-STYLE-CLI-01) | Verified by CI (PR #28, Ubuntu, full suite) | Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows) | Verified 18 Nov 2026 (automated, POV-Ray for Windows, one laptop) |
@@ -250,7 +274,7 @@ user's report for PR #22.
 | Hands-on use of the window | Partial (the user's own use; most post-0.2.0 features not checked by hand) | Not tested | The user reports it working well (hands-on test, 18 Nov 2026); a scripted run of the window passed |
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Partial: 125 % scale (device pixel ratio 1.25), GUI tests and a scripted run |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Not tested; none exists |
-| Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | Experimental job without POV-Ray (PR #35); a decision on POV-Ray is open |
+| Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | Verified: tests without windows with POV-Ray for Windows on every pull request (PR #36, 18 Nov 2026) |
 
 ### Hands-on checks on a Mac
 

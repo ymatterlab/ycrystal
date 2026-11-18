@@ -72,9 +72,6 @@ jobs:
     name: tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
-    # The Windows port is experimental (docs/development/windows-port.md): its job
-    # reports, but does not fail the run, until it passes reliably.
-    continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       fail-fast: false
       matrix:
@@ -92,16 +89,17 @@ jobs:
           - name: macOS 15 arm64, Python 3.12, POV-Ray 3.7, no GUI tests
             os: macos-15
             pytest: python -m pytest -q -rs -m "not gui"
-          - name: Windows Server 2022, Python 3.12, POV-Ray for Windows 3.7, no GUI tests, experimental
+          # Windows with the official POV-Ray for Windows 3.7, from this repository's
+          # "ci-assets" release (povray.org refuses downloads from runners). The GUI
+          # tests are left out, as on macOS: they run on a real Windows computer.
+          - name: Windows Server 2022, Python 3.12, POV-Ray for Windows 3.7, no GUI tests
             os: windows-2022
             pytest: python -m pytest -q -rs -m "not gui"
-            experimental: true
     defaults:
       run:
         shell: bash
     env:
-      # The experimental Windows job may skip the POV-Ray tests (see its install step).
-      YCRYSTAL_REQUIRE_INTEGRATION: ${{ matrix.experimental == true && '0' || '1' }}
+      YCRYSTAL_REQUIRE_INTEGRATION: "1"
     steps:
       - uses: actions/checkout@v7
 
@@ -122,20 +120,35 @@ jobs:
         run: brew install povray
 
       - name: System packages (Windows; POV-Ray for Windows 3.7, official installer)
-        id: povwin
         if: runner.os == 'Windows'
-        # povray.org answers runners with a Cloudflare browser challenge (first run of
-        # this job, 17 Nov 2026), so this may fail; the job then runs without POV-Ray.
-        continue-on-error: true
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # The official installer, as in the Chocolatey package pov-ray 3.7.0.20161121.
-          $url = "http://www.povray.org/redirect/www.povray.org/ftp/pub/povray/Official/povwin-3.7-agpl3-setup.exe"
+          # The official installer (the same file as the Chocolatey package pov-ray
+          # 3.7.0.20161121), kept unmodified as an asset of this repository's
+          # "ci-assets" release: povray.org answers runners with a Cloudflare browser
+          # challenge (17 Nov 2026). Licence and source: see that release's notes.
           $expected = "2B1331641B6F96113C2DBA951BE80D99EB548639480399CABB5E3A60DCE5BDC8"
-          Invoke-WebRequest -Uri $url -OutFile povwin-setup.exe
+          gh release download ci-assets --repo "${{ github.repository }}" --pattern povwin-3.7-agpl3-setup.exe --output povwin-setup.exe
           $hash = (Get-FileHash povwin-setup.exe -Algorithm SHA256).Hash
           if ($hash -ne $expected) { throw "Unexpected installer checksum $hash" }
           Start-Process -FilePath .\povwin-setup.exe -ArgumentList "/S" -Wait
+          # Two dialogs of POV-Ray for Windows would wait for an answer on this runner
+          # (screenshots, 18 Nov 2026), so its settings are written before its first start:
+          # - without its separately licensed editor DLL it asks on every start whether to
+          #   download it: turn editor loading off (Options > Other Settings > Use Editor);
+          # - from its second start on it shows its About box when ItsAboutTime has passed
+          #   (unset: at once; then every 14 days): set the latest time its 32-bit clock
+          #   comparison allows.
+          $docs = (Get-ItemProperty "HKCU:\Software\POV-Ray\v3.7\Windows").DocPath
+          New-Item -ItemType Directory -Force (Join-Path $docs "ini") | Out-Null
+          Add-Type -Namespace Win32 -Name Ini -MemberDefinition '[DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern bool WritePrivateProfileString(string section, string key, string value, string file);'
+          $ini = Join-Path $docs "ini\pvengine.ini"
+          foreach ($pair in @(@("UseEditors", "0"), @("ItsAboutTime", "2147483647"))) {
+            if (-not [Win32.Ini]::WritePrivateProfileString("General", $pair[0], $pair[1], $ini)) { throw "Could not write $ini" }
+          }
+          Get-Content (Join-Path $docs "ini\pvengine.ini")
           Get-ChildItem "$env:ProgramFiles\POV-Ray" -Recurse -Depth 3 | Select-Object -ExpandProperty FullName
           Get-ChildItem "$env:USERPROFILE\Documents\POV-Ray" -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
           Get-ItemProperty "HKCU:\Software\POV-Ray\v3.7\Windows" -ErrorAction SilentlyContinue
@@ -152,23 +165,28 @@ jobs:
       - name: Install (integration-tested pins from constraints.txt)
         run: python -m pip install -e ".[dev]" -c constraints.txt
 
-      - name: How POV-Ray for Windows behaves (diagnostics for the port)
-        if: runner.os == 'Windows' && steps.povwin.outcome == 'success'
+      - name: How POV-Ray for Windows behaves (diagnostics; also its first start)
+        if: runner.os == 'Windows'
         timeout-minutes: 5
         continue-on-error: true
-        run: python scripts/windows_povray_probe.py
+        run: python scripts/windows_povray_probe.py --timeout 60 --screenshots probe-screenshots
+
+      - name: Screenshots of POV-Ray for Windows waiting (if any)
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: povray-windows-probe
+          path: probe-screenshots/
+          if-no-files-found: ignore
 
       - name: Command line and renderer check (POV-Ray found)
         timeout-minutes: 10
         run: |
           ycrystal --version
           if [ "$RUNNER_OS" != "Windows" ]; then command -v povray; fi
-          if [ "$RUNNER_OS" != "Windows" ] || [ "${{ steps.povwin.outcome }}" = "success" ]; then
-            ycrystal --check-renderer
-          fi
+          ycrystal --check-renderer
 
       - name: Display-independent documentation examples
-        continue-on-error: ${{ matrix.experimental == true }}
         run: |
           python -m doctest src/ycrystal/core/structure.py src/ycrystal/core/scene.py src/ycrystal/core/colors.py src/ycrystal/core/aspect.py src/ycrystal/core/lighting.py src/ycrystal/core/measure.py src/ycrystal/core/vectors.py src/ycrystal/core/background.py src/ycrystal/presets/custom.py src/ycrystal/core/camera.py src/ycrystal/core/picking.py src/ycrystal/io/readers.py src/ycrystal/io/project.py src/ycrystal/io/style.py src/ycrystal/presets/__init__.py src/ycrystal/render/jobs.py src/ycrystal/render/povray.py src/ycrystal/render/thumbnails.py src/ycrystal/batch.py src/ycrystal/provenance.py src/ycrystal/desktop.py src/ycrystal/gui/native.py src/ycrystal/core/export.py src/ycrystal/render/formats.py
           python scripts/docs_examples.py

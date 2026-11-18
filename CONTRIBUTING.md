@@ -77,10 +77,11 @@ used; the Actions job runs the same pinned hooks.
 - CI runs every test on Ubuntu 24.04 under Xvfb. On macOS it runs the tests that open
   no window (`-m "not gui"`), because GitHub's hosted Macs have no GPU for Qt's
   OpenGL widget; run the GUI tests on a real Mac before relying on a GUI change
-  there. On Windows it runs the same tests experimentally (failures do not fail the
-  run) and without POV-Ray, whose installer cannot be downloaded on CI; run the
-  rendering and GUI tests on a Windows computer before relying on a change there. To add an operating system, add a matrix entry and a system-packages step
-  to the `test` job.
+  there. On Windows it runs the same tests, with the official POV-Ray for Windows 3.7
+  installer kept as an asset of the `ci-assets` release (povray.org blocks downloads
+  from CI runners); run the GUI tests on a Windows computer before relying on a GUI
+  change there. To add an operating system, add a matrix entry and a system-packages
+  step to the `test` job.
 - `scripts/m0_evidence.py` regenerates screenshots and alignment measurements.
 - `scripts/benchmark_scene.py` measures display cost for growing supercells; rerun it
   when changing the viewport, and record the hardware with the numbers.

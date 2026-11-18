@@ -73,8 +73,9 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   Since it runs one copy at a time, Ycrystal's own renders take turns, and a copy the
   user has open is reported with an explanation instead of POV-Ray's error dialog. The
   window has its own taskbar button and icon. Tested on one Windows 11 laptop (all
-  automated tests, and by hand); Windows CI runs without POV-Ray. Installation steps
-  in the install guide.
+  automated tests, and by hand); Windows CI renders with POV-Ray for Windows too.
+  Installation steps in the install guide: start POV-Ray for Windows once and settle
+  its editor question, or every render waits for it.
 
 ### Fixes
 - Switching the view directly between some axes in the window (for example from c to
