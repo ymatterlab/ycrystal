@@ -9,6 +9,8 @@
 | macOS: the Dock and the menu bar show “Python” | Expected: Ycrystal runs from a source checkout, not from an application bundle. Start it with `.venv/bin/ycrystal`; there is no launcher for the Applications folder yet. |
 | Windows: “The term 'py' is not recognized” | Install Python 3.12 from python.org (or `winget install --id Python.Python.3.12 --exact --scope user`), then open a new PowerShell window; a terminal opened before the installation, also VS Code's until VS Code restarts, keeps the old `PATH`. `py --list` shows the installed versions. After `py -3.12 -m venv .venv`, run `.venv\Scripts\python.exe` and `.venv\Scripts\ycrystal.exe`, which need nothing on `PATH`. |
 | Windows: `python` opens the Microsoft Store | That `python` is a Store alias, not an installed Python. Use `py -3.12` (above) or the virtual environment's `.venv\Scripts\python.exe`. |
+| Windows: “running scripts is disabled on this system” | Windows' default policy refuses PowerShell scripts. Start the installation script as the [install guide](install.md#windows) writes it, `powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1`, which allows it for that one run and changes no setting. |
+| Windows: the installation script ends with “Not ready yet” | Each line says what is missing and what to do; fix it and run the script again (it repeats only what is needed). If `pip` failed with a broken `.venv`, delete the `.venv` folder first. |
 | No display on a server | The GUI needs a display and OpenGL. Use display-independent Python examples or `--check-renderer`; GUI tests can use Xvfb as described in the contributor guide. |
 | Structure open fails | Read the error and [format restrictions](../FORMATS.md). The previous scene stays. Use Open As… if the format was misdetected. |
 | A multi-block CIF or VASP 4 file asks a question | Choose the CIF block or supply the requested species elements. Cancelling keeps the current scene. |
@@ -19,7 +21,8 @@
 | --- | --- |
 | POV-Ray not found | Install `povray` (Linux Mint: `sudo apt install povray`; macOS: `brew install povray`; Windows: POV-Ray for Windows 3.7 from povray.org), then choose the executable with Render ▸ Set POV-Ray Executable… (`/usr/bin/povray`, `/opt/homebrew/bin/povray` with Homebrew on Apple silicon, or `C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe`). A stale saved path takes precedence over the environment and `PATH`. |
 | Windows: “POV-Ray for Windows is already open … Keep Single Instance” | POV-Ray for Windows runs only one copy at a time unless its option *Options ▸ Keep Single Instance* is off, so it cannot render for Ycrystal while you have it open (also minimised). Close it, or turn the option off in POV-Ray, and render again. Ycrystal's own previews and renders take turns by themselves. |
-| Windows: a preview or render does not finish | POV-Ray for Windows is waiting for an answer in a window of its own; click its button on the taskbar. Its About box appears at its second start and then every 14 days: click *OK*, and the render continues. If it asks "Could not load internal editor – download it?" (at every start), install the editor or answer *No* and untick *Options ▸ Other Settings ▸ Use Editor* in POV-Ray (see [installation](install.md#windows)). |
+| Windows: “POV-Ray for Windows would stop before rendering to ask "Could not load internal editor - download it?"” | Without its editor, POV-Ray for Windows asks this at every start, and each render would wait for the answer, so Ycrystal does not start it. Start POV-Ray for Windows once from the Start menu, answer *No*, untick *Options ▸ Other Settings ▸ Use Editor*, and close it (or answer *Yes* and install the editor). The installation script offers this step. |
+| Windows: a preview or render does not finish | POV-Ray for Windows is waiting for an answer in a window of its own; click its button on the taskbar. Its About box appears at its second start and then every 14 days: click *OK*, and the render continues. |
 | Windows: a POV-Ray button appears on the taskbar during previews | Expected: POV-Ray for Windows is a window program; Ycrystal starts it minimised and it closes when the image is done. In the window, Ycrystal keeps it from taking the keyboard focus. A render started from a terminal (`--render`) cannot prevent that, so the terminal loses the keyboard focus while POV-Ray runs. |
 | CLI check passes, GUI rendering fails to find POV-Ray | The CLI does not use the saved GUI setting. Re-select the executable in the application. |
 | “Viewing angle has to be smaller than 180” | A known self-built 3.8 build with `-ffast-math` rejects unset camera fields. Use the distribution 3.7 package and run Check Renderer. Rebuild custom binaries without that optimisation if necessary. |
@@ -34,9 +37,15 @@ that every scene or output directory will work.
 
 ## Menu launcher
 
-The menu launcher exists on Linux only; on macOS and Windows the two options print an
-error and write nothing.
+The menu entry exists on Linux (a menu launcher) and Windows (a Start-menu shortcut);
+on macOS the two options print an error and write nothing.
 
+- *Windows: Ycrystal in the Start menu does not start, or a `.ycrystal` file does not
+  open*: started from the Start menu, Ycrystal has no console that could show an error.
+  Start `.venv\Scripts\ycrystal.exe` in PowerShell in the checkout to see it. If the
+  checkout was moved, run `.venv\Scripts\ycrystal.exe --install-desktop` again from the
+  new place. If another program was chosen for `.ycrystal` files in Windows' *Open
+  with* dialog, that choice stays; open projects with **File ▸ Open…** in Ycrystal.
 - *Ycrystal does not appear in the menu*: run `.venv/bin/ycrystal --install-desktop`
   again from the checkout; Cinnamon may need a few seconds or a new login. The launcher
   runs the checkout's `.venv/bin/ycrystal` by absolute path, so moving or deleting the

@@ -13,6 +13,8 @@ laptop (18 November 2026). This page records:
 POV-Ray for Windows 3.7. On one laptop it passes every automated test (below), and the
 user tested it by hand there and reports that it works well. Since PR #36, Windows CI
 renders with the real POV-Ray for Windows too (see [CI](#pov-ray-for-windows-on-ci)).
+Since PR #39, one script installs it, with a Start-menu
+entry (see [installation](#installation-in-one-command)).
 
 ## Decision
 
@@ -199,6 +201,75 @@ c: POV-Ray 3.8 beta; d: no POV-Ray on Windows CI), the user chose **a** on 18 No
 - Before the repository or the release becomes public, check the AGPL-3.0 obligations
   for passing the installer on (the release notes point to the source).
 
+## Installation in one command
+
+Asked by the user on 18 November 2026 ("is there a simpler method for installation?").
+The manual installation had eight steps:
+- install Git and Python, then open a new terminal (else `py` is not found);
+- clone; create `.venv`; run the long `pip` line;
+- download POV-Ray for Windows from povray.org and install it;
+- start POV-Ray once to settle its editor question;
+- start Ycrystal from PowerShell every time (no Start-menu entry).
+
+Its traps were the stale `PATH` and the editor question: a render then waited silently
+at a dialog in a minimised window.
+
+| Finding | Checked how |
+| --- | --- |
+| `winget` has the official POV-Ray installer: package `PersistenceOfVisionRaytracer.POVRay` 3.7, URL `https://www.povray.org/ftp/pub/povray/Official/povwin-3.7-agpl3-setup.exe`, the same SHA-256 as above, type `nullsoft` (silent with `/S`) | `winget show`; `winget download` on the laptop fetched it from povray.org and verified the checksum (no browser challenge for a home connection); `winget list` recognises the installed POV-Ray as this package |
+| POV-Ray for Windows asks about its editor exactly when `[General] UseEditors` (in `pvengine.ini`, default 1) is not 0 and the editor library (`cmedit64.dll` for the 64-bit build) loads neither from the program's folder nor from `bin` of the installation folder recorded in the registry (`Home`) | Its source: `windows/pvengine.cpp` (`WinMain`), `windows/pvedit.cpp` (`LoadEditorDLL`), `windows/pvengine.h` (`EDITDLLNAME`), `windows/pvmisc.cpp` (`editors_enabled`) |
+| Git for Windows signs in to GitHub in the browser for a private repository over HTTPS (Git Credential Manager) | `git config --show-origin credential.helper`: `manager` in the installation's `gitconfig` |
+| The SVG icon renders without an application object (`QSvgRenderer` into a `QImage`) | Run on the laptop |
+
+Implemented:
+
+- **`scripts/install-windows.ps1`** (ASCII, for Windows PowerShell 5.1, which every
+  Windows 11 has): Python 3.12 with `winget --scope user` unless `py` finds Python
+  3.12, 3.13, or 3.14 (in this order; older ones are refused, also in an existing `.venv`)
+  (it re-reads `PATH` from the registry, so no new terminal is needed); `.venv`;
+  `pip install -e . -c constraints.txt`; POV-Ray for Windows with `winget` unless found;
+  if POV-Ray would ask about its editor, it opens once with instructions; the
+  Start-menu entry; `--check-renderer`. Idempotent; exit status 0 only when everything
+  is ready, with a list of what is not otherwise. Options `-Python`, `-Dev`,
+  `-NoPovray`, `-NoStartMenu`.
+- **`--install-desktop` on Windows** (`desktop.py`, `windows_shortcut.py`):
+  - `Ycrystal.lnk` in the user's Start-menu folder (`SHGetKnownFolderPath`). It starts
+    `.venv\Scripts\pythonw.exe -I -m ycrystal.app`, so that no console window opens;
+    `-I` keeps a `ycrystal` module in the starting folder from shadowing the package,
+    and is used only inside a virtual environment.
+  - The shortcut carries the application id `YMatterLab.Ycrystal`, the one
+    `set_taskbar_identity()` gives the window. It is written through `IShellLinkW`,
+    `IPropertyStore`, and `IPersistFile` with `ctypes`, since `WScript.Shell` cannot set it.
+  - An `.ico` with 8 sizes drawn from the SVG by Qt, in
+    `%LOCALAPPDATA%\Y-Matter Lab\Ycrystal`.
+  - The file type `Ycrystal.Project` for `.ycrystal` under
+    `HKEY_CURRENT_USER\Software\Classes`. The user's own *Open with* choice
+    (`UserChoice`) is left alone, and so is an `.ycrystal` key that points elsewhere at
+    uninstall.
+  - `--uninstall-desktop` removes all three; macOS still refuses both options.
+- **The editor question is reported instead of waited for:**
+  `windows_engine_conflict()` returns `EDITOR_QUESTION_MESSAGE` when
+  `editor_question_pending()` holds, so `--check-renderer`, previews, and renders fail
+  at once with the remedy. Stand-in programs (`.cmd`) are never checked.
+- **Windows CI** runs the script in Windows PowerShell 5.1 into a new `.venv` (with
+  `-Python` from setup-python, POV-Ray already installed) and reads the shortcut back.
+
+Evidence on the laptop (18 November 2026):
+
+| Check | Result |
+| --- | --- |
+| A copy of the checkout in a folder with a space (`…\Temp\yc trial\ycrystal`), no `.venv`, `powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1` in Windows PowerShell 5.1 | Found Python 3.12 through `py`; created `.venv`; installed the pinned packages; found POV-Ray; editor question settled (the editor is installed here), so no prompt; Start-menu entry and icon installed; `PASS: … within 0.14 px`; "Ycrystal is ready.", exit status 0 |
+| The same script again | Reused `.venv`, reinstalled only Ycrystal, check passed; 29 s |
+| The Start-menu shortcut opened as a click does (`os.startfile`) | One new window, "SrTiO3 (unsaved) — Ycrystal", process `pythonw.exe`, no console window; its own taskbar button with the Ycrystal icon; the automatic POV-Ray preview rendered (2.8 s). `Get-StartApps`: `Ycrystal`, AppID `YMatterLab.Ycrystal` |
+| `examples\SrTiO3-studio.ycrystal` opened as a double-click does | Opened in Ycrystal ("SrTiO3-studio.ycrystal — Ycrystal", `pythonw.exe`) |
+| New tests: `tests/test_windows_desktop.py` (launch command, icon sizes, the shortcut's fields and application id written and read back with a non-ASCII path, Start-menu entry and file type installed and removed in a test registry key, another program's file type left alone, the two command-line options); `tests/test_windows_povray.py` (the editor question: settings, both library folders, other programs; reported before starting) | Passed |
+| Full suite, `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` | 906 passed, 3 skipped (POSIX-only), 12.4 min |
+| Python 3.13.17 and 3.14.10 (python.org, `winget`): the script with `-Python … -Dev -NoStartMenu` on fresh copies, then the full suite | Both "Ycrystal is ready." (pins from wheels); 906 passed, 3 skipped on each ([PROGRESS.md](../PROGRESS.md#python-313-and-314-on-windows-18-november-2026)) |
+
+Not verified: installing Python and POV-Ray through the script (both were already on
+the laptop); the script's editor prompt (the editor is installed here); pinning the
+running window to the taskbar by hand; the entry on another Windows computer.
+
 ## Still open
 
 1. **Hands-on use.** The user tested Ycrystal by hand on the Windows laptop on
@@ -217,9 +288,13 @@ c: POV-Ray 3.8 beta; d: no POV-Ray on Windows CI), the user chose **a** on 18 No
    This is documented (install guide, troubleshooting). Ycrystal does not change the
    user's POV-Ray settings; whether it should detect the box and bring it forward is
    undecided.
-3. **Out of scope until decided:**
-   - an installer or launcher (there is no Start-menu entry; `--install-desktop` is
-     Linux only), and `.ycrystal` file association;
+3. **The installation script on a new computer** (see
+   [installation](#installation-in-one-command)): with neither Python nor POV-Ray
+   installed, so that the `winget` steps and the editor prompt run; then *Pin to
+   taskbar* on the running window.
+4. **Out of scope until decided:**
+   - a packaged installer (a single `.exe` or MSI with its own Python), which would need
+     a freezing tool and code signing;
    - Windows on ARM; Windows 10;
    - progress percentages during renders with POV-Ray for Windows. It prints none, but
      its window title carries them (`POV-Ray for Windows [Rendering scene.pov: 37%]`),

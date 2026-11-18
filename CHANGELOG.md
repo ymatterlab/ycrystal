@@ -74,8 +74,24 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   user has open is reported with an explanation instead of POV-Ray's error dialog. The
   window has its own taskbar button and icon. Tested on one Windows 11 laptop (all
   automated tests, and by hand); Windows CI renders with POV-Ray for Windows too.
-  Installation steps in the install guide: start POV-Ray for Windows once and settle
-  its editor question, or every render waits for it.
+- **Windows installation in one command.** After `git clone`,
+  `powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1` installs Python
+  3.12 and POV-Ray for Windows 3.7 with `winget` where they are missing (the latter is
+  its official installer), sets up `.venv`, adds Ycrystal to the Start menu, and runs
+  the renderer check; run it again after `git pull` to update. `--install-desktop` now
+  works on Windows: a Start-menu entry that starts Ycrystal without a console window
+  and shares the window's taskbar identity, its icon, and the `.ycrystal` file type, so
+  that projects open from File Explorer (current user, no administrator rights;
+  `--uninstall-desktop` removes them). When POV-Ray for Windows would stop at its
+  question about its missing editor, Ycrystal now says so at once, with the remedy,
+  instead of waiting for it.
+- **Python 3.12, 3.13, and 3.14.** Ycrystal now requires Python 3.12 or newer
+  (`requires-python = ">=3.12"`, formerly `>=3.10`): the tested packages of
+  `constraints.txt` (NumPy 2.5, SciPy 1.18) need it, so Python 3.10 and 3.11 could not
+  install them. CI runs the full suite on Python 3.13 and 3.14 as well, on Ubuntu. The
+  Windows installation script uses Python 3.12, 3.13, or 3.14 if `py` finds one (in
+  this order) before installing 3.12, and refuses older versions, also in an existing
+  `.venv`, with a message instead of a failing `pip`.
 
 ### Fixes
 - Switching the view directly between some axes in the window (for example from c to

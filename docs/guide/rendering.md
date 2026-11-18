@@ -4,7 +4,8 @@
 
 On Linux Mint, install the distribution renderer with `sudo apt install povray`; on
 macOS, `brew install povray`; on Windows, POV-Ray for Windows 3.7 with its official
-installer (see [installation](install.md#windows)). The tested baseline is POV-Ray 3.7.
+installer, which the installation script installs with `winget` (see
+[installation](install.md#windows)). The tested baseline is POV-Ray 3.7.
 In the GUI, discovery uses the first source that is set:
 
 1. **Render ▸ Set POV-Ray Executable…** (saved on this machine).
@@ -43,6 +44,8 @@ saved by the GUI. Without the option it uses the environment, then `PATH`, then 
 Windows) the installation of POV-Ray for Windows. A pass
 prints `PASS: …`; a renderer failure prints `FAIL: …` and exits 1. The check creates
 temporary files and removes the completed job. It launches POV-Ray, but no Qt window.
+On Windows it fails at once, with the remedy, if POV-Ray for Windows is open or would
+ask about its missing editor (see [troubleshooting](troubleshooting.md#renderer)).
 
 ## Export an editable scene
 

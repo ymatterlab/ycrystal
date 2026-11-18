@@ -194,8 +194,8 @@ with no `~/.config/Y-Matter Lab` and no earlier checkout.
 4. Work through the [independent evaluation checklist](independent-evaluation.md)
    yourself, and fix the documentation where it failed before sending it out.
 
-The repository is private, so the fresh computer needs access to it; the same question
-arises for referees (see HANDOFF.md).
+The repository is public, so the fresh computer (and a referee) can clone it without a
+GitHub account.
 
 ## What each result allows us to say
 

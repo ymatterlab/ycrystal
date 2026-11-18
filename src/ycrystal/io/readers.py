@@ -369,7 +369,7 @@ def read_structure(
         "format": fmt,
         "sha256": hashlib.sha256(data).hexdigest(),
         "size_bytes": len(data),
-        "imported_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+        "imported_at": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
         "reader": f"ASE {ase.__version__}",
     }
     source.update(extra)

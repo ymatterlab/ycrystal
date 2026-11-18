@@ -9,7 +9,7 @@
 [![CI](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml/badge.svg)](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml)
 [![Release: 0.3.0](https://img.shields.io/badge/release-0.3.0-blue.svg)](CHANGELOG.md)
 [![Platforms: Linux | macOS | Windows](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](docs/guide/support.md)
-[![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB.svg)](docs/guide/support.md)
+[![Python 3.12 | 3.13 | 3.14](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776AB.svg)](docs/guide/support.md)
 [![Renderer: POV-Ray 3.7](https://img.shields.io/badge/renderer-POV--Ray%203.7-5A2D82.svg)](https://www.povray.org/)
 [![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
@@ -53,60 +53,101 @@ command line, so figures made by hand and figures made in bulk match.
 
 The Python interface may still change before version 1.0.
 
-## Install and run
+## Install
 
-Linux Mint 22 / Ubuntu 24.04, system Python 3.12, X11 with OpenGL:
+You need Python 3.12 or newer (3.12, 3.13, and 3.14 are tested on Linux and Windows;
+3.12 and 3.13 on macOS), and POV-Ray 3.7 for rendering images (the window and `.pov`
+export work without it). Git is optional. Ycrystal is installed into a folder `.venv`
+inside the Ycrystal folder.
+
+### Get the code
+
+With Git, which makes updating easy (to install Git: `sudo apt install git` on Linux,
+`xcode-select --install` on macOS, and on Windows see below):
 
 ```bash
-sudo apt install git povray povray-includes libxcb-cursor0 python3.12-venv
 git clone https://github.com/ymatterlab/ycrystal.git
 cd ycrystal
-/usr/bin/python3 -m venv .venv
-.venv/bin/python -m pip install -e . -c constraints.txt
-.venv/bin/ycrystal --sample perovskite
 ```
 
-On Linux use the system interpreter: Conda's bundled `libstdc++` can prevent Mesa from
-loading. POV-Ray is needed for rendering PNG, PDF, and JPEG images; viewing and
-exporting `.pov`/`.ini` work without it. Check it with `.venv/bin/ycrystal --check-renderer`. While the
-repository is private, clone it with `gh repo clone ymatterlab/ycrystal` or over SSH.
+Without Git, download
+[the code as a ZIP file](https://github.com/ymatterlab/ycrystal/archive/refs/heads/main.zip)
+(also under the green **Code** button on GitHub), unpack it, and open a terminal in the
+unpacked folder `ycrystal-main`. Or, on Linux and macOS, in a terminal:
 
-macOS 15 on Apple silicon, with [Homebrew](https://brew.sh/):
+```bash
+curl -L -o ycrystal.zip https://github.com/ymatterlab/ycrystal/archive/refs/heads/main.zip
+unzip ycrystal.zip && cd ycrystal-main
+```
+
+On Windows, in PowerShell:
+
+```powershell
+Invoke-WebRequest https://github.com/ymatterlab/ycrystal/archive/refs/heads/main.zip -OutFile ycrystal.zip
+Expand-Archive ycrystal.zip . ; cd ycrystal-main
+```
+
+Then follow your system, in that folder.
+
+### Linux (Mint 22 / Ubuntu 24.04)
+
+```bash
+sudo apt install povray povray-includes libxcb-cursor0 python3.12-venv
+/usr/bin/python3 -m venv .venv
+.venv/bin/python -m pip install -e . -c constraints.txt
+.venv/bin/ycrystal --sample perovskite   # opens the window with a sample structure
+```
+
+Use the system Python (`/usr/bin/python3`), not Conda's: Conda's libraries can stop the
+3D view from starting. To add Ycrystal to the applications menu, run
+`.venv/bin/ycrystal --install-desktop`.
+
+### macOS (15, Apple silicon)
+
+With [Homebrew](https://brew.sh/):
 
 ```bash
 brew install python@3.12 povray
-git clone https://github.com/ymatterlab/ycrystal.git
-cd ycrystal
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -e . -c constraints.txt
-.venv/bin/ycrystal --sample perovskite
+.venv/bin/ycrystal --sample perovskite   # opens the window with a sample structure
 ```
 
-Windows 11, with Python 3.12 from python.org and POV-Ray for Windows 3.7 from its
-official installer, in PowerShell:
+### Windows 11
+
+In PowerShell, in the Ycrystal folder (for Git: `winget install --id Git.Git --exact`,
+then open a new PowerShell window before cloning):
 
 ```powershell
-winget install --id Python.Python.3.12 --exact --scope user   # or python.org's installer
-# Then open a NEW PowerShell window (restart VS Code for its terminal), so that py is found.
-git clone https://github.com/ymatterlab/ycrystal.git
-cd ycrystal
-py -3.12 -m venv .venv
-.venv\Scripts\python.exe -m pip install -e . -c constraints.txt
-.venv\Scripts\ycrystal.exe --sample perovskite
+powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1
 ```
 
-`py` is the Python launcher that python.org's installer puts on `PATH`; "py is not
-recognized" means Python 3.12 is not installed or the terminal was opened before it
-was. Ycrystal finds POV-Ray for Windows in its installation folder; it cannot render while
-POV-Ray for Windows is open by hand (see the
-[install guide](docs/guide/install.md#windows)). The commands below are written for
-Linux and macOS; on Windows, run `.venv\Scripts\ycrystal.exe` and write paths with
-backslashes.
+The script installs Python and POV-Ray for Windows if they are missing, sets up
+Ycrystal, and adds it to the Start menu. Then start **Ycrystal** from the Start menu.
+
+### Check and update
+
+Check that rendering works (on Windows: `.venv\Scripts\ycrystal.exe --check-renderer`):
 
 ```bash
-.venv/bin/ycrystal --install-desktop                                    # menu launcher (Linux)
-.venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png  # no window
-# Reuse a style (studio, lighting, image size) for another structure, without a window:
+.venv/bin/ycrystal --check-renderer
+```
+
+To update, run `git pull` in the Ycrystal folder, then the `pip install` line again (on
+Windows: the installation script again). Without Git, download and unpack the new ZIP
+file and install again in the new folder; then delete the old folder. The [install guide](docs/guide/install.md)
+covers each step in detail, the Windows installation without the script, and
+uninstalling; [troubleshooting](docs/guide/troubleshooting.md) helps if something fails.
+
+## Command-line examples
+
+Run these in the Ycrystal folder, without opening a window. On Windows, write
+`.venv\Scripts\ycrystal.exe` instead of `.venv/bin/ycrystal`, and backslashes in paths.
+
+```bash
+# Render a saved project:
+.venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png
+# Reuse a style (studio, lighting, image size) for another structure:
 .venv/bin/ycrystal tests/fixtures/MgB2.cif --style examples/grey-studio.ycstyle --render MgB2.png
 # Also give the style's Ti settings (chrome) to Zr, so both perovskites look alike:
 .venv/bin/ycrystal tests/fixtures/BaZrO3.cif --style examples/grey-studio.ycstyle --element-map Ti=Zr --render BaZrO3.png
@@ -119,8 +160,9 @@ backslashes.
 .venv/bin/ycrystal MgB2-c.ycrystal --render MgB2-c-again.png
 ```
 
-Latest release 0.3.0; `main` is the development version 0.4.0.dev0. See the [changelog](CHANGELOG.md), the
-[support matrix](docs/guide/support.md), and the [third-party notices](THIRD_PARTY_NOTICES.md).
+Latest release 0.3.0; `main` is the development version 0.4.0.dev0. See the
+[changelog](CHANGELOG.md), the [support matrix](docs/guide/support.md), and the
+[third-party notices](THIRD_PARTY_NOTICES.md).
 
 ## Guides and reference
 

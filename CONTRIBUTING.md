@@ -53,8 +53,7 @@ The same configuration runs in two places on purpose:
 | Your machine (`pre-commit install`) | Fast feedback before committing |
 | GitHub Actions, job `pre-commit` | Authoritative check on every pull request, independent of external services |
 
-The repository is private, so pre-commit.ci (free only for public repositories) is not
-used; the Actions job runs the same pinned hooks.
+pre-commit.ci is not used; the Actions job runs the same pinned hooks.
 
 ## Tests
 
@@ -69,8 +68,11 @@ used; the Actions job runs the same pinned hooks.
   `ycrystal --check-renderer`; it is found on `PATH` (on Windows, POV-Ray for Windows
   in its installation folder), or set `YCRYSTAL_POVRAY` to it. POV-Ray for Windows runs
   one copy at a time: keep it closed and render nothing else while the tests run.
-- On Windows, run the tools as `.venv\Scripts\python.exe -m pytest -q -rs`,
-  `.venv\Scripts\pre-commit.exe`, and so on.
+- On Windows, `powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1
+  -Dev` sets up `.venv` with the developer tools (and Python and POV-Ray for Windows
+  with `winget`, if missing). Run the tools as
+  `.venv\Scripts\python.exe -m pytest -q -rs`, `.venv\Scripts\pre-commit.exe`, and so
+  on.
 - Locally, missing prerequisites skip those tests (`-rs` lists them). CI sets
   `YCRYSTAL_REQUIRE_INTEGRATION=1`, which turns a missing display or renderer into an
   error; set it yourself to make sure nothing was skipped.
@@ -79,9 +81,9 @@ used; the Actions job runs the same pinned hooks.
   OpenGL widget; run the GUI tests on a real Mac before relying on a GUI change
   there. On Windows it runs the same tests, with the official POV-Ray for Windows 3.7
   installer kept as an asset of the `ci-assets` release (povray.org blocks downloads
-  from CI runners); run the GUI tests on a Windows computer before relying on a GUI
-  change there. To add an operating system, add a matrix entry and a system-packages
-  step to the `test` job.
+  from CI runners), and it also runs `scripts\install-windows.ps1` into a new `.venv`;
+  run the GUI tests on a Windows computer before relying on a GUI change there. To add
+  an operating system, add a matrix entry and a system-packages step to the `test` job.
 - `scripts/m0_evidence.py` regenerates screenshots and alignment measurements.
 - `scripts/benchmark_scene.py` measures display cost for growing supercells; rerun it
   when changing the viewport, and record the hardware with the numbers.
@@ -187,8 +189,8 @@ tests.
 
 Committed configuration does not by itself activate these services:
 
-- **pre-commit.ci:** not used while the repository is private. If it becomes public
-  again, the app can be re-enabled at <https://pre-commit.ci>; add a `ci:` section to
+- **pre-commit.ci:** not used. It is free for public repositories such as this one and
+  can be enabled at <https://pre-commit.ci>; add a `ci:` section to
   `.pre-commit-config.yaml` for its settings.
 - **Dependabot:** version updates start from `.github/dependabot.yml` once Dependabot is
   allowed for the repository; check *Settings ▸ Code security* (also for Dependabot
@@ -196,5 +198,6 @@ Committed configuration does not by itself activate these services:
 - **Branch protection (optional):** require the `pre-commit` and `tests` checks on `main`
   (the `tests` job reports one check per operating system; the Ubuntu check keeps its
   earlier name).
-  On GitHub Free, rulesets are enforced only on public repositories; the "Protect main"
-  ruleset is kept but inactive while the repository is private.
+  The "Protect main" ruleset is active on `main`: no deletion or force-push, and changes
+  only through pull requests (no approval required). Its list of required checks is
+  empty, so add the checks there to require them.
