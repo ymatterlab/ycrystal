@@ -365,6 +365,8 @@ def test_user_files_folder_recorded_by_the_installer(tmp_path, monkeypatch):
     """POV-Ray for Windows records where it put its include files (``DocPath``)."""
     from ycrystal.render.povray import include_directories, missing_includes
 
+    # Test-only names: a system include folder (Linux) must not count.
+    ONLY_HERE = "ycrystal-test-only.inc"  # noqa: N806
     # A version folder of its own, so that a real installation's files cannot count.
     executable = tmp_path / "Program Files" / "POV-Ray" / "v-test" / "bin" / "pvengine64.exe"
     executable.parent.mkdir(parents=True)
@@ -372,18 +374,18 @@ def test_user_files_folder_recorded_by_the_installer(tmp_path, monkeypatch):
     monkeypatch.setattr(povray, "_registry_user_folders", lambda: [])
     documents = tmp_path / "OneDrive" / "Documents" / "POV-Ray" / "v-test"  # a moved folder
     (documents / "include").mkdir(parents=True)
-    (documents / "include" / "metals.inc").write_text("// test\n")
+    (documents / "include" / ONLY_HERE).write_text("// test\n")
     library = tmp_path / "my includes"
     library.mkdir()
     (library / "extra.inc").write_text("// test\n")
     (documents / "ini").mkdir()
     (documents / "ini" / "povray.ini").write_text(f'Library_Path="{library}"\n')
-    assert missing_includes(["metals.inc", "extra.inc"], executable) == [
-        "metals.inc",
+    assert missing_includes([ONLY_HERE, "extra.inc"], executable) == [
+        ONLY_HERE,
         "extra.inc",
     ]
     monkeypatch.setattr(povray, "_registry_user_folders", lambda: [str(documents)])
-    assert missing_includes(["metals.inc", "extra.inc"], executable) == []
+    assert missing_includes([ONLY_HERE, "extra.inc"], executable) == []
     directories = include_directories(executable)
     assert documents / "include" in directories and library in directories
 
