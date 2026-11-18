@@ -53,7 +53,7 @@ editable install must be refreshed.
 ```bash
 git pull
 .venv/bin/python -m pip install -e ".[dev]" -c constraints.txt
-.venv/bin/ycrystal --version            # ycrystal 0.5.0
+.venv/bin/ycrystal --version            # ycrystal 0.4.0
 .venv/bin/ycrystal --check-renderer     # PASS: POV-Ray 3.7… passed
 ```
 

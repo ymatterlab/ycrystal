@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Colorblind Friendly](https://img.shields.io/badge/Colorblind-Friendly-0077B6)](docs/guide/appearance.md#choosing-colours)
 [![CI](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml/badge.svg)](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml)
-[![Version: 0.5.0](https://img.shields.io/badge/version-0.5.0-blue.svg)](CHANGELOG.md)
+[![Version: 0.4.0](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
 [![Platforms: Linux | macOS | Windows](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](docs/guide/support.md)
 [![Python 3.12 | 3.13 | 3.14](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776AB.svg)](docs/guide/support.md)
 [![Renderer: POV-Ray 3.7](https://img.shields.io/badge/renderer-POV--Ray%203.7-5A2D82.svg)](https://www.povray.org/)
@@ -63,8 +63,7 @@ Download `Ycrystal-<version>-windows-x64-setup.exe` from the
 administrator rights. Ycrystal renders with POV-Ray for Windows 3.7, installed
 separately (the installer says so if it is missing). The installer is not signed yet:
 if Windows shows "Windows protected your PC", choose *More info*, then *Run anyway*.
-Version 0.5.0 is the first with the installer; until its GitHub release carries the
-file, the installer of the newest source is the artifact of the latest
+Until a GitHub release carries the installer file, the installer of the newest source is the artifact of the latest
 [*Windows installer* workflow run](https://github.com/ymatterlab/ycrystal/actions/workflows/windows-installer.yml)
 (GitHub account needed). Details: [install guide](docs/guide/install.md#windows).
 
@@ -181,7 +180,7 @@ Run these in the Ycrystal folder, without opening a window. On Windows, write
 .venv/bin/ycrystal MgB2-c.ycrystal --render MgB2-c-again.png
 ```
 
-Current version 0.5.0 (tag `v0.5.0`; the previous tag is `v0.3.0`). See the
+Current version 0.4.0. See the
 [changelog](CHANGELOG.md), the [support matrix](docs/guide/support.md), and the
 [third-party notices](THIRD_PARTY_NOTICES.md).
 
