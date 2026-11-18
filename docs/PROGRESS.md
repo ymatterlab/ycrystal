@@ -132,6 +132,19 @@ Not verified: the `winget` installs of Python and POV-Ray through the script and
 editor prompt (both programs and the editor were already on the laptop); pinning the
 running window to the taskbar by hand.
 
+## Maintenance: Python 3.13 on macOS (18 November 2026)
+
+No code change. On the Mac mini (macOS 15.8, Apple silicon), Homebrew Python 3.13.18 in a
+fresh virtual environment outside the checkout, `pip install -e ".[dev]" -c
+constraints.txt` installed every pin from wheels without version changes (PySide6 6.12.0,
+VTK 9.7.2, pyvista 0.49.2, ASE 3.29.0, NumPy 2.5.4). `ycrystal --version` and
+`--check-renderer` passed; command-line renders (a project, a style with
+`--element-map` and `--view`, the five-job example batch) succeeded;
+`YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rfs` 900 passed, 1 skipped (the POV-Ray for
+Windows test, Windows only); the CI doctest list (24 modules), `scripts/docs_examples.py`,
+and Ruff were clean. Linux and Windows on 3.13 are not tested, and CI stays on 3.12 (the
+project owner's decision). Recorded in the [support matrix](guide/support.md#platform).
+
 ## Windows CI with the real POV-Ray for Windows (18 November 2026)
 
 Requested by the user after PR #35 was merged (`ae01f43`): render with POV-Ray for
