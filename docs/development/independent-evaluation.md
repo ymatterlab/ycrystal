@@ -28,8 +28,8 @@ evaluation result until an evaluator has written it.
       beforehand; how the documentation alone works is part of the evaluation.
 - [ ] Agree how the answers will be returned (a signed document or an e-mail) and that
       they will be given to the journal for the review with the evaluator's name.
-- [ ] Referees need anonymous access to the program: the repository is private at the
-      time of writing, so decide how to provide it before submitting.
+- [ ] Referees need anonymous access to the program: the repository is public, so they
+      can clone it without an account; confirm that this still holds before submitting.
 
 ## For the evaluator
 

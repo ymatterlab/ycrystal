@@ -95,8 +95,9 @@ Known limitations and unresolved issues:
   have not been replayed on another machine. Figure 1 (schematic, screenshot) and the
   plots of Figure 4 are still to be made (`docs/development/manuscript-figures.md`).
 - JAC submission: referees need anonymous access to the program and a web page with
-  documentation (per the journal's instructions; recheck them), but the repository
-  is private. Decide how to provide access before submitting.
+  documentation (per the journal's instructions; recheck them). The repository is now
+  public, so the program can be cloned without an account; the documentation web page
+  is still to be decided.
 - Found during FR-REPRO-01, not changed: `save_project` (and so every project and
   snapshot) is written through `mkstemp` and ends up readable by the owner only (mode
   0600 on Linux/macOS), which matters for shared folders. The new provenance records
@@ -269,9 +270,9 @@ Suggestions only — not approved, ask before starting any of them:
 
 Dependencies and blockers:
 
-- The repository is private, and GitHub bills hosted macOS minutes at a higher rate
-  than Linux minutes. The macOS job runs on every pull request and push to `main`; if
-  that is too costly, restrict it (for example to `main` and manual runs).
+- The repository is public, so GitHub's standard hosted runners, macOS included, cost
+  nothing. If it became private again, macOS minutes would be billed at a higher rate
+  than Linux minutes; then restrict the macOS job (for example to `main` and manual runs).
 - GitHub's hosted Macs have no GPU, so the GUI tests cannot run there reliably; they
   need a real Mac.
 - Windows: POV-Ray for Windows is a GUI program without a `povray` command. Ycrystal

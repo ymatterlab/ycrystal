@@ -28,10 +28,6 @@ that native POV-Ray materials (gold, marble, `M_Glass`, …) need. The `pip inst
 step downloads about 300 MB of wheels (Qt, VTK) the first time. To install developer
 tools, use `-e ".[dev]"` instead of `-e .`.
 
-While the GitHub repository is private, `git clone` over HTTPS asks for credentials;
-clone with `gh repo clone ymatterlab/ycrystal` (GitHub CLI, after `gh auth login`) or
-over SSH (`git clone git@github.com:ymatterlab/ycrystal.git`) instead.
-
 If using `uv`, the equivalent environment setup is:
 
 ```bash
@@ -95,9 +91,7 @@ Then start Ycrystal from the Start menu. The script can run again at any time: a
 once `.venv` exists, so delete `.venv` to change it), `-Dev` (also the developer tools),
 `-NoPovray`, and `-NoStartMenu`; `Get-Help .\scripts\install-windows.ps1 -Detailed`
 describes them. `-ExecutionPolicy Bypass` lets this one PowerShell run the script,
-which Windows' default policy refuses otherwise; it changes no setting. While the
-GitHub repository is private, `git clone` asks you to sign in to GitHub in the browser
-(the credential manager of Git for Windows).
+which Windows' default policy refuses otherwise; it changes no setting.
 
 POV-Ray for Windows is a window program. For each preview and render, Ycrystal starts
 it minimised (its button appears on the taskbar while it runs) and it closes by itself.

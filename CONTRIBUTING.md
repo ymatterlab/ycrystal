@@ -53,8 +53,7 @@ The same configuration runs in two places on purpose:
 | Your machine (`pre-commit install`) | Fast feedback before committing |
 | GitHub Actions, job `pre-commit` | Authoritative check on every pull request, independent of external services |
 
-The repository is private, so pre-commit.ci (free only for public repositories) is not
-used; the Actions job runs the same pinned hooks.
+pre-commit.ci is not used; the Actions job runs the same pinned hooks.
 
 ## Tests
 
@@ -190,8 +189,8 @@ tests.
 
 Committed configuration does not by itself activate these services:
 
-- **pre-commit.ci:** not used while the repository is private. If it becomes public
-  again, the app can be re-enabled at <https://pre-commit.ci>; add a `ci:` section to
+- **pre-commit.ci:** not used. It is free for public repositories such as this one and
+  can be enabled at <https://pre-commit.ci>; add a `ci:` section to
   `.pre-commit-config.yaml` for its settings.
 - **Dependabot:** version updates start from `.github/dependabot.yml` once Dependabot is
   allowed for the repository; check *Settings ▸ Code security* (also for Dependabot
@@ -199,5 +198,6 @@ Committed configuration does not by itself activate these services:
 - **Branch protection (optional):** require the `pre-commit` and `tests` checks on `main`
   (the `tests` job reports one check per operating system; the Ubuntu check keeps its
   earlier name).
-  On GitHub Free, rulesets are enforced only on public repositories; the "Protect main"
-  ruleset is kept but inactive while the repository is private.
+  The "Protect main" ruleset is active on `main`: no deletion or force-push, and changes
+  only through pull requests (no approval required). Its list of required checks is
+  empty, so add the checks there to require them.
