@@ -101,8 +101,8 @@ Windows 3.7 for previews and images ([below](#pov-ray-for-windows)).
 ### Windows: the installer (recommended)
 
 1. Download `Ycrystal-<version>-windows-x64-setup.exe` from the
-   [Releases page](https://github.com/ymatterlab/ycrystal/releases). The first release
-   that carries it will be the next one after 0.3.0. Until then, the installer of the
+   [Releases page](https://github.com/ymatterlab/ycrystal/releases). Version 0.4.0 is
+   the first with it; until its GitHub release carries the file, the installer of the
    newest source can be downloaded, with a GitHub account, from the latest run of the
    [*Windows installer* workflow](https://github.com/ymatterlab/ycrystal/actions/workflows/windows-installer.yml)
    (artifact `ycrystal-windows-installer`: a ZIP file with the installer inside).
@@ -234,7 +234,7 @@ developer installation is renamed **Ycrystal (development)** when the script or
 ## Check the installation
 
 ```bash
-.venv/bin/ycrystal --version          # ycrystal 0.4.0.dev0
+.venv/bin/ycrystal --version          # ycrystal 0.4.0
 .venv/bin/ycrystal --check-renderer   # PASS: POV-Ray 3.7… passed
 .venv/bin/ycrystal examples/SrTiO3-studio.ycrystal --render SrTiO3.png
 ```
@@ -242,7 +242,7 @@ developer installation is renamed **Ycrystal (development)** when the script or
 On Windows, in PowerShell:
 
 ```powershell
-.venv\Scripts\ycrystal.exe --version          # ycrystal 0.4.0.dev0
+.venv\Scripts\ycrystal.exe --version          # ycrystal 0.4.0
 .venv\Scripts\ycrystal.exe --check-renderer   # PASS: POV-Ray 3.7.0.0 at C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe passed…
 .venv\Scripts\ycrystal.exe examples\SrTiO3-studio.ycrystal --render SrTiO3.png
 ```

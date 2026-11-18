@@ -46,6 +46,26 @@ is not part of this procedure.
 6. Record the results in `docs/PROGRESS.md` and in the checklist below, marking each
    item passed, failed, or unverified.
 
+## Checklist for 0.4.0
+
+Requested by the user on 18 November 2026: tag `v0.4.0` once PR #40 (the Windows
+installer) passed CI, update the files that record the version, then audit the README
+before deciding on a GitHub release. The version was set by its own pull request
+(branch `release/v0.5.0`); the tag marks its merge. Steps 2–4 of the procedure (the
+reference-machine run, a clean install by a person, the wheel) were not run for this
+tag; each feature was verified when merged (see `docs/PROGRESS.md`).
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Version | Updated before the tag | `__version__ = "0.4.0"`; changelog section 0.4.0 (PRs #23–#40); README badge and version line; sample outputs in the guides |
+| Tests at the last feature merge | Passed | CI run 44401632629 on PR #40: Ubuntu 24.04 with Python 3.12, 3.13, 3.14 (910 passed, 10 skipped each, GUI tests under Xvfb), macOS 15 (738 passed, 10 skipped), Windows Server 2022 (746 passed, 2 skipped), docs, pre-commit; *Windows installer* run 44401632704 (installer built, packaged render, 27 coexistence checks) |
+| Tests at the tagged commit | See the version pull request's CI | |
+| Projects compatible | Passed | Schema 7 unchanged since 0.3.0; older projects open (`test_project.py`) |
+| Windows installer | Built by CI (artifact `ycrystal-windows-installer`); built and installed on the Windows laptop | Not signed; not attached to a GitHub release |
+| Clean install by a person, wheel build | Not run for 0.4.0 | |
+| README audit by the user | Pending | Before a GitHub release |
+| Tag `v0.4.0` | See `docs/HANDOFF.md` | Annotated tag at the merge of the version pull request; GitHub release not created |
+
 ## Checklist for 0.3.0
 
 Version 0.3.0 did not follow the procedure above. The maintainer tagged `v0.3.0` on

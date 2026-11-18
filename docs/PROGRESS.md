@@ -93,6 +93,26 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## Version 0.4.0 (18 November 2026)
+
+Requested by the user: once PR #40 passed CI, tag `v0.4.0` and update the files that
+record the version; then ask the user to audit the README before a release. PR #40's CI
+passed (run 44401632629: Ubuntu with Python 3.12, 3.13, and 3.14, each 910 passed and 10
+skipped; macOS 738 passed and 10 skipped; Windows 746 passed and 2 skipped; docs,
+pre-commit; *Windows installer* run 44401632704 passed). Branch `release/v0.5.0`:
+
+- `__version__ = "0.4.0"`;
+- changelog section 0.4.0 (PRs #23–#40);
+- README badge and version line, and the installer's availability notes;
+- sample outputs in the guides, HANDOFF, next-tests;
+- the 0.4.0 checklist in `docs/development/release.md`.
+
+The version was first set to 0.5.0; the user corrected it to 0.4.0 before the merge, and
+asked to drop the mentions of earlier versions from the README. Dated records
+(benchmark and replay results, the gallery run, the Windows-port evidence) keep
+`0.4.0.dev0`. Locally: `ycrystal --version` gives `ycrystal 0.4.0`; release,
+installer, and reproducibility tests pass; pre-commit and the strict docs build pass.
+
 ## Windows installer (18 November 2026)
 
 Requested by the user: a graphical Windows installer (PyInstaller, Inno Setup) in its

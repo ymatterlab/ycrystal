@@ -9,12 +9,13 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 
 ## Current project status
 
-- **Milestone:** version 0.3.0 is tagged (tags `v0.1.0`, `v0.2.0`, `v0.3.0`; no GitHub
-  releases). `v0.3.0` marks commit `6ed6b03` (PR #22); the source there still reports
-  0.2.0; since the release housekeeping of 17 November 2026, `main` reports the
-  development version `0.4.0.dev0`.
-  FR-EXPORT-01 (PR #23) and the maintenance in PRs #25–#26 came after the tag and are
-  listed as "Unreleased" in `CHANGELOG.md`.
+- **Milestone:** version **0.4.0** (18 November 2026, at the user's request): the
+  source reports `0.4.0`, and `CHANGELOG.md` lists everything since `v0.3.0` (PRs
+  #23–#40) under 0.4.0 (`main` reported `0.4.0.dev0` until then).
+  The tag `v0.4.0` is set on the merge of the version change (see
+  [the 0.4.0 checklist](development/release.md#checklist-for-040)); no GitHub release
+  yet: the user decides after auditing the README. Earlier tags: `v0.1.0`, `v0.2.0`,
+  `v0.3.0` (commit `6ed6b03`, PR #22; the source there still reports 0.2.0).
 - **Windows support** (requested by the user on 17 November 2026), branch
   `feature/windows`, PR #35: completed on a Windows 11 laptop on 18 November 2026. All
   automated tests pass there with POV-Ray for Windows, and the user tested Ycrystal by
@@ -396,7 +397,7 @@ Then, on either system, from the repository root:
 
 ```bash
 .venv/bin/python -m pip install -e ".[dev]" -c constraints.txt
-.venv/bin/ycrystal --version            # ycrystal 0.4.0.dev0
+.venv/bin/ycrystal --version            # ycrystal 0.4.0
 .venv/bin/ycrystal --check-renderer     # PASS: POV-Ray 3.7… passed
 .venv/bin/ycrystal --sample perovskite  # opens the window
 .venv/bin/python -m pytest -q -rs       # GUI tests open windows for about 1.5 minutes

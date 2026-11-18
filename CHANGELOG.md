@@ -3,9 +3,9 @@
 All notable changes to Ycrystal. Versions follow [semantic versioning](https://semver.org/);
 before 1.0 the Python interface may change between minor versions.
 
-## Unreleased
+## 0.4.0 — Windows, export formats, and figures from the command line (18 November 2026)
 
-Merged after the `v0.3.0` tag; not yet part of a release.
+Everything merged after the `v0.3.0` tag (PRs #23–#40).
 
 ### Highlights
 - **PDF and JPEG export with publication sizes (FR-EXPORT-01).** **Render ▸ Render
@@ -117,7 +117,8 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   application.
 - Linux: `--install-desktop` now refreshes the icon theme, so a reinstalled launcher
   shows the current icon in GTK and Cinnamon menus.
-- `ycrystal --version` reports `0.4.0.dev0`, the development version after 0.3.0.
+- `ycrystal --version` reported `0.4.0.dev0`, the development version after 0.3.0,
+  until this version; it reports `0.4.0` now.
 - Validation and benchmarks (FR-VALIDATION-01); no change to the application.
   - `tests/test_validation.py` checks the following, by measured image properties
     rather than stored pictures:

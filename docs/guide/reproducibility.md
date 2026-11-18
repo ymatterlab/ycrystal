@@ -101,7 +101,7 @@ An excerpt of `figures/BaZrO3.provenance.json`:
 {
  "format": "ycrystal-provenance",
  "schema_version": 1,
- "generator": "Ycrystal 0.4.0.dev0",
+ "generator": "Ycrystal 0.4.0",
  "replay": "ycrystal BaZrO3.ycrystal --render BaZrO3.png",
  "image": {"name": "BaZrO3.png", "path": "BaZrO3.png", "sha256": "896f8581…", "bytes": 145288, "width": 800, "height": 600},
  "input": {"name": "BaZrO3.cif", "path": null, "sha256": "ccc0450b…", "bytes": 385, "format": "cif"},
