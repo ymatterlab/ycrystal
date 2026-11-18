@@ -2,27 +2,56 @@
   <img src="docs/assets/logo_horizontal.png" alt="Ycrystal logo: a Y-shaped molecule next to the word crystal" width="480">
 </p>
 
-# ycrystal
+# Ycrystal
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Status: early development](https://img.shields.io/badge/status-early%20development-orange.svg)](docs/PROGRESS.md)
+[![Colorblind Friendly](https://img.shields.io/badge/Colorblind-Friendly-0077B6)](docs/guide/appearance.md#choosing-colours)
+[![CI](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml/badge.svg)](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml)
+[![Release: 0.3.0](https://img.shields.io/badge/release-0.3.0-blue.svg)](CHANGELOG.md)
+[![Platforms: Linux | macOS | Windows](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](docs/guide/support.md)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB.svg)](docs/guide/support.md)
+[![Renderer: POV-Ray 3.7](https://img.shields.io/badge/renderer-POV--Ray%203.7-5A2D82.svg)](https://www.povray.org/)
+[![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-Ycrystal is a desktop application for Linux, macOS, and Windows (PySide6 + VTK) for
-preparing
-reproducible crystal-structure figures and rendering them with
-[POV-Ray](https://www.povray.org/).
+Ycrystal prepares reproducible crystal-structure figures and renders them with
+[POV-Ray](https://www.povray.org/), on Linux, macOS, and Windows. It has two faces that
+share one scene model and one renderer:
 
-**Early development.** Open POSCAR/CONTCAR, CIF, and Quantum ESPRESSO (`ibrav = 0`)
-inputs, save/reopen `.ycrystal` projects, orbit/pan/zoom, select and hide individual
-displayed atoms, and export or render the current orthographic view. Supercell
-repetitions, periodic bonds, cell-edge modes, and lattice/Cartesian view directions
-are available, as are an output frame, a POV-Ray preview, cancellable renders, and
-galleries of 30 materials and 12 environments with POV-Ray thumbnails, per-element and
-per-atom materials, floors, skies, and lighting controls. Drag the a/b/c handles to add
-cells, rotate freely or about a lattice/Cartesian axis, and reuse a figure's style with
-another structure, in the window or from the command line; every figure change is
-undoable.
-Python interfaces are evolving developer functionality, without a stable API guarantee.
+- a **desktop application** (PySide6 + VTK) to open a structure, frame it, and design
+  its look interactively, with a live view and a POV-Ray preview;
+- a **command line** that renders without a window, from a terminal, a script, or a
+  remote machine: apply a saved style to any structure, choose the view and scale, and
+  render whole series of structures from one JSON manifest, for high-throughput figure
+  production.
+
+A look designed in the window can be saved as a style and reused unchanged on the
+command line, so figures made by hand and figures made in bulk match.
+
+## Features
+
+- **Structures and projects:** POSCAR/CONTCAR, CIF, and Quantum ESPRESSO
+  (`ibrav = 0`) inputs; `.ycrystal` projects that keep the structure, view, and look,
+  and reopen without the original files.
+- **Interactive view:** orbit, pan, and zoom; free or axis-constrained rotation;
+  lattice and Cartesian view directions; select and hide atoms; supercells with
+  draggable a/b/c handles, periodic bonds, and cell-edge modes; distance and
+  bond-angle measurements; atom-attached direction and magnetic-moment arrows.
+- **Appearance:** 30 materials and 12 environments with POV-Ray thumbnails,
+  per-element and per-atom materials, editable material recipes, colours by value or
+  name, floors, skies, background pictures, and a Lighting Setup window.
+- **Output:** a POV-Ray preview, cancellable renders, PNG, PDF, and JPEG export with
+  publication sizes, and editable `.pov`/`.ini` scenes. Every figure change is
+  undoable.
+- **Command line and high-throughput rendering:** `--render` and `--export-pov` for
+  single figures; `--style` with explicit `--element-map` between compositions;
+  `--view`, `--camera-policy`, and `--view-height` for consistent orientation and
+  scale; `--batch` for a series from a JSON manifest, checked completely before
+  rendering, with a JSON report of every job. No display is needed.
+- **Reproducibility:** self-contained project snapshots with a provenance record, so
+  a figure can be rendered again later or elsewhere; a gallery of example figures
+  regenerated from scripts.
+
+The Python interface may still change before version 1.0.
 
 ## Install and run
 
@@ -98,6 +127,8 @@ Latest release 0.3.0; `main` is the development version 0.4.0.dev0. See the [cha
   and [troubleshooting](docs/guide/troubleshooting.md).
 - [Developer architecture](docs/development/architecture.md),
   [Python examples](docs/development/examples.md), and [API reference](docs/reference/index.md).
+- [Reproducible figures](docs/guide/reproducibility.md) and the
+  [figure gallery](docs/guide/gallery.md).
 - [Progress and roadmap](docs/PROGRESS.md), [release checklist](docs/development/release.md),
   and [contributing](CONTRIBUTING.md).
 
@@ -126,6 +157,11 @@ GUI tests need a display; renderer tests need POV-Ray. CI runs the full applicat
 suite on Ubuntu under Xvfb with POV-Ray, the tests that need no window on macOS and on
 Windows (both with POV-Ray), and builds documentation separately. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for strict integration checks and maintenance setup.
+
+## Author
+
+Ycrystal is designed and developed by [@yw-fang](https://github.com/yw-fang)
+(Y-Matter Lab).
 
 ## License
 
