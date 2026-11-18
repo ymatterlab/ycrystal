@@ -62,7 +62,7 @@ Rules that follow from this design:
 
 - One repository and one codebase. Targets now: Linux Mint 22 / Ubuntu 24.04, macOS
   (Apple silicon), and Windows 11 (x64) with POV-Ray for Windows 3.7 (verified on one
-  laptop, 18 November 2026; Windows CI runs without POV-Ray).
+  laptop, 18 November 2026; Windows CI renders with it too).
 - POV-Ray for Windows (`pvengine64.exe`) is a window program that keeps a single
   instance: never start two at once, and route every run through `render/jobs.py` or
   `render/process.py`, which start it minimised, hold the foreground, and take turns
@@ -189,7 +189,8 @@ on a fresh Windows `PATH` is a Microsoft Store alias: do not use it.
   exact equality.
 - CI (`.github/workflows/ci.yml`): Ubuntu runs everything under Xvfb; macOS runs the
   tests that need no window (hosted Macs have no GPU for Qt's OpenGL widget); Windows
-  runs them too, experimentally and without POV-Ray (its installer cannot be
-  downloaded on CI).
+  runs them too, with POV-Ray for Windows from the `ci-assets` release (povray.org
+  blocks downloads from runners; the job pre-sets two POV-Ray settings so that no
+  dialog waits, see `docs/development/windows-port.md`).
 - The developer's Linux laptop is slow: avoid heavy benchmarks; run targeted test files
   first, the full suite when integration changes justify it.

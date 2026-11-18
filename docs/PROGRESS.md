@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 18 November 2026 (Windows port continued on a Windows computer, draft PR #35). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 18 November 2026 (Windows CI with the real POV-Ray for Windows, PR #36). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,38 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## Windows CI with the real POV-Ray for Windows (18 November 2026)
+
+Requested by the user after PR #35 was merged (`ae01f43`): render with POV-Ray for
+Windows in GitHub's Windows CI job, which povray.org's browser challenge kept from
+downloading the installer. Branch `ci/windows-povray`, PR #36.
+
+- The official installer, unmodified (SHA-256 `2B1331641B6F…5BDC8`, checked on the
+  user's download), is the asset of a new release `ci-assets` (not a Ycrystal
+  release; notes give the licence and the source). The job downloads it with
+  `gh release download` and its own token, refuses another checksum, installs it with
+  `/S`.
+- First run: the install worked, but every render waited. `scripts/windows_povray_probe.py`
+  gained `--screenshots` (window texts and a desktop screenshot when a render times
+  out; the job uploads them). Its screenshots showed two dialogs: "Could not load
+  internal editor – download it?" (every start without the editor DLL) and, from the
+  second start on, the About box (when `ItsAboutTime` has passed). POV-Ray's source
+  (`pvedit.cpp`, `pvengine.cpp`) confirms both. The job now writes `UseEditors=0` and
+  `ItsAboutTime=2147483647` into the runner's `pvengine.ini` before the first start.
+- The laptop never showed the editor question to Ycrystal because the user installed
+  the editor during the session (its DLLs appeared in the installation folder); this
+  also explains the first probe render's 90-second wait.
+- The Windows job is no longer experimental and runs with
+  `YCRYSTAL_REQUIRE_INTEGRATION=1`.
+- Users: the install guide asks to start POV-Ray once and settle the editor question;
+  troubleshooting explains the About box (second start, then every 14 days).
+
+| Check | Result |
+| --- | --- |
+| Windows job, run 44254469298 (`57f1afd`) | Renderer check `PASS: POV-Ray 3.7.0.0 … 0.14 px`; doctests and documentation examples pass; tests: 727 passed, 2 skipped (POSIX-only), 172 GUI deselected |
+| Same run, other jobs | Ubuntu (full suite), macOS, docs, pre-commit: pass |
+| Probe timeout reporting, on the laptop | Reproduced the single-instance error box: window title, button, and message reported; screenshot saved |
 
 ## Windows port, continued on a Windows computer (18 November 2026)
 

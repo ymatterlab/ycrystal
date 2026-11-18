@@ -127,8 +127,8 @@ docs-only installation, NumPy-style writing conventions, and asset regeneration.
 
 On Windows the programs are `.venv\Scripts\python.exe` and `.venv\Scripts\pre-commit.exe`.
 GUI tests need a display; renderer tests need POV-Ray. CI runs the full application
-suite on Ubuntu under Xvfb with POV-Ray, the tests that need no window on macOS and
-(experimentally, without POV-Ray) on Windows, and builds documentation separately. See
+suite on Ubuntu under Xvfb with POV-Ray, the tests that need no window on macOS and on
+Windows (both with POV-Ray), and builds documentation separately. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for strict integration checks and maintenance setup.
 
 ## License

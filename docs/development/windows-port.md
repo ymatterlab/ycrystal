@@ -11,8 +11,8 @@ laptop (18 November 2026). This page records:
 
 **Status (18 November 2026):** Ycrystal runs from a source checkout on Windows 11 with
 POV-Ray for Windows 3.7. On one laptop it passes every automated test (below), and the
-user tested it by hand there and reports that it works well. Windows CI runs without
-POV-Ray (see [the CI decision](#decision-needed-pov-ray-for-windows-on-ci)).
+user tested it by hand there and reports that it works well. Since PR #36, Windows CI
+renders with the real POV-Ray for Windows too (see [CI](#pov-ray-for-windows-on-ci)).
 
 ## Decision
 
@@ -37,6 +37,7 @@ They remain possible later and are not implemented.
 | Command-line switches of POV-Ray for Windows 3.7: `/EXIT` (quit after the render), `/NR` or `/NORESTORE`, `/RENDER FILE`, `/EDIT FILE`, `/NOEXEC`, `/THREADS N`, `/DEBUG`, `/DEMO`, `/BENCHMARK`; anything else after a `/` is an error dialog. Other arguments (an INI file, `+GA…`) are ordinary POV-Ray options | Its source, `windows/pvtext.cpp` (`preparse_commandline`), branch `3.7-stable` of github.com/POV-Ray/povray | Read 18 Nov 2026 (povray.org refuses automated access, HTTP 403) |
 | **Keep Single Instance** is on by default: `[General] OneInstance` in `DocPath\ini\pvengine.ini`, default 1. When a main window of class `Pov37-Win64-MainWinClass` (64-bit build) exists, a new copy brings it forward, shows a one-time notice (`[DontShowAgain] OneInstanceSet`), and passes only `/EDIT` and `/RENDER` to it; with `/EXIT` it shows the modal error box "Only /EDIT and /RENDER may be passed to previous instance" and exits with status 1 | Source: `windows/pvengine.cpp` (`WinMain`), `windows/pvtext.cpp` (`preparse_instance_commandline`), `windows/pvmisc.cpp` (`GetHKCU` reads `pvengine.ini`) | Read 18 Nov 2026, and observed on the Windows computer (experiment 6 below) |
 | With `/EXIT`, POV-Ray for Windows closes its window as soon as the render stops, **before** it plays the completion or error sound and before its first-time notices (render-complete sound, output file location) | Source: `windows/pvengine.cpp` (`render_stopped`) | Read 18 Nov 2026 |
+| **Two dialogs wait for an answer even with `/EXIT`.** (1) Without its separately licensed editor DLL (the AGPL installer does not include it), every start asks "Could not load internal editor – download it?" unless `[General] UseEditors=0` (*Options ▸ Other Settings ▸ Use Editor*) or the editor is installed. (2) From the second start on, it shows its About box whenever `[General] ItsAboutTime` has passed (unset: at once), then sets it 1 day ahead the first time and 14 days ahead after that | Source: `windows/pvedit.cpp` (`LoadEditorDLL`), `windows/pvengine.cpp` (`WinMain`, `ShowAboutBox`) | Read 18 Nov 2026; both seen in screenshots of the CI runner taken by the probe |
 | Command-line renders start directly, not through POV-Ray's file queue, so the `[Info] Rendering=1` flag that a killed render leaves behind does not make the next one skipped | Source: `windows/pvengine.cpp` (`WinMain`, the queue code that checks `Rendering`) | Read 18 Nov 2026 |
 
 ## What is implemented on `feature/windows`
@@ -156,7 +157,7 @@ installed by the user with the official installer, user files included.
 | 1 | Does `pvengine64.exe /EXIT /NR +GAscene.log scene.ini` render `scene.png` and quit? | **Yes**, in 2.3–2.8 s for a small scene. `/EXIT /NR /RENDER scene.ini +GAscene.log` behaves the same; the command line is kept |
 | 2 | Exit status after success and after a parse error? | **0 in both cases.** After a parse error there is no image, and `finish_job()` already treats "status 0, no image" as a failure, explained from the log |
 | 3 | Does `scene.log` hold POV-Ray's messages, including "Parse Error"? | **Yes** (options, warnings, statistics, and the parse error with file and line). No progress lines |
-| 4 | Does a dialog appear on the first start? | The very first render after installation produced no image within 90 s and was killed; the next start took 28 s, all later ones under 3 s. The dialog itself was not seen by the session. POV-Ray's settings file now holds `[DontShowAgain] OneInstanceSet=1`: the one-time *Keep Single Instance* notice, which it shows when another copy is open, so a POV-Ray window the user had open is the likely cause. The completion-sound and output-file notices never appear with `/EXIT` (source). No later render of the session (several full test runs) waited for a dialog |
+| 4 | Does a dialog appear on the first start? | **Yes, two of them** (found on the CI runner, see [CI](#pov-ray-for-windows-on-ci)): the editor question on every start until the editor is installed or turned off, and the About box from the second start on, again every 14 days. On the laptop, the very first render produced no image within 90 s and the next start took 28 s: by then the user had installed the editor (its DLLs appeared in the installation folder during the session) and the About box had been shown and closed (`ItsAboutTime` set). POV-Ray's settings also hold `[DontShowAgain] OneInstanceSet=1`, the one-time *Keep Single Instance* notice. The completion-sound and output-file notices never appear with `/EXIT` (source) |
 | 5 | Does the window stay minimised and not take the focus? | **Minimised: yes** (watched in every state, "Starting" to "Done"). **Focus: no** — it makes itself the foreground window even when started minimised or hidden (`SW_HIDE`). A Qt window in the foreground that starts it took the foreground away 2 times in 2 trials without `LockSetForegroundWindow`, and 0 times with it (1 trial; in a second one the window had not got the foreground first, and Windows refused the lock, as documented). Implemented for the window; a terminal cannot do it, so `--render` loses the terminal's focus while POV-Ray runs. `SW_HIDE` would also keep its taskbar button away; minimised was kept, so that a POV-Ray dialog stays reachable |
 | 6 | With POV-Ray for Windows already open, does a second render start a new copy? | **No.** It shows the modal "Commandline processing error" box and waits (killed after 15 s; no image). With the new check, `.venv\Scripts\python.exe -m ycrystal --check-renderer` fails in 0.7 s with the explanation, and nothing appears. Ycrystal's own renders now take turns |
 | 7 | Where are the include files, and are they found? | `Documents\POV-Ray\v3.7\include` (the installation folder has none). Found; `metals.inc` and the others present. The folder is also read from the registry (`DocPath`) |
@@ -173,20 +174,29 @@ Further observations:
 - A clone made from `main` before `.gitattributes` existed keeps CRLF files after a
   switch to this branch; tests that hash tracked files would fail (see HANDOFF.md).
 
-### Decision needed: POV-Ray for Windows on CI
+### POV-Ray for Windows on CI
 
-The CI runner cannot download the installer, so real Windows renders in CI need one of
-these:
+povray.org answers GitHub's runners with a browser challenge, so CI cannot download the
+installer from there. Of the options considered on 17 November 2026 (a: keep the
+official installer as a release asset of this repository; b: a self-hosted runner;
+c: POV-Ray 3.8 beta; d: no POV-Ray on Windows CI), the user chose **a** on 18 November
+2026 (PR #36):
 
-| Option | For | Against |
-| --- | --- | --- |
-| a. Keep the official installer (SHA-256 above) as a release asset of this repository, and download it from there in CI | Real POV-Ray 3.7 renders on every pull request | Redistributes an AGPL-3.0 binary: check the licence obligations (the corresponding source is POV-Ray's public repository) before the repository or the asset becomes public |
-| b. A self-hosted Windows runner with POV-Ray installed by hand | Real renders, the real program, no redistribution | A machine to keep online |
-| c. POV-Ray's 3.8 beta installer from its GitHub releases (downloadable) | Automatic | Not 3.7: the tests, the documentation, and the users' version all assume 3.7 |
-| d. No POV-Ray on Windows CI; test rendering by hand on a Windows computer | Nothing to decide now | Rendering on Windows is only as tested as the last hand run |
-
-Suggested: **d** for now (the hand run of 18 November 2026 is recorded above), then
-**a** or **b** once Windows is a supported target.
+- The official installer, unmodified (SHA-256 above), is the asset
+  `povwin-3.7-agpl3-setup.exe` of the release `ci-assets` (not a Ycrystal release;
+  its notes give the licence, AGPL-3.0, and the source, github.com/POV-Ray/povray). The
+  Windows job downloads it with its own token, refuses another checksum, and installs
+  it silently.
+- Before POV-Ray's first start the job writes `UseEditors=0` and `ItsAboutTime` (the
+  latest 32-bit time) into the runner's `pvengine.ini`; without them, the editor
+  question and the About box waited for an answer (screenshots of
+  `scripts/windows_povray_probe.py --screenshots`, uploaded by the job).
+- The job is no longer experimental: it runs the renderer check, the documentation
+  examples, and the tests without windows with `YCRYSTAL_REQUIRE_INTEGRATION=1`.
+  First passing run: 727 passed, 2 skipped (POSIX-only tests), GUI tests not run (as
+  on macOS: run them on a Windows computer).
+- Before the repository or the release becomes public, check the AGPL-3.0 obligations
+  for passing the installer on (the release notes point to the source).
 
 ## Still open
 
@@ -200,9 +210,12 @@ Suggested: **d** for now (the hand run of 18 November 2026 is recorded above), t
    Ycrystal); a long render cancelled; closing the window during a render; a project
    saved on Linux or macOS renders the same on Windows and back; whether POV-Ray plays
    a sound (none expected with `/EXIT`).
-2. **CI.** Decide how CI gets POV-Ray for Windows (above). Once the job passes with
-   real renders, remove `experimental: true` from its matrix entry and the
-   `continue-on-error` of its install and documentation-example steps.
+2. **POV-Ray for Windows' About box for users.** Every 14 days (and at the second
+   start after installation) POV-Ray for Windows shows its About box when it starts,
+   also when Ycrystal starts it minimised, and waits for OK; the render waits with it.
+   This is documented (install guide, troubleshooting). Ycrystal does not change the
+   user's POV-Ray settings; whether it should detect the box and bring it forward is
+   undecided.
 3. **Out of scope until decided:**
    - an installer or launcher (there is no Start-menu entry; `--install-desktop` is
      Linux only), and `.ycrystal` file association;
