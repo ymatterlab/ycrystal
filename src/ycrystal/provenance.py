@@ -470,7 +470,7 @@ def provenance_record(
         "format": PROVENANCE_FORMAT,
         "schema_version": PROVENANCE_SCHEMA_VERSION,
         "generator": f"Ycrystal {__version__}",
-        "created": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+        "created": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
         "job": request.job,
         "replay": shlex.join(["ycrystal", replay_project, "--render", replay_image]),
         "image": {

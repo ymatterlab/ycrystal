@@ -141,7 +141,7 @@ def project_to_dict(project: Project) -> dict[str, Any]:
         "format": PROJECT_FORMAT,
         "schema_version": SCHEMA_VERSION,
         "generator": f"Ycrystal {__version__}",
-        "saved_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+        "saved_at": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
         "structure": {
             "cell": s.cell.tolist(),
             "positions": s.positions.tolist(),

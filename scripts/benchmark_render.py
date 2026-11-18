@@ -325,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     report = {
         "format": "ycrystal-benchmark",
         "schema_version": 1,
-        "created": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+        "created": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
         "options": {  # no paths: the report may be published
             "cases": names,
             "warmups": args.warmups,

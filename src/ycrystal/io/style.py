@@ -546,7 +546,7 @@ def style_to_dict(style: Style) -> dict[str, Any]:
         "schema_version": STYLE_SCHEMA_VERSION,
         "project_schema": project["schema_version"],
         "generator": f"Ycrystal {__version__}",
-        "saved_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+        "saved_at": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
         "source": {"composition": style.source_name, "symbols": list(style.source_symbols)},
         "scene": {key: value for key, value in project["scene"].items() if key != "vectors"},
         "environment": project["environment"],

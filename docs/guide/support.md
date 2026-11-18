@@ -43,8 +43,9 @@ Details: [structure files and projects](../FORMATS.md).
 | Linux Mint 22.1 Cinnamon, X11, Intel Meteor Lake graphics (Mesa 25.2) | Verified on the development laptop |
 | Ubuntu 24.04 under Xvfb (software OpenGL) | Verified by CI on every change |
 | System Python 3.12 | Verified |
-| Python 3.10 and 3.11 | Allowed by the package metadata, unverified |
-| Python 3.13 | Verified on macOS 15.8, Apple silicon (Homebrew Python 3.13.18, full suite including the GUI tests and POV-Ray, 18 November 2026); unverified on Linux and Windows, and not tested in CI |
+| Python 3.13 | Verified on macOS 15.8, Apple silicon (Homebrew Python 3.13.18, full suite including the GUI tests and POV-Ray, 18 November 2026); full suite in CI on Ubuntu 24.04 (Xvfb, POV-Ray 3.7) on every change; unverified on Windows |
+| Python 3.14 | Full suite in CI on Ubuntu 24.04 (Xvfb, POV-Ray 3.7) on every change; unverified on real machines, macOS, and Windows |
+| Python 3.10 and 3.11 | Not supported: the tested NumPy and SciPy need Python 3.12 (`requires-python = ">=3.12"`) |
 | macOS 15.8, Apple silicon, Homebrew Python 3.12 and POV-Ray, non-Retina display | Automated tests verified on a Mac mini (full suite including the GUI tests, 16 November 2026); hands-on use not yet checked |
 | macOS on a Retina display, Intel Macs, other macOS versions | Unverified (the GUI tests also pass with an emulated 2× display scale) |
 | macOS in CI (GitHub-hosted, no GPU) | Tests that open no window only, on every pull request and push to `main` |

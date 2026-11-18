@@ -1,6 +1,8 @@
 # Integration-tested dependency set (M0; pre-commit added in the tooling change), Linux Mint 22.1, system Python 3.12.3.
 # Install with:  uv pip install -e ".[dev]" -c constraints.txt   (or pip ... -c constraints.txt)
 # The same pins install on macOS 15 (arm64, Python 3.12.16); pyobjc-* are needed only there (by pyvista).
+# They need Python 3.12 or newer (NumPy, SciPy, contourpy) and have wheels for Python 3.12, 3.13, and 3.14 on
+# Linux, macOS, and Windows; CI tests 3.12 on all three and 3.13 and 3.14 on Ubuntu. Keep it so when updating.
 ase==3.29.0
 attrs==26.1.0
 certifi==2026.10.23

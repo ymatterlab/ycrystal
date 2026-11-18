@@ -85,6 +85,13 @@ Merged after the `v0.3.0` tag; not yet part of a release.
   `--uninstall-desktop` removes them). When POV-Ray for Windows would stop at its
   question about its missing editor, Ycrystal now says so at once, with the remedy,
   instead of waiting for it.
+- **Python 3.12, 3.13, and 3.14.** Ycrystal now requires Python 3.12 or newer
+  (`requires-python = ">=3.12"`, formerly `>=3.10`): the tested packages of
+  `constraints.txt` (NumPy 2.5, SciPy 1.18) need it, so Python 3.10 and 3.11 could not
+  install them. CI runs the full suite on Python 3.13 and 3.14 as well, on Ubuntu. The
+  Windows installation script uses Python 3.12, 3.13, or 3.14 if `py` finds one (in
+  this order) before installing 3.12, and refuses older versions, also in an existing
+  `.venv`, with a message instead of a failing `pip`.
 
 ### Fixes
 - Switching the view directly between some axes in the window (for example from c to

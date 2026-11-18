@@ -89,8 +89,9 @@ Rules that follow from this design:
 - Follow the existing architecture and conventions; prefer minimal, focused changes.
   No broad refactoring, no new framework, and no new dependency without a clear need.
 - Preserve existing behaviour and backward compatibility; add tests for new behaviour.
-- Python ≥ 3.10 (developed and CI-tested on 3.12). NumPy-style docstrings; ruff with
-  line length 100 and pydocstyle rules (first docstring line in imperative mood, D401).
+- Python ≥ 3.12; supported 3.12, 3.13, 3.14 (CI: 3.12 on every system, 3.13 and 3.14
+  on Ubuntu). NumPy-style docstrings; ruff with line length 100 and pydocstyle rules
+  (first docstring line in imperative mood, D401).
 - British spelling in the UI and docs ("colour", "centre"). Keep user-approved
   colour-name descriptions unchanged.
 - Docstring cross-references use mkdocstrings syntax

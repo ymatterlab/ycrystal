@@ -224,7 +224,8 @@ at a dialog in a minimised window.
 Implemented:
 
 - **`scripts/install-windows.ps1`** (ASCII, for Windows PowerShell 5.1, which every
-  Windows 11 has): Python 3.12 with `winget --scope user` unless `py -3.12` finds one
+  Windows 11 has): Python 3.12 with `winget --scope user` unless `py` finds Python
+  3.12, 3.13, or 3.14 (in this order; older ones are refused, also in an existing `.venv`)
   (it re-reads `PATH` from the registry, so no new terminal is needed); `.venv`;
   `pip install -e . -c constraints.txt`; POV-Ray for Windows with `winget` unless found;
   if POV-Ray would ask about its editor, it opens once with instructions; the

@@ -75,7 +75,8 @@ powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1
 
 The script installs what is missing and checks the result:
 
-1. Python 3.12 with `winget`, for the current user, unless `py -3.12` finds one;
+1. Python 3.12 with `winget`, for the current user, unless `py` finds Python 3.12,
+   3.13, or 3.14 (in this order);
 2. the virtual environment `.venv` in the checkout, with Ycrystal and the tested
    package versions of `constraints.txt` (about 300 MB the first time);
 3. POV-Ray for Windows 3.7 with `winget`, unless it is installed: its official
@@ -90,7 +91,8 @@ The script installs what is missing and checks the result:
 Then start Ycrystal from the Start menu. The script can run again at any time: after
 `git pull` it updates the installation. It ends with "Ycrystal is ready." (exit status
 0), or with a list of what is not ready yet. Its options: `-Python C:\path\to\python.exe`
-(another Python, 3.10 or newer, for `.venv`), `-Dev` (also the developer tools),
+(another Python, 3.12 or newer, for `.venv`; newer than 3.14 with a warning; ignored
+once `.venv` exists, so delete `.venv` to change it), `-Dev` (also the developer tools),
 `-NoPovray`, and `-NoStartMenu`; `Get-Help .\scripts\install-windows.ps1 -Detailed`
 describes them. `-ExecutionPolicy Bypass` lets this one PowerShell run the script,
 which Windows' default policy refuses otherwise; it changes no setting. While the

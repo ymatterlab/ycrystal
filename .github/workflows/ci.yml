@@ -64,9 +64,11 @@ jobs:
         run: zensical build --clean --strict
 
   test:
-    # One job per operating system, same steps. To add a system, add a matrix entry and
-    # a "System packages" step for it; POV-Ray must be on PATH, except POV-Ray for
-    # Windows, which Ycrystal finds in its installation folder.
+    # One job per operating system, same steps, on Python 3.12 (the version the pins in
+    # constraints.txt were tested with), plus Python 3.13 and 3.14 on Ubuntu only: the
+    # full suite there costs two jobs, against six for every system. To add a system,
+    # add a matrix entry and a "System packages" step for it; POV-Ray must be on PATH,
+    # except POV-Ray for Windows, which Ycrystal finds in its installation folder.
     # YCRYSTAL_REQUIRE_INTEGRATION makes a missing display or renderer fail the run
     # instead of skipping the GUI and rendering tests.
     name: tests (${{ matrix.name }})
@@ -80,6 +82,16 @@ jobs:
           # distribution's POV-Ray 3.7. Runs every test.
           - name: Ubuntu 24.04, Python 3.12, Xvfb, POV-Ray 3.7
             os: ubuntu-24.04
+            python: "3.12"
+            pytest: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -rs
+          # The newer supported Pythons, with the same pins and every test.
+          - name: Ubuntu 24.04, Python 3.13, Xvfb, POV-Ray 3.7
+            os: ubuntu-24.04
+            python: "3.13"
+            pytest: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -rs
+          - name: Ubuntu 24.04, Python 3.14, Xvfb, POV-Ray 3.7
+            os: ubuntu-24.04
+            python: "3.14"
             pytest: xvfb-run -a -s "-screen 0 1920x1080x24" python -m pytest -q -rs
           # macOS on Apple silicon with Homebrew's POV-Ray 3.7: installation, imports,
           # structure and project code, POV-Ray discovery and rendering, and Qt without
@@ -88,12 +100,14 @@ jobs:
           # renderer. Run them on a real Mac (docs/HANDOFF.md).
           - name: macOS 15 arm64, Python 3.12, POV-Ray 3.7, no GUI tests
             os: macos-15
+            python: "3.12"
             pytest: python -m pytest -q -rs -m "not gui"
           # Windows with the official POV-Ray for Windows 3.7, from this repository's
           # "ci-assets" release (povray.org refuses downloads from runners). The GUI
           # tests are left out, as on macOS: they run on a real Windows computer.
           - name: Windows Server 2022, Python 3.12, POV-Ray for Windows 3.7, no GUI tests
             os: windows-2022
+            python: "3.12"
             pytest: python -m pytest -q -rs -m "not gui"
     defaults:
       run:
@@ -156,7 +170,7 @@ jobs:
 
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
           cache: pip
           cache-dependency-path: |
             constraints.txt

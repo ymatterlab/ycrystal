@@ -10,7 +10,8 @@ Run it in PowerShell, in the checkout (the folder that "git clone" made):
 It installs what is missing, so it can be run again at any time; after "git pull" it
 updates the installation. In order:
 
-1. Python 3.12, with winget for the current user, unless "py -3.12" finds one;
+1. Python 3.12, with winget for the current user, unless "py" finds Python 3.12, 3.13,
+   or 3.14 (in this order: 3.12 is the version the pinned packages were tested with);
 2. the virtual environment .venv in the checkout, and Ycrystal into it, with the
    tested versions of constraints.txt (about 300 MB of packages the first time);
 3. POV-Ray for Windows 3.7, with winget (its official installer from povray.org;
@@ -25,8 +26,9 @@ Only the POV-Ray installer needs administrator rights. The exit status is 0 when
 everything is ready, and 1 when a step failed or rendering is not ready yet.
 
 .PARAMETER Python
-A Python interpreter (3.10 or newer; 3.12 is tested) to create .venv with, instead of
-"py -3.12". Ignored when .venv exists.
+A Python interpreter to create .venv with, instead of the one that "py" finds: Python
+3.12, 3.13, or 3.14 (3.12 is tested most; newer versions are tried with a warning).
+Ignored when .venv exists: to change the Python of .venv, delete the folder .venv first.
 
 .PARAMETER Dev
 Also install the developer tools (pytest, ruff, pre-commit): pip's ".[dev]".
@@ -94,12 +96,34 @@ function Install-Package([string]$Id, [string[]]$Options) {
     Update-SessionPath
 }
 
-function Find-Python312 {
+# The Python versions that the pins of constraints.txt install on, in order of preference.
+$supportedPythons = @("3.12", "3.13", "3.14")
+
+function Find-Python {
     $launcher = Get-Command py -ErrorAction SilentlyContinue
     if (-not $launcher) { return $null }
-    $found = & $launcher.Source -3.12 -c "import sys; print(sys.executable)" 2>$null
-    if ($LASTEXITCODE -ne 0 -or -not $found) { return $null }
-    return "$found".Trim()
+    foreach ($wanted in $supportedPythons) {
+        $found = & $launcher.Source "-$wanted" -c "import sys; print(sys.executable)" 2>$null
+        if ($LASTEXITCODE -eq 0 -and $found) { return "$found".Trim() }
+    }
+    return $null
+}
+
+function Test-PythonVersion([string]$Program, [string]$What) {
+    # Stops for a Python older than 3.12 (the pinned NumPy and SciPy need 3.12), warns
+    # for one newer than 3.14 (not tested), and returns its version.
+    $found = & $Program -c "import sys; print('%d.%d' % sys.version_info[:2])"
+    if ($LASTEXITCODE -ne 0 -or -not $found) { Stop-Install "$Program does not run." }
+    $found = "$found".Trim()
+    if ([version]$found -lt [version]$supportedPythons[0]) {
+        Stop-Install ("$What is Python $found; Ycrystal needs Python 3.12 or newer (tested: " +
+            ($supportedPythons -join ", ") + ").")
+    }
+    if ([version]$found -gt [version]$supportedPythons[-1]) {
+        Write-Host ("WARNING: Python $found is newer than the tested versions (" + ($supportedPythons -join ", ") +
+            "); its packages may be missing or fail.") -ForegroundColor Yellow
+    }
+    return $found
 }
 
 function Find-Povray {
@@ -132,19 +156,21 @@ if (-not (Test-Path (Join-Path $root "pyproject.toml"))) {
 # ----- 1. Python and the virtual environment -------------------------------------------
 Write-Step "Python and the virtual environment .venv"
 if (Test-Path $venvPython) {
-    Write-Host "Using the existing environment $venv"
+    $version = Test-PythonVersion $venvPython ("The existing environment $venv (delete the folder .venv " +
+        "and run this script again to recreate it)")
+    Write-Host "Using the existing environment $venv (Python $version)"
 } else {
     $base = $Python
     if (-not $base) {
-        $base = Find-Python312
+        $base = Find-Python
         if (-not $base) {
             if (-not (Test-Winget)) {
-                Stop-Install ("Python 3.12 was not found, and winget is not available to install it. " +
+                Stop-Install ("Python 3.12, 3.13, or 3.14 was not found, and winget is not available to install it. " +
                     "Install Python 3.12 from https://www.python.org/downloads/windows/ and run this script again.")
             }
-            Write-Host "Python 3.12 was not found; installing it with winget, for the current user."
+            Write-Host "Python 3.12, 3.13, or 3.14 was not found; installing Python 3.12 with winget, for the current user."
             Install-Package "Python.Python.3.12" @("--scope", "user")
-            $base = Find-Python312
+            $base = Find-Python
             if (-not $base) {
                 Stop-Install "Python 3.12 is still not found. Open a new PowerShell window and run this script again."
             }
@@ -153,12 +179,7 @@ if (Test-Path $venvPython) {
     if ($base -like "*\WindowsApps\*") {
         Stop-Install "$base is the Microsoft Store alias, not a Python installation. Use Python 3.12 from python.org or winget."
     }
-    $version = & $base -c "import sys; print('%d.%d' % sys.version_info[:2])"
-    if ($LASTEXITCODE -ne 0 -or -not $version) { Stop-Install "$base does not run." }
-    $version = "$version".Trim()
-    if ([version]$version -lt [version]"3.10") {
-        Stop-Install "$base is Python $version; Ycrystal needs Python 3.10 or newer (3.12 is tested)."
-    }
+    $version = Test-PythonVersion $base $base
     Write-Host "Creating $venv with Python $version ($base)"
     & $base -m venv $venv
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $venvPython)) { Stop-Install "Could not create $venv." }

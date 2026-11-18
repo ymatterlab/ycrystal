@@ -130,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     report = {
         "format": "ycrystal-replay-check",
         "schema_version": 1,
-        "created": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+        "created": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
         "reference": args.reference.name,  # folder names only: the report may be published
         "tolerance": args.tolerance,
         "system": system_info(povray),
