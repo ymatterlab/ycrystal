@@ -153,6 +153,14 @@ Known limitations and unresolved issues:
   **Ycrystal**, pointing at its checkout's `.venv` (`--uninstall-desktop` removes it).
 - **Not done:** nothing run on Linux or macOS on a real machine in this session (CI ran
   them); GUI tests on Windows CI (run them on a Windows computer).
+- **Then, on the Linux laptop (Python versions):** the user merged PR #38 (3.13 on
+  macOS, `e5cf291`) and asked for Python 3.12, 3.13, and 3.14 on PR #39:
+  `requires-python >=3.12`, the installation script accepting 3.12–3.14, and CI jobs
+  for 3.13 and 3.14 within twice the 3.12 CI cost. Commit `f581801`; CI run
+  44366127112 passed, Ubuntu 904 passed / 5 skipped on each of 3.12, 3.13, and 3.14,
+  at 1.8× the job time (details in
+  [PROGRESS.md](PROGRESS.md#python-312-313-and-314-18-november-2026)). Not run: 3.13
+  and 3.14 on Windows and on a real Linux machine, the script's `py` search for them.
 
 Earlier, on 17 November 2026:
 
@@ -430,6 +438,9 @@ py -3.12 -m venv .venv-docs; .venv-docs\Scripts\python.exe -m pip install -r doc
   stay in `gui/native.py`, `desktop.py`, `render/povray.py`, and `tests/conftest.py`.
 - A resize of the view is not a change of the figure (16 November 2026).
 - macOS CI runs without GUI tests; the GUI is verified on a real Mac.
+- Python: 3.12, 3.13, and 3.14 are supported; `requires-python >=3.12` (18 November
+  2026). CI runs 3.12 on every system and 3.13 and 3.14 on Ubuntu only, within the
+  user's limit of twice the 3.12-only CI cost; check this when adding jobs.
 - Vectors: Cartesian components in the structure frame; magnetic moments in μB,
   directions dimensionless; source defaults plus image overrides/suppressions; no
   inferred signs or magnetic symmetry; styles carry arrow appearance, never vectors.

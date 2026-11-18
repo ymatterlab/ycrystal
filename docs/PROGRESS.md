@@ -93,6 +93,44 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
 
+## Python 3.12, 3.13, and 3.14 (18 November 2026)
+
+Requested by the user after reviewing PR #39: Ycrystal should work at least with Python
+3.12, 3.13, and 3.14; `requires-python >=3.12`; CI jobs for 3.13 and 3.14 only if CI
+does not become twice as heavy as with 3.12 alone, otherwise record them by hand. PR #38
+(3.13 on macOS) was merged first (`e5cf291`). Commit `f581801` on
+`feature/windows-install` (PR #39):
+
+- `pyproject.toml`: `requires-python = ">=3.12"` (was `>=3.10`). The pins of
+  `constraints.txt` already needed it: NumPy 2.5.4, SciPy 1.18.1, and contourpy 1.4.0
+  require Python 3.12 (PyPI metadata), so 3.10 and 3.11 could not install them. PyPI
+  lists wheels for 3.12, 3.13, and 3.14 on Linux x86_64, macOS arm64, and Windows x64
+  for every compiled pin.
+- Ruff's target follows `requires-python`: `datetime.timezone.utc` became
+  `datetime.UTC` (UP017, the same object) in 7 places; no behaviour change.
+- `scripts/install-windows.ps1`: uses Python 3.12, 3.13, or 3.14 if `py` finds one,
+  in this order, before installing 3.12 with `winget`; refuses Python older than 3.12,
+  also in an existing `.venv`, with a message instead of a failing `pip`; warns above
+  3.14.
+- CI: the full suite (GUI tests under Xvfb, POV-Ray 3.7) on Ubuntu 24.04 also with
+  Python 3.13 and 3.14. All systems on all three versions would triple the job time,
+  so the new jobs run on Ubuntu only.
+- Docs: install guide, support matrix, windows-port, `constraints.txt` header,
+  CLAUDE.md, changelog.
+
+| Check | Result |
+| --- | --- |
+| Local (Linux laptop, Python 3.12.3): Ruff, `pre-commit run --all-files`, doctests of the 4 changed modules with doctests, `zensical build --clean --strict` | Clean |
+| Local: `pytest -m "not gui"` on the tests of the changed modules (project, readers, style, POV-Ray writer, export, reproducibility, platform, Windows) | 213 passed, 5 skipped (Windows only) |
+| CI run 44366127112 on `f581801`: Ubuntu, Python 3.12.16 / 3.13.18 / 3.14.10, full suite with `YCRYSTAL_REQUIRE_INTEGRATION=1` | 904 passed, 5 skipped on each version; every pin installed from wheels, unchanged |
+| Same run: macOS 15, Python 3.12.10, no GUI tests | 732 passed, 5 skipped |
+| Same run: Windows Server 2022, Python 3.12.10, no GUI tests; then the installation script with `-Python` | 735 passed, 2 skipped; script: `.venv` created with Python 3.12, "Ycrystal is ready." |
+| CI cost, same run | 36.8 job-minutes against 20.3 for the 3.12 jobs alone (1.8×; under the user's 2× limit); wall time 9.6 min (the 3.14 job) against 7.0 min |
+
+Not verified: Python 3.13 and 3.14 on Windows and on a real Linux machine, 3.14 on
+macOS; the script's search through `py` for 3.13 and 3.14 and its refusal of an old
+`.venv` (CI passes `-Python`; no PowerShell on the Linux laptop).
+
 ## Windows installation in one command (18 November 2026)
 
 Requested by the user after PR #36 was merged (`8051f04`): "is there a simpler method
