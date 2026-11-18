@@ -154,7 +154,15 @@ jobs:
         if: runner.os == 'Windows'
         timeout-minutes: 5
         continue-on-error: true
-        run: python scripts/windows_povray_probe.py
+        run: python scripts/windows_povray_probe.py --timeout 60 --screenshots probe-screenshots
+
+      - name: Screenshots of POV-Ray for Windows waiting (if any)
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: povray-windows-probe
+          path: probe-screenshots/
+          if-no-files-found: ignore
 
       - name: Command line and renderer check (POV-Ray found)
         timeout-minutes: 10

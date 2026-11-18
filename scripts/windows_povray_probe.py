@@ -60,6 +60,63 @@ def candidates(executable: str) -> dict[str, list[str]]:
     }
 
 
+def window_texts(pid: int) -> list[str]:
+    """Return the visible windows of a process, with the texts of their controls.
+
+    A dialog that POV-Ray for Windows waits on shows here with its title, message, and
+    buttons. Empty on other systems.
+    """
+    if sys.platform != "win32":
+        return []
+    import ctypes
+    from ctypes import wintypes
+
+    user32 = ctypes.WinDLL("user32")
+    callback_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+
+    def text_of(hwnd) -> str:
+        buffer = ctypes.create_unicode_buffer(user32.GetWindowTextLengthW(hwnd) + 1)
+        user32.GetWindowTextW(hwnd, buffer, len(buffer))
+        return buffer.value
+
+    lines: list[str] = []
+
+    def on_window(hwnd, _):
+        owner = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(owner))
+        if owner.value == pid and user32.IsWindowVisible(hwnd):
+            parts: list[str] = []
+
+            def on_child(child, _):
+                if user32.IsWindowVisible(child) and text_of(child).strip():
+                    parts.append(text_of(child).strip().replace("\r\n", " ").replace("\n", " "))
+                return True
+
+            user32.EnumChildWindows(hwnd, callback_type(on_child), 0)
+            lines.append(f"{text_of(hwnd)!r}: " + " | ".join(parts)[:1500])
+        return True
+
+    user32.EnumWindows(callback_type(on_window), 0)
+    return lines
+
+
+def save_screenshot(path) -> bool:
+    """Save a screenshot of the whole desktop (Windows; needs Pillow)."""
+    try:
+        from PIL import ImageGrab
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        ImageGrab.grab(all_screens=True).save(path)
+        return True
+    except Exception as exc:  # diagnostics only: never fail the probe here
+        print("  no screenshot:", exc)
+        return False
+
+
+screenshot_dir = None
+"""Folder for screenshots of renders that time out (``--screenshots``)."""
+
+
 def probe(executable: str, name: str, arguments: list[str], timeout: float) -> None:
     job = prepare_job(
         self_test_geometry(),
@@ -70,21 +127,28 @@ def probe(executable: str, name: str, arguments: list[str], timeout: float) -> N
     )
     print(f"\n--- {name}: {executable} {' '.join(arguments)}")
     started = time.monotonic()
+    process = subprocess.Popen(
+        [executable, *arguments],
+        cwd=job.directory,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        startupinfo=background_startupinfo(executable),
+    )
     try:
-        completed = subprocess.run(
-            [executable, *arguments],
-            cwd=job.directory,
-            capture_output=True,
-            text=True,
-            errors="replace",
-            timeout=timeout,
-            startupinfo=background_startupinfo(executable),
-        )
-        print(f"exit status: {completed.returncode}")
-        if completed.stdout.strip() or completed.stderr.strip():
-            print("printed:", (completed.stdout + completed.stderr).strip()[-2000:])
+        output, _ = process.communicate(timeout=timeout)
+        print(f"exit status: {process.returncode}")
+        if output.strip():
+            print("printed:", output.decode("utf-8", "replace").strip()[-2000:])
     except subprocess.TimeoutExpired:
         print(f"TIMEOUT after {timeout} s (a dialog may be waiting for an answer)")
+        for line in window_texts(process.pid):
+            print("  window:", line)
+        if screenshot_dir is not None:
+            shot = screenshot_dir / f"probe-{name}.png"
+            if save_screenshot(shot):
+                print("  screenshot:", shot)
+        process.kill()
+        process.communicate()
     print(f"seconds: {time.monotonic() - started:.1f}")
     files = sorted(p.name for p in job.directory.iterdir())
     print("job folder:", files)
@@ -101,7 +165,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--povray", help="POV-Ray executable (default: as Ycrystal finds it)")
     parser.add_argument("--timeout", type=float, default=90.0, help="seconds per render")
+    parser.add_argument("--screenshots", help="folder for screenshots of renders that time out")
     args = parser.parse_args(argv)
+    global screenshot_dir
+    if args.screenshots:
+        from pathlib import Path
+
+        screenshot_dir = Path(args.screenshots)
     print(f"Python {sys.version.split()[0]} on {sys.platform}")
     executable = find_povray(args.povray)
     print("executable:", executable)
