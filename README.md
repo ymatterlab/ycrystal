@@ -8,6 +8,7 @@
 [![Colorblind Friendly](https://img.shields.io/badge/Colorblind-Friendly-0077B6)](docs/guide/appearance.md#choosing-colours)
 [![CI](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml/badge.svg)](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml)
 [![Version: 0.4.0](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.24403163-1682D4.svg)](https://doi.org/10.5281/zenodo.24403163)
 [![Platforms: Linux | macOS | Windows](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](docs/guide/support.md)
 [![Python 3.12 | 3.13 | 3.14](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776AB.svg)](docs/guide/support.md)
 [![Renderer: POV-Ray 3.7](https://img.shields.io/badge/renderer-POV--Ray%203.7-5A2D82.svg)](https://www.povray.org/)
@@ -221,6 +222,31 @@ GUI tests need a display; renderer tests need POV-Ray. CI runs the full applicat
 suite on Ubuntu under Xvfb with POV-Ray, the tests that need no window on macOS and on
 Windows (both with POV-Ray), and builds documentation separately. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for strict integration checks and maintenance setup.
+
+## How to cite
+
+Until a journal article is available, please cite the archived software. Version 0.4.0
+is on Zenodo:
+
+> Fang, Y.-W. (2026). *Ycrystal: reproducible ray-traced crystal visualization with
+> transferable styles and automated workflows* (version v0.4.0) [Computer software].
+> Zenodo. https://doi.org/10.5281/zenodo.24403163
+
+```bibtex
+@software{Fang2026Ycrystal,
+  author    = {Fang, Yue-Wen},
+  title     = {Ycrystal: reproducible ray-traced crystal visualization with
+               transferable styles and automated workflows},
+  version   = {v0.4.0},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.24403163},
+  url       = {https://doi.org/10.5281/zenodo.24403163}
+}
+```
+
+This DOI identifies version 0.4.0 (Git tag `v0.4.0`). If you used another version,
+please name it as well.
 
 ## Author
 
