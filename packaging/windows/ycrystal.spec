@@ -70,11 +70,11 @@ def licence_files():
 
 def version_info(description, filename):
     strings = [
-        StringStruct("CompanyName", "Y-Matter Lab"),
+        StringStruct("CompanyName", "Yue-Wen Fang"),
         StringStruct("FileDescription", description),
         StringStruct("FileVersion", VERSION),
         StringStruct("InternalName", filename.removesuffix(".exe")),
-        StringStruct("LegalCopyright", "MIT License, Y-Matter Lab"),
+        StringStruct("LegalCopyright", "MIT License, Yue-Wen Fang"),
         StringStruct("OriginalFilename", filename),
         StringStruct("ProductName", "Ycrystal"),
         StringStruct("ProductVersion", VERSION),

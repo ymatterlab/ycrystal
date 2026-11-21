@@ -9,7 +9,7 @@ description = "Prepare reproducible crystal-structure figures and render them wi
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
-authors = [{ name = "Y-Matter Lab" }]
+authors = [{ name = "Yue-Wen Fang" }]
 requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
