@@ -250,8 +250,7 @@ please name it as well.
 
 ## Author
 
-Ycrystal is designed and developed by [@yw-fang](https://github.com/yw-fang)
-(Y-Matter Lab).
+Ycrystal is designed and developed by [Yue-Wen Fang](https://github.com/yw-fang).
 
 ## License
 
