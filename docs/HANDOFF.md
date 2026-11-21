@@ -9,12 +9,11 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 
 ## Current project status
 
-- **In review: FR-LEGEND-01, element legend** (requested 21 November 2026), branch
-  `feature/element-legend` from `main` at `844775d`: a *Scene ▸ Legend* tab and a
-  legend of the displayed elements painted onto the figure, its previews, renders, and
-  exports (project schema 8, style schema 3). Verified on the Linux laptop only (full
-  suite 963 passed, 10 Windows-only skipped); not merged. See
-  [PROGRESS.md](PROGRESS.md#fr-legend-01-element-legend-post-040-21-november-2026).
+- **FR-LEGEND-01, element legend** (requested 21 November 2026): merged in PR #45
+  (merge commit `6735400`) after CI passed on every system. A *Scene ▸ Legend* tab and
+  a legend of the displayed elements painted onto the figure, its previews, renders, and
+  exports (project schema 8, style schema 3). Not yet in a release; no hands-on check
+  yet. See [PROGRESS.md](PROGRESS.md#fr-legend-01-element-legend-post-040-21-november-2026).
 - **Milestone:** version **0.4.0** (18 November 2026, at the user's request): the
   source reports `0.4.0`, and `CHANGELOG.md` lists everything since `v0.3.0` (PRs
   #23–#40) under 0.4.0 (`main` reported `0.4.0.dev0` until then).
@@ -66,7 +65,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 (`8051f04`) |
 | unreleased | Graphical Windows installer (PyInstaller + Inno Setup), coexisting with the developer installation (no FR ID) | branch `feature/windows-installer` |
 | unreleased | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | PR #39 |
-| unreleased | FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3 | branch `feature/element-legend` (not merged) |
+| unreleased | FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3 | PR #45 (`6735400`) |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
@@ -124,13 +123,19 @@ Known limitations and unresolved issues:
   owner's name in the licence, package metadata, README, and Windows installer metadata
   (PR #44, merged at `844775d`). The `QSettings` organisation name and data folders stay
   "Y-Matter Lab" on purpose, so existing settings keep working.
-- **Then:** FR-LEGEND-01 on `feature/element-legend` (details and evidence in
+- **Then:** FR-LEGEND-01 on `feature/element-legend`, PR #45 (details and evidence in
   [PROGRESS.md](PROGRESS.md#fr-legend-01-element-legend-post-040-21-november-2026)).
   The legend is a 2D layer painted with Qt onto the rendered PNG in `finish_job`; the
   live view draws the same layout as an overlay; Fit keeps the structure beside it.
-- **Not done:** macOS and Windows (CI runs the tests without windows there once the
-  branch is pushed); hands-on use by a person; commit, push, and CI (only when the user
-  asks).
+- **Then:** the first CI run of PR #45 failed on Windows only: `QImageWriter` keeps its
+  output file open until it is destroyed, so the legend's temporary PNG could not be
+  renamed over the image ("being used by another process"). Fixed by encoding into a
+  `QBuffer` (`ee6f04a`); CI then passed everywhere (run 44911218624: Ubuntu 963 passed,
+  10 skipped on each of Python 3.12, 3.13, and 3.14; macOS 781 passed, 10 skipped;
+  Windows 789 passed, 2 skipped, with POV-Ray for Windows; docs, pre-commit, Windows
+  installer). Merged at `6735400`, as the user asked.
+- **Not done:** hands-on use of the Legend tab on any system; GUI tests on macOS and
+  Windows (CI runs only the tests without windows there).
 
 Earlier, on 18 November 2026:
 
@@ -280,11 +285,10 @@ hands-on runs by a person.
 
 ## Next recommended steps
 
-0. FR-LEGEND-01: once the user asks, commit, push, and open a pull request; check CI on
-   macOS and Windows (the windowless `--render` legend test runs there). Then a hands-on
-   check of the Legend tab on Linux, the Mac, and Windows: switch the legend on, Fit, try
-   each position, layout, font, and order, render PNG/PDF/JPEG, and compare the image
-   with the frame.
+0. FR-LEGEND-01 (merged in PR #45): a hands-on check of the Legend tab on Linux, the
+   Mac, and Windows: switch the legend on, Fit, try each position, layout, font, and
+   order, render PNG/PDF/JPEG, and compare the image with the frame; run the GUI legend
+   tests (`tests/test_gui_legend.py`) on the Mac and on Windows.
 
 1. On the Mac mini, first: `git checkout main && git pull`, then check whether PR #36
    is merged (`gh pr view 36`); if not, merge it when the user asks (its CI passed).
@@ -378,7 +382,7 @@ user's report for PR #22.
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Partial: 125 % scale (device pixel ratio 1.25), GUI tests and a scripted run |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Verified 18 Nov 2026 on one laptop: Start-menu entry starts the window without a console, a `.ycrystal` file opens from File Explorer (scripted clicks); pinning to the taskbar not tried |
 | Installation script | Not applicable | Not applicable | Verified 18 Nov 2026 on one laptop with Python and POV-Ray already installed (Windows PowerShell 5.1, fresh `.venv`, rerun); the `winget` installs of Python and POV-Ray and the editor prompt not run |
-| Element legend (FR-LEGEND-01) | Verified 21 Nov 2026 on the Mint laptop: full suite with real windows and POV-Ray, windowless `--render` in a new process (`offscreen` plug-in), scripted window screenshots | Not tested (the command line uses the `offscreen` plug-in with Core Text fonts: untested) | Not tested (the command line uses the native plug-in for its fonts: untested) |
+| Element legend (FR-LEGEND-01) | Verified 21 Nov 2026 on the Mint laptop: full suite with real windows and POV-Ray, windowless `--render` in a new process (`offscreen` plug-in), scripted window screenshots; CI (PR #45, full suite under Xvfb) | CI only (PR #45: tests without windows, real POV-Ray, windowless `--render` with the `offscreen` plug-in); not run on the Mac | CI only (PR #45: tests without windows, POV-Ray for Windows, windowless `--render` with the native plug-in; the file-locking bug was found and fixed there); not run on a Windows computer |
 | Graphical installer (packaged) | Not applicable | Not applicable | Partial, 18 Nov 2026 on one laptop: built, installed per user, window and command line, Start menu and file type, coexistence with the developer installation (27 checks); wizard not clicked through by a person, all-users installation not tried, not signed |
 | Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | Verified: tests without windows with POV-Ray for Windows on every pull request (PR #36, 18 Nov 2026) |
 
