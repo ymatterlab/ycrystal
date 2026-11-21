@@ -9,8 +9,8 @@ differences up to about 5e-7 alat are rounding.
 
 With ``--qe-checkout``, every pw.x input with ``ibrav`` other than 0 in a local copy
 of QE's ``test-suite`` that has a stored pw.x output is compared instead (about 400
-such inputs, about 300 of them applicable; no network needed). Inputs where the comparison does not apply are listed
-separately: pw.x took the structure from an earlier run ("unit cell read from
+such inputs, about 300 of them applicable; no network needed). Inputs where the
+comparison does not apply are listed separately: pw.x took the structure from an earlier run ("unit cell read from
 directory"), or the positions from a trajectory (QEHeat: only the axes are compared),
 or Ycrystal cannot read the file for a reason unrelated to ``ibrav``.
 
