@@ -135,6 +135,54 @@ Resizing the window changes the frame on screen but not the image. Projects stor
 camera of the output image together with its size, so a project reopens with the same
 framing in a window of any shape.
 
+## Element legend
+
+A legend names the elements of the figure: a coloured circle for each element, followed
+by its symbol, such as *● Sr ● Ti ● O* beneath the structure. Switch it on with
+**Show the element legend** in the **Scene ▸ Legend** tab. The live view, the POV-Ray
+preview, and every rendered or exported image (PNG, PDF, JPEG, and `ycrystal --render`)
+then show it.
+
+- **Entries.** Ycrystal lists the elements that are displayed: hidden atoms, and
+  elements whose atoms are all hidden, do not count. Each marker has the colour of the
+  element's spheres, including your colour overrides and the colour of a material with
+  its own pigment (gold, copper, …). When you change the structure, a colour, or a
+  material, the legend follows.
+- **Layout and position.** Horizontal (one row) or vertical (one column), at the
+  **Bottom**, **Top**, **Left**, or **Right** of the image (centred along that edge, at
+  the **Margin** from it), or at a **Custom** place: the centre of the legend at *x* %
+  of the width and *y* % of the height. A custom legend stays inside the image.
+- **Text.** **Font** (the default is Arial or Helvetica where installed, otherwise
+  Liberation Sans, Nimbus Sans, or DejaVu Sans), **Size**, and **Colour**. The size is
+  a percentage of the image height, and the other sizes are multiples of the text height,
+  so a 480-pixel preview, the output image, and a 600-dpi export all show the same
+  legend relative to the structure.
+- **Markers.** **Shaded sphere** (a ball lit from the upper left, like the atoms) or
+  **Flat disc**, both with a thin darker outline so that white elements stay visible
+  on white; **Size** of the circles and **Spacing** between entries.
+- **Background.** An optional rounded box behind the legend, with its colour and
+  **Opacity**.
+- **Order.** As in the structure (order of first appearance in the atom list), by atomic
+  number, alphabetical, or custom: select an element and press **Up** or **Down**.
+
+**Making room.** The legend is drawn on top of the image, so a structure that fills the
+frame would lie under it. With the legend at an edge, **Fit View Beside Legend** (and
+also Fit (F), Reset View, and the view-along buttons) fits the structure into the space
+the legend leaves free, with the margin between them. A saved view is never moved by
+itself: after you switch the legend on, press Fit when it overlaps.
+
+**Sharpness.** The legend is not part of the 3D scene. POV-Ray renders the structure as
+before, and Ycrystal then paints the legend onto the rendered image at its full pixel
+size, with antialiased glyph outlines and no colour fringes, so it is as sharp as the
+image. In a PDF it is part of the embedded picture (not separate vector text). An
+exported `.pov` scene does not contain the legend.
+
+Every change is an undoable step. Projects save the legend (schema 8), and styles carry
+it with the materials and colours (see [styles](appearance.md#reusing-the-look-styles)).
+Fonts are looked up on the computer that renders: a project that names a font that is
+not installed there is drawn with a similar one, and the panel marks it *(not
+installed)*.
+
 ## Materials and backgrounds
 
 Materials (per default, element, or selected atom), element colours, backgrounds,
@@ -183,11 +231,12 @@ GUI.
 
 | Format | What is written |
 | --- | --- |
-| PNG (`.png`) | The POV-Ray image unchanged (8-bit sRGB, alpha with a transparent background), with the resolution stored in the file. |
+| PNG (`.png`) | The POV-Ray image unchanged (8-bit sRGB, alpha with a transparent background), with the resolution stored in the file. With the [element legend](#element-legend) on, the legend is painted onto it first; nothing else changes. |
 | PDF (`.pdf`) | One page of the physical size of the figure, containing the POV-Ray image at full resolution, losslessly compressed. A transparent background stays transparent. |
 | JPEG (`.jpg`, `.jpeg`) | The POV-Ray image encoded once with the chosen **Quality** (1–100, default 95), with the resolution stored in the file. JPEG has no transparency: a transparent background becomes white. |
 
-The PDF contains a raster image, like the PNG: it is **not** a vector drawing and does
+All three formats contain the element legend when it is on. The PDF contains a raster
+image, like the PNG: it is **not** a vector drawing (nor is the legend's text) and does
 not become sharper when enlarged. Choose the size and resolution the figure needs.
 
 **Size.** Choose one of:

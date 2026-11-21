@@ -28,6 +28,12 @@ re-resolved from the output camera before every redraw, so they follow orbiting,
 and rolling exactly as the exported lights do. Shadows, area-light softness, reflections,
 refraction, and the reflection panel appear only in POV-Ray.
 
+Element legend (FR-LEGEND-01): an enabled legend is drawn inside the output frame by the
+same painter that draws it onto rendered images
+([`legend_overlay`][ycrystal.render.legend.legend_overlay]), at the frame's size in
+device pixels, so the view shows where the legend lands in the image. Fitting the view
+keeps the structure out of the legend's area.
+
 Importing this module sets the environment variable ``QT_API=pyside6`` for the whole
 process and imports PyVista, PyVistaQt, and VTK. Creating a
 [`StructureViewport`][ycrystal.viewport.qt_viewport.StructureViewport] needs a
@@ -58,12 +64,16 @@ from vtkmodules.vtkRenderingCore import (  # noqa: E402
     vtkLight,
     vtkPolyDataMapper2D,
     vtkTextActor,
+    vtkTexture,
+    vtkTexturedActor2D,
 )
 
 from ycrystal.core.camera import Camera  # noqa: E402
+from ycrystal.core.legend import LegendEntry, LegendSettings, legend_entries  # noqa: E402
 from ycrystal.core.lighting import LightingRig, resolve_lighting_for_bounds  # noqa: E402
 from ycrystal.core.picking import pick_sphere  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry, Environment  # noqa: E402
+from ycrystal.render.legend import legend_fit_region, legend_overlay  # noqa: E402
 from ycrystal.viewport.interactor import SynchronousInteractor  # noqa: E402
 
 if qtpy.API_NAME != "PySide6":  # pragma: no cover - environment guard
@@ -283,6 +293,18 @@ class StructureViewport(QWidget):
         self._dim_actor, self._frame_actor = _frame_actors()
         self._plotter.renderer.AddViewProp(self._dim_actor)
         self._plotter.renderer.AddViewProp(self._frame_actor)
+        # Element legend: a picture of the legend at the frame's pixel size.
+        self._legend = LegendSettings()
+        self._legend_key: tuple | None = None
+        self._entries: tuple[LegendEntry, ...] | None = None  # cache for the geometry
+        self.legend_box: tuple[int, int, int, int] | None = None
+        """Where the legend is drawn: ``(x, y, width, height)`` in device pixels of the
+        view (top-left origin), or ``None`` when no legend is shown."""
+        self._legend_actor = vtkTexturedActor2D()
+        self._legend_actor.SetMapper(vtkPolyDataMapper2D())
+        self._legend_actor.SetPickable(False)
+        self._legend_actor.SetVisibility(False)
+        self._plotter.renderer.AddViewProp(self._legend_actor)
         # Measurement guide lines are drawn in a second, non-interactive layer with the
         # same camera, so that they stay visible in front of the atoms.
         from vtkmodules.vtkRenderingCore import vtkRenderer
@@ -445,6 +467,7 @@ class StructureViewport(QWidget):
             _apply_look(actor, material.live)
             actor.SetPickable(False)
         self._geometry = geometry
+        self._entries = None  # the legend follows the new colours and elements
         self._environment = environment
         self._bounds = geometry.bounding_sphere()
         plotter.render()  # the lights are resolved before the redraw
@@ -652,11 +675,49 @@ class StructureViewport(QWidget):
         self.camera_changed.emit()
 
     def fit(self) -> None:
-        """Fit the visible structure into the output frame, keeping the orientation."""
+        """Fit the visible structure into the output frame, keeping the orientation.
+
+        With an element legend at an edge of the frame, the structure is fitted into the
+        space beside the legend (see
+        [`fit_region`][ycrystal.viewport.qt_viewport.StructureViewport.fit_region]).
+        """
         if self._geometry is None:
             return
         points, radii = self._geometry.points_and_radii()
-        self.set_output_camera(self.output_camera().fitted(points, radii, self._output_aspect))
+        self.set_output_camera(
+            self.output_camera().fitted(
+                points, radii, self._output_aspect, region=self.fit_region()
+            )
+        )
+
+    # ----- element legend -------------------------------------------------------------
+    def set_legend(self, legend: LegendSettings) -> None:
+        """Show the element legend of ``legend`` in the output frame (or none, if disabled).
+
+        The entries come from the drawn geometry; the camera is not changed.
+        """
+        if legend != self._legend:
+            self._legend = legend
+            self._entries = None
+            self._plotter.render()
+
+    def legend_entries(self) -> tuple[LegendEntry, ...]:
+        """Return the entries of the legend for the drawn geometry (empty if disabled)."""
+        if self._geometry is None or not self._legend.enabled:
+            return ()
+        if self._entries is None:
+            self._entries = legend_entries(self._geometry, self._legend)
+        return self._entries
+
+    def fit_region(self) -> tuple[float, float, float, float] | None:
+        """Return the part of the output frame left free by the legend, or ``None``.
+
+        See [`legend_fit_region`][ycrystal.render.legend.legend_fit_region].
+        """
+        entries = self.legend_entries()
+        if not entries:
+            return None
+        return legend_fit_region(entries, self._legend, self._output_aspect)
 
     # ----- output frame -------------------------------------------------------------
     def set_output_aspect(self, aspect: float) -> None:
@@ -1172,6 +1233,7 @@ class StructureViewport(QWidget):
         self._last_factor = factor
         self._update_lights()
         self._update_frame_overlay()
+        self._update_legend_overlay()
         self._update_handles()
 
     def _update_lights(self) -> None:
@@ -1205,6 +1267,50 @@ class StructureViewport(QWidget):
             ],
         )
         _set_outline(self._frame_actor, (left, bottom, right, top))
+
+    def _update_legend_overlay(self) -> None:
+        """Redraw the legend picture when the legend, the geometry, or the frame changed."""
+        x0, y0, frame_w, frame_h = self.frame_rect()
+        _, height = self.render_size()
+        entries = self.legend_entries()
+        key = (entries, self._legend, round(x0), round(y0), round(frame_w), round(frame_h))
+        if key == self._legend_key:
+            return
+        self._legend_key = key
+        overlay = legend_overlay(entries, self._legend, round(frame_w), round(frame_h))
+        if overlay is None:
+            self._legend_actor.SetVisibility(False)
+            self.legend_box = None
+            return
+        image, x, y = overlay
+        w, h = image.width(), image.height()
+        left, top = round(x0) + x, round(y0) + y
+        self.legend_box = (left, top, w, h)
+        rows = np.frombuffer(image.constBits(), dtype=np.uint8).reshape(h, image.bytesPerLine())
+        pixels = rows[:, : 4 * w].reshape(h, w, 4)[::-1]  # VTK images start at the bottom
+        texture = vtkTexture()
+        texture.SetInputData(pv.ImageData(dimensions=(w, h, 1)))
+        texture.GetInput().GetPointData().SetScalars(
+            pv.convert_array(np.ascontiguousarray(pixels).reshape(-1, 4))
+        )
+        texture.InterpolateOff()
+        bottom = height - (top + h)
+        quad = pv.PolyData(
+            np.array(
+                [
+                    (left, bottom, 0),
+                    (left + w, bottom, 0),
+                    (left + w, bottom + h, 0),
+                    (left, bottom + h, 0),
+                ],
+                dtype=float,
+            ),
+            faces=[4, 0, 1, 2, 3],
+        )
+        quad.active_texture_coordinates = np.array([(0, 0), (1, 0), (1, 1), (0, 1)], dtype=float)
+        self._legend_actor.GetMapper().SetInputData(quad)
+        self._legend_actor.SetTexture(texture)
+        self._legend_actor.SetVisibility(True)
 
 
 def _sphere_actor(

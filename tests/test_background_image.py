@@ -306,7 +306,7 @@ def test_environment_style_carries_its_picture(pictures, tmp_path):
     again = load_style(path)
     assert again.environment == env and images.get_image(asset.id).format == "jpeg"
     plain = save_style(tmp_path / "plain.ycstyle", replace(style, environment=Environment()))
-    assert not is_package(plain) and json.loads(plain.read_text())["schema_version"] == 2
+    assert not is_package(plain) and json.loads(plain.read_text())["schema_version"] == 3
     data = json.loads(plain.read_text())
     data["schema_version"] = 1  # a 0.1/0.2 style
     (tmp_path / "old.ycstyle").write_text(json.dumps(data))

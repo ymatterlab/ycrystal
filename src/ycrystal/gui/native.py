@@ -50,6 +50,24 @@ def windows_app_id(frozen: bool | None = None) -> str:
     return WINDOWS_PACKAGED_APP_ID if is_packaged(frozen) else WINDOWS_APP_ID
 
 
+def painting_platform(platform: str = sys.platform) -> str | None:
+    """Return the Qt platform plug-in for drawing text without a window, or ``None``.
+
+    The command line draws the element legend
+    ([`ycrystal.render.legend`][ycrystal.render.legend]) without opening a window. On
+    Linux and macOS the ``offscreen`` plug-in finds the installed fonts (fontconfig,
+    Core Text) and needs no display, so rendering works over SSH and on servers. On
+    Windows it may not find the system fonts, so the native plug-in is kept (``None``);
+    it opens no window either.
+
+    Examples
+    --------
+    >>> painting_platform("linux"), painting_platform("darwin"), painting_platform("win32")
+    ('offscreen', 'offscreen', None)
+    """
+    return None if platform == "win32" else "offscreen"
+
+
 def set_taskbar_identity(platform: str = sys.platform, frozen: bool | None = None) -> bool:
     """Give Ycrystal its own taskbar button and icon on Windows.
 

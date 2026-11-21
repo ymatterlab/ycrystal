@@ -2,8 +2,9 @@
 
 Used by ``ycrystal --render`` and ``ycrystal --export-pov``. A project is drawn exactly
 as saved (camera of the output image, output size, materials, environment); a structure
-file gets the default display settings and the default view. No Qt or VTK code is
-imported, so these functions work without a display.
+file gets the default display settings and the default view. No VTK code is imported,
+so these functions work without a display; Qt is used only to draw an element legend
+(FR-LEGEND-01), without a window.
 
 With ``--style`` (FR-STYLE-CLI-01), [`apply_style_file`][ycrystal.batch.apply_style_file]
 first applies a ``.ycstyle`` file with the transfer rules of
@@ -44,6 +45,7 @@ from pathlib import Path
 
 from ycrystal.core import aspect
 from ycrystal.core.camera import Camera, ViewPolicy
+from ycrystal.core.legend import legend_entries
 from ycrystal.core.scene import (
     LARGE_DISPLAY_ATOMS,
     DisplayGeometry,
@@ -321,6 +323,8 @@ def scene_for(
     and visible height (only the visible width follows the new aspect ratio), as in the
     window. A fitted camera is fitted at the final aspect ratio, to the framing bounds
     of the drawn scene: atoms, cell edges, and complete vector arrows.
+    With an element legend at an edge of the image, a fitted camera keeps the scene
+    out of the legend's area ([`legend_fit_region`][ycrystal.render.legend.legend_fit_region]).
 
     Raises
     ------
@@ -332,9 +336,15 @@ def scene_for(
     geometry = build_geometry(project.structure, project.scene)
     points, radii = geometry.points_and_radii()
     cell = project.structure.cell if project.structure.has_cell else None
-    camera = (view or ViewPolicy()).resolve(
-        project.camera, points, radii, settings.width / settings.height, cell
-    )
+    policy = view or ViewPolicy()
+    aspect_ratio = settings.width / settings.height
+    region = None
+    legend = project.scene.legend
+    if legend.enabled and not (policy.policy == "saved" and project.camera is not None):
+        from ycrystal.render.legend import legend_fit_region
+
+        region = legend_fit_region(legend_entries(geometry, legend), legend, aspect_ratio)
+    camera = policy.resolve(project.camera, points, radii, aspect_ratio, cell, region)
     return geometry, camera, settings
 
 
@@ -399,7 +409,8 @@ def render_png(
     -------
     ycrystal.render.jobs.RenderResult
         With ``image_path`` set to `destination` on success. The temporary job
-        directory is removed.
+        directory is removed. An enabled element legend of the project is painted onto
+        the image.
 
     Raises
     ------
@@ -414,6 +425,7 @@ def render_png(
         camera,
         project.environment,
         settings,
+        legend=project.scene.legend,
         title=f"Ycrystal scene: {project.structure.composition()}",
         renderer_note=f"{executable} ({version or 'version unknown'})",
     )

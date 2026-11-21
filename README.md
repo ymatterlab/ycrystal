@@ -41,8 +41,9 @@ command line, so figures made by hand and figures made in bulk match.
   per-element and per-atom materials, editable material recipes, colours by value or
   name, floors, skies, background pictures, and a Lighting Setup window.
 - **Output:** a POV-Ray preview, cancellable renders, PNG, PDF, and JPEG export with
-  publication sizes, and editable `.pov`/`.ini` scenes. Every figure change is
-  undoable.
+  publication sizes, an element legend (coloured markers and symbols, beneath the
+  structure or elsewhere) drawn sharply into every image, and editable `.pov`/`.ini`
+  scenes. Every figure change is undoable.
 - **Command line and high-throughput rendering:** `--render` and `--export-pov` for
   single figures; `--style` with explicit `--element-map` between compositions;
   `--view`, `--camera-policy`, and `--view-height` for consistent orientation and

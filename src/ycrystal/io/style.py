@@ -8,7 +8,8 @@ A style whose environment has a background picture is saved as a ZIP package wit
 picture (``style.json`` plus ``assets/``, see [`ycrystal.io.package`][ycrystal.io.package]),
 so it works after the original picture file is moved or deleted; other styles stay
 plain JSON. Style schema 2 adds the picture record and the definitions of the custom
-materials the style uses (FR-MATERIAL-01); schema-1 styles still load.
+materials the style uses (FR-MATERIAL-01); schema 3 adds the element legend
+(FR-LEGEND-01). Older styles still load, with the legend disabled.
 
 Transfer rules
 --------------
@@ -19,7 +20,8 @@ subset of them (see [`STYLE_PARTS`][ycrystal.io.style.STYLE_PARTS]):
     Default material. Material, colour, and radius overrides of elements are applied to
     the elements the target structure contains; overrides of other elements are left
     out and listed in the notes. The vector arrow appearance (placement, length mode,
-    sizes, colour, material) is applied too.
+    sizes, colour, material) and the element legend (FR-LEGEND-01) are applied too; the
+    legend's custom element order follows the element mapping.
 ``display``
     Atom size, repetitions, boundary atoms, cell edges, bond settings. Bond-pair rules
     apply when the target contains both elements.
@@ -85,7 +87,7 @@ from ycrystal.core.structure import Structure
 STYLE_FORMAT = "ycrystal-style"
 """Value of the ``format`` key that identifies a style file."""
 
-STYLE_SCHEMA_VERSION = 2
+STYLE_SCHEMA_VERSION = 3
 """Style schema written by this Ycrystal; newer versions are refused on load."""
 
 STYLE_DOCUMENT = "style.json"
@@ -436,10 +438,20 @@ def apply_style(
                     missing.add(element)
             return tuple(sorted(kept))
 
+        # The legend's custom order follows explicit mappings; other symbols stay (an
+        # element the structure lacks is simply not shown).
+        order = tuple(
+            dict.fromkeys(
+                target
+                for target in (element_map.get(e, e) for e in source.legend.custom_order)
+                if target is not None
+            )
+        )
         new = replace(
             new,
             material=source.material,
             vector_style=source.vector_style,  # arrow appearance only, never vector data
+            legend=replace(source.legend, custom_order=order),
             element_materials=keep(source.element_materials),
             element_colors=keep(source.element_colors),
             element_radii=keep(source.element_radii),

@@ -1,7 +1,9 @@
 """Write a rendered POV-Ray image as PNG, PDF, or JPEG (FR-EXPORT-01).
 
-POV-Ray always writes an 8-bit PNG at the requested pixel size. This module turns that
-image into the file the user asked for, without resampling it:
+POV-Ray always writes an 8-bit PNG at the requested pixel size (with an element legend,
+Ycrystal has already painted it onto that PNG, see
+[`ycrystal.render.legend`][ycrystal.render.legend]). This module turns that image into
+the file the user asked for, without resampling it:
 
 - **PNG**: the rendered file byte for byte; with a resolution, a ``pHYs`` chunk is
   inserted after the header (the image data are not decoded or re-encoded).
@@ -121,10 +123,25 @@ def png_with_resolution(data: bytes, dpi: float) -> bytes:
     ExportWriteError
         If ``data`` is not a well-formed PNG.
     """
+    per_metre = round(dpi / MM_PER_INCH * 1000)
+    return _with_phys(data, _png_chunk(b"pHYs", struct.pack(">IIB", per_metre, per_metre, 1)))
+
+
+def png_without_resolution(data: bytes) -> bytes:
+    """Return PNG ``data`` without a ``pHYs`` chunk; the image data are unchanged.
+
+    Raises
+    ------
+    ExportWriteError
+        If ``data`` is not a well-formed PNG.
+    """
+    return _with_phys(data, None)
+
+
+def _with_phys(data: bytes, phys: bytes | None) -> bytes:
+    """Return ``data`` with every ``pHYs`` chunk replaced by ``phys`` (``None``: none)."""
     if not data.startswith(PNG_SIGNATURE):
         raise ExportWriteError("The rendered image is not a PNG file.")
-    per_metre = round(dpi / MM_PER_INCH * 1000)
-    phys = _png_chunk(b"pHYs", struct.pack(">IIB", per_metre, per_metre, 1))
     out = [PNG_SIGNATURE]
     pos = len(PNG_SIGNATURE)
     while pos < len(data):
@@ -136,7 +153,7 @@ def png_with_resolution(data: bytes, dpi: float) -> bytes:
             raise ExportWriteError("The rendered PNG is truncated.")
         if kind != b"pHYs":
             out.append(data[pos:end])
-        if kind == b"IHDR":
+        if kind == b"IHDR" and phys is not None:
             out.append(phys)
         pos = end
         if kind == b"IEND":

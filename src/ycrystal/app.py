@@ -238,7 +238,10 @@ def _batch(args: argparse.Namespace) -> int:
         except OSError as exc:
             print(f"ERROR: cannot write {args.export_pov}: {exc.strerror or exc}", file=sys.stderr)
             return 1
-        print(f"Exported {pov} and {ini}")
+        note = ""
+        if project.scene.legend.enabled:
+            note = " (the element legend is added to rendered images only, not to the scene)"
+        print(f"Exported {pov} and {ini}{note}")
     if args.render and args.save_project:
         return _render_snapshot(args, project, notes)
     if args.render:

@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 18 November 2026 (graphical Windows installer, branch `feature/windows-installer`). Before that: Python 3.13 and 3.14 on Windows, verified on the laptop (PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 21 November 2026 (FR-LEGEND-01, element legend, branch `feature/element-legend`). Before that: 18 November 2026 (graphical Windows installer, branch `feature/windows-installer`). Before that: Python 3.13 and 3.14 on Windows, verified on the laptop (PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,71 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## FR-LEGEND-01: element legend (post-0.4.0, 21 November 2026)
+
+Requested by the user on 21 November 2026, with a reference image (a POV-Ray figure with
+"● Be ● Sc ● Ru" under the structure): a customizable, publication-quality legend of the
+displayed elements, drawn independently of the 3D pipeline and exported with the figure.
+Branch `feature/element-legend`, from `main` at `844775d`. Run on the Linux Mint laptop
+(Python 3.12.3, PySide6 6.12.0, VTK 9.7.2, POV-Ray 3.7.0.10).
+
+Delivered:
+
+- `core/legend.py` (no Qt): `LegendSettings` (enabled, layout, position with custom
+  centre, font family and size, text colour, marker size and style, spacing, margin,
+  background with colour and opacity, order with a custom list; validated), stored as
+  `SceneSettings.legend`; `legend_entries` reads elements and colours from
+  `DisplayGeometry`, so the markers have the drawn colours (overrides, own-pigment
+  materials; hidden elements leave the legend).
+- `render/legend.py` (QtGui, no window): one layout computed at a reference text size
+  and scaled to the image (text height = % of image height, everything else in text
+  heights), glyph outlines without hinting or subpixel antialiasing, shaded or flat
+  markers with a darker outline; `draw_legend_on_file` paints onto the rendered PNG in
+  place (pixels outside the legend, alpha, and text chunks kept; no resolution chunk
+  added); `legend_overlay` for the live view; `legend_fit_region` for fitting. The
+  command line creates a windowless `QGuiApplication` (`offscreen` on Linux and macOS,
+  the native plug-in on Windows: `gui/native.py::painting_platform`).
+- Render jobs: `prepare_job(..., legend=)`; `finish_job` paints the legend, so the
+  preview, renders, PNG/PDF/JPEG exports, `--render`, manifests, and snapshot replays
+  all carry it. The `.pov` scene never contains it (the window and `--export-pov` say so).
+- Framing: `Camera.fitted(region=…)`, `Camera.placed_in`, `ViewPolicy.resolve(region=…)`;
+  Fit, Reset View, View along, the panel's *Fit View Beside Legend*, and fitted
+  command-line views keep the structure out of a legend at an edge. Saved cameras are
+  never moved.
+- Window: *Scene ▸ Legend* tab (`gui/panels/legend_panel.py`); every change one undo
+  step (spin boxes merge); a legend-only change does not rebuild the geometry; live
+  overlay in the output frame at device pixels (`StructureViewport.set_legend`).
+- Files: project schema 8 (`scene.legend`), style schema 3 (the legend transfers with the
+  appearance part; its custom order follows explicit element mappings); older files open
+  with the legend off. `examples/publication/styles/*.ycstyle` regenerated by
+  `scripts/make_examples.py` (schema numbers and a disabled `legend` block only).
+- Documentation: user guide (*Export and rendering ▸ Element legend*, controls,
+  appearance), formats, architecture, API reference, changelog; CI doctests include
+  `core/legend.py`.
+
+| Check | Result |
+| --- | --- |
+| `tests/test_legend.py` (43 tests, no window): settings validation, order, entry colours (override, pigment, majority, hidden), project and style round trips and transfer, fitting into a region (all four edges, fixed visible height), layout scaling (×10 size gives exactly ×10 box), placement, painting (only the legend's box changes, marker centres within 1/255 of the element colour, transparency kept, no `pHYs` added, deterministic), jobs (painted when enabled, file untouched when not, failure reported), `--export-pov` note | Pass |
+| Command line in a new process without `DISPLAY` (`ycrystal PROJECT --render`, stand-in renderer): legend markers in the PNG at the computed places | Pass (offscreen plug-in, Linux) |
+| Real POV-Ray 3.7 render of SrTiO3 with a legend, fitted: marker colours within 2/255, structure entirely above the legend with a clear gap | Pass |
+| `tests/test_gui_legend.py` (10 tests, real window): Legend tab and undo, panel controls, live marker colours and their update after a colour override and a pigmented material, hidden elements, Fit/Reset View/View along beside the legend, render box = live box within one view pixel, JPEG and PDF exports, preview, project reopen | Pass |
+| Full suite `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` | 963 passed, 10 skipped (Windows-only tests) |
+| CI doctest list, `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Pass |
+| Time to paint the legend (on top of the render; random-noise images, the worst case for PNG encoding) | 0.3 s at 1200 × 800, 2.9 s at 4252 × 2835 |
+
+Visual checks (scripted, inspected as images): real renders of SrTiO3 at 700 × 700 with
+the default legend (sphere markers, Liberation Sans) and with DejaVu Serif in
+atomic-number order; the window with the Legend tab, the live overlay, and the view
+fitted above the legend.
+
+Not verified: macOS and Windows (CI will run the tests without windows there, including
+the windowless command-line render; the `offscreen` font lookup on macOS and the native
+plug-in on Windows are untested by hand); HiDPI displays; hands-on use by a person.
+Known limitations: fonts are looked up on the rendering computer (a missing family is
+replaced, so a project can look different elsewhere); in a PDF the legend is part of the
+raster image, not vector text; the legend is not part of `.pov` exports; no dragging
+of the legend in the view (custom position by numbers).
 
 ## Version 0.4.0 (18 November 2026)
 

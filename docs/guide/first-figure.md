@@ -68,6 +68,12 @@ root. The built-in sample works without importing a file.
    output size, and camera are restored, with the same framing in a window of any
    shape.
 
+**Optional: an element legend.** Open the **Scene ▸ Legend** tab and check **Show the
+element legend**: *● Sr ● Ti ● O* appears at the bottom of the frame. Press **Fit View
+Beside Legend** so that the structure sits above it, then render again. See
+[element legend](rendering.md#element-legend) for the layout, font, marker, and order
+choices.
+
 Your chosen directory now contains the project, two editable scene files, and the
 PNG. GUI renders use a separate temporary job directory and remove it after
 completion. They do not render the exported `.pov` file; editing that file requires

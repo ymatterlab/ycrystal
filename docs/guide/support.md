@@ -15,10 +15,10 @@ means not tested, not that it fails.
 | CIF with partial or mixed occupancy, overlapping sites | Rejected with an explanation | — | |
 | Quantum ESPRESSO pw.x input, `ibrav = 0` with `CELL_PARAMETERS` | Yes | — | Ambiguous species labels: the window asks |
 | QE `ibrav ≠ 0`, `crystal_sg` positions | Rejected with an explanation | — | Rewrite as `ibrav = 0` |
-| Ycrystal project `.ycrystal` (schema 1–7) | Yes | Schema 7 | Self-contained: JSON, or a ZIP package when it carries a background picture |
-| Ycrystal style `.ycstyle` | Yes | Yes | Presentation only; a ZIP package when it carries a background picture |
+| Ycrystal project `.ycrystal` (schema 1–8) | Yes | Schema 8 | Self-contained: JSON, or a ZIP package when it carries a background picture |
+| Ycrystal style `.ycstyle` (schema 1–3) | Yes | Schema 3 | Presentation only, including the element legend; a ZIP package when it carries a background picture |
 | POV-Ray scene `.pov` + `.ini` | — | Yes | Editable; may `#include` standard POV-Ray files |
-| PNG image | — | Yes (via POV-Ray) | 8-bit sRGB, optional alpha; resolution (dpi) stored when rendered from the Render Image dialog |
+| PNG image | — | Yes (via POV-Ray) | 8-bit sRGB, optional alpha; resolution (dpi) stored when rendered from the Render Image dialog; an enabled element legend is painted onto it |
 | PDF document | — | Yes (via POV-Ray) | One page of the figure's physical size with the POV-Ray image embedded losslessly; raster, not vector graphics |
 | JPEG image | — | Yes (via POV-Ray) | Quality 1–100 (default 95), resolution stored; transparent backgrounds become white |
 

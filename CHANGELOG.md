@@ -3,6 +3,29 @@
 All notable changes to Ycrystal. Versions follow [semantic versioning](https://semver.org/);
 before 1.0 the Python interface may change between minor versions.
 
+## Unreleased
+
+### Added
+- **Element legend (FR-LEGEND-01).** A new **Scene ▸ Legend** tab shows a legend of the
+  displayed elements on the figure: a coloured circle and the symbol of each element, in
+  a row or a column, at the bottom, top, left, or right of the image or at a custom
+  place. The markers take the colours the spheres are drawn with (overrides and
+  pigmented materials included) and follow changes of the structure, colours, and
+  materials. Font family, text size and colour, marker style (shaded sphere or flat
+  disc), marker size, spacing, margin, an optional background box, and the element
+  order (structure, atomic number, alphabetical, or custom) can be chosen; every change
+  is undoable. The live view shows the legend in the output frame; the preview, renders,
+  PNG/PDF/JPEG exports, `ycrystal --render`, batch manifests, and snapshots carry it.
+  The legend is painted onto the rendered image at its full resolution, independent of
+  the 3D scene, and its sizes are relative to the image height, so previews and exports
+  of any size agree. Fit, Reset View, the view-along buttons, and fitted command-line
+  views keep the structure beside a legend at an edge. Disabled (the default), images
+  are exactly as before.
+
+### Changed
+- Project schema 8 (`scene.legend`) and style schema 3; older files open with the legend
+  off. Ycrystal 0.4.0 and older refuse the new files.
+
 ## 0.4.0 — Windows, export formats, and figures from the command line (18 November 2026)
 
 Everything merged after the `v0.3.0` tag (PRs #23–#40).
