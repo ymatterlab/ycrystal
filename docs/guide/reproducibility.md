@@ -88,6 +88,10 @@ Ycrystal and POV-Ray 3.7 with its standard include files, nothing else.
 - **Not across systems, unless checked.** Another POV-Ray build, another operating
   system, or other versions of POV-Ray's standard include files may change pixels
   slightly. How much has not been measured yet.
+- **The element legend.** A snapshot stores the legend settings, and a replay paints the
+  legend again. Its font is looked up on the computer that renders: on another system
+  the default font (or a named one that is not installed there) can be a different
+  family, so the legend's text can differ even where the structure does not.
 - **What the snapshot does not contain:** POV-Ray and its standard include files
   (`textures.inc`, `metals.inc`, …). The record lists the include files the scene
   needs under `renderer.includes`. On Linux Mint and Ubuntu they come from the

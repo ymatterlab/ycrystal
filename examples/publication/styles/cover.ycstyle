@@ -1,7 +1,7 @@
 {
  "format": "ycrystal-style",
- "schema_version": 2,
- "project_schema": 7,
+ "schema_version": 3,
+ "project_schema": 8,
  "generator": "Ycrystal (scripts/make_examples.py)",
  "saved_at": "2026-11-15T00:00:00+00:00",
  "source": {
@@ -90,6 +90,33 @@
     0.1
    ],
    "material": "satin"
+  },
+  "legend": {
+   "enabled": false,
+   "layout": "horizontal",
+   "position": "bottom",
+   "x": 0.5,
+   "y": 0.9,
+   "font_family": "",
+   "font_size": 5.0,
+   "text_color": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "marker_size": 0.9,
+   "marker_style": "sphere",
+   "spacing": 1.0,
+   "margin": 0.6,
+   "background": false,
+   "background_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "background_opacity": 0.85,
+   "order": "structure",
+   "custom_order": []
   },
   "bonds": {
    "enabled": true,

@@ -85,6 +85,6 @@ def test_lock_state_in_projects_and_old_files():
         del data["output"][key]
     old = project_from_dict(data).output
     assert old.aspect_locked is True and old.target_ratio() == pytest.approx(1000 / 700)
-    assert data["schema_version"] == 7  # the lock keys alone did not bump the schema (5)
+    assert data["schema_version"] == 8  # the lock keys alone did not bump the schema (5)
     with pytest.raises(ValueError):
         RenderSettings(10, 10, aspect_ratio=-1.0)

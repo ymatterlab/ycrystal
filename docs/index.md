@@ -14,7 +14,8 @@ individual displayed atoms, export scenes, and render PNG, PDF, or JPEG figures.
 periodic bonds, cell-edge modes, and view-direction controls
 are available, as are an output frame, a POV-Ray preview, cancellable renders, and
 galleries of 30 materials and 12 environments with POV-Ray thumbnails, per-element and
-per-atom materials, floors, skies, and lighting controls. Drag the a/b/c handles to add
+per-atom materials, floors, skies, and lighting controls, and an
+[element legend](guide/rendering.md#element-legend) for the figure. Drag the a/b/c handles to add
 cells, rotate freely or about a lattice/Cartesian axis, and reuse a figure's style with
 another structure, in the window or [from the command line](guide/examples.md#apply-a-style-from-the-command-line);
 every figure change is undoable.

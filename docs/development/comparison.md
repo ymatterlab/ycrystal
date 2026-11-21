@@ -71,7 +71,7 @@ snapshots with provenance. It does not rest on any single feature being unique.
   window toolkit and need no display.
 - **(Y7)** [Supported file formats](../FORMATS.md). Tests: `tests/test_readers.py`.
 - **(Y8)** FR-VECTOR-01. Tests: `tests/test_vectors.py`, `tests/test_validation.py`.
-- **(Y9)** Project schema 7 with ZIP packages. Tests: `tests/test_project.py`,
+- **(Y9)** Project schema 8 with ZIP packages. Tests: `tests/test_project.py`,
   `tests/test_background_image.py`, `tests/test_reproducibility.py`.
 - **(Y10)** FR-REPRO-01 ([reproducible figures](../guide/reproducibility.md)). Tests:
   `tests/test_reproducibility.py`.

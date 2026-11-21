@@ -94,6 +94,7 @@
         - JPEG_MATTE
         - write_export
         - png_with_resolution
+        - png_without_resolution
         - png_resolution
         - opaque_image
         - fitted_rect
@@ -149,3 +150,26 @@
         - TOLERANCE_PX
         - SelfTestResult
         - run_self_test
+
+## Element legend
+
+::: ycrystal.render.legend
+    options:
+      members:
+        - DEFAULT_FONT_FAMILIES
+        - REFERENCE_SIZE
+        - LABEL_GAP
+        - PADDING
+        - CORNER_RADIUS
+        - OUTLINE
+        - MIN_FREE_FRACTION
+        - LegendError
+        - ensure_gui_application
+        - resolved_font_family
+        - legend_font
+        - LegendLayout
+        - legend_layout
+        - legend_fit_region
+        - paint_legend
+        - legend_overlay
+        - draw_legend_on_file

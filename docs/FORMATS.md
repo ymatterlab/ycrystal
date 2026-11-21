@@ -89,9 +89,10 @@ asks whether to save, discard, or cancel.
 The camera is stored for the explicit output size, so a project reopens with the same
 framing in a window of any shape.
 
-Current project schema is 7 (schema 6 added background pictures, stored in ZIP
-packages, and custom material definitions; schema 7 added atom-attached vectors). Older projects remain readable with their original
-appearance (schema-1 projects load with bonds switched off, as they were drawn). Newer
+Current project schema is 8 (schema 6 added background pictures, stored in ZIP
+packages, and custom material definitions; schema 7 added atom-attached vectors; schema
+8 added the element legend, `scene.legend`). Older projects remain readable with their
+original appearance and no legend (schema-1 projects load with bonds switched off, as they were drawn). Newer
 schemas are rejected with a message to update Ycrystal.
 
 ### Figure snapshots and provenance records
@@ -108,11 +109,12 @@ folder); its name, format, and checksum remain. See
 ## Ycrystal styles (`.ycstyle`)
 
 **File ▸ Export Style…** writes the presentation without structure and camera:
-materials, colours, radii, display settings, the environment, the output size, and the
-element sequence of the source structure (used to decide whether per-atom settings can
+materials, colours, radii, the element legend, display settings, the environment, the
+output size, and the element sequence of the source structure (used to decide whether per-atom settings can
 transfer). See [reusing the look](guide/appearance.md#reusing-the-look-styles) for the
 transfer rules. Style files are versioned JSON, or a ZIP package when they carry a
-background picture; newer versions are rejected. An element mapping chosen when a style
+background picture; newer versions are rejected (style schema 3 added the element
+legend; older styles load without one). An element mapping chosen when a style
 is applied ([element mapping](guide/appearance.md#element-mapping-a-style-for-another-composition))
 is not stored in the style file, which stays unchanged; a project saved afterwards
 stores the resulting element settings.

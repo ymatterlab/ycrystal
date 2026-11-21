@@ -26,6 +26,7 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - set_selection_material
         - clear_atom_materials
         - set_element_color
+        - set_legend
         - set_radius_scale
         - set_element_radius
         - reset_element_appearance
@@ -135,6 +136,9 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - camera
         - set_camera
         - fit
+        - set_legend
+        - legend_entries
+        - fit_region
         - set_output_aspect
         - output_aspect
         - frame_rect
@@ -156,6 +160,14 @@ Only Ycrystal's selected methods and signals are shown, with inherited members o
         - render_size
         - screenshot
         - close_viewport
+
+::: ycrystal.gui.panels.legend_panel.LegendPanel
+    options:
+      members:
+        - legend_requested
+        - fit_requested
+        - move_element
+        - sync
 
 ::: ycrystal.gui.lighting_setup.LightingSetupWindow
     options:

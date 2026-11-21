@@ -15,7 +15,9 @@ A job goes through these steps; the caller owns the job directory throughout:
    [`RenderProcess`][ycrystal.render.process.RenderProcess]. It writes ``scene.png``.
 3. [`finish_job`][ycrystal.render.jobs.finish_job] turns the exit status and log into
    a [`RenderResult`][ycrystal.render.jobs.RenderResult]; renderer failures are
-   reported in the result, not raised.
+   reported in the result, not raised. If the job has an enabled element legend, it is
+   painted onto the image now ([`ycrystal.render.legend`][ycrystal.render.legend]), so
+   that every use of the image (preview, export, command line) has it.
 4. [`copy_result`][ycrystal.render.jobs.copy_result] copies the image to its
    destination.
 5. [`RenderJob.cleanup`][ycrystal.render.jobs.RenderJob.cleanup] deletes the
@@ -32,6 +34,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ycrystal.core.camera import Camera
+from ycrystal.core.legend import LegendEntry, LegendSettings
+from ycrystal.core.legend import legend_entries as resolve_legend_entries
 from ycrystal.core.scene import DisplayGeometry, Environment
 from ycrystal.render.pov_writer import RenderSettings, write_scene_files
 from ycrystal.render.povray import (
@@ -64,6 +68,10 @@ class RenderJob:
         has rendered successfully.
     settings
         Output settings written into the scene and the ``.ini`` file.
+    legend
+        Element legend painted onto the image after the render, or ``None``.
+    legend_entries
+        The legend's entries, resolved from the rendered geometry.
     """
 
     directory: Path
@@ -71,6 +79,8 @@ class RenderJob:
     ini_path: Path
     image_path: Path
     settings: RenderSettings
+    legend: LegendSettings | None = None
+    legend_entries: tuple[LegendEntry, ...] = ()
 
     def arguments(self, executable: str | None = None) -> list[str]:
         """Return the POV-Ray command-line arguments, without the executable.
@@ -172,6 +182,7 @@ def prepare_job(
     environment: Environment,
     settings: RenderSettings,
     parent: Path | None = None,
+    legend: LegendSettings | None = None,
     **writer_kwargs: str,
 ) -> RenderJob:
     """Create a job directory and write the scene and settings into it.
@@ -189,6 +200,10 @@ def prepare_job(
     parent
         Directory in which to create the job directory; ``None`` uses the system
         temporary directory (``$TMPDIR``, usually ``/tmp``).
+    legend
+        Element legend to paint onto the finished image (``SceneSettings.legend``);
+        ``None`` or a disabled legend leaves the image exactly as POV-Ray renders it.
+        The scene files do not contain it.
     **writer_kwargs
         Passed to [`scene_to_pov`][ycrystal.render.pov_writer.scene_to_pov].
 
@@ -212,6 +227,10 @@ def prepare_job(
     pov, ini, image = write_scene_files(
         directory, JOB_BASENAME, geometry, camera, environment, settings, **writer_kwargs
     )
+    if legend is not None and legend.enabled:
+        return RenderJob(
+            directory, pov, ini, image, settings, legend, resolve_legend_entries(geometry, legend)
+        )
     return RenderJob(directory, pov, ini, image, settings)
 
 
@@ -232,9 +251,19 @@ def finish_job(job: RenderJob, returncode: int | None, log: str) -> RenderResult
     RenderResult
         Success if `returncode` is 0 and ``job.image_path`` is a non-empty file;
         otherwise a failure whose message comes from
-        [`explain_failure`][ycrystal.render.povray.explain_failure].
+        [`explain_failure`][ycrystal.render.povray.explain_failure]. A job with an
+        enabled legend has it painted onto the image first; if that fails, the result
+        is a failure that says so.
     """
     if returncode == 0 and job.image_path.is_file() and job.image_path.stat().st_size > 0:
+        if job.legend is not None and job.legend_entries:
+            from ycrystal.render.legend import LegendError, draw_legend_on_file
+
+            try:
+                draw_legend_on_file(job.image_path, job.legend_entries, job.legend)
+            except (LegendError, OSError) as exc:
+                message = f"POV-Ray rendered the image, but the element legend failed: {exc}"
+                return RenderResult(False, returncode, log, None, message)
         return RenderResult(True, returncode, log, job.image_path)
     if returncode == 0:
         message = "POV-Ray finished but produced no image.\n" + explain_failure(returncode, log)

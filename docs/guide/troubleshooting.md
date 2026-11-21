@@ -76,6 +76,10 @@ version, the two options print an error and write nothing.
   picture itself.
 - Exported PDF files contain the POV-Ray raster image, not vector graphics. The command
   line (`--render`) writes PNG only; PDF and JPEG come from **Render Image…**.
+- The [element legend](rendering.md#element-legend) is painted onto images: it is
+  raster in a PDF, absent from exported `.pov` scenes, placed by edge or by numbers
+  (not by dragging), and drawn with the fonts of the computer that renders. On the
+  command line it comes from a project or a style; there is no `--legend` option.
 - Vectors are entered by hand in Cartesian components; there is no import from tables
   or DFT output files and no magnetic symmetry. Measurements are not saved in projects.
 - Transparent materials with area lights (Studio and Top lighting) render slowly; see

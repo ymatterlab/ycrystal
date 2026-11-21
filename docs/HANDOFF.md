@@ -9,6 +9,12 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 
 ## Current project status
 
+- **In review: FR-LEGEND-01, element legend** (requested 21 November 2026), branch
+  `feature/element-legend` from `main` at `844775d`: a *Scene ▸ Legend* tab and a
+  legend of the displayed elements painted onto the figure, its previews, renders, and
+  exports (project schema 8, style schema 3). Verified on the Linux laptop only (full
+  suite 963 passed, 10 Windows-only skipped); not merged. See
+  [PROGRESS.md](PROGRESS.md#fr-legend-01-element-legend-post-040-21-november-2026).
 - **Milestone:** version **0.4.0** (18 November 2026, at the user's request): the
   source reports `0.4.0`, and `CHANGELOG.md` lists everything since `v0.3.0` (PRs
   #23–#40) under 0.4.0 (`main` reported `0.4.0.dev0` until then).
@@ -60,6 +66,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 (`8051f04`) |
 | unreleased | Graphical Windows installer (PyInstaller + Inno Setup), coexisting with the developer installation (no FR ID) | branch `feature/windows-installer` |
 | unreleased | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | PR #39 |
+| unreleased | FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3 | branch `feature/element-legend` (not merged) |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
@@ -109,6 +116,23 @@ Known limitations and unresolved issues:
   behave the same. Decide whether to change it (a separate task).
 
 ## Latest development session
+
+- **Date and machine:** 21 November 2026, the Linux Mint laptop (Python 3.12.3, PySide6
+  6.12.0, VTK 9.7.2, POV-Ray 3.7.0.10; no Xvfb installed, so GUI tests opened windows on
+  the desktop).
+- **Done first:** the copyright holder and author changed from "Y-Matter Lab" to the
+  owner's name in the licence, package metadata, README, and Windows installer metadata
+  (PR #44, merged at `844775d`). The `QSettings` organisation name and data folders stay
+  "Y-Matter Lab" on purpose, so existing settings keep working.
+- **Then:** FR-LEGEND-01 on `feature/element-legend` (details and evidence in
+  [PROGRESS.md](PROGRESS.md#fr-legend-01-element-legend-post-040-21-november-2026)).
+  The legend is a 2D layer painted with Qt onto the rendered PNG in `finish_job`; the
+  live view draws the same layout as an overlay; Fit keeps the structure beside it.
+- **Not done:** macOS and Windows (CI runs the tests without windows there once the
+  branch is pushed); hands-on use by a person; commit, push, and CI (only when the user
+  asks).
+
+Earlier, on 18 November 2026:
 
 - **Date and machine:** 18 November 2026, a Windows 11 laptop (x64, 125 % display
   scale, Python 3.12.10 from python.org, POV-Ray for Windows 3.7.0 from the official
@@ -256,6 +280,12 @@ hands-on runs by a person.
 
 ## Next recommended steps
 
+0. FR-LEGEND-01: once the user asks, commit, push, and open a pull request; check CI on
+   macOS and Windows (the windowless `--render` legend test runs there). Then a hands-on
+   check of the Legend tab on Linux, the Mac, and Windows: switch the legend on, Fit, try
+   each position, layout, font, and order, render PNG/PDF/JPEG, and compare the image
+   with the frame.
+
 1. On the Mac mini, first: `git checkout main && git pull`, then check whether PR #36
    is merged (`gh pr view 36`); if not, merge it when the user asks (its CI passed).
    Reinstall into the existing `.venv` (`.venv/bin/python -m pip install -e ".[dev]" -c
@@ -293,6 +323,10 @@ further is authorized by this record; new work needs its own request.
 Still open from the macOS task: the [hands-on macOS checklist](#hands-on-checks-on-a-mac).
 
 Suggestions only — not approved, ask before starting any of them:
+
+- FR-LEGEND-01 follow-ups: dragging the legend in the view; a `--legend` command-line
+  option (today the legend comes from a project or style); a picture of the legend in
+  the user guide.
 
 - A command-line option for PDF/JPEG (`--render figure.pdf --dpi 600`); the CLI still
   writes PNG only.
@@ -344,6 +378,7 @@ user's report for PR #22.
 | HiDPI / Retina display | Not tested | Partial: emulated 2× scale only | Partial: 125 % scale (device pixel ratio 1.25), GUI tests and a scripted run |
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Verified 18 Nov 2026 on one laptop: Start-menu entry starts the window without a console, a `.ycrystal` file opens from File Explorer (scripted clicks); pinning to the taskbar not tried |
 | Installation script | Not applicable | Not applicable | Verified 18 Nov 2026 on one laptop with Python and POV-Ray already installed (Windows PowerShell 5.1, fresh `.venv`, rerun); the `winget` installs of Python and POV-Ray and the editor prompt not run |
+| Element legend (FR-LEGEND-01) | Verified 21 Nov 2026 on the Mint laptop: full suite with real windows and POV-Ray, windowless `--render` in a new process (`offscreen` plug-in), scripted window screenshots | Not tested (the command line uses the `offscreen` plug-in with Core Text fonts: untested) | Not tested (the command line uses the native plug-in for its fonts: untested) |
 | Graphical installer (packaged) | Not applicable | Not applicable | Partial, 18 Nov 2026 on one laptop: built, installed per user, window and command line, Start menu and file type, coexistence with the developer installation (27 checks); wizard not clicked through by a person, all-users installation not tried, not signed |
 | Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | Verified: tests without windows with POV-Ray for Windows on every pull request (PR #36, 18 Nov 2026) |
 
@@ -542,6 +577,15 @@ py -3.12 -m venv .venv-docs; .venv-docs\Scripts\python.exe -m pip install -r doc
   request; the GUI's Import Style dialog is unchanged. A saved project keeps its camera.
   A style may not raise the display above 20,000 atoms (`LARGE_DISPLAY_ATOMS`) from
   the command line; there is no override. Notes are `WARNING:` lines on stderr.
+- Element legend (FR-LEGEND-01, 21 November 2026): a 2D layer, never part of the 3D
+  scene or the `.pov` export; painted onto the rendered PNG at full size after POV-Ray
+  (all image paths), and as an overlay in the live view, by one layout. Sizes are
+  relative: text height in % of the image height, the rest in text heights. Entries come
+  from `DisplayGeometry` (drawn colours; majority colour per element). Stored in
+  `SceneSettings.legend` (project schema 8, style schema 3, appearance part). Fitting
+  (window and fitted command-line views) leaves the legend's area free; saved cameras
+  are never moved. Default font: Arial, Helvetica, Liberation Sans, Nimbus Sans, or
+  DejaVu Sans, the first installed. Disabled by default; then images are unchanged.
 - Export (FR-EXPORT-01): one POV-Ray render per export at the export pixel size; pixels
   and dpi are the source of truth (mm derived); no resampling; JPEG transparency →
   white; PDF = raster image on a page of the physical size, never called vector; the

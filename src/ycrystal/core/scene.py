@@ -27,6 +27,7 @@ from ase.data.colors import jmol_colors
 
 from ycrystal.core.background import BackgroundImage
 from ycrystal.core.bonds import BondSettings, periodic_bonds
+from ycrystal.core.legend import LegendSettings
 from ycrystal.core.structure import Structure
 from ycrystal.core.vectors import Arrow, VectorSet, VectorStyle, arrow_spheres, resolve_arrows
 
@@ -110,6 +111,10 @@ class SceneSettings:
         Records of atoms that are hidden or not displayed are kept and draw nothing.
     vector_style
         Arrow appearance ([`VectorStyle`][ycrystal.core.vectors.VectorStyle]).
+    legend
+        Element legend drawn onto the figure
+        ([`LegendSettings`][ycrystal.core.legend.LegendSettings]); it does not change
+        the geometry.
     """
 
     radius_scale: float = 0.5  # sphere radius = radius_scale * covalent radius
@@ -136,6 +141,7 @@ class SceneSettings:
     element_radii: tuple[tuple[str, float], ...] = ()
     vectors: VectorSet = field(default_factory=VectorSet)
     vector_style: VectorStyle = field(default_factory=VectorStyle)
+    legend: LegendSettings = field(default_factory=LegendSettings)
 
     def __post_init__(self) -> None:
         reps = tuple(int(r) for r in self.repetitions)

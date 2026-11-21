@@ -34,6 +34,13 @@ in scripts. `--povray PATH` chooses the POV-Ray executable. Errors print `ERROR:
 exit with status 1. Files that need a question answered (format, CIF data block, VASP 4
 elements) must be opened in the window first and saved as a project.
 
+A project (or a style applied with `--style`) whose
+[element legend](rendering.md#element-legend) is on gets the legend in the PNG as well;
+Ycrystal paints it after POV-Ray, without a window. A fitted view (a structure file,
+`--view`, `--camera-policy fit`) keeps the structure beside a legend at an edge; a saved
+camera is used as it is. `--export-pov` notes that the `.pov` scene does not contain the
+legend.
+
 On the development laptop (Intel Core Ultra 5 135U), each example renders at 400 × 300
 in about 1–2 seconds.
 

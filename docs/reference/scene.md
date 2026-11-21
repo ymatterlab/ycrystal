@@ -57,6 +57,21 @@
         - resolve_arrows
         - arrow_spheres
 
+## Element legend
+
+::: ycrystal.core.legend
+    options:
+      members:
+        - LEGEND_LAYOUTS
+        - LEGEND_POSITIONS
+        - LEGEND_ORDERS
+        - MARKER_STYLES
+        - LEGEND_RANGES
+        - LegendSettings
+        - LegendEntry
+        - order_elements
+        - legend_entries
+
 ## Background pictures
 
 ::: ycrystal.core.background

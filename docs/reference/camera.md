@@ -16,6 +16,7 @@
         - pan
         - zoom
         - fitted
+        - placed_in
         - looking_along
         - to_dict
         - from_dict

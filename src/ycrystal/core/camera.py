@@ -36,6 +36,14 @@ def _vec(value: Any) -> Vec3:
     return (float(array[0]), float(array[1]), float(array[2]))
 
 
+def _check_region(region: Any) -> tuple[float, float, float, float]:
+    """Validate a frame region ``(left, top, right, bottom)`` in fractions of the frame."""
+    left, top, right, bottom = (float(v) for v in region)
+    if not (0.0 <= left < right <= 1.0 and 0.0 <= top < bottom <= 1.0):
+        raise ValueError("region must lie inside the frame: 0 <= left < right <= 1, same for y")
+    return left, top, right, bottom
+
+
 def _rotate(vector: np.ndarray, axis: np.ndarray, angle_deg: float) -> np.ndarray:
     """Rodrigues rotation of ``vector`` about unit ``axis`` (right-hand rule)."""
     theta = math.radians(angle_deg)
@@ -360,7 +368,14 @@ class Camera:
             raise ValueError("zoom factor must be positive")
         return self._replace(parallel_scale=self.parallel_scale / factor)
 
-    def fitted(self, points: Any, radii: Any, aspect: float, margin: float = 0.06) -> Camera:
+    def fitted(
+        self,
+        points: Any,
+        radii: Any,
+        aspect: float,
+        margin: float = 0.06,
+        region: tuple[float, float, float, float] | None = None,
+    ) -> Camera:
         """Centre and scale the view on spheres, keeping the orientation.
 
         Parameters
@@ -373,6 +388,11 @@ class Camera:
             Output width divided by output height.
         margin
             Extra space as a fraction of the fitted half-height; 0.06 adds 6 %.
+        region
+            Part of the frame the spheres are fitted into, as ``(left, top, right,
+            bottom)`` fractions of the frame width and height (top-left origin), for
+            example the space an element legend leaves free; ``None`` is the whole
+            frame (see [`placed_in`][ycrystal.core.camera.Camera.placed_in]).
 
         Returns
         -------
@@ -387,8 +407,26 @@ class Camera:
         Raises
         ------
         ValueError
-            If `aspect` is not positive.
+            If `aspect` is not positive or `region` is not inside the frame.
+
+        Examples
+        --------
+        Fitted into the upper 80 % of the frame, the view is 1.25 times as tall and the
+        spheres sit 10 % of the frame height above its centre:
+
+        >>> cam = Camera.looking_along((0, 1, 0), (0, 0, 1))
+        >>> points = [[0.0, 0.0, 0.0], [0.0, 0.0, 2.0]]
+        >>> full = cam.fitted(points, 1.0, 1.0, margin=0.0)
+        >>> upper = cam.fitted(points, 1.0, 1.0, margin=0.0, region=(0.0, 0.0, 1.0, 0.8))
+        >>> round(upper.parallel_scale / full.parallel_scale, 6)
+        1.25
+        >>> float(np.round(upper.project([[0.0, 0.0, 1.0]], 100, 100)[0, 1], 6))
+        40.0
         """
+        if region is not None:
+            left, top, right, bottom = _check_region(region)
+            inner = (right - left) / (bottom - top)
+            return self.fitted(points, radii, aspect * inner, margin).placed_in(region, aspect)
         if aspect <= 0:
             raise ValueError("aspect must be positive")
         pts = np.asarray(points, dtype=float).reshape(-1, 3)
@@ -412,6 +450,35 @@ class Camera:
             position=tuple(new_focal - distance * d),
             focal_point=tuple(new_focal),
             view_up=tuple(u),
+            parallel_scale=scale,
+        )
+
+    def placed_in(self, region: tuple[float, float, float, float], aspect: float) -> Camera:
+        """Return the camera whose frame shows this camera's view inside ``region``.
+
+        This camera's image (at the aspect ratio of `region`) appears, unchanged in
+        scale, in the part ``(left, top, right, bottom)`` of the new frame, given as
+        fractions of its width and height (top-left origin); the new frame has the
+        aspect ratio `aspect`. Only the focal point, the eye, and the parallel scale
+        change; the orientation is kept.
+
+        Raises
+        ------
+        ValueError
+            If `aspect` is not positive or `region` is not inside the frame.
+        """
+        if aspect <= 0:
+            raise ValueError("aspect must be positive")
+        left, top, right, bottom = _check_region(region)
+        scale = self.parallel_scale / (bottom - top)
+        full_h = 2.0 * scale
+        full_w = full_h * aspect
+        r, u, _ = self.basis()
+        shift = -r * ((left + right) / 2 - 0.5) * full_w + u * ((top + bottom) / 2 - 0.5) * full_h
+        return Camera(
+            position=tuple(np.asarray(self.position) + shift),
+            focal_point=tuple(np.asarray(self.focal_point) + shift),
+            view_up=self.view_up,
             parallel_scale=scale,
         )
 
@@ -678,7 +745,13 @@ class ViewPolicy:
         return "fit" if self.view is not None or self.visible_height is not None else "saved"
 
     def resolve(
-        self, saved: Camera | None, points: Any, radii: Any, aspect: float, cell: Any = None
+        self,
+        saved: Camera | None,
+        points: Any,
+        radii: Any,
+        aspect: float,
+        cell: Any = None,
+        region: tuple[float, float, float, float] | None = None,
     ) -> Camera:
         """Return the camera for a scene.
 
@@ -694,6 +767,10 @@ class ViewPolicy:
             Output width divided by height.
         cell
             Lattice vectors as rows, or ``None`` without a cell (for a, b, c).
+        region
+            Part of the frame a fitted scene must stay in, for example beside an element
+            legend (see [`Camera.fitted`][ycrystal.core.camera.Camera.fitted]); ``None``
+            is the whole frame. A saved camera is never changed by it.
 
         Returns
         -------
@@ -717,16 +794,19 @@ class ViewPolicy:
         else:
             base = Camera.looking_along(DEFAULT_DIRECTION, (0.0, 0.0, 1.0))
         if self.visible_height is None:
-            return base.fitted(points, radii, aspect, self.margin)
-        tight = base.fitted(points, radii, aspect, margin=0.0)
-        needed = 2.0 * tight.parallel_scale
+            return base.fitted(points, radii, aspect, self.margin, region)
+        left, top, right, bottom = region or (0.0, 0.0, 1.0, 1.0)
+        inner = (right - left) / (bottom - top)
+        tight = base.fitted(points, radii, aspect * inner, margin=0.0)
+        needed = 2.0 * tight.parallel_scale / (bottom - top)
         if self.visible_height < needed * (1.0 - 1e-9):
             raise CameraPolicyError(
                 f"The scene does not fit in a visible height of {self.visible_height:g} Å at "
                 f"this aspect ratio: it needs at least {needed:.2f} Å. Increase the visible "
                 "height, or let the view be fitted."
             )
-        return tight._replace(parallel_scale=0.5 * self.visible_height)
+        fixed = tight._replace(parallel_scale=0.5 * self.visible_height * (bottom - top))
+        return fixed if region is None else fixed.placed_in(region, aspect)
 
 
 def _check_size(width: int, height: int) -> None:

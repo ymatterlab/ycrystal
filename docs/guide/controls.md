@@ -80,8 +80,9 @@ tab and the galleries. There is no atom editor.
 
 ## Supercells, bonds, and directions
 
-The **Scene** dock has **Structure**, **Bonds**, **Appearance**, and **Render** tabs.
-If closed, reopen it from
+The **Scene** dock has **Structure**, **Bonds**, **Appearance**, **Legend** (the
+[element legend](rendering.md#element-legend)), and **Render** tabs. If closed, reopen
+it from
 **View ▸ Scene**. Under Structure, set repetitions along a, b, c (1 to 20),
 use **+ all** / **− all**, or reset with **1 × 1 × 1**. Typed counts apply on Enter
 or focus change. The view refits after a repetition change. Expansions above 20,000
@@ -259,7 +260,7 @@ repetitions hide the arrows of images that are no longer displayed, without dele
 their overrides; more repetitions bring them back. Changing atom radii does not change
 arrows. Opening another structure starts without vectors.
 
-**Saving.** Projects store all vectors at full precision (project schema 7), including
+**Saving.** Projects store all vectors at full precision (since project schema 7), including
 suppressions and the arrow appearance, and the definition of a custom arrow material.
 Styles carry only the arrow appearance (with the *Materials, colours, and radii* part);
 they never transfer vectors to another structure, and importing a style keeps the
