@@ -410,15 +410,23 @@ def draw_legend_on_file(
     painter = QPainter(image)
     paint_legend(painter, layout, settings)
     painter.end()
-    original = path.read_bytes()
-    tmp = path.with_name(path.name + ".legend")
-    writer = QImageWriter(str(tmp), b"png")
-    if not writer.write(image):
-        tmp.unlink(missing_ok=True)
-        raise LegendError(f"Could not write the image with its legend: {writer.errorString()}")
+    # Encoded in memory: a file written by QImageWriter stays open (and so cannot be
+    # renamed on Windows) until the writer is destroyed.
+    from PySide6.QtCore import QBuffer, QIODevice
+
     from ycrystal.render.formats import png_resolution, png_without_resolution
 
-    if png_resolution(original) is None:
-        tmp.write_bytes(png_without_resolution(tmp.read_bytes()))
+    buffer = QBuffer()
+    buffer.open(QIODevice.OpenModeFlag.WriteOnly)
+    writer = QImageWriter(buffer, b"png")
+    if not writer.write(image):
+        raise LegendError(f"Could not encode the image with its legend: {writer.errorString()}")
+    del writer
+    data = bytes(buffer.data())
+    buffer.close()
+    if png_resolution(path.read_bytes()) is None:
+        data = png_without_resolution(data)
+    tmp = path.with_name(path.name + ".legend")
+    tmp.write_bytes(data)
     tmp.replace(path)
     return True
