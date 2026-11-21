@@ -1,6 +1,6 @@
 # Ycrystal progress record
 
-Last updated: 21 November 2026 (FR-LEGEND-01, element legend, merged in PR #45 at `6735400`). Before that: 18 November 2026 (graphical Windows installer, branch `feature/windows-installer`). Before that: Python 3.13 and 3.14 on Windows, verified on the laptop (PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 21 November 2026 (FR-QE-IBRAV-01, Quantum ESPRESSO input with `ibrav` other than 0, branch `feature/qe-ibrav`). Before that: FR-LEGEND-01, element legend, merged in PR #45 at `6735400`. Before that: 18 November 2026 (graphical Windows installer, branch `feature/windows-installer`). Before that: Python 3.13 and 3.14 on Windows, verified on the laptop (PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
 ## Milestones
 
@@ -92,6 +92,100 @@ opening `partial_occupancy.cif` shows the explanation while the scene stays.
 - The view counts as part of the project: rotating marks it modified.
 - POSCAR element lines with POTCAR suffixes (`Na_pv`) are reduced to the element; the
   raw token is not kept as a label.
+
+## FR-QE-IBRAV-01: Quantum ESPRESSO input with ibrav other than 0 (post-0.4.0, 21 November 2026)
+
+Requested by the user on 21 November 2026: support pw.x inputs with `ibrav` ≠ 0; first
+check whether ASE supports them, and if not, whether the code in the local `utils/`
+folder (external code, ignored by Git) can read them. Branch `feature/qe-ibrav` from
+`main` at `1aae367`. Run on the Linux Mint laptop (Python 3.12.3, ASE 3.29.0).
+
+Findings:
+
+- ASE 3.29.0 (the pinned version) does not read or write `ibrav` ≠ 0:
+  `read_espresso_in` raises "ASE does not support ibrav != 0", and no other part of ASE
+  converts `ibrav`. ASE 3.22.1 had `ibrav_to_cell` (its wheel from PyPI was inspected);
+  it was later removed.
+- `utils/autoph/pw_utils.py::ibrav_to_cell` is ASE 3.22.1's function (identical text)
+  with two changes: a fix of its `ibrav = 11` row (a typo that made it fail) and an
+  added `ibrav = -13`. Checked against QE's `Modules/latgen.f90`: the lattices it has
+  are right; it has no `ibrav = 91` and checks no parameters (a missing `c` gives a
+  flat cell). It is LGPL code from ASE, inside a repository licensed MIT.
+
+Delivered:
+
+- `io/qe_lattice.py`, an own implementation from the pw.x input documentation
+  (`INPUT_PW`) and `latgen.f90`: `IBRAV_LATTICES` (all 20 values pw.x accepts),
+  `celldm_from_input` (`celldm(1…6)` or `A, B, C, cosAB, cosAC, cosBC` with pw.x's
+  `abc2celldm` mapping), `ibrav_cell`, and `LatticeError` with pw.x's checks. For
+  `ibrav = -13` the axes of QE 6.5 and later.
+- `io/readers.py`: QE input with `ibrav` ≠ 0 opens; `alat` positions use `a`; a
+  `CELL_PARAMETERS` card together with `ibrav` ≠ 0 is refused (as pw.x does); the source
+  record keeps `qe_ibrav` and `qe_celldm`. `crystal_sg` stays unsupported.
+- Fixtures `Si_ibrav2.pw.in`, `MgB2_ibrav4.pw.in`, `SrTiO3_ibrav1.pw.in`,
+  `triclinic_ibrav14.pw.in`, and `qe_ibrav4_no_c.pw.in` (still refused, replacing the
+  removed `qe_ibrav2.pw.in` in the GUI and command-line rejection tests).
+- `scripts/check_qe_ibrav.py`: compares with pw.x's output in QE's test suite.
+- Documentation: formats, support matrix, limitations, validation (section F),
+  comparison, architecture, API reference, changelog; CI doctests include the module.
+
+| Check | Result |
+| --- | --- |
+| `tests/test_qe_lattice.py` (67 tests): the vectors of all 20 lattices as written in `INPUT_PW`; conventional cell and centring vectors as whole-number combinations, volume ratio, right-handedness; rhombohedral angle and threefold axes; triclinic lengths and angles; the `A, B, C, cos…` → `celldm` slots; refused parameters | Pass |
+| `tests/test_readers.py` (50 tests): Si, MgB2, SrTiO3, triclinic via `ibrav` 2, 4, 1, 14 equivalent to their POSCAR/CIF/`ibrav = 0` files (within 1e-6 Å); `alat` positions; 9 refused inputs with messages | Pass |
+| `scripts/check_qe_ibrav.py` against QE `develop` (`test-suite/pw_lattice-ibrav`): 17 lattices (QE has none for −9, 91, −13) | 17 of 17 agree: axes within 4.7e-7 alat (pw.x prints 6 decimals), positions within 1.5e-8 alat |
+| Cross-check with the `utils` function (local only; `utils/` is not in the repository): 19 lattices × 200 random parameter sets × both input forms | 7,600 cells, largest difference 3.6e-15 Å; `ibrav = 91` is not in the `utils` function |
+| Content detection of `ibrav` inputs named `scf.in` and `input` | Detected as QE and read |
+| Full suite `YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs` | 1043 passed, 10 skipped (Windows-only tests); after the audit and the Fortran-number and expression fix: 1115 passed, 10 skipped (Windows-only) |
+| CI doctest list, `scripts/docs_examples.py`, `pre-commit run --all-files`, `zensical build --clean --strict` | Pass |
+
+QE versions (asked for by the user, documented in `docs/guide/qe-lattices.md`): QE's
+release notes and the source of `latgen.f90` at 23 tags (4.3.2 to the development
+branch) were read and the code of each `ibrav` compared as text. Only `ibrav = -13`
+changed (QE 6.5: v1(old) = −v2, v2(old) = v1; release notes give (x, y, z) → (y, −x, z)
+for old crystal positions); `-9` appeared in 5.0, `91` and `-13` in 5.2.0, `-3` in
+6.2.0. The `A, B, C, cos…` mapping is as today from 6.3 (6.2.x ignored `cosAC` for −13);
+the bohr changed from CODATA 2006 to 2018 in QE 6.6 (Ycrystal keeps ASE's CODATA 2006
+value: relative difference below 5e-9). Compiling the old `latgen.f90` versions to
+compare numbers was not permitted in this session (running downloaded code), so the
+version comparison is by reading only. This also corrected an earlier statement:
+the current −13 axes start with QE 6.5, not 6.4.1.
+
+Audit of every `ibrav` (requested by the user, same day; matrix in
+`docs/guide/qe-lattices.md`):
+
+- Committed tests: all 20 lattices against the documented vectors; all 20 through
+  `read_structure` in both parameter forms (new: 40 tests); lattice geometry for all 20.
+  Tracing the tests showed every statement of `io/qe_lattice.py` and of the reader's
+  `ibrav` branch executed (104 of 104; the 7 unexecuted reader lines are older error
+  paths for missing cards and `ibrav = 0`).
+- pw.x output: `scripts/check_qe_ibrav.py --qe-checkout` (new option) over a sparse
+  clone of QE's `test-suite` (development branch): 289 of 289 applicable inputs agreed
+  (17 lattices; `A, B, C` form for 1, 2, 4, 6, 14); 112 not applicable (no stored pw.x
+  output, structure read from an earlier run, QEHeat trajectory positions); 6 not read
+  for reasons unrelated to `ibrav` (Fortran `16.D0` masses in `ATOMIC_SPECIES` in 5,
+  arithmetic in positions in 1; ASE's parser reads neither).
+- Fixed at the user's request, the same day (`io/readers.py`): card values that pw.x
+  reads but ASE does not are rewritten before ASE parses the cards. Fortran reals with
+  a `D` exponent in `ATOMIC_SPECIES` and `CELL_PARAMETERS` (`fortran_real`), and
+  coordinates of `ATOMIC_POSITIONS` evaluated with the grammar of pw.x's `eval_infix`
+  (`evaluate_qe_expression`: numbers with `e/E/d/D` exponents, `+ - * / ^`,
+  parentheses; `^` and signs bind tightest and group from the right; division by zero
+  and non-real powers refused), read from QE's `UtilXlib/eval_infix.c` and
+  `Modules/read_cards.f90`. Plain numbers are left exactly as they were. After the fix:
+  295 of 295 applicable `ibrav` ≠ 0 inputs agree (the 6 now read and agree, among them
+  QE's own expression test `pw_eval/eval_infix.in`); QE's 37 applicable `ibrav = 0`
+  inputs agree too (a separate check of the same kind), none unreadable. Tests: 31 new
+  in `tests/test_readers.py` (grammar, precedence, errors, Fortran reals, files).
+- A grep of QE's whole test suite and example folders found no input with `ibrav` −9,
+  91, or −13, so no pw.x reference exists for them in QE.
+- Independent code (the `utils` copy of ASE 3.22.1's function) and the 17-lattice check
+  were rerun: unchanged.
+
+Not verified: `ibrav` −9, 91, and −13 against a pw.x run (they rest on the documented
+vectors, and −9 and −13 on the `utils` cross-check); inputs written for QE 6.4.1 or older
+with `ibrav = -13` and crystal positions open with the current axes (not detected); macOS and Windows (CI will run the tests);
+opening such a file in the window by hand.
 
 ## FR-LEGEND-01: element legend (post-0.4.0, 21 November 2026)
 

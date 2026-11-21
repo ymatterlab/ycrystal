@@ -38,7 +38,7 @@ come **only from documentation** and nothing in them was tested.
 | Images without a window, and batch processing | Yes: `--render`, `--export-pov`, `--batch` manifests, no display needed (Y6) | Command-line image export (`-export_img`), listed among commands that work only with the GUI window; batch not found (V5) | Yes: Python module and `ovitos`, headless on Linux, batch processing (O6) | Planned (C5) |
 | CIF input | Yes, without partial occupancy or overlapping sites (Y7) | Yes, fractional coordinates only (V6) | Yes, one data block, fractional coordinates (O7) | Yes (C6) |
 | VASP POSCAR/CONTCAR input | Yes, VASP 5 and 4 (elements asked for VASP 4) (Y7) | Yes; needs OUTCAR for element symbols (V6) | POSCAR yes; CONTCAR not named (O7) | Yes (C6) |
-| Quantum ESPRESSO pw.x input | Yes, `ibrav = 0` only (Y7) | Not found (XSF written by QE is read) (V6) | Yes, `ibrav` = 1, 2, 3, −3 only (O7) | Yes (C6) |
+| Quantum ESPRESSO pw.x input | Yes, every `ibrav` of pw.x (Y7) | Not found (XSF written by QE is read) (V6) | Yes, `ibrav` = 1, 2, 3, −3 only (O7) | Yes (C6) |
 | Atom-attached vectors (magnetic moments) | Yes, entered in the window; no import from calculation output (Y8) | Yes (V7) | Yes, arrow glyphs, centred option (O8) | Planned (C7) |
 | One file with structure and all view settings | Yes: `.ycrystal`, self-contained (structure, pictures, custom materials) (Y9) | Yes: `.vesta` holds structure and graphic settings; volumetric data stay external (V8) | Session state with pipeline, viewport, render settings; whether atom data are inside is not stated (O9) | Only for charge-density figures (`.cview.json`) (C8) |
 | Provenance record of a rendered image (versions, checksums) | Yes (Y10) | Not found | Not found | Not found |
@@ -69,7 +69,9 @@ snapshots with provenance. It does not rest on any single feature being unique.
   `tests/test_gui_style_map.py`.
 - **(Y6)** FR-BATCH-01. Tests: `tests/test_batch_manifest.py`; tests in CI that load no
   window toolkit and need no display.
-- **(Y7)** [Supported file formats](../FORMATS.md). Tests: `tests/test_readers.py`.
+- **(Y7)** [Supported file formats](../FORMATS.md) and
+  [Quantum ESPRESSO lattices](../guide/qe-lattices.md) (every `ibrav` of pw.x, compared
+  with pw.x's output). Tests: `tests/test_readers.py`, `tests/test_qe_lattice.py`.
 - **(Y8)** FR-VECTOR-01. Tests: `tests/test_vectors.py`, `tests/test_validation.py`.
 - **(Y9)** Project schema 8 with ZIP packages. Tests: `tests/test_project.py`,
   `tests/test_background_image.py`, `tests/test_reproducibility.py`.

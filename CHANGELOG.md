@@ -22,6 +22,21 @@ before 1.0 the Python interface may change between minor versions.
   views keep the structure beside a legend at an edge. Disabled (the default), images
   are exactly as before.
 
+- **Quantum ESPRESSO input with any `ibrav` (FR-QE-IBRAV-01).** pw.x inputs with
+  `ibrav` other than 0 (1–14, −3, −5, −9, 91, −12, −13; lattice from `celldm(1…6)` or
+  `A, B, C, cosAB, cosAC, cosBC`) now open instead of being refused, with exactly the
+  lattice vectors pw.x builds, so crystal coordinates mean the same thing. ASE does not
+  read these files; the conversion follows the pw.x input documentation and its checks
+  (missing or impossible parameters, a redundant `CELL_PARAMETERS` card are refused with
+  a message). The structure's source record keeps `ibrav` and `celldm`. The vectors
+  are those of QE 6.5 and later; files with `ibrav = −13` and crystal positions written
+  for QE 6.4.1 or older need converting (see the new *Quantum ESPRESSO lattices* page).
+
+- **pw.x input as pw.x reads it.** Numbers in Fortran notation (`16.D0`, `1.5d-3`) in
+  the `ATOMIC_SPECIES` and `CELL_PARAMETERS` cards, and coordinates written as simple
+  arithmetic (`1/4`, `2*(1/8)`, with `+ - * / ^` and parentheses, pw.x's rules), no
+  longer stop a file from opening. Before, ASE's parser refused them for any `ibrav`.
+
 ### Changed
 - Project schema 8 (`scene.legend`) and style schema 3; older files open with the legend
   off. Ycrystal 0.4.0 and older refuse the new files.

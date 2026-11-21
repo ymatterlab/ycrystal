@@ -13,6 +13,18 @@ See the [user-facing format restrictions](../FORMATS.md) before importing data.
         - ElementMappingRequired
         - detect_format
         - read_structure
+        - evaluate_qe_expression
+        - fortran_real
+
+## Quantum ESPRESSO lattices (`ibrav`)
+
+::: ycrystal.io.qe_lattice
+    options:
+      members:
+        - IBRAV_LATTICES
+        - LatticeError
+        - celldm_from_input
+        - ibrav_cell
 
 ::: ycrystal.io.project
     options:

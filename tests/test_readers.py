@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 
 from ycrystal.core.compare import compare_structures, supercell
+from ycrystal.io.qe_lattice import IBRAV_LATTICES
 from ycrystal.io.readers import (
     BlockChoiceRequired,
     ElementMappingRequired,
@@ -20,6 +21,8 @@ from ycrystal.io.readers import (
     UnsupportedStructureError,
     detect_format,
     element_from_label,
+    evaluate_qe_expression,
+    fortran_real,
     read_structure,
 )
 
@@ -233,11 +236,196 @@ def test_cif_block_choice():
 
 
 # ----- QE rejections and labels -----------------------------------------------------------
-def test_qe_nonzero_ibrav_is_rejected_without_guessing():
-    with pytest.raises(UnsupportedStructureError) as info:
-        read_structure(fx("qe_ibrav2.pw.in"))
-    message = str(info.value)
-    assert "ibrav = 2" in message and "CELL_PARAMETERS" in message
+# ----- QE input with ibrav other than 0 (FR-QE-IBRAV-01) ---------------------------------------
+def test_qe_ibrav_2_is_the_fcc_cell_of_pw_x_and_the_same_silicon():
+    a = 5.431
+    qe = read_structure(fx("Si_ibrav2.pw.in"))  # celldm(1) in bohr, positions in alat
+    expected = a / 2 * np.array([[-1, 0, 1], [0, 1, 1], [-1, 1, 0]])  # pw.x's fcc vectors
+    np.testing.assert_allclose(qe.cell, expected, atol=1e-8)
+    poscar = read_structure(fx("Si_primitive.vasp"))
+    # Same lattice, other primitive vectors: QE's = P @ POSCAR's, with det P = 1.
+    P = np.array([[1, 0, -1], [1, 0, 0], [1, -1, 0]])
+    assert round(np.linalg.det(P)) == 1
+    np.testing.assert_allclose(P @ poscar.cell, qe.cell, atol=1e-8)
+    assert_equivalent(supercell(poscar, P), qe)
+    source = qe.metadata["source"]
+    assert source["qe_ibrav"] == 2 and source["qe_celldm"][0] == pytest.approx(10.2631026323)
+
+
+def test_qe_ibrav_4_from_a_and_c_in_angstrom_is_mgb2():
+    qe = read_structure(fx("MgB2_ibrav4.pw.in"))
+    assert_equivalent(read_structure(fx("MgB2.vasp")), qe)
+    assert qe.metadata["source"]["qe_celldm"][2] == pytest.approx(3.524 / 3.086)
+
+
+def test_qe_ibrav_1_keeps_labels_and_flags():
+    vasp, qe = read_structure(fx("SrTiO3.vasp")), read_structure(fx("SrTiO3_ibrav1.pw.in"))
+    np.testing.assert_allclose(qe.cell, 3.905 * np.eye(3), atol=1e-9)
+    assert_equivalent(vasp, qe)
+    assert qe.labels == ("Sr", "Ti", "O1", "O1", "O_2")
+    np.testing.assert_array_equal(qe.movable, vasp.movable)
+
+
+def test_qe_ibrav_14_puts_each_cosine_on_its_angle():
+    """cosBC is cos(alpha), cosAC cos(beta), cosAB cos(gamma), as in pw.x."""
+    qe = read_structure(fx("triclinic_ibrav14.pw.in"))
+    np.testing.assert_allclose(qe.cell, triclinic_cell(4.6, 5.3, 6.1, 78, 84, 71), atol=1e-9)
+    assert_equivalent(read_structure(fx("triclinic.pw.in")), qe)
+
+
+@pytest.mark.parametrize("form", ["celldm", "abc"])
+@pytest.mark.parametrize("ibrav", list(IBRAV_LATTICES))
+def test_every_ibrav_reads_with_the_documented_vectors(tmp_path, ibrav, form):
+    """All 20 lattices of pw.x through the reader, in both parameter forms."""
+    from ase.io.espresso import units
+
+    from test_qe_lattice import COS_BETA, COS_GAMMA, celldm, documented_vectors
+
+    bohr = units["Bohr"]
+    cd = celldm(ibrav)  # a, b/a, c/a in bohr units, and the cosines
+    if form == "celldm":
+        lattice = ", ".join(f"celldm({i + 1}) = {v!r}" for i, v in enumerate(cd))
+    else:
+        a = cd[0] * bohr
+        cosines = {
+            14: {"cosBC": cd[3], "cosAC": COS_BETA, "cosAB": COS_GAMMA},
+            -12: {"cosAC": COS_BETA},
+            -13: {"cosAC": COS_BETA},
+            12: {"cosAB": COS_GAMMA},
+            13: {"cosAB": COS_GAMMA},
+            5: {"cosAB": cd[3]},
+            -5: {"cosAB": cd[3]},
+        }.get(ibrav, {})
+        parts = [f"A = {a!r}", f"B = {a * cd[1]!r}", f"C = {a * cd[2]!r}"]
+        lattice = ", ".join(parts + [f"{k} = {v!r}" for k, v in cosines.items()])
+    path = tmp_path / "x.pw.in"
+    path.write_text(
+        f"&SYSTEM\n  ibrav = {ibrav}, {lattice}, nat = 2, ntyp = 1\n/\n"
+        "ATOMIC_SPECIES\n  Mg 1.0 Mg.upf\n"
+        "ATOMIC_POSITIONS crystal\n  Mg 0 0 0\n  Mg 0.1 0.2 0.3\n"
+    )
+    structure = read_structure(path)
+    expected = np.array(documented_vectors(ibrav)) * bohr
+    np.testing.assert_allclose(structure.cell, expected, atol=1e-9)
+    np.testing.assert_allclose(
+        structure.positions[1], np.array([0.1, 0.2, 0.3]) @ expected, atol=1e-9
+    )
+    assert structure.metadata["source"]["qe_ibrav"] == ibrav
+
+
+def _qe(tmp_path, system: str, positions: str = "crystal\n  Mg 0 0 0", extra: str = ""):
+    path = tmp_path / "x.pw.in"
+    path.write_text(
+        f"&SYSTEM\n  {system}, nat = 1, ntyp = 1\n/\nATOMIC_SPECIES\n  Mg 1.0 Mg.upf\n"
+        f"{extra}ATOMIC_POSITIONS {positions}\n"
+    )
+    return path
+
+
+def test_qe_alat_positions_use_the_lattice_parameter_of_ibrav(tmp_path):
+    s = read_structure(_qe(tmp_path, "ibrav = 6, A = 3.0, C = 5.0", "alat\n  Mg 0.5 0.5 1.0"))
+    np.testing.assert_allclose(s.positions, [[1.5, 1.5, 3.0]], atol=1e-12)  # alat = a, not c
+    np.testing.assert_allclose(s.cell, np.diag([3.0, 3.0, 5.0]), atol=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("system", "extra", "message"),
+    [
+        ("ibrav = 4, celldm(1) = 5.83", "", "ibrav = 4 needs celldm(3) or C > 0"),
+        ("ibrav = 8, A = 3, C = 4", "", "ibrav = 8 needs celldm(2) or B > 0"),
+        ("ibrav = 12, A = 3, B = 4, C = 5, cosAB = 1.0", "", "celldm(4) = cos(gamma)"),
+        ("ibrav = 5, celldm(1) = 9, celldm(4) = -0.5", "", "cos(alpha) < 1"),
+        ("ibrav = 15, celldm(1) = 9", "", "not a pw.x Bravais lattice"),
+        ("ibrav = 1, celldm(1) = 9, A = 4.7", "", "given twice"),
+        ("ibrav = 1", "", "needs the lattice parameters"),
+        ("ibrav = 1, A = 4", "CELL_PARAMETERS angstrom\n 4 0 0\n 0 4 0\n 0 0 4\n", "redundant"),
+        (
+            "ibrav = 14, A = 3, B = 3, C = 3, cosAB = 0.9, cosAC = -0.9, cosBC = 0.9",
+            "",
+            "do not make a cell",
+        ),
+    ],
+)
+def test_qe_ibrav_errors_are_explained(tmp_path, system, extra, message):
+    with pytest.raises(StructureImportError) as error:
+        read_structure(_qe(tmp_path, system, extra=extra))
+    assert message in str(error.value) and "x.pw.in" in str(error.value)
+
+
+# ----- numbers as pw.x reads them -----------------------------------------------------------------
+@pytest.mark.parametrize(
+    ("expression", "value"),
+    [
+        ("0.25", 0.25),
+        ("1/4", 0.25),
+        ("2*(1/8)", 0.25),
+        ("1/(2/(1/2))", 0.25),
+        ("(1+1)*0", 0.0),
+        ("1-1", 0.0),
+        ("0/2", 0.0),
+        ("1--1", 2.0),
+        ("-2^2", -4.0),  # the sign binds like ^, from the right
+        ("2^-1", 0.5),
+        ("2^3^2", 512.0),  # ^ groups from the right
+        ("8/2/2", 2.0),  # / groups from the left
+        ("1-2-3", -4.0),
+        ("-2*3", -6.0),
+        ("+3", 3.0),
+        (".5", 0.5),
+        ("5.", 5.0),
+        ("1.5d-1", 0.15),
+        ("2.5D0*2", 5.0),
+        ("1e1/4", 2.5),
+        ("3^(1/2)^2", 3.0**0.25),
+    ],
+)
+def test_coordinates_are_evaluated_as_pw_x_does(expression, value):
+    assert evaluate_qe_expression(expression) == pytest.approx(value, rel=1e-15, abs=1e-15)
+
+
+@pytest.mark.parametrize("expression", ["", "1/0", "2*", "(1+2", "1+2)", "abc", "1,5", "(-1)^0.5"])
+def test_coordinates_pw_x_cannot_evaluate_are_refused(expression):
+    with pytest.raises(ValueError):
+        evaluate_qe_expression(expression)
+
+
+def test_fortran_reals_get_python_exponents_and_nothing_else_changes():
+    assert [fortran_real(t) for t in ("16.D0", "1.5d-3", "-.5D+2", "7d0")] == [
+        "16.E0",
+        "1.5e-3",
+        "-.5E+2",
+        "7e0",
+    ]
+    for unchanged in ("16.0", "Si.pbe-d.UPF", "d0", "Cd", "1.5e-3", "0.5"):
+        assert fortran_real(unchanged) == unchanged
+
+
+def test_fortran_numbers_and_expressions_read_like_plain_numbers(tmp_path):
+    """Masses and cell in Fortran notation, positions as expressions, as pw.x accepts."""
+    plain = tmp_path / "plain.pw.in"
+    plain.write_text(
+        "&SYSTEM\n  ibrav = 0, nat = 2, ntyp = 1\n/\nATOMIC_SPECIES\n  Si 28.0855 Si.upf\n"
+        "CELL_PARAMETERS angstrom\n  0.0 2.7155 2.7155\n  2.7155 0.0 2.7155\n"
+        "  2.7155 2.7155 0.0\nATOMIC_POSITIONS crystal\n  Si 0.0 0.0 0.0\n"
+        "  Si 0.25 0.25 0.25 0 1 1\n"
+    )
+    fortran = tmp_path / "fortran.pw.in"
+    fortran.write_text(
+        "&SYSTEM\n  ibrav = 0, nat = 2, ntyp = 1\n/\nATOMIC_SPECIES\n  Si 28.0855D0 Si.upf\n"
+        "CELL_PARAMETERS angstrom\n  0.D0 2.7155d0 2.7155D+00\n  2.7155d0 0.d0 2.7155D0\n"
+        "  2.7155D0 2.7155D0 0.0\nATOMIC_POSITIONS crystal\n  Si 1-1 0/2 (1+1)*0\n"
+        "  Si 1/4 2*(1/8) 1/(2/(1/2)) 0 1 1\n"
+    )
+    a, b = read_structure(plain), read_structure(fortran)
+    np.testing.assert_array_equal(a.cell, b.cell)
+    np.testing.assert_array_equal(a.positions, b.positions)
+    np.testing.assert_array_equal(a.movable, b.movable)  # the if_pos flags stay integers
+
+
+def test_a_coordinate_pw_x_cannot_evaluate_is_explained(tmp_path):
+    path = _qe(tmp_path, "ibrav = 1, A = 4", "crystal\n  Mg 1/0 0 0")
+    with pytest.raises(StructureImportError, match="ATOMIC_POSITIONS line 'Mg 1/0 0 0'.*division"):
+        read_structure(path)
 
 
 def test_qe_crystal_sg_and_missing_cell():

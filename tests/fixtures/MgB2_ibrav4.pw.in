@@ -1,0 +1,10 @@
+&SYSTEM
+  ibrav = 4, A = 3.086, C = 3.524, nat = 3, ntyp = 2, ecutwfc = 40
+/
+ATOMIC_SPECIES
+  Mg 24.305 Mg.upf
+  B  10.811 B.upf
+ATOMIC_POSITIONS crystal
+  Mg 0.0         0.0         0.0
+  B  0.333333333333 0.666666666667 0.5
+  B  0.666666666667 0.333333333333 0.5

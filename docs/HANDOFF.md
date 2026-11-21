@@ -9,6 +9,13 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 
 ## Current project status
 
+- **In review: FR-QE-IBRAV-01, Quantum ESPRESSO input with `ibrav` other than 0**
+  (requested 21 November 2026), branch `feature/qe-ibrav` from `main` at `1aae367`: all
+  20 lattices of pw.x, checked against pw.x's own output (17 lattices, 295 inputs of QE's
+  test suite) and the pw.x documentation (all 20); Fortran numbers (`16.D0`) in cards
+  and arithmetic in positions (`1/4`) read as pw.x reads them. User guide page
+  `docs/guide/qe-lattices.md`. Verified on the Linux laptop only; not merged. See
+  [PROGRESS.md](PROGRESS.md#fr-qe-ibrav-01-quantum-espresso-input-with-ibrav-other-than-0-post-040-21-november-2026).
 - **FR-LEGEND-01, element legend** (requested 21 November 2026): merged in PR #45
   (merge commit `6735400`) after CI passed on every system. A *Scene ▸ Legend* tab and
   a legend of the displayed elements painted onto the figure, its previews, renders, and
@@ -65,6 +72,7 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | unreleased | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 (`8051f04`) |
 | unreleased | Graphical Windows installer (PyInstaller + Inno Setup), coexisting with the developer installation (no FR ID) | branch `feature/windows-installer` |
 | unreleased | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | PR #39 |
+| unreleased | FR-QE-IBRAV-01 QE input with `ibrav` other than 0 (all pw.x lattices) | branch `feature/qe-ibrav` (not merged) |
 | unreleased | FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3 | PR #45 (`6735400`) |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
@@ -136,6 +144,19 @@ Known limitations and unresolved issues:
   installer). Merged at `6735400`, as the user asked.
 - **Not done:** hands-on use of the Legend tab on any system; GUI tests on macOS and
   Windows (CI runs only the tests without windows there).
+- **Then:** FR-QE-IBRAV-01 on `feature/qe-ibrav` (details in
+  [PROGRESS.md](PROGRESS.md#fr-qe-ibrav-01-quantum-espresso-input-with-ibrav-other-than-0-post-040-21-november-2026)).
+  ASE 3.29 does not read `ibrav` ≠ 0; the `utils/` function is ASE 3.22.1's old
+  `ibrav_to_cell` (LGPL), so it served as a cross-check, and Ycrystal has its own
+  implementation from the pw.x documentation (full suite at the end: 1115 passed,
+  10 skipped, Windows-only). An audit of every `ibrav` added a reader
+  test for all 20 lattices in both forms and compared 289 inputs of QE's test suite
+  with pw.x's output (all agree); −9, 91, −13 have no pw.x reference in QE. Then, at
+  the user's request, Fortran numbers (`16.D0`) in cards and arithmetic in positions
+  (`1/4`) are read as pw.x reads them; 295 of 295 QE inputs agree. Full suite
+  1043 passed, 10 skipped
+  (Windows-only). Not done: commit, push, CI (only when the user asks); opening such a
+  file in the window by hand.
 
 Earlier, on 18 November 2026:
 
@@ -285,7 +306,11 @@ hands-on runs by a person.
 
 ## Next recommended steps
 
-0. FR-LEGEND-01 (merged in PR #45): a hands-on check of the Legend tab on Linux, the
+- FR-QE-IBRAV-01 (branch `feature/qe-ibrav`): once the user asks, commit, push, and
+   open a pull request; check CI on macOS and Windows; run `scripts/check_qe_ibrav.py`
+   once on the Mac and on Windows (`docs/development/next-tests.md`, step 1f); open an
+   `ibrav` file in the window by hand (for example `tests/fixtures/Si_ibrav2.pw.in`).
+- FR-LEGEND-01 (merged in PR #45): a hands-on check of the Legend tab on Linux, the
    Mac, and Windows: switch the legend on, Fit, try each position, layout, font, and
    order, render PNG/PDF/JPEG, and compare the image with the frame; run the GUI legend
    tests (`tests/test_gui_legend.py`) on the Mac and on Windows.
@@ -383,6 +408,7 @@ user's report for PR #22.
 | Menu launcher, file association | Verified on `main` (`--install-desktop`) | Known issue: none exists; the option refuses | Verified 18 Nov 2026 on one laptop: Start-menu entry starts the window without a console, a `.ycrystal` file opens from File Explorer (scripted clicks); pinning to the taskbar not tried |
 | Installation script | Not applicable | Not applicable | Verified 18 Nov 2026 on one laptop with Python and POV-Ray already installed (Windows PowerShell 5.1, fresh `.venv`, rerun); the `winget` installs of Python and POV-Ray and the editor prompt not run |
 | Element legend (FR-LEGEND-01) | Verified 21 Nov 2026 on the Mint laptop: full suite with real windows and POV-Ray, windowless `--render` in a new process (`offscreen` plug-in), scripted window screenshots; CI (PR #45, full suite under Xvfb) | CI only (PR #45: tests without windows, real POV-Ray, windowless `--render` with the `offscreen` plug-in); not run on the Mac | CI only (PR #45: tests without windows, POV-Ray for Windows, windowless `--render` with the native plug-in; the file-locking bug was found and fixed there); not run on a Windows computer |
+| QE input with any `ibrav` (FR-QE-IBRAV-01) | Verified 21 Nov 2026 on the Mint laptop: full suite; every `ibrav` of QE's test suite against pw.x's output (`scripts/check_qe_ibrav.py`) | Not tested (CI runs the tests without windows once the branch is pushed) | Not tested (same) |
 | Graphical installer (packaged) | Not applicable | Not applicable | Partial, 18 Nov 2026 on one laptop: built, installed per user, window and command line, Start menu and file type, coexistence with the developer installation (27 checks); wizard not clicked through by a person, all-users installation not tried, not signed |
 | Continuous integration | Verified (PR #22, user report) | Job runs without GUI tests by design (PR #22, user report) | Verified: tests without windows with POV-Ray for Windows on every pull request (PR #36, 18 Nov 2026) |
 
@@ -581,6 +607,11 @@ py -3.12 -m venv .venv-docs; .venv-docs\Scripts\python.exe -m pip install -r doc
   request; the GUI's Import Style dialog is unchanged. A saved project keeps its camera.
   A style may not raise the display above 20,000 atoms (`LARGE_DISPLAY_ATOMS`) from
   the command line; there is no override. Notes are `WARNING:` lines on stderr.
+- QE `ibrav` (FR-QE-IBRAV-01, 21 November 2026): pw.x's lattice vectors exactly
+  (`INPUT_PW`, `latgen.f90`), all 20 lattices, pw.x's parameter checks; `ibrav = -13`
+  with the axes of QE 6.5 and later (5.2.0–6.4.1 used others); a `CELL_PARAMETERS` card with `ibrav` ≠ 0 is
+  refused as pw.x does; `crystal_sg` stays unsupported. QE's GPL test files are not
+  copied into the repository; `scripts/check_qe_ibrav.py` downloads them.
 - Element legend (FR-LEGEND-01, 21 November 2026): a 2D layer, never part of the 3D
   scene or the `.pov` export; painted onto the rendered PNG at full size after POV-Ray
   (all image paths), and as an overlay in the live view, by one layout. Sizes are

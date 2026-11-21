@@ -44,6 +44,9 @@ and #36) added tests. It is a plan, not a record: results go to
    passes on one Windows 11 laptop with POV-Ray for Windows, and the user tested it by
    hand. Not done there: the benchmark, the full-size gallery, and replays between
    machines; see `docs/development/windows-port.md`.
+8. **Quantum ESPRESSO lattices on the Mac and Windows** (FR-QE-IBRAV-01, 21 November
+   2026): the comparison of every `ibrav` with pw.x's output ran on Linux only. It needs
+   no window and no POV-Ray (step 1f).
 
 ## 1. Mac mini, automated (Claude Code or a terminal)
 
@@ -150,6 +153,19 @@ laptop and run there:
 
 Both directions together answer question C of the validation report for these two
 installations.
+
+**1f. Quantum ESPRESSO lattices against pw.x's output.** Needs network access; no QE
+installation. Also worth running once on Windows.
+
+```bash
+.venv/bin/python scripts/check_qe_ibrav.py      # expected: 17 of 17 lattices agree
+git clone --depth 1 --filter=blob:none --sparse https://github.com/QEF/q-e.git ../q-e
+git -C ../q-e sparse-checkout set test-suite
+.venv/bin/python scripts/check_qe_ibrav.py --qe-checkout ../q-e   # expected: all agree
+```
+
+Expected on Linux (21 November 2026, QE development branch): 295 of 295 inputs agree.
+Record the count and any input reported as different.
 
 ## 2. Mac mini, by a person
 

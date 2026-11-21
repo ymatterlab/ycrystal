@@ -30,8 +30,9 @@ command line, so figures made by hand and figures made in bulk match.
 
 ## Features
 
-- **Structures and projects:** POSCAR/CONTCAR, CIF, and Quantum ESPRESSO
-  (`ibrav = 0`) inputs; `.ycrystal` projects that keep the structure, view, and look,
+- **Structures and projects:** POSCAR/CONTCAR, CIF, and Quantum ESPRESSO pw.x
+  inputs (every `ibrav`, with pw.x's lattice vectors); `.ycrystal` projects that keep
+  the structure, view, and look,
   and reopen without the original files.
 - **Interactive view:** orbit, pan, and zoom; free or axis-constrained rotation;
   lattice and Cartesian view directions; select and hide atoms; supercells with
@@ -189,7 +190,8 @@ Current version 0.4.0. See the
 - [Documentation home](docs/index.md), [installation details](docs/guide/install.md), and
   [examples and the command line](docs/guide/examples.md).
 - [Your first crystal figure](docs/guide/first-figure.md), [controls](docs/guide/controls.md),
-  [supported formats and projects](docs/FORMATS.md), [rendering](docs/guide/rendering.md),
+  [supported formats and projects](docs/FORMATS.md) (with
+  [Quantum ESPRESSO lattices](docs/guide/qe-lattices.md)), [rendering](docs/guide/rendering.md),
   and [troubleshooting](docs/guide/troubleshooting.md).
 - [Developer architecture](docs/development/architecture.md),
   [Python examples](docs/development/examples.md), and [API reference](docs/reference/index.md).

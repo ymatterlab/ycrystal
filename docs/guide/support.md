@@ -14,7 +14,8 @@ means not tested, not that it fails.
 | CIF, ordered structures | Yes | — | Symmetry expanded by ASE; several data blocks: choose one |
 | CIF with partial or mixed occupancy, overlapping sites | Rejected with an explanation | — | |
 | Quantum ESPRESSO pw.x input, `ibrav = 0` with `CELL_PARAMETERS` | Yes | — | Ambiguous species labels: the window asks |
-| QE `ibrav ≠ 0`, `crystal_sg` positions | Rejected with an explanation | — | Rewrite as `ibrav = 0` |
+| QE pw.x input with any other `ibrav` (1–14, −3, −5, −9, 91, −12, −13) and `celldm` or `A, B, C, cos…` | Yes | — | Same lattice vectors as pw.x (QE 6.5 and later); see [QE lattices](qe-lattices.md) |
+| QE `crystal_sg` positions | Rejected with an explanation | — | Give all atoms |
 | Ycrystal project `.ycrystal` (schema 1–8) | Yes | Schema 8 | Self-contained: JSON, or a ZIP package when it carries a background picture |
 | Ycrystal style `.ycstyle` (schema 1–3) | Yes | Schema 3 | Presentation only, including the element legend; a ZIP package when it carries a background picture |
 | POV-Ray scene `.pov` + `.ini` | — | Yes | Editable; may `#include` standard POV-Ray files |

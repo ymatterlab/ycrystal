@@ -18,8 +18,9 @@ is not part of this procedure.
 
     `tests/test_release.py` includes the end-to-end workflow (open a CIF, rotate and
     pan, expand to 2 × 2 × 2, change an element's finish, choose a studio, render, save,
-    close, reopen without the source file, render again, then POSCAR and QE imports and
-    the rejection of `ibrav ≠ 0`), the command line, the desktop launcher, and the
+    close, reopen without the source file, render again, then POSCAR and QE imports
+    (`ibrav = 0` and `ibrav = 1`) and the rejection of a QE file whose lattice pw.x would
+    refuse), the command line, the desktop launcher, and the
     examples.
 3. Clean install: in a new directory, follow [Install and launch](../guide/install.md)
    exactly (clone, `venv`, `pip install -e . -c constraints.txt`), then run

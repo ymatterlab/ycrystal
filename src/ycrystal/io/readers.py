@@ -7,9 +7,13 @@ that keep Ycrystal from drawing something different from what the file means:
   elements from words in the free-text comment line, which can be silently wrong.
 * CIF sites with partial occupancy, or distinct sites at the same position, are
   rejected instead of being drawn as an ordered structure.
-* QE input is accepted only with ``ibrav = 0`` and a ``CELL_PARAMETERS`` card;
-  ``crystal_sg`` positions are rejected. Species labels are kept separately from
-  elements; labels that do not name an element unambiguously need a mapping.
+* QE input with ``ibrav = 0`` needs a ``CELL_PARAMETERS`` card. Other ``ibrav``
+  values (ASE does not read them) are converted here with pw.x's own conventions
+  ([`ycrystal.io.qe_lattice`][ycrystal.io.qe_lattice]); ``crystal_sg`` positions are
+  rejected. Card values that pw.x reads but ASE does not are rewritten first: Fortran
+  reals such as ``16.D0``, and arithmetic in coordinates such as ``1/4``. Species
+  labels are kept separately from elements; labels that do not name an element
+  unambiguously need a mapping.
 
 Interactive questions are raised as exceptions
 ([`FormatChoiceRequired`][ycrystal.io.readers.FormatChoiceRequired],
@@ -63,11 +67,14 @@ mixed sites and distinct sites at the same position; such files are rejected rat
 than drawn as an ordered structure.
 <br><br>
 <b>Quantum ESPRESSO pw.x input</b>: <code>ibrav = 0</code> with a
-<code>CELL_PARAMETERS</code> card (alat, bohr, or angstrom), positions in alat, bohr,
-angstrom, or crystal units, species labels such as Fe1 or Fe_up. <i>Not supported:</i>
-<code>ibrav</code> other than 0 (lattice from <code>celldm</code> or
-<code>A, B, C, cosAB…</code>) and <code>ATOMIC_POSITIONS crystal_sg</code>. Ycrystal
-never runs pw.x and needs no pseudopotential files.
+<code>CELL_PARAMETERS</code> card (alat, bohr, or angstrom), or any other
+<code>ibrav</code> of pw.x (1–14, -3, -5, -9, 91, -12, -13) with <code>celldm(1…6)</code>
+or <code>A, B, C, cosAB, cosAC, cosBC</code>, built with pw.x's axes; positions in alat,
+bohr, angstrom, or crystal units, also as arithmetic such as <code>1/4</code> or
+<code>2*(1/8)</code>; numbers in Fortran notation such as <code>16.D0</code>; species
+labels such as Fe1 or Fe_up. <i>Not supported:</i>
+<code>ATOMIC_POSITIONS crystal_sg</code>. Ycrystal never runs pw.x and needs no
+pseudopotential files.
 <br><br>
 <b>Ycrystal project (.ycrystal)</b>: the structure, camera, and display settings in
 one file; it does not need the original structure file.
@@ -87,8 +94,8 @@ class UnsupportedStructureError(StructureImportError):
     """The file is valid but uses a construct Ycrystal does not support.
 
     Raised for CIF partial occupancy or overlapping sites and for QE input with
-    ``ibrav`` other than 0 or ``crystal_sg`` positions. The message names the
-    construct and suggests an alternative.
+    ``crystal_sg`` positions. The message names the construct and suggests an
+    alternative.
     """
 
 
@@ -313,7 +320,8 @@ def read_structure(
         ``format``, ``sha256`` and ``size_bytes`` of the file, ``imported_at`` (UTC,
         ISO 8601), ``reader`` (the ASE version), and ``element_map`` if one was given.
         Format-specific entries are ``comment`` and ``vasp_version`` (POSCAR), ``block``
-        and, if known, ``spacegroup`` (CIF), and ``qe_species`` (QE label to element).
+        and, if known, ``spacegroup`` (CIF), ``qe_species`` (QE label to element),
+        and ``qe_ibrav`` and ``qe_celldm`` (QE input with ``ibrav`` other than 0).
 
     Raises
     ------
@@ -550,6 +558,180 @@ def _read_cif(
 
 
 # ----- Quantum ESPRESSO pw.x input --------------------------------------------------------------
+_FORTRAN_REAL = re.compile(r"^[+-]?(?:\d+\.?\d*|\.\d+)[dD][+-]?\d+$")
+
+_CARDS = (
+    "ATOMIC_SPECIES",
+    "ATOMIC_POSITIONS",
+    "K_POINTS",
+    "ADDITIONAL_K_POINTS",
+    "CELL_PARAMETERS",
+    "OCCUPATIONS",
+    "CONSTRAINTS",
+    "ATOMIC_VELOCITIES",
+    "ATOMIC_FORCES",
+    "SOLVENTS",
+    "HUBBARD",
+)
+"""Cards of pw.x input, which start the sections after the namelists."""
+
+
+def fortran_real(token: str) -> str:
+    """Return a Fortran real with a ``D`` exponent in the ``E`` notation Python reads.
+
+    pw.x reads masses and cell vectors with Fortran, which accepts ``16.D0`` or
+    ``1.5d-3``; other text is returned unchanged.
+
+    Examples
+    --------
+    >>> from ycrystal.io.readers import fortran_real
+    >>> fortran_real("16.D0"), fortran_real("-1.5d-3"), fortran_real("Si.pbe-d.UPF")
+    ('16.E0', '-1.5e-3', 'Si.pbe-d.UPF')
+    """
+    if _FORTRAN_REAL.match(token):
+        return token.replace("D", "E").replace("d", "e")
+    return token
+
+
+_EXPRESSION_TOKEN = re.compile(r"(?:\d+\.?\d*|\.\d*)(?:[eEdD][+-]?\d+)?|[-+*/^()]")
+
+
+def evaluate_qe_expression(expression: str) -> float:
+    """Evaluate a coordinate of ``ATOMIC_POSITIONS`` as pw.x does.
+
+    pw.x accepts simple arithmetic for each coordinate (its ``eval_infix``): numbers
+    (also ``.5`` and exponents with ``e``, ``E``, ``d``, or ``D``), ``+``, ``-``, ``*``,
+    ``/``, ``^`` (power), and parentheses, without spaces. ``^`` and the signs ``+`` and
+    ``-`` bind tightest and group from the right (``-2^2`` is −4, ``2^3^2`` is 512, and
+    ``2^-1`` is 0.5); then ``*`` and ``/``; then ``+`` and ``-``, which group from the
+    left.
+
+    Raises
+    ------
+    ValueError
+        For anything else, an unbalanced parenthesis, or a division by zero.
+
+    Examples
+    --------
+    >>> from ycrystal.io.readers import evaluate_qe_expression
+    >>> evaluate_qe_expression("1/4"), evaluate_qe_expression("2*(1/8)")
+    (0.25, 0.25)
+    >>> evaluate_qe_expression("1/(2/(1/2))"), evaluate_qe_expression("-2^2")
+    (0.25, -4.0)
+    >>> evaluate_qe_expression("0.5d0")
+    0.5
+    """
+    text = expression.strip()
+    tokens, position = [], 0
+    while position < len(text):
+        match = _EXPRESSION_TOKEN.match(text, position)
+        if not match or match.end() == position:
+            raise ValueError(f"cannot read {text!r} at {text[position:]!r}")
+        tokens.append(match.group())
+        position = match.end()
+    if not tokens:
+        raise ValueError("the coordinate is empty")
+    index = 0
+
+    def peek() -> str | None:
+        return tokens[index] if index < len(tokens) else None
+
+    def take() -> str:
+        nonlocal index
+        index += 1
+        return tokens[index - 1]
+
+    def total() -> float:  # + and -, from the left
+        value = product()
+        while peek() in ("+", "-"):
+            value = value + product() if take() == "+" else value - product()
+        return value
+
+    def product() -> float:  # * and /, from the left
+        value = signed()
+        while peek() in ("*", "/"):
+            operator, right = take(), signed()
+            if operator == "/" and right == 0:
+                raise ValueError(f"division by zero in {text!r}")
+            value = value * right if operator == "*" else value / right
+        return value
+
+    def signed() -> float:  # signs, as tight as ^
+        if peek() in ("+", "-"):
+            return -signed() if take() == "-" else signed()
+        return power()
+
+    def power() -> float:  # ^, from the right; its exponent may carry a sign
+        base = operand()
+        if peek() == "^":
+            take()
+            try:
+                result = base ** signed()
+            except (ZeroDivisionError, OverflowError) as exc:
+                raise ValueError(f"cannot raise to that power in {text!r}") from exc
+            if isinstance(result, complex):  # a negative base and a fractional power
+                raise ValueError(f"{text!r} is not a real number")
+            return float(result)
+        return base
+
+    def operand() -> float:
+        token = peek()
+        if token == "(":
+            take()
+            value = total()
+            if peek() != ")":
+                raise ValueError(f"unbalanced parenthesis in {text!r}")
+            take()
+            return value
+        if token is None or token in "+-*/^)":
+            raise ValueError(f"a number is missing in {text!r}")
+        return float(take().replace("d", "e").replace("D", "e"))
+
+    value = total()
+    if index != len(tokens):
+        raise ValueError(f"unexpected {tokens[index]!r} in {text!r}")
+    if value != value:
+        raise ValueError(f"{text!r} is not a real number")
+    return float(value)
+
+
+def _plain_card_numbers(card_lines: list[str], path: Path) -> list[str]:
+    """Rewrite card values that pw.x reads but ASE does not, keeping all others as they are.
+
+    Fortran reals such as ``16.D0`` in ``ATOMIC_SPECIES`` and ``CELL_PARAMETERS`` get an
+    ``E`` exponent; coordinates of ``ATOMIC_POSITIONS`` that are not plain numbers are
+    evaluated as pw.x does ([`evaluate_qe_expression`][ycrystal.io.readers.evaluate_qe_expression]).
+    """
+    out, card = [], None
+    for line in card_lines:
+        tokens = line.split()
+        name = re.match(r"\s*([A-Za-z_]+)", line)
+        if name and name.group(1).upper() in _CARDS:
+            card = name.group(1).upper()
+            out.append(line)
+            continue
+        if not tokens or tokens[0].startswith(("!", "#")):
+            out.append(line)
+            continue
+        if card == "ATOMIC_SPECIES" and len(tokens) >= 2:
+            tokens[1] = fortran_real(tokens[1])
+        elif card == "CELL_PARAMETERS":
+            tokens = [fortran_real(t) for t in tokens]
+        elif card == "ATOMIC_POSITIONS" and len(tokens) >= 4:
+            for k in (1, 2, 3):
+                try:
+                    float(tokens[k])
+                except ValueError:
+                    try:
+                        tokens[k] = repr(evaluate_qe_expression(tokens[k]))
+                    except ValueError as exc:
+                        raise StructureImportError(
+                            f"{path.name}: ATOMIC_POSITIONS line '{line.strip()}': {exc}."
+                        ) from exc
+        out.append(" ".join(tokens))
+    return out
+
+
 def element_from_label(label: str) -> str | None:
     """Return the element named unambiguously by a QE species label.
 
@@ -599,36 +781,50 @@ def _read_qe(
         if key not in system:
             raise StructureImportError(f"{path.name}: &SYSTEM must set {key}.")
     ibrav = int(system["ibrav"])
-    if ibrav != 0:
-        raise UnsupportedStructureError(
-            f"{path.name} uses ibrav = {ibrav}. Ycrystal reads Quantum ESPRESSO input only "
-            "with ibrav = 0 and an explicit CELL_PARAMETERS card; it does not convert "
-            "celldm(...) or A/B/C/cosAB lattice definitions. Rewrite the cell as ibrav = 0 "
-            "with CELL_PARAMETERS."
-        )
     if re.search(r"^\s*ATOMIC_POSITIONS\s*[({]?\s*crystal_sg", text, re.M | re.I):
         raise UnsupportedStructureError(
             f"{path.name} gives ATOMIC_POSITIONS in crystal_sg (symmetry-reduced) form, "
             "which Ycrystal does not support. Give all atoms with crystal, alat, bohr, or "
             "angstrom coordinates."
         )
-    # Lattice parameter: celldm(1) in bohr takes precedence over A in angstrom (QE rule).
-    # (ASE's own reader looks up 'A' in upper case and misses it; keys are lowercase.)
-    if "celldm(1)" in system:
-        alat = float(system["celldm(1)"]) * units["Bohr"]
-    elif "a" in system:
-        alat = float(system["a"])
+    card_lines = _plain_card_numbers(card_lines, path)  # 16.D0, 1/4, … as pw.x reads them
+    has_cell_card = re.search(r"^\s*CELL_PARAMETERS\b", text, re.M | re.I) is not None
+    extra: dict[str, Any] = {}
+    if ibrav != 0:
+        from ycrystal.io.qe_lattice import LatticeError, celldm_from_input, ibrav_cell
+
+        if has_cell_card:
+            raise StructureImportError(
+                f"{path.name} gives both ibrav = {ibrav} and a CELL_PARAMETERS card. pw.x "
+                "refuses this (redundant cell): use ibrav = 0 with CELL_PARAMETERS, or "
+                "remove the card."
+            )
+        try:
+            celldm = celldm_from_input(ibrav, system, units["Bohr"])
+            cell = ibrav_cell(ibrav, celldm, units["Bohr"])
+        except LatticeError as exc:
+            raise StructureImportError(f"{path.name}: {exc}") from exc
+        alat = celldm[0] * units["Bohr"]  # positions in alat units refer to a
+        extra = {"qe_ibrav": ibrav, "qe_celldm": [float(v) for v in celldm]}
     else:
-        alat = None
-    if re.search(r"^\s*CELL_PARAMETERS\s*[({]?\s*alat", text, re.M | re.I) and alat is None:
-        raise StructureImportError(
-            f"{path.name}: CELL_PARAMETERS in alat units needs celldm(1) or A in &SYSTEM."
-        )
-    cell, _ = get_cell_parameters(card_lines, alat=alat)
-    if cell is None:
-        raise StructureImportError(
-            f"{path.name}: ibrav = 0 requires a CELL_PARAMETERS card, which is missing."
-        )
+        # Lattice parameter: celldm(1) in bohr takes precedence over A in angstrom (QE
+        # rule). (ASE's own reader looks up 'A' in upper case and misses it; keys are
+        # lowercase.)
+        if "celldm(1)" in system:
+            alat = float(system["celldm(1)"]) * units["Bohr"]
+        elif "a" in system:
+            alat = float(system["a"])
+        else:
+            alat = None
+        if re.search(r"^\s*CELL_PARAMETERS\s*[({]?\s*alat", text, re.M | re.I) and alat is None:
+            raise StructureImportError(
+                f"{path.name}: CELL_PARAMETERS in alat units needs celldm(1) or A in &SYSTEM."
+            )
+        cell, _ = get_cell_parameters(card_lines, alat=alat)
+        if cell is None:
+            raise StructureImportError(
+                f"{path.name}: ibrav = 0 requires a CELL_PARAMETERS card, which is missing."
+            )
     species = get_atomic_species(card_lines, n_species=int(system["ntyp"]))
     if species is None:
         raise StructureImportError(f"{path.name}: the ATOMIC_SPECIES card is missing.")
@@ -682,4 +878,7 @@ def _read_qe(
         pbc=(True, True, True),
         movable=movable,
     )
-    return structure, {"qe_species": {label: elements[label] for label in species_labels}}
+    return structure, {
+        "qe_species": {label: elements[label] for label in species_labels},
+        **extra,
+    }
