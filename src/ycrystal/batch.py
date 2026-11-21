@@ -269,7 +269,7 @@ def load_input(path: str | Path, fmt: str | None = None) -> Project:
     Parameters
     ----------
     path
-        Project or structure file (POSCAR/CONTCAR, CIF, QE ``ibrav = 0``).
+        Project or structure file (POSCAR/CONTCAR, CIF, QE pw.x input).
     fmt
         ``"project"``, ``"poscar"``, ``"cif"``, or ``"qe"``; ``None`` detects it (a
         ``.ycrystal`` suffix means a project).

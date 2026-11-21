@@ -91,7 +91,9 @@ version, the two options print an error and write nothing.
   indicator instead of a percentage, and a final render makes later previews wait until
   it has finished.
 - The current reader accepts ordered structures only: partial/mixed CIF occupancy,
-  overlapping sites, QE `ibrav != 0`, and QE `crystal_sg` are rejected.
+  overlapping sites, and QE `crystal_sg` are rejected. QE input with `ibrav` other than
+  0 is read with pw.x's lattice vectors (see
+  [Quantum ESPRESSO lattices](qe-lattices.md), including old `ibrav = −13` files).
 - Camera navigation is outside undo/redo (it still marks the project modified); use
   **View ▸ Reset View** or the view directions. Rotation modes are not saved in projects.
 - Styles transfer per-atom settings only between structures with the same atoms in the

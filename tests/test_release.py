@@ -38,7 +38,7 @@ def test_export_pov_from_structure_and_project(tmp_path, capsys):
 
 
 def test_command_line_errors(tmp_path, capsys):
-    bad = main([str(FIXTURES / "qe_ibrav2.pw.in"), "--export-pov", str(tmp_path / "x.pov")])
+    bad = main([str(FIXTURES / "qe_ibrav4_no_c.pw.in"), "--export-pov", str(tmp_path / "x.pov")])
     assert bad == 1 and "ibrav" in capsys.readouterr().err
     assert main([str(FIXTURES / "MgB2.cif"), "--render", "x.png", "--width", "5"]) == 2
     with pytest.raises(SystemExit) as exit_info:
@@ -464,12 +464,12 @@ def test_release_workflow(qtbot, tmp_path, povray_executable):
         assert np.abs(again.astype(int) - image.astype(int)).max() <= 2  # same figure
 
         # Other formats of the same structure, and a rejected QE file.
-        for name in ("SrTiO3.vasp", "SrTiO3.pw.in"):
+        for name in ("SrTiO3.vasp", "SrTiO3.pw.in", "SrTiO3_ibrav1.pw.in"):
             second.ask_save_changes = lambda: "discard"
             assert second.open_file(FIXTURES / name), name
             assert second.structure.composition() == "SrTiO3"
             assert len(second.structure) == 5
-        assert not second.open_file(FIXTURES / "qe_ibrav2.pw.in")
+        assert not second.open_file(FIXTURES / "qe_ibrav4_no_c.pw.in")
         assert "ibrav" in second.last_error[1]
         second._message_box.close()
     finally:

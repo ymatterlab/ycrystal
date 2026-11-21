@@ -9,7 +9,8 @@ uses PySide6 and VTK; the exported scene keeps the same orthographic camera and
 displayed atoms.
 
 **Early development.** You can open POSCAR/CONTCAR, CIF, and Quantum ESPRESSO
-`ibrav = 0` inputs, save self-contained `.ycrystal` projects, navigate, select and hide
+inputs ([any `ibrav`](guide/qe-lattices.md)), save self-contained `.ycrystal` projects,
+navigate, select and hide
 individual displayed atoms, export scenes, and render PNG, PDF, or JPEG figures. Supercell repetitions,
 periodic bonds, cell-edge modes, and view-direction controls
 are available, as are an output frame, a POV-Ray preview, cancellable renders, and

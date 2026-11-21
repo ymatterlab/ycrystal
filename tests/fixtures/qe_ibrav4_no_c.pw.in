@@ -1,0 +1,7 @@
+&SYSTEM
+  ibrav = 4, celldm(1) = 5.83, nat = 1, ntyp = 1, ecutwfc = 30
+/
+ATOMIC_SPECIES
+  Mg 24.305 Mg.upf
+ATOMIC_POSITIONS crystal
+  Mg 0.0 0.0 0.0

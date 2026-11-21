@@ -228,6 +228,30 @@ The existing tests add:
 - custom material parameters changing the image (`test_custom_materials.py`);
 - vector arrows (`test_vectors.py`).
 
+## F. Quantum ESPRESSO lattices (`ibrav` other than 0)
+
+A pw.x input with `ibrav` other than 0 gives its atoms in a cell that pw.x builds from
+`celldm` or `A, B, C, cos…`; crystal coordinates are only right if Ycrystal builds the
+same vectors (`ycrystal.io.qe_lattice`). Checks of 21 November 2026, audited for every
+`ibrav` the same day:
+
+| Check | Lattices | Result |
+| --- | --- | --- |
+| Vectors as written in the pw.x input documentation (`tests/test_qe_lattice.py`), and the conventional cell and centring vectors as whole-number combinations of them | All 20 | Equal within 1e-12 |
+| pw.x's own output: `scripts/check_qe_ibrav.py` reads the inputs of QE's test suite (`test-suite/pw_lattice-ibrav`, branch `develop`) and compares with the crystal axes and positions pw.x printed | 17 (QE has no test for −9, 91, −13) | Axes within 4.7e-7 alat (pw.x prints 6 decimals), positions within 1.5e-8 alat |
+| pw.x's own output for every applicable input with `ibrav` ≠ 0 in QE's test suite (`scripts/check_qe_ibrav.py --qe-checkout`) | 17; 295 inputs, both parameter forms for 1, 2, 4, 6, 14 | All agree within pw.x's printed precision |
+| Every lattice through the reader, `celldm` and `A, B, C, cos…` forms, against the documented vectors (`tests/test_readers.py`) | All 20 | Within 1e-9 Å |
+| Same structures as other formats: Si (`ibrav = 2`), MgB2 (4, from `A`, `C`), SrTiO3 (1), the triclinic cell (14, from `A, B, C, cos…`) against the POSCAR, CIF, and `ibrav = 0` files (`tests/test_readers.py`) | 1, 2, 4, 14 | Equivalent within 1e-6 Å |
+| Independent code: ASE 3.22.1's former `ibrav_to_cell` in a local copy (not in the repository, so not rerunnable from it), 200 random parameter sets per lattice in both forms | 19 (that code has no 91) | Within 4e-15 Å |
+
+Without options the script downloads QE's 17 lattice tests (network access; QE's files
+are GPL and not part of Ycrystal); with `--qe-checkout PATH` it compares every applicable
+input of a local copy of QE's test suite (commands in
+[Check it yourself](../guide/qe-lattices.md#check-it-yourself)). The applicable and
+refused cases, the dependence on the QE version (only `ibrav = −13` changed, in QE 6.5),
+and what was not tested are described in
+[Quantum ESPRESSO lattices](../guide/qe-lattices.md).
+
 ## Reproduce
 
 ```bash
@@ -272,7 +296,8 @@ them.
   use of the window is listed in [HANDOFF.md](../HANDOFF.md).
 - **Unsupported input.** Refused rather than drawn:
   - CIF files with partial occupancy or overlapping sites;
-  - Quantum ESPRESSO input with `ibrav` other than 0 or `crystal_sg` positions.
+  - Quantum ESPRESSO input with `crystal_sg` positions, or with lattice parameters that
+    pw.x would refuse.
 
   VASP 4 files need the elements: the window asks for them, and the command line
   refuses the file. See [supported formats](../FORMATS.md).

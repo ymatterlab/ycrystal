@@ -14,6 +14,7 @@ nav = [
         { "Your first crystal figure" = "guide/first-figure.md" },
         { "Controls and display" = "guide/controls.md" },
         { "Structure files and projects" = "FORMATS.md" },
+        { "Quantum ESPRESSO lattices (ibrav)" = "guide/qe-lattices.md" },
         { "Materials, backgrounds, and lighting" = "guide/appearance.md" },
         { "Export and rendering" = "guide/rendering.md" },
         { "Reproducible figures" = "guide/reproducibility.md" },

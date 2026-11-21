@@ -55,16 +55,32 @@ Supported:
 
 - `ibrav = 0` with a `CELL_PARAMETERS` card in `alat`, `bohr`, or `angstrom` units.
   `alat` uses `celldm(1)` (bohr) or `A` (Å).
-- `ATOMIC_POSITIONS` in `alat`, `bohr`, `angstrom`, or `crystal` units.
+- Every other `ibrav` of pw.x: 1, 2, 3, −3, 4, 5, −5, 6, 7, 8, 9, −9, 91, 10, 11, 12,
+  −12, 13, −13, and 14, with the lattice given by `celldm(1)`…`celldm(6)` or by `A, B,
+  C, cosAB, cosAC, cosBC`. Ycrystal builds the same lattice vectors as pw.x (QE 6.5 and
+  later), so crystal coordinates mean the same thing; `alat` positions use `a`. The
+  parameters are checked as pw.x checks them. Files with `ibrav = −13` and crystal
+  positions written for QE 6.4.1 or older need converting. The vectors of every
+  lattice, the parameters each needs, the refused inputs, the dependence on the QE
+  version, and how this was verified are in
+  [Quantum ESPRESSO lattices](guide/qe-lattices.md).
+- `ATOMIC_POSITIONS` in `alat`, `bohr`, `angstrom`, or `crystal` units. Each coordinate
+  may be simple arithmetic, as pw.x allows: numbers, `+`, `-`, `*`, `/`, `^` (power),
+  and parentheses, without spaces (for example `1/4`, `2*(1/8)`, `-2^2` = −4). `^` and
+  signs bind tightest and group from the right, then `*` and `/`, then `+` and `-`.
+- Numbers in Fortran notation, such as `16.D0` or `1.5d-3`, in the namelists and in
+  the `ATOMIC_SPECIES`, `CELL_PARAMETERS`, and `ATOMIC_POSITIONS` cards.
 - Species labels such as `Fe1`, `Fe_up`, or `O-2` (an element symbol followed by a digit,
   `_`, `-`, `+`, or `.`). Labels are kept; the element is taken from the label.
 - `if_pos` flags (0/1 after the coordinates), kept like selective dynamics.
 
 Not supported (the file is rejected with an explanation):
 
-- `ibrav` other than 0, i.e. lattices defined by `celldm(2…6)` or `A, B, C, cosAB…`.
-  Rewrite the cell as `ibrav = 0` with `CELL_PARAMETERS`.
+- A `CELL_PARAMETERS` card together with an `ibrav` other than 0 (pw.x refuses it as
+  redundant too).
 - `ATOMIC_POSITIONS crystal_sg` (symmetry-reduced positions).
+- A coordinate that pw.x's arithmetic cannot evaluate (`1/0`, an unbalanced
+  parenthesis); the message names the line.
 
 Labels that do not name an element unambiguously (for example `Cb`, which could be
 carbon) require the element to be entered when opening. Ycrystal never runs pw.x and

@@ -53,7 +53,7 @@ def test_open_structure_file_replaces_scene(window):
     "name, title",
     [
         ("partial_occupancy.cif", "Cannot Open File"),
-        ("qe_ibrav2.pw.in", "Cannot Open File"),
+        ("qe_ibrav4_no_c.pw.in", "Cannot Open File"),
         ("POSCAR_truncated", "Cannot Open File"),
     ],
 )

@@ -1,0 +1,20 @@
+&SYSTEM
+  ibrav = 14
+  A = 4.6, B = 5.3, C = 6.1
+  cosBC = 0.20791169081775945
+  cosAC = 0.10452846326765346
+  cosAB = 0.32556815445715676
+  nat = 5, ntyp = 5, ecutwfc = 30
+/
+ATOMIC_SPECIES
+  O 1.0 O.upf
+  Fe 1.0 Fe.upf
+  S 1.0 S.upf
+  Cl 1.0 Cl.upf
+  N 1.0 N.upf
+ATOMIC_POSITIONS crystal
+  O  0.10 0.15 0.20
+  Fe 0.55 0.30 0.25
+  S  0.25 0.70 0.40
+  Cl 0.80 0.75 0.65
+  N  0.35 0.25 0.80
