@@ -1,0 +1,578 @@
+{
+ "format": "ycrystal-benchmark",
+ "schema_version": 1,
+ "created": "2026-11-17T19:52:49+00:00",
+ "options": {
+  "cases": [
+   "srtio3-1",
+   "srtio3-4",
+   "srtio3-8",
+   "srtio3-4-small",
+   "effects-plain",
+   "effects-studio",
+   "effects-chrome",
+   "effects-glass",
+   "mgb2-style"
+  ],
+  "warmups": 1,
+  "repeats": 3,
+  "scale": 0.5
+ },
+ "method": {
+  "warmups": 1,
+  "repeats": 3,
+  "statistic": "median, minimum, and maximum of the timed runs",
+  "wall_s": "whole command, new process each run",
+  "render_s": "render time printed by ycrystal (0.1 s resolution)",
+  "peak_rss_mib": "largest process of the command (Python or POV-Ray), from wait4 in a small launcher process (its own size, about 10 MiB, is the floor)"
+ },
+ "system": {
+  "os": "Linux Mint 22.1",
+  "kernel": "Linux 6.8.0-149-generic",
+  "machine": "x86_64",
+  "cpu": "Intel(R) Core(TM) Ultra 5 135U",
+  "logical_cpus": 14,
+  "memory_gib": 7.2,
+  "python": "3.12.3",
+  "numpy": "2.5.4",
+  "ase": "3.29.0",
+  "ycrystal": "0.4.0.dev0",
+  "povray": "3.7.0.10.unofficial"
+ },
+ "cases": [
+  {
+   "id": "srtio3-1",
+   "description": "SrTiO3 1×1×1, satin, white",
+   "input": {
+    "name": "srtio3-1.ycrystal",
+    "sha256": "b22882929f949f8e1c988a8f38007bfc743f08ea92843a5d8432f3783e31cc6d"
+   },
+   "fixture": {
+    "name": "SrTiO3.cif",
+    "sha256": "a201832ea582202d0ad0d9848199ea92f1dff848e3702b46d2ac3a35677fdd14"
+   },
+   "style": null,
+   "repetitions": [
+    1,
+    1,
+    1
+   ],
+   "material": "satin",
+   "environment": "white",
+   "width": 400,
+   "height": 300,
+   "displayed_atoms": 15,
+   "bonds": 30,
+   "snapshot": "snapshots/srtio3-1.ycrystal",
+   "runs": [
+    {
+     "wall_s": 1.6528,
+     "render_s": 1.4,
+     "peak_rss_mib": 71.5
+    },
+    {
+     "wall_s": 1.7053,
+     "render_s": 1.4,
+     "peak_rss_mib": 71.5
+    },
+    {
+     "wall_s": 1.6796,
+     "render_s": 1.4,
+     "peak_rss_mib": 71.6
+    }
+   ],
+   "summary": {
+    "wall_s": {
+     "median": 1.6796,
+     "min": 1.6528,
+     "max": 1.7053
+    },
+    "render_s": {
+     "median": 1.4,
+     "min": 1.4,
+     "max": 1.4
+    },
+    "peak_rss_mib": {
+     "median": 71.5,
+     "min": 71.5,
+     "max": 71.6
+    }
+   }
+  },
+  {
+   "id": "srtio3-4",
+   "description": "SrTiO3 4×4×4, satin, white",
+   "input": {
+    "name": "srtio3-4.ycrystal",
+    "sha256": "40cf65e91ea821ee16eebbc52604ed7e1d3a1da6a3370d93dc668e6c3a5bcb9f"
+   },
+   "fixture": {
+    "name": "SrTiO3.cif",
+    "sha256": "a201832ea582202d0ad0d9848199ea92f1dff848e3702b46d2ac3a35677fdd14"
+   },
+   "style": null,
+   "repetitions": [
+    4,
+    4,
+    4
+   ],
+   "material": "satin",
+   "environment": "white",
+   "width": 400,
+   "height": 300,
+   "displayed_atoms": 429,
+   "bonds": 1344,
+   "snapshot": "snapshots/srtio3-4.ycrystal",
+   "runs": [
+    {
+     "wall_s": 1.9117,
+     "render_s": 1.6,
+     "peak_rss_mib": 72.3
+    },
+    {
+     "wall_s": 1.9319,
+     "render_s": 1.6,
+     "peak_rss_mib": 72.4
+    },
+    {
+     "wall_s": 1.9819,
+     "render_s": 1.6,
+     "peak_rss_mib": 72.3
+    }
+   ],
+   "summary": {
+    "wall_s": {
+     "median": 1.9319,
+     "min": 1.9117,
+     "max": 1.9819
+    },
+    "render_s": {
+     "median": 1.6,
+     "min": 1.6,
+     "max": 1.6
+    },
+    "peak_rss_mib": {
+     "median": 72.3,
+     "min": 72.3,
+     "max": 72.4
+    }
+   }
+  },
+  {
+   "id": "srtio3-8",
+   "description": "SrTiO3 8×8×8, satin, white",
+   "input": {
+    "name": "srtio3-8.ycrystal",
+    "sha256": "47301032c50bb2ab1d8d2f245dd7c66a24bcf21821dcc4652aed49c84b1a666e"
+   },
+   "fixture": {
+    "name": "SrTiO3.cif",
+    "sha256": "a201832ea582202d0ad0d9848199ea92f1dff848e3702b46d2ac3a35677fdd14"
+   },
+   "style": null,
+   "repetitions": [
+    8,
+    8,
+    8
+   ],
+   "material": "satin",
+   "environment": "white",
+   "width": 400,
+   "height": 300,
+   "displayed_atoms": 2969,
+   "bonds": 9984,
+   "snapshot": "snapshots/srtio3-8.ycrystal",
+   "runs": [
+    {
+     "wall_s": 2.5917,
+     "render_s": 2.2,
+     "peak_rss_mib": 79.2
+    },
+    {
+     "wall_s": 2.5654,
+     "render_s": 2.2,
+     "peak_rss_mib": 79.1
+    },
+    {
+     "wall_s": 2.4826,
+     "render_s": 2.2,
+     "peak_rss_mib": 79.3
+    }
+   ],
+   "summary": {
+    "wall_s": {
+     "median": 2.5654,
+     "min": 2.4826,
+     "max": 2.5917
+    },
+    "render_s": {
+     "median": 2.2,
+     "min": 2.2,
+     "max": 2.2
+    },
+    "peak_rss_mib": {
+     "median": 79.2,
+     "min": 79.1,
+     "max": 79.3
+    }
+   }
+  },
+  {
+   "id": "srtio3-4-small",
+   "description": "SrTiO3 4×4×4, satin, white",
+   "input": {
+    "name": "srtio3-4-small.ycrystal",
+    "sha256": "11e52d3383c667d1419ab99e7db6d120dbcea8a772fbe83a5bb556eb8722b1ea"
+   },
+   "fixture": {
+    "name": "SrTiO3.cif",
+    "sha256": "a201832ea582202d0ad0d9848199ea92f1dff848e3702b46d2ac3a35677fdd14"
+   },
+   "style": null,
+   "repetitions": [
+    4,
+    4,
+    4
+   ],
+   "material": "satin",
+   "environment": "white",
+   "width": 200,
+   "height": 150,
+   "displayed_atoms": 429,
+   "bonds": 1344,
+   "snapshot": "snapshots/srtio3-4-small.ycrystal",
+   "runs": [
+    {
+     "wall_s": 1.8044,
+     "render_s": 1.5,
+     "peak_rss_mib": 72.1
+    },
+    {
+     "wall_s": 1.7659,
+     "render_s": 1.4,
+     "peak_rss_mib": 72.6
+    },
+    {
+     "wall_s": 1.7839,
+     "render_s": 1.5,
+     "peak_rss_mib": 72.5
+    }
+   ],
+   "summary": {
+    "wall_s": {
+     "median": 1.7839,
+     "min": 1.7659,
+     "max": 1.8044
+    },
+    "render_s": {
+     "median": 1.5,
+     "min": 1.4,
+     "max": 1.5
+    },
+    "peak_rss_mib": {
+     "median": 72.5,
+     "min": 72.1,
+     "max": 72.6
+    }
+   }
+  },
+  {
+   "id": "effects-plain",
+   "description": "SrTiO3 2×2×2, satin, white",
+   "input": {
+    "name": "effects-plain.ycrystal",
+    "sha256": "00232be9ffdb88bfdcb0216dcbd55b4fa2791ab0f540c3788275a266b93951c4"
+   },
+   "fixture": {
+    "name": "SrTiO3.cif",
+    "sha256": "a201832ea582202d0ad0d9848199ea92f1dff848e3702b46d2ac3a35677fdd14"
+   },
+   "style": null,
+   "repetitions": [
+    2,
+    2,
+    2
+   ],
+   "material": "satin",
+   "environment": "white",
+   "width": 400,
+   "height": 300,
+   "displayed_atoms": 71,
+   "bonds": 192,
+   "snapshot": "snapshots/effects-plain.ycrystal",
+   "runs": [
+    {
+     "wall_s": 1.7737,
+     "render_s": 1.4,
+     "peak_rss_mib": 71.4
+    },
+    {
+     "wall_s": 1.7376,
+     "render_s": 1.4,
+     "peak_rss_mib": 71.7
+    },
+    {
+     "wall_s": 1.7381,
+     "render_s": 1.4,
+     "peak_rss_mib": 71.6
+    }
+   ],
+   "summary": {
+    "wall_s": {
+     "median": 1.7381,
+     "min": 1.7376,
+     "max": 1.7737
+    },
+    "render_s": {
+     "median": 1.4,
+     "min": 1.4,
+     "max": 1.4
+    },
+    "peak_rss_mib": {
+     "median": 71.6,
+     "min": 71.4,
+     "max": 71.7
+    }
+   }
+  },
+  {
+   "id": "effects-studio",
+   "description": "SrTiO3 2×2×2, satin, studio (floor, area light, soft shadows)",
+   "input": {
+    "name": "effects-studio.ycrystal",
+    "sha256": "f1ec38bb43771109ff1d4ba875ee69b83e0ca842efe949edb6ebf68500647b8b"
+   },
+   "fixture": {
+    "name": "SrTiO3.cif",
+    "sha256": "a201832ea582202d0ad0d9848199ea92f1dff848e3702b46d2ac3a35677fdd14"
+   },
+   "style": null,
+   "repetitions": [
+    2,
+    2,
+    2
+   ],
+   "material": "satin",
+   "environment": "studio_white",
+   "width": 400,
+   "height": 300,
+   "displayed_atoms": 71,
+   "bonds": 192,
+   "snapshot": "snapshots/effects-studio.ycrystal",
+   "runs": [
+    {
+     "wall_s": 2.2654,
+     "render_s": 1.9,
+     "peak_rss_mib": 71.2
+    },
+    {
+     "wall_s": 2.1898,
+     "render_s": 1.9,
+     "peak_rss_mib": 71.6
+    },
+    {
+     "wall_s": 2.2099,
+     "render_s": 1.9,
+     "peak_rss_mib": 71.7
+    }
+   ],
+   "summary": {
+    "wall_s": {
+     "median": 2.2099,
+     "min": 2.1898,
+     "max": 2.2654
+    },
+    "render_s": {
+     "median": 1.9,
+     "min": 1.9,
+     "max": 1.9
+    },
+    "peak_rss_mib": {
+     "median": 71.6,
+     "min": 71.2,
+     "max": 71.7
+    }
+   }
+  },
+  {
+   "id": "effects-chrome",
+   "description": "SrTiO3 2×2×2, chrome (reflection), studio",
+   "input": {
+    "name": "effects-chrome.ycrystal",
+    "sha256": "91d88baf5f2079b30ecef814ba38f2f0d8271acbd9f997c8f4e8a4376d0b35c9"
+   },
+   "fixture": {
+    "name": "SrTiO3.cif",
+    "sha256": "a201832ea582202d0ad0d9848199ea92f1dff848e3702b46d2ac3a35677fdd14"
+   },
+   "style": null,
+   "repetitions": [
+    2,
+    2,
+    2
+   ],
+   "material": "chrome",
+   "environment": "studio_white",
+   "width": 400,
+   "height": 300,
+   "displayed_atoms": 71,
+   "bonds": 192,
+   "snapshot": "snapshots/effects-chrome.ycrystal",
+   "runs": [
+    {
+     "wall_s": 3.3755,
+     "render_s": 3.1,
+     "peak_rss_mib": 71.3
+    },
+    {
+     "wall_s": 3.3886,
+     "render_s": 3.1,
+     "peak_rss_mib": 71.7
+    },
+    {
+     "wall_s": 3.4365,
+     "render_s": 3.1,
+     "peak_rss_mib": 71.4
+    }
+   ],
+   "summary": {
+    "wall_s": {
+     "median": 3.3886,
+     "min": 3.3755,
+     "max": 3.4365
+    },
+    "render_s": {
+     "median": 3.1,
+     "min": 3.1,
+     "max": 3.1
+    },
+    "peak_rss_mib": {
+     "median": 71.4,
+     "min": 71.3,
+     "max": 71.7
+    }
+   }
+  },
+  {
+   "id": "effects-glass",
+   "description": "SrTiO3 2×2×2, glass (refraction), studio",
+   "input": {
+    "name": "effects-glass.ycrystal",
+    "sha256": "17b3915fd843db5cb31424a9a02fff323ad4c404f2cab940ebfdd4e89e5adc22"
+   },
+   "fixture": {
+    "name": "SrTiO3.cif",
+    "sha256": "a201832ea582202d0ad0d9848199ea92f1dff848e3702b46d2ac3a35677fdd14"
+   },
+   "style": null,
+   "repetitions": [
+    2,
+    2,
+    2
+   ],
+   "material": "glass",
+   "environment": "studio_white",
+   "width": 400,
+   "height": 300,
+   "displayed_atoms": 71,
+   "bonds": 192,
+   "snapshot": "snapshots/effects-glass.ycrystal",
+   "runs": [
+    {
+     "wall_s": 56.2062,
+     "render_s": 55.9,
+     "peak_rss_mib": 71.8
+    },
+    {
+     "wall_s": 65.4784,
+     "render_s": 65.1,
+     "peak_rss_mib": 71.5
+    },
+    {
+     "wall_s": 74.9548,
+     "render_s": 74.6,
+     "peak_rss_mib": 71.5
+    }
+   ],
+   "summary": {
+    "wall_s": {
+     "median": 65.4784,
+     "min": 56.2062,
+     "max": 74.9548
+    },
+    "render_s": {
+     "median": 65.1,
+     "min": 55.9,
+     "max": 74.6
+    },
+    "peak_rss_mib": {
+     "median": 71.5,
+     "min": 71.5,
+     "max": 71.8
+    }
+   }
+  },
+  {
+   "id": "mgb2-style",
+   "description": "MgB2 with --style grey-studio.ycstyle",
+   "input": {
+    "name": "MgB2.cif",
+    "sha256": "9e3209b6fb551c68d6700aa546271ef41f5c6807f628d413aa2cd1e892288430"
+   },
+   "fixture": {
+    "name": "MgB2.cif",
+    "sha256": "9e3209b6fb551c68d6700aa546271ef41f5c6807f628d413aa2cd1e892288430"
+   },
+   "style": {
+    "name": "grey-studio.ycstyle",
+    "sha256": "bdfb2b3e52b1f8c509e3f7f45ef46c1f6423e6e24dde38538b4479af83bd29d0"
+   },
+   "repetitions": [
+    1,
+    1,
+    1
+   ],
+   "material": null,
+   "environment": null,
+   "width": 400,
+   "height": 300,
+   "displayed_atoms": 10,
+   "bonds": 1,
+   "snapshot": "snapshots/mgb2-style.ycrystal",
+   "runs": [
+    {
+     "wall_s": 2.0462,
+     "render_s": 1.1,
+     "peak_rss_mib": 85.0
+    },
+    {
+     "wall_s": 2.061,
+     "render_s": 1.1,
+     "peak_rss_mib": 84.7
+    },
+    {
+     "wall_s": 2.0297,
+     "render_s": 1.1,
+     "peak_rss_mib": 85.2
+    }
+   ],
+   "summary": {
+    "wall_s": {
+     "median": 2.0462,
+     "min": 2.0297,
+     "max": 2.061
+    },
+    "render_s": {
+     "median": 1.1,
+     "min": 1.1,
+     "max": 1.1
+    },
+    "peak_rss_mib": {
+     "median": 85.0,
+     "min": 84.7,
+     "max": 85.2
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,2230 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/development/windows-port.html">
+      
+      
+      
+        <link rel="prev" href="./next-tests.html">
+      
+      
+        <link rel="next" href="./windows-installer.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Windows port - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Windows port
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/controls.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./validation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="windows-port.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Decision
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-known-and-from-where" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What is known, and from where
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-implemented-on-featurewindows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What is implemented on <code>feature/windows</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Evidence
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evidence">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-ci-17-november-2026-from-the-linux-laptop" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows CI (17 November 2026, from the Linux laptop)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-windows-computer-18-november-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The Windows computer (18 November 2026)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Windows computer (18 November 2026)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#full-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Full suite
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#answers-to-the-questions-of-the-takeover" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Answers to the questions of the takeover
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pov-ray-for-windows-on-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        POV-Ray for Windows on CI
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-in-one-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Installation in one command
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#still-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Still open
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HANDOFF.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Decision
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-known-and-from-where" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What is known, and from where
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-implemented-on-featurewindows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What is implemented on <code>feature/windows</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Evidence
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evidence">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-ci-17-november-2026-from-the-linux-laptop" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows CI (17 November 2026, from the Linux laptop)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-windows-computer-18-november-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The Windows computer (18 November 2026)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Windows computer (18 November 2026)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#full-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Full suite
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#answers-to-the-questions-of-the-takeover" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Answers to the questions of the takeover
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pov-ray-for-windows-on-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        POV-Ray for Windows on CI
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-in-one-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Installation in one command
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#still-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Still open
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="windows-port">Windows port<a class="headerlink" href="#windows-port" title="Permanent link">&para;</a></h1>
+<p>Windows support was developed on branch <code>feature/windows</code> (PR #35): the groundwork on
+the Linux laptop and Windows CI (17 November 2026), the completion on a Windows 11
+laptop (18 November 2026). This page records:</p>
+<ul>
+<li>what was decided, and what is known with sources;</li>
+<li>what is implemented and how it was tested;</li>
+<li>the answers found on the Windows computer;</li>
+<li>what is still open.</li>
+</ul>
+<p><strong>Status (18 November 2026):</strong> Ycrystal runs from a source checkout on Windows 11 with
+POV-Ray for Windows 3.7. On one laptop it passes every automated test (below), and the
+user tested it by hand there and reports that it works well. Since PR #36, Windows CI
+renders with the real POV-Ray for Windows too (see <a href="#pov-ray-for-windows-on-ci">CI</a>).
+Since PR #39, one script installs it, with a Start-menu
+entry (see <a href="#installation-in-one-command">installation</a>); that is now the developer
+installation. For users, a graphical installer (PyInstaller + Inno Setup) installs it
+without Python, Git, or PowerShell, side by side with the developer installation (see
+<a href="windows-installer.html">Windows installer</a>).</p>
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<p>Taken by the user on 17 November 2026: Ycrystal runs <strong>natively on Windows</strong>, and
+renders with the official <strong>POV-Ray for Windows 3.7</strong> (<code>pvengine64.exe</code>).</p>
+<p>The alternatives were set aside:
+- <strong>WSL2 only:</strong> Ycrystal and Linux POV-Ray inside WSL2.
+- <strong>Hybrid:</strong> native Ycrystal with <code>wsl povray</code> for rendering.</p>
+<p>They remain possible later and are not implemented.</p>
+<h2 id="what-is-known-and-from-where">What is known, and from where<a class="headerlink" href="#what-is-known-and-from-where" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Fact</th>
+<th>Source</th>
+<th>Checked how</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>There is no command-line POV-Ray for Windows from conda-forge</td>
+<td>conda-forge <code>povray</code> has builds for linux-64, linux-aarch64, osx-64, osx-arm64 only</td>
+<td><code>api.anaconda.org/package/conda-forge/povray</code>, 17 Nov 2026</td>
+</tr>
+<tr>
+<td>There is no MSYS2 package of POV-Ray</td>
+<td>packages.msys2.org search for "povray": no results</td>
+<td>17 Nov 2026</td>
+</tr>
+<tr>
+<td>GitHub releases of POV-Ray have Windows builds of 3.8 betas and alphas only, no 3.7</td>
+<td><code>gh api repos/POV-Ray/povray/releases</code></td>
+<td>17 Nov 2026</td>
+</tr>
+<tr>
+<td>Official installer: <code>povwin-3.7-agpl3-setup.exe</code>, SHA-256 <code>2B1331641B6F96113C2DBA951BE80D99EB548639480399CABB5E3A60DCE5BDC8</code>, silent with <code>/S</code>, installs into <code>%ProgramFiles%\POV-Ray\v3.7</code>, executable <code>bin\pvengine64.exe</code></td>
+<td>The Chocolatey package <code>pov-ray</code> 3.7.0.20161121 (its install script)</td>
+<td>Read on community.chocolatey.org. The CI job uses this URL and checksum</td>
+</tr>
+<tr>
+<td>The installer records <code>Home</code> (installation folder) and <code>DocPath</code> (user files: <code>Documents\POV-Ray\v3.7</code>, with <code>include</code> and <code>ini</code>) under <code>HKEY_CURRENT_USER\Software\POV-Ray\v3.7\Windows</code></td>
+<td>The registry of the Windows computer</td>
+<td>Read 18 Nov 2026</td>
+</tr>
+<tr>
+<td>Command-line switches of POV-Ray for Windows 3.7: <code>/EXIT</code> (quit after the render), <code>/NR</code> or <code>/NORESTORE</code>, <code>/RENDER FILE</code>, <code>/EDIT FILE</code>, <code>/NOEXEC</code>, <code>/THREADS N</code>, <code>/DEBUG</code>, <code>/DEMO</code>, <code>/BENCHMARK</code>; anything else after a <code>/</code> is an error dialog. Other arguments (an INI file, <code>+GA…</code>) are ordinary POV-Ray options</td>
+<td>Its source, <code>windows/pvtext.cpp</code> (<code>preparse_commandline</code>), branch <code>3.7-stable</code> of github.com/POV-Ray/povray</td>
+<td>Read 18 Nov 2026 (povray.org refuses automated access, HTTP 403)</td>
+</tr>
+<tr>
+<td><strong>Keep Single Instance</strong> is on by default: <code>[General] OneInstance</code> in <code>DocPath\ini\pvengine.ini</code>, default 1. When a main window of class <code>Pov37-Win64-MainWinClass</code> (64-bit build) exists, a new copy brings it forward, shows a one-time notice (<code>[DontShowAgain] OneInstanceSet</code>), and passes only <code>/EDIT</code> and <code>/RENDER</code> to it; with <code>/EXIT</code> it shows the modal error box "Only /EDIT and /RENDER may be passed to previous instance" and exits with status 1</td>
+<td>Source: <code>windows/pvengine.cpp</code> (<code>WinMain</code>), <code>windows/pvtext.cpp</code> (<code>preparse_instance_commandline</code>), <code>windows/pvmisc.cpp</code> (<code>GetHKCU</code> reads <code>pvengine.ini</code>)</td>
+<td>Read 18 Nov 2026, and observed on the Windows computer (experiment 6 below)</td>
+</tr>
+<tr>
+<td>With <code>/EXIT</code>, POV-Ray for Windows closes its window as soon as the render stops, <strong>before</strong> it plays the completion or error sound and before its first-time notices (render-complete sound, output file location)</td>
+<td>Source: <code>windows/pvengine.cpp</code> (<code>render_stopped</code>)</td>
+<td>Read 18 Nov 2026</td>
+</tr>
+<tr>
+<td><strong>Two dialogs wait for an answer even with <code>/EXIT</code>.</strong> (1) Without its separately licensed editor DLL (the AGPL installer does not include it), every start asks "Could not load internal editor – download it?" unless <code>[General] UseEditors=0</code> (<em>Options ▸ Other Settings ▸ Use Editor</em>) or the editor is installed. (2) From the second start on, it shows its About box whenever <code>[General] ItsAboutTime</code> has passed (unset: at once), then sets it 1 day ahead the first time and 14 days ahead after that</td>
+<td>Source: <code>windows/pvedit.cpp</code> (<code>LoadEditorDLL</code>), <code>windows/pvengine.cpp</code> (<code>WinMain</code>, <code>ShowAboutBox</code>)</td>
+<td>Read 18 Nov 2026; both seen in screenshots of the CI runner taken by the probe</td>
+</tr>
+<tr>
+<td>Command-line renders start directly, not through POV-Ray's file queue, so the <code>[Info] Rendering=1</code> flag that a killed render leaves behind does not make the next one skipped</td>
+<td>Source: <code>windows/pvengine.cpp</code> (<code>WinMain</code>, the queue code that checks <code>Rendering</code>)</td>
+<td>Read 18 Nov 2026</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-is-implemented-on-featurewindows">What is implemented on <code>feature/windows</code><a class="headerlink" href="#what-is-implemented-on-featurewindows" title="Permanent link">&para;</a></h2>
+<p>Linux and macOS behaviour is unchanged: <code>povray</code> gets exactly the arguments it got
+before and still runs as a <code>QProcess</code>; every existing test passes on Linux.</p>
+<ul>
+<li><strong><code>src/ycrystal/render/povray.py</code></strong> (the place for renderer platform checks):</li>
+<li><code>is_windows_engine()</code> recognises <code>pvengine*.exe</code> by name.</li>
+<li><code>windows_engine_candidates()</code> and <code>installed_windows_engine(platform)</code> find POV-Ray
+    for Windows from the registry <code>Home</code> values and the <code>ProgramFiles</code> folders (it is not
+    on <code>PATH</code>); <code>find_povray()</code> falls back to it after <code>povray</code> on <code>PATH</code>.</li>
+<li><code>render_arguments()</code>: <code>["scene.ini"]</code> for <code>povray</code>; <code>["/EXIT", "/NR",
+    "+GAscene.log", "scene.ini"]</code> for POV-Ray for Windows, which prints nothing and
+    writes all messages to <code>scene.log</code> (<code>read_log()</code>).</li>
+<li><code>background_startupinfo()</code> starts it minimised (<code>SW_SHOWMINNOACTIVE</code>).</li>
+<li><code>hold_foreground()</code> / <code>release_foreground()</code> / <code>foreground_held()</code>: POV-Ray for
+    Windows makes itself the foreground window even when started minimised or hidden.
+    While it runs, Ycrystal calls <code>LockSetForegroundWindow</code>, which Windows allows only
+    to the owner of the foreground window, so it works in the window and is refused
+    harmlessly in a terminal. Holds are counted; every hold asks for the lock again.</li>
+<li><code>windows_engine_conflict()</code>: the same test POV-Ray makes at start-up (a window of
+    its main class exists, and <code>OneInstance</code> is not 0 in its <code>pvengine.ini</code>), so that
+    Ycrystal reports <code>ENGINE_OPEN_MESSAGE</code> instead of starting a copy that would show
+    POV-Ray's modal error box and wait. <code>keeps_single_instance()</code> reads the setting as
+    <code>GetPrivateProfileInt</code> does.</li>
+<li><code>include_directories()</code> also reads the user-files folder recorded in the registry
+    (<code>DocPath</code>; right also when Documents was moved, for example into OneDrive), then
+    <code>Documents\POV-Ray\v3.7</code> in the home folder.</li>
+<li><code>povray_version()</code> never starts POV-Ray for Windows (no <code>--version</code>; it would open
+    its window); it reads the executable's version resource.</li>
+<li><strong><code>src/ycrystal/render/jobs.py</code>:</strong> <code>run_job()</code> reports a conflict without starting
+  POV-Ray, holds the foreground while it runs, starts it minimised, and appends its log.</li>
+<li><strong><code>src/ycrystal/render/process.py</code></strong> (the window's previews, final renders, and
+  material thumbnails): PySide6 6.12 has no <code>QProcess.setCreateProcessArgumentsModifier</code>,
+  so <code>QProcess</code> cannot start a program minimised. POV-Ray for Windows therefore runs as
+  a <code>subprocess.Popen</code>, checked every 100 ms by a <code>QTimer</code>. Since only one copy can
+  render, the program's own runs take turns (a render started while another runs
+  waits, and counts as running); whether one runs is decided by the process itself, and
+  a waiting render checks for its turn on its own timer, so a render whose Qt object was
+  deleted cannot hold up the others. Cancelling kills POV-Ray and reports at once. It
+  reports no progress (POV-Ray for Windows prints none): the window shows a busy
+  indicator, then 100 %.</li>
+<li><strong><code>src/ycrystal/gui/native.py</code>:</strong> <code>set_taskbar_identity()</code> (an explicit
+  AppUserModelID, so that the window has its own taskbar button and icon, not Python's;
+  called from <code>app.py</code> before the application object) and <code>executable_filter()</code>
+  (<em>Render ▸ Set POV-Ray Executable…</em> lists <code>.exe</code> files on Windows). That dialog now
+  starts at the POV-Ray Ycrystal would use, not at <code>povray</code> on <code>PATH</code>.</li>
+<li><strong>Tests:</strong></li>
+<li><code>tests/conftest.py</code>: <code>python_program()</code> makes stand-in programs work everywhere (a
+    <code>.cmd</code> launcher on Windows); the <code>povray_executable</code> fixture also finds an installed
+    POV-Ray for Windows.</li>
+<li><code>tests/test_windows_povray.py</code> checks the Windows contract on any system with
+    stand-ins: arguments, log, version query, folder search and the recorded user
+    folder, the <code>Popen</code> backend (success, failure, cancel, failure to start, preview
+    superseding, renders taking turns, a deleted render not holding up the next), the
+    foreground holds, the single-instance setting, and the conflict check. One test runs
+    only on Windows, against the installed program.</li>
+<li>Tests that simulate "no POV-Ray" by emptying <code>PATH</code> also hide an installed POV-Ray
+    for Windows. A test that renders an exported scene by hand uses
+    <code>render_arguments()</code> (with <code>povray</code> unchanged: <code>povray scene.ini</code>).</li>
+<li><code>tests/test_preview_resolution.py</code> compares scene files with the header's time
+    aside (a minute could pass between two states: a flake on every system, seen first
+    on Windows, where each preview takes longer).</li>
+<li><strong><code>.gitattributes</code>:</strong> text files keep LF line endings in Windows checkouts. Several
+  tests compare SHA-256 digests of tracked files.</li>
+<li><strong><code>scripts/make_examples.py</code></strong> writes LF on every system.</li>
+<li><strong><code>scripts/windows_povray_probe.py</code></strong> reports how POV-Ray for Windows behaves under
+  Ycrystal; it also prints the settings file and the single-instance setting and stops
+  when another copy is open.</li>
+<li><strong>CI</strong> (<code>.github/workflows/ci.yml</code>): a third test job on Windows Server 2022 with
+  Python 3.12; experimental in PR #35, required and rendering with POV-Ray for Windows
+  since PR #36 (see <a href="#pov-ray-for-windows-on-ci">CI</a>).</li>
+<li><strong>Documentation:</strong> a Windows section in the install guide and the README, rows in the
+  support matrix and troubleshooting, the architecture page, and the changelog.</li>
+</ul>
+<h2 id="evidence">Evidence<a class="headerlink" href="#evidence" title="Permanent link">&para;</a></h2>
+<h3 id="windows-ci-17-november-2026-from-the-linux-laptop">Windows CI (17 November 2026, from the Linux laptop)<a class="headerlink" href="#windows-ci-17-november-2026-from-the-linux-laptop" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 (<code>3741931</code>)</td>
+<td>Failed after 13 s at the installer download: povray.org answered the GitHub runner with a <strong>Cloudflare browser challenge</strong> instead of the installer. The official installer, and the Chocolatey package that fetches the same URL, <strong>cannot be installed automatically on CI</strong></td>
+</tr>
+<tr>
+<td>2 (<code>9d2c4d1</code>)</td>
+<td>The job continues without POV-Ray. <strong>Ycrystal installed with the pinned dependencies</strong>; doctests and <code>scripts/docs_examples.py</code> passed; <strong>tests: 621 passed, 98 skipped, none failed</strong> (GUI tests deselected)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-windows-computer-18-november-2026">The Windows computer (18 November 2026)<a class="headerlink" href="#the-windows-computer-18-november-2026" title="Permanent link">&para;</a></h3>
+<p>A laptop with Windows 11 Enterprise (build 26300), x64, a 1536 × 864 logical display at
+<strong>125 % scale</strong> (device pixel ratio 1.25), and a UTF-8 system code page (65001). Python
+3.12.10 from python.org (installed with <code>winget</code>, per user), PySide6 6.12.0, VTK 9.7.2.
+POV-Ray for Windows 3.7.0 (file version 3.7.0.0, <code>VersionNo64=3.7.0.msvc10.win64</code>),
+installed by the user with the official installer, user files included.</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Install: <code>py -3.12 -m venv .venv</code>, <code>.venv\Scripts\python.exe -m pip install -e ".[dev]" -c constraints.txt</code></td>
+<td>Installed</td>
+</tr>
+<tr>
+<td><code>scripts/windows_povray_probe.py</code></td>
+<td>Found <code>C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe</code> (not on <code>PATH</code>), version 3.7.0.0, include folder <code>Documents\POV-Ray\v3.7\include</code>, no include file missing. First start: no image within 90 s (see question 4); then both command lines rendered</td>
+</tr>
+<tr>
+<td>Small render (120 × 80) timing, 7 timed runs</td>
+<td>2.3–2.8 s each after the first start (POV-Ray's start-up dominates); the second start of all took 28 s</td>
+</tr>
+<tr>
+<td>Tests without windows, real POV-Ray for Windows, before the changes of 18 November</td>
+<td>715 passed, 3 skipped (symbolic links unavailable, execute bit, POSIX permissions), 1 failed: the test that ran <code>pvengine64.exe scene.ini</code> without <code>/EXIT</code> waited 120 s (fixed in the test)</td>
+</tr>
+<tr>
+<td>GUI tests, first run</td>
+<td>160 passed, 12 failed: one test unexpectedly started a real render (an installed POV-Ray for Windows is found outside <code>PATH</code>), its window closed, and the <code>Popen</code> backend's "running" marker stayed set, so every later render waited for ever. Fixed (cancel reports at once; the process decides whether one runs) and covered by a new test</td>
+</tr>
+<tr>
+<td>Full suite after the fixes, <code>YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs</code></td>
+<td>898 passed, 3 skipped (see <a href="#full-suite">the result</a> below)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="full-suite">Full suite<a class="headerlink" href="#full-suite" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs</code> (GUI tests with real windows at 125 % scale, all POV-Ray tests with POV-Ray for Windows)</td>
+<td><strong>898 passed, 3 skipped, none failed</strong>, 12 min. Skipped by design: symbolic links (need a Windows privilege), the execute bit, POSIX permissions</td>
+</tr>
+<tr>
+<td>CI's doctest module list and <code>scripts/docs_examples.py</code></td>
+<td>Passed</td>
+</tr>
+<tr>
+<td><code>pre-commit run --all-files</code>; <code>zensical build --clean --strict</code> (in <code>.venv-docs</code>)</td>
+<td>Passed; built without issues</td>
+</tr>
+<tr>
+<td><code>.venv\Scripts\ycrystal.exe --version</code>; <code>--check-renderer</code>; <code>examples\SrTiO3-studio.ycrystal --render "…\SrTiO3 studio.png"</code>; <code>--export-pov</code></td>
+<td><code>ycrystal 0.4.0.dev0</code>; <code>PASS: POV-Ray 3.7.0.0 … sphere centres within 0.14 px</code>; rendered in 4.7 s; exported (into an existing folder; a missing folder is refused, as documented)</td>
+</tr>
+<tr>
+<td>The rendering guide's command for an exported scene, <code>Start-Process -Wait "…\pvengine64.exe" "/EXIT /NR SrTiO3.ini"</code></td>
+<td>Renders <code>SrTiO3.png</code>. PowerShell's call operator <code>&amp;</code> returns at once instead (POV-Ray for Windows is a window program), hence <code>-Wait</code></td>
+</tr>
+<tr>
+<td>Scripted run of the real window (as <code>.venv\Scripts\ycrystal.exe --sample perovskite</code>): screen capture, 3 previews, 1 final render, foreground watched every 10 ms</td>
+<td>Draws correctly at device pixel ratio 1.25 (structure, output frame, a/b/c handles, axes, preview dock; Qt follows the Windows dark theme); previews ready in 2.6–2.7 s each; the final render saved; <strong>the foreground never left the Ycrystal window</strong>; AppUserModelID <code>YMatterLab.Ycrystal</code> set</td>
+</tr>
+</tbody>
+</table>
+<h3 id="answers-to-the-questions-of-the-takeover">Answers to the questions of the takeover<a class="headerlink" href="#answers-to-the-questions-of-the-takeover" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Answer (18 November 2026)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Does <code>pvengine64.exe /EXIT /NR +GAscene.log scene.ini</code> render <code>scene.png</code> and quit?</td>
+<td><strong>Yes</strong>, in 2.3–2.8 s for a small scene. <code>/EXIT /NR /RENDER scene.ini +GAscene.log</code> behaves the same; the command line is kept</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Exit status after success and after a parse error?</td>
+<td><strong>0 in both cases.</strong> After a parse error there is no image, and <code>finish_job()</code> already treats "status 0, no image" as a failure, explained from the log</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Does <code>scene.log</code> hold POV-Ray's messages, including "Parse Error"?</td>
+<td><strong>Yes</strong> (options, warnings, statistics, and the parse error with file and line). No progress lines</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Does a dialog appear on the first start?</td>
+<td><strong>Yes, two of them</strong> (found on the CI runner, see <a href="#pov-ray-for-windows-on-ci">CI</a>): the editor question on every start until the editor is installed or turned off, and the About box from the second start on, again every 14 days. On the laptop, the very first render produced no image within 90 s and the next start took 28 s: by then the user had installed the editor (its DLLs appeared in the installation folder during the session) and the About box had been shown and closed (<code>ItsAboutTime</code> set). POV-Ray's settings also hold <code>[DontShowAgain] OneInstanceSet=1</code>, the one-time <em>Keep Single Instance</em> notice. The completion-sound and output-file notices never appear with <code>/EXIT</code> (source)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Does the window stay minimised and not take the focus?</td>
+<td><strong>Minimised: yes</strong> (watched in every state, "Starting" to "Done"). <strong>Focus: no</strong> — it makes itself the foreground window even when started minimised or hidden (<code>SW_HIDE</code>). A Qt window in the foreground that starts it took the foreground away 2 times in 2 trials without <code>LockSetForegroundWindow</code>, and 0 times with it (1 trial; in a second one the window had not got the foreground first, and Windows refused the lock, as documented). Implemented for the window; a terminal cannot do it, so <code>--render</code> loses the terminal's focus while POV-Ray runs. <code>SW_HIDE</code> would also keep its taskbar button away; minimised was kept, so that a POV-Ray dialog stays reachable</td>
+</tr>
+<tr>
+<td>6</td>
+<td>With POV-Ray for Windows already open, does a second render start a new copy?</td>
+<td><strong>No.</strong> It shows the modal "Commandline processing error" box and waits (killed after 15 s; no image). With the new check, <code>.venv\Scripts\python.exe -m ycrystal --check-renderer</code> fails in 0.7 s with the explanation, and nothing appears. Ycrystal's own renders now take turns</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Where are the include files, and are they found?</td>
+<td><code>Documents\POV-Ray\v3.7\include</code> (the installation folder has none). Found; <code>metals.inc</code> and the others present. The folder is also read from the registry (<code>DocPath</code>)</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Does <code>povray_version()</code> read a version starting with 3.7?</td>
+<td><strong>Yes</strong>: <code>3.7.0.0</code> from the file version resource</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Does the window open, draw, and render previews?</td>
+<td><strong>Yes, in scripted runs:</strong> the 172 GUI tests open real windows at 125 % scale and pass, and a scripted run of the main window drew correctly and rendered previews without losing the focus (see <a href="#full-suite">the result</a>). Not yet checked by hand</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Do all tests pass?</td>
+<td><strong>Yes:</strong> 898 passed, 3 skipped by design, with <code>YCRYSTAL_REQUIRE_INTEGRATION=1</code> (<a href="#full-suite">full suite</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>Further observations:</p>
+<ul>
+<li>Job folders whose path contains <code>ñ</code>, <code>ü</code>, or <code>晶体 Ω</code> render, but this computer's
+  system code page is UTF-8. Whether POV-Ray for Windows (an ANSI program) renders in a
+  <code>%TEMP%</code> with characters outside a legacy code page (for example Chinese characters
+  in a user name on a Western-European Windows) is <strong>unverified</strong>.</li>
+<li>A clone made from <code>main</code> before <code>.gitattributes</code> existed keeps CRLF files after a
+  switch to this branch; tests that hash tracked files would fail (see HANDOFF.md).</li>
+</ul>
+<h3 id="pov-ray-for-windows-on-ci">POV-Ray for Windows on CI<a class="headerlink" href="#pov-ray-for-windows-on-ci" title="Permanent link">&para;</a></h3>
+<p>povray.org answers GitHub's runners with a browser challenge, so CI cannot download the
+installer from there. Of the options considered on 17 November 2026 (a: keep the
+official installer as a release asset of this repository; b: a self-hosted runner;
+c: POV-Ray 3.8 beta; d: no POV-Ray on Windows CI), the user chose <strong>a</strong> on 18 November
+2026 (PR #36):</p>
+<ul>
+<li>The official installer, unmodified (SHA-256 above), is the asset
+  <code>povwin-3.7-agpl3-setup.exe</code> of the release <code>ci-assets</code> (not a Ycrystal release;
+  its notes give the licence, AGPL-3.0, and the source, github.com/POV-Ray/povray). The
+  Windows job downloads it with its own token, refuses another checksum, and installs
+  it silently.</li>
+<li>Before POV-Ray's first start the job writes <code>UseEditors=0</code> and <code>ItsAboutTime</code> (the
+  latest 32-bit time) into the runner's <code>pvengine.ini</code>; without them, the editor
+  question and the About box waited for an answer (screenshots of
+  <code>scripts/windows_povray_probe.py --screenshots</code>, uploaded by the job).</li>
+<li>The job is no longer experimental: it runs the renderer check, the documentation
+  examples, and the tests without windows with <code>YCRYSTAL_REQUIRE_INTEGRATION=1</code>.
+  First passing run: 727 passed, 2 skipped (POSIX-only tests), GUI tests not run (as
+  on macOS: run them on a Windows computer).</li>
+<li>Before the repository or the release becomes public, check the AGPL-3.0 obligations
+  for passing the installer on (the release notes point to the source).</li>
+</ul>
+<h2 id="installation-in-one-command">Installation in one command<a class="headerlink" href="#installation-in-one-command" title="Permanent link">&para;</a></h2>
+<p>Asked by the user on 18 November 2026 ("is there a simpler method for installation?").
+The manual installation had eight steps:
+- install Git and Python, then open a new terminal (else <code>py</code> is not found);
+- clone; create <code>.venv</code>; run the long <code>pip</code> line;
+- download POV-Ray for Windows from povray.org and install it;
+- start POV-Ray once to settle its editor question;
+- start Ycrystal from PowerShell every time (no Start-menu entry).</p>
+<p>Its traps were the stale <code>PATH</code> and the editor question: a render then waited silently
+at a dialog in a minimised window.</p>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Checked how</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>winget</code> has the official POV-Ray installer: package <code>PersistenceOfVisionRaytracer.POVRay</code> 3.7, URL <code>https://www.povray.org/ftp/pub/povray/Official/povwin-3.7-agpl3-setup.exe</code>, the same SHA-256 as above, type <code>nullsoft</code> (silent with <code>/S</code>)</td>
+<td><code>winget show</code>; <code>winget download</code> on the laptop fetched it from povray.org and verified the checksum (no browser challenge for a home connection); <code>winget list</code> recognises the installed POV-Ray as this package</td>
+</tr>
+<tr>
+<td>POV-Ray for Windows asks about its editor exactly when <code>[General] UseEditors</code> (in <code>pvengine.ini</code>, default 1) is not 0 and the editor library (<code>cmedit64.dll</code> for the 64-bit build) loads neither from the program's folder nor from <code>bin</code> of the installation folder recorded in the registry (<code>Home</code>)</td>
+<td>Its source: <code>windows/pvengine.cpp</code> (<code>WinMain</code>), <code>windows/pvedit.cpp</code> (<code>LoadEditorDLL</code>), <code>windows/pvengine.h</code> (<code>EDITDLLNAME</code>), <code>windows/pvmisc.cpp</code> (<code>editors_enabled</code>)</td>
+</tr>
+<tr>
+<td>Git for Windows signs in to GitHub in the browser for a private repository over HTTPS (Git Credential Manager)</td>
+<td><code>git config --show-origin credential.helper</code>: <code>manager</code> in the installation's <code>gitconfig</code></td>
+</tr>
+<tr>
+<td>The SVG icon renders without an application object (<code>QSvgRenderer</code> into a <code>QImage</code>)</td>
+<td>Run on the laptop</td>
+</tr>
+</tbody>
+</table>
+<p>Implemented:</p>
+<ul>
+<li><strong><code>scripts/install-windows.ps1</code></strong> (ASCII, for Windows PowerShell 5.1, which every
+  Windows 11 has): Python 3.12 with <code>winget --scope user</code> unless <code>py</code> finds Python
+  3.12, 3.13, or 3.14 (in this order; older ones are refused, also in an existing <code>.venv</code>)
+  (it re-reads <code>PATH</code> from the registry, so no new terminal is needed); <code>.venv</code>;
+  <code>pip install -e . -c constraints.txt</code>; POV-Ray for Windows with <code>winget</code> unless found;
+  if POV-Ray would ask about its editor, it opens once with instructions; the
+  Start-menu entry; <code>--check-renderer</code>. Idempotent; exit status 0 only when everything
+  is ready, with a list of what is not otherwise. Options <code>-Python</code>, <code>-Dev</code>,
+  <code>-NoPovray</code>, <code>-NoStartMenu</code>.</li>
+<li><strong><code>--install-desktop</code> on Windows</strong> (<code>desktop.py</code>, <code>windows_shortcut.py</code>):</li>
+<li><code>Ycrystal.lnk</code> in the user's Start-menu folder (<code>SHGetKnownFolderPath</code>). It starts
+    <code>.venv\Scripts\pythonw.exe -I -m ycrystal.app</code>, so that no console window opens;
+    <code>-I</code> keeps a <code>ycrystal</code> module in the starting folder from shadowing the package,
+    and is used only inside a virtual environment.</li>
+<li>The shortcut carries the application id <code>YMatterLab.Ycrystal</code>, the one
+    <code>set_taskbar_identity()</code> gives the window. It is written through <code>IShellLinkW</code>,
+    <code>IPropertyStore</code>, and <code>IPersistFile</code> with <code>ctypes</code>, since <code>WScript.Shell</code> cannot set it.</li>
+<li>An <code>.ico</code> with 8 sizes drawn from the SVG by Qt, in
+    <code>%LOCALAPPDATA%\Y-Matter Lab\Ycrystal</code>.</li>
+<li>The file type <code>Ycrystal.Project</code> for <code>.ycrystal</code> under
+    <code>HKEY_CURRENT_USER\Software\Classes</code>. The user's own <em>Open with</em> choice
+    (<code>UserChoice</code>) is left alone, and so is an <code>.ycrystal</code> key that points elsewhere at
+    uninstall.</li>
+<li><code>--uninstall-desktop</code> removes all three; macOS still refuses both options.</li>
+<li><strong>The editor question is reported instead of waited for:</strong>
+  <code>windows_engine_conflict()</code> returns <code>EDITOR_QUESTION_MESSAGE</code> when
+  <code>editor_question_pending()</code> holds, so <code>--check-renderer</code>, previews, and renders fail
+  at once with the remedy. Stand-in programs (<code>.cmd</code>) are never checked.</li>
+<li><strong>Windows CI</strong> runs the script in Windows PowerShell 5.1 into a new <code>.venv</code> (with
+  <code>-Python</code> from setup-python, POV-Ray already installed) and reads the shortcut back.</li>
+</ul>
+<p>Evidence on the laptop (18 November 2026):</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A copy of the checkout in a folder with a space (<code>…\Temp\yc trial\ycrystal</code>), no <code>.venv</code>, <code>powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1</code> in Windows PowerShell 5.1</td>
+<td>Found Python 3.12 through <code>py</code>; created <code>.venv</code>; installed the pinned packages; found POV-Ray; editor question settled (the editor is installed here), so no prompt; Start-menu entry and icon installed; <code>PASS: … within 0.14 px</code>; "Ycrystal is ready.", exit status 0</td>
+</tr>
+<tr>
+<td>The same script again</td>
+<td>Reused <code>.venv</code>, reinstalled only Ycrystal, check passed; 29 s</td>
+</tr>
+<tr>
+<td>The Start-menu shortcut opened as a click does (<code>os.startfile</code>)</td>
+<td>One new window, "SrTiO3 (unsaved) — Ycrystal", process <code>pythonw.exe</code>, no console window; its own taskbar button with the Ycrystal icon; the automatic POV-Ray preview rendered (2.8 s). <code>Get-StartApps</code>: <code>Ycrystal</code>, AppID <code>YMatterLab.Ycrystal</code></td>
+</tr>
+<tr>
+<td><code>examples\SrTiO3-studio.ycrystal</code> opened as a double-click does</td>
+<td>Opened in Ycrystal ("SrTiO3-studio.ycrystal — Ycrystal", <code>pythonw.exe</code>)</td>
+</tr>
+<tr>
+<td>New tests: <code>tests/test_windows_desktop.py</code> (launch command, icon sizes, the shortcut's fields and application id written and read back with a non-ASCII path, Start-menu entry and file type installed and removed in a test registry key, another program's file type left alone, the two command-line options); <code>tests/test_windows_povray.py</code> (the editor question: settings, both library folders, other programs; reported before starting)</td>
+<td>Passed</td>
+</tr>
+<tr>
+<td>Full suite, <code>YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -q -rs</code></td>
+<td>906 passed, 3 skipped (POSIX-only), 12.4 min</td>
+</tr>
+<tr>
+<td>Python 3.13.17 and 3.14.10 (python.org, <code>winget</code>): the script with <code>-Python … -Dev -NoStartMenu</code> on fresh copies, then the full suite</td>
+<td>Both "Ycrystal is ready." (pins from wheels); 906 passed, 3 skipped on each (<a href="../PROGRESS.html#python-313-and-314-on-windows-18-november-2026">PROGRESS.md</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>Not verified: installing Python and POV-Ray through the script (both were already on
+the laptop); the script's editor prompt (the editor is installed here); pinning the
+running window to the taskbar by hand; the entry on another Windows computer.</p>
+<h2 id="still-open">Still open<a class="headerlink" href="#still-open" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Hands-on use.</strong> The user tested Ycrystal by hand on the Windows laptop on
+   18 November 2026 and reports that it works well; which items were tried was not
+   recorded. On another Windows computer, a fuller check can follow the macOS
+   checklist in HANDOFF.md, adapted: the window draws sharply at the display's scale;
+   mouse and touchpad; selection; menus and Ctrl shortcuts; File Explorer dialogs;
+   <em>Set POV-Ray Executable…</em> and <em>Check Renderer</em>; previews with <strong>Update
+   automatically</strong> (the POV-Ray taskbar button, the keyboard focus staying in
+   Ycrystal); a long render cancelled; closing the window during a render; a project
+   saved on Linux or macOS renders the same on Windows and back; whether POV-Ray plays
+   a sound (none expected with <code>/EXIT</code>).</li>
+<li><strong>POV-Ray for Windows' About box for users.</strong> Every 14 days (and at the second
+   start after installation) POV-Ray for Windows shows its About box when it starts,
+   also when Ycrystal starts it minimised, and waits for OK; the render waits with it.
+   This is documented (install guide, troubleshooting). Ycrystal does not change the
+   user's POV-Ray settings; whether it should detect the box and bring it forward is
+   undecided.</li>
+<li><strong>The installation script on a new computer</strong> (see
+   <a href="#installation-in-one-command">installation</a>): with neither Python nor POV-Ray
+   installed, so that the <code>winget</code> steps and the editor prompt run; then <em>Pin to
+   taskbar</em> on the running window.</li>
+<li><strong>Out of scope until decided:</strong></li>
+<li>code signing of the graphical installer, which exists since branch
+     <code>feature/windows-installer</code> (PyInstaller + Inno Setup; see
+     <a href="windows-installer.html">Windows installer</a>) but is not signed;</li>
+<li>Windows on ARM; Windows 10;</li>
+<li>progress percentages during renders with POV-Ray for Windows. It prints none, but
+     its window title carries them (<code>POV-Ray for Windows [Rendering scene.pov: 37%]</code>),
+     which a later change could read;</li>
+<li>an option to start POV-Ray hidden (<code>SW_HIDE</code>) instead of minimised.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>

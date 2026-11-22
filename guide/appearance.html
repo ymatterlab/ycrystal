@@ -1,0 +1,2608 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/guide/appearance.html">
+      
+      
+      
+        <link rel="prev" href="./qe-lattices.html">
+      
+      
+        <link rel="next" href="./rendering.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Materials, backgrounds, and lighting - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Materials, backgrounds, and lighting
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./controls.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="appearance.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-materials" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Choosing materials
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-colours" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Choosing colours
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Choosing colours">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-material-gallery" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The material gallery
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Catalog
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customizing-a-material" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Customizing a material
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Environments
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Background
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#background-picture" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Background picture
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#floor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Floor
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lighting" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Lighting
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lighting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-lights-are-placed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How the lights are placed
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lighting-setup-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Lighting Setup window
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-live-view-shows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What the live view shows
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reusing-the-look-styles" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reusing the look: styles
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reusing the look: styles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#element-mapping-a-style-for-another-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Element mapping: a style for another composition
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/validation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-port.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HANDOFF.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-materials" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Choosing materials
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-colours" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Choosing colours
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Choosing colours">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-material-gallery" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The material gallery
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Catalog
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customizing-a-material" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Customizing a material
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Environments
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Background
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#background-picture" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Background picture
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#floor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Floor
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lighting" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Lighting
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lighting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-lights-are-placed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How the lights are placed
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lighting-setup-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Lighting Setup window
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-the-live-view-shows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What the live view shows
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reusing-the-look-styles" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reusing the look: styles
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reusing the look: styles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#element-mapping-a-style-for-another-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Element mapping: a style for another composition
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="materials-backgrounds-and-lighting">Materials, backgrounds, and lighting<a class="headerlink" href="#materials-backgrounds-and-lighting" title="Permanent link">&para;</a></h1>
+<p>The <strong>Scene ▸ Appearance</strong> tab and the two galleries (<strong>Edit ▸ Material Gallery…</strong>,
+<strong>Edit ▸ Environment Gallery…</strong>) control how atoms, bonds, and their surroundings look
+in the POV-Ray preview and the rendered PNG. Every change is undoable (Ctrl+Z) and saved
+in projects.</p>
+<p>The 3D view approximates materials (colour, highlights, and transparency), gradients,
+and floors. Shadows, reflections, refraction, clouds, and procedural textures such as
+marble appear only in the <strong>POV-Ray preview</strong> (F5) and the render; use the preview to
+judge them.</p>
+<h2 id="choosing-materials">Choosing materials<a class="headerlink" href="#choosing-materials" title="Permanent link">&para;</a></h2>
+<p>A material decides how a surface reacts to light. Colour and material are separate:
+the <strong>Colour</strong> column of the element table sets an element's colour, the <strong>Radius</strong>
+column its sphere radius in Å, and the <strong>Material</strong> column its material. The <strong>↺</strong>
+button returns an element to its default colour and radius (the covalent radius times
+the <strong>Atom size</strong> in the Structure tab).</p>
+<h2 id="choosing-colours">Choosing colours<a class="headerlink" href="#choosing-colours" title="Permanent link">&para;</a></h2>
+<p>Click a colour button (an element's <strong>Colour</strong>, or the background and floor colours)
+to open the colour dialog. Choose a colour in one of three ways:</p>
+<ul>
+<li><strong>Spectrum</strong>: hue from left to right, lightness from top (white) to bottom (black);
+  the <strong>Saturation</strong> slider below it makes the colours more vivid or greyer.</li>
+<li><strong>Named colours</strong>: the 140 CSS colours (silver, steel blue, tomato, …).</li>
+<li><strong>Type a colour</strong> in any notation; all fields update together:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Range</th>
+<th>Example (red)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hex</td>
+<td><code>#RRGGBB</code>, any case (also <code>#RGB</code>)</td>
+<td><code>#FF0000</code></td>
+</tr>
+<tr>
+<td>RGB (0–255)</td>
+<td>three integers 0–255</td>
+<td><code>255 0 0</code></td>
+</tr>
+<tr>
+<td>RGB (0–1)</td>
+<td>three fractions, three decimals — the values stored in projects and POV-Ray scenes</td>
+<td><code>1.000 0.000 0.000</code></td>
+</tr>
+<tr>
+<td>HSV</td>
+<td>hue 0–359°, saturation 0–100 %, <strong>value</strong> 0–100 %</td>
+<td><code>0, 100, 100</code></td>
+</tr>
+<tr>
+<td>HSL</td>
+<td>hue 0–359°, saturation 0–100 %, <strong>lightness</strong> 0–100 %</td>
+<td><code>0, 100, 50</code></td>
+</tr>
+<tr>
+<td>Name or any notation</td>
+<td>a CSS name or any of the notations below</td>
+<td><code>red</code></td>
+</tr>
+</tbody>
+</table>
+<p>In the text field, <code>rgb(255, 0, 0)</code>, <code>rgb(100%, 0%, 0%)</code>, <code>hsv(0, 100%, 100%)</code>,
+<code>hsl(0, 100%, 50%)</code>, and three numbers are accepted. Numbers are never reinterpreted:
+integers are 0–255 (<code>1 0 0</code> is almost black), numbers written with a decimal point are
+fractions 0–1 (<code>1.0 0 0</code> is red), and HSV/HSL saturation, value, and lightness are
+always percent, with or without <code>%</code>. Names ignore case and spaces; "grey" and "gray",
+"aqua" (= cyan), and "fuchsia" (= magenta) are accepted. A field completes names as you
+type.</p>
+<p>Text that cannot be read is explained below the fields, leaves the colour unchanged,
+and disables <strong>OK</strong> until it is corrected; valid text that was typed but not yet
+confirmed with Enter is applied when you press OK. HSV and HSL show one decimal, so
+switching between notations does not drift (each 8-bit channel stays within one step).
+For a grey (no hue), the hue you typed is kept so that adding saturation continues from
+it. <strong>OK</strong> applies the colour as one undoable step; <strong>Cancel</strong> keeps the old one; the
+<strong>↺</strong> button in the element table returns to the default colour and radius.</p>
+<p>The dialog works without a mouse: Tab moves between the fields and the named-colour
+grid; in the grid, the arrow keys move and Enter or Space chooses. Every field has an
+accessible name (for example "HSL lightness in percent") for screen readers.</p>
+<p><strong>Colour names for everyone.</strong> Rest the mouse on the spectrum or a named colour (or move
+the keyboard focus in the grid), and the dialog writes that colour in words with its
+exact values, for example
+<em>Under the mouse: brown (nearest named colour: chocolate #D2691E) — #C25200 — RGB (194,
+82, 0)</em>. The first part is a plain description from a small vocabulary (red, orange,
+yellow, green, cyan, blue, purple, magenta, pink, brown, olive, black, grey, white, with
+<em>dark</em>, <em>light</em>, or <em>greyish</em>); the second is the closest CSS named colour by perceived
+difference (CIEDE2000). It says <em>exactly the named colour …</em> only when the colour equals
+it at 8-bit precision, and <em>nearest named colour …</em> otherwise; the hex and RGB values are
+always the exact ones. Hovering only identifies a colour; clicking chooses it. The chosen
+colour is described the same way above the fields, named-colour tooltips read like
+<em>red — #FF0000 — RGB (255, 0, 0)</em>, and every colour button's tooltip and accessible name
+state its colour (<em>Colour of O: red (nearest named colour: red #FF0000)</em> with its
+values). This helps people with colour-vision deficiencies tell element colours apart;
+descriptions are approximate and supplement, not replace, the colours themselves.</p>
+<p>The colour of an element is its base colour: it does not change its radius, material, or
+opacity. Materials with their own colours (gold, chrome, marble, …) hide it; the colour
+button's tooltip then says so, and the colour returns when you choose another material.</p>
+<p>Materials are assigned at three levels. The most specific one wins:</p>
+<ol>
+<li><strong>Selected atoms</strong> — click atoms (Ctrl+click for several), then
+   <strong>Edit ▸ Material for Selection…</strong> (Ctrl+M) or <strong>Material for Selection…</strong> in the
+   Appearance tab. Like hiding, this applies to the displayed balls you picked: other
+   periodic images of the same atom keep their material.</li>
+<li><strong>Element</strong> — the Material column of the element table, or the gallery with
+   <em>Apply to: Element X</em>.</li>
+<li><strong>Default</strong> — the <em>Default</em> menu, or the gallery with <em>Apply to: All atoms</em>.</li>
+</ol>
+<p><em>Use Default</em> (gallery or panel) removes the override of an element or of the selected
+atoms; <strong>Clear All</strong> removes every per-atom override. Each half of a bond uses the
+material of its atom.</p>
+<h3 id="the-material-gallery">The material gallery<a class="headerlink" href="#the-material-gallery" title="Permanent link">&para;</a></h3>
+<p>The gallery shows a thumbnail of every material rendered by POV-Ray in the same scene,
+so materials can be compared directly. Type in the search field to filter by name,
+description, category, POV-Ray identifier (for example <code>T_Gold_3C</code>), or include file
+(<code>metals.inc</code>). The category menu also offers <strong>★ Favourites</strong>: mark a material with
+<em>Add to favourites</em>. Favourites are stored for your user account, not in projects.
+Double-click a thumbnail or press <strong>Apply</strong>.</p>
+<p>Materials marked <em>own colours</em> use POV-Ray's built-in pigments (gold, marble, wood…)
+and replace the element colour; the gallery says so for each material. The others keep
+the element colours.</p>
+<h3 id="catalog">Catalog<a class="headerlink" href="#catalog" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Material</th>
+<th>Category</th>
+<th>POV-Ray declaration</th>
+<th>Include files</th>
+<th>Colour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Matte</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Satin (default)</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Glossy</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Ceramic (glazed)</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Plastic</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>VMD style (ASE)</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Jmol style (ASE)</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>ASE2 style (ASE)</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>ASE3 style (ASE)</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Intermediate (ASE)</td>
+<td>Scientific finishes</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Metallic</td>
+<td>Metals</td>
+<td>finish</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Polished metal (F_MetalD)</td>
+<td>Metals</td>
+<td>finish</td>
+<td>metals.inc</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Soft metal (F_MetalB)</td>
+<td>Metals</td>
+<td>finish</td>
+<td>metals.inc</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Gold (T_Gold_3C)</td>
+<td>Metals</td>
+<td>texture</td>
+<td>metals.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Silver (T_Silver_3C)</td>
+<td>Metals</td>
+<td>texture</td>
+<td>metals.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Copper (T_Copper_3C)</td>
+<td>Metals</td>
+<td>texture</td>
+<td>metals.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Brass (T_Brass_3C)</td>
+<td>Metals</td>
+<td>texture</td>
+<td>metals.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Bronze (Bright_Bronze)</td>
+<td>Metals</td>
+<td>texture</td>
+<td>textures.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Chrome (Polished_Chrome)</td>
+<td>Metals</td>
+<td>texture</td>
+<td>textures.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Aluminium (Aluminum)</td>
+<td>Metals</td>
+<td>texture</td>
+<td>textures.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Glass (tinted)</td>
+<td>Glass and transparent</td>
+<td>material (IOR 1.45)</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Frosted glass</td>
+<td>Glass and transparent</td>
+<td>material (IOR 1.5)</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Gem (IOR 2.4)</td>
+<td>Glass and transparent</td>
+<td>material (IOR 2.42)</td>
+<td>—</td>
+<td>element colour</td>
+</tr>
+<tr>
+<td>Clear glass (M_Glass)</td>
+<td>Glass and transparent</td>
+<td>material</td>
+<td>textures.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Ruby glass (M_Ruby_Glass)</td>
+<td>Glass and transparent</td>
+<td>material</td>
+<td>textures.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>White marble (White_Marble)</td>
+<td>Decorative textures</td>
+<td>pigment</td>
+<td>textures.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Jade (Jade)</td>
+<td>Decorative textures</td>
+<td>pigment</td>
+<td>textures.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Pink granite (Pink_Granite)</td>
+<td>Decorative textures</td>
+<td>pigment</td>
+<td>textures.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Stone (T_Stone25)</td>
+<td>Decorative textures</td>
+<td>texture</td>
+<td>colors.inc, stones.inc</td>
+<td>own colour</td>
+</tr>
+<tr>
+<td>Cherry wood (Cherry_Wood)</td>
+<td>Decorative textures</td>
+<td>pigment</td>
+<td>textures.inc</td>
+<td>own colour</td>
+</tr>
+</tbody>
+</table>
+<p>The ASE styles use the finish values of ASE's <code>ase.io.pov</code> writer. Names in
+parentheses are native POV-Ray identifiers. Exported scenes use them unchanged, so
+POV-Ray users can recognise and edit them. Scenes that use them <code>#include</code> the standard
+files listed above (shipped with POV-Ray: <code>sudo apt install povray-includes</code> on Linux
+Mint); the export says which files are needed and warns if one is missing.</p>
+<p>Procedural textures (marble, granite, stone, wood, frosted glass, and the native metals)
+are scaled to each atom, so the pattern has the same size on every atom.</p>
+<h3 id="customizing-a-material">Customizing a material<a class="headerlink" href="#customizing-a-material" title="Permanent link">&para;</a></h3>
+<p><strong>Customize Material…</strong> (Appearance tab, or <strong>Edit ▸ Customize Material…</strong>) starts from a
+material and adjusts its parameters. Choose <strong>Apply to</strong> (the default material, an
+element, or the selected atoms) and <strong>Start from</strong> (the material to vary). The usual
+precedence stays: selected atom &gt; element &gt; default, and each half of a bond takes the
+material of its atom. A selection is the one at the moment the dialog opens; selecting
+other atoms while the dialog is open does not change where the variant goes.</p>
+<table>
+<thead>
+<tr>
+<th>Start from</th>
+<th>Parameters you can change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Matte, Satin, Glossy, Ceramic</td>
+<td>Diffuse amount, specular amount, highlight roughness, reflection amount</td>
+</tr>
+<tr>
+<td>Plastic</td>
+<td>Diffuse amount, specular amount (phong), highlight sharpness (phong size), reflection amount</td>
+</tr>
+<tr>
+<td>Glass (tinted), Gem</td>
+<td>As above, plus glass filter amount and refractive index</td>
+</tr>
+<tr>
+<td>Frosted glass</td>
+<td>As Glass, plus bump strength and bump scale of the frosted relief</td>
+</tr>
+<tr>
+<td>Marble, Jade, Granite, Stone, Wood</td>
+<td>Pattern scale (relative to each atom)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Highlight roughness</em> changes only the size of the highlight; the <em>bump</em> values change
+the surface relief. The <em>glass filter amount</em> says how much light passes through,
+tinted by the atom colour; it is not a generic opacity or a measured optical constant.
+Materials that use POV-Ray's own definitions (the metals, <code>M_Glass</code>, <code>M_Ruby_Glass</code>) and
+the ASE styles cannot be edited; the dialog explains why and keeps <strong>Apply</strong> disabled.</p>
+<p>While you edit, the 3D view and the POV-Ray preview show the variant (the 3D view only
+approximates highlight and transparency; check the preview). <strong>Reset to Base</strong> returns
+to the values of the material you started from. <strong>Apply</strong> assigns the variant as one
+undoable step; <strong>Cancel</strong> restores the previous look and leaves nothing on the undo
+stack. A variant leaves the built-in materials unchanged; an untouched variant renders
+exactly like its base.</p>
+<p><strong>Save as My Material</strong> keeps the variant in your user settings. It then appears in the
+material menus (marked ✎) and in the gallery's category <strong>My materials</strong>, with a POV-Ray
+thumbnail when POV-Ray is available (otherwise the base material's thumbnail with a ✎
+badge). Every variant has its own id derived from its name and values, so a variant can
+never replace a built-in material or another variant. Projects and styles store the full
+definition of every variant they use, so they open on another computer without your
+personal list, and exported <code>.pov</code> files contain the variant's declaration and name.</p>
+<h2 id="environments">Environments<a class="headerlink" href="#environments" title="Permanent link">&para;</a></h2>
+<p>An environment preset sets the background, the floor, and the lighting together. Choose
+one from the <strong>Environment</strong> menu or the environment gallery, then adjust each part in
+the groups below it; the note under the menu says when the environment was modified.</p>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Background</th>
+<th>Floor</th>
+<th>Lighting</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>White</td>
+<td>solid</td>
+<td>—</td>
+<td>Soft</td>
+<td>Plain white background.</td>
+</tr>
+<tr>
+<td>Transparent (PNG alpha)</td>
+<td>solid</td>
+<td>—</td>
+<td>Soft</td>
+<td>Transparent PNG; the live view shows light grey.</td>
+</tr>
+<tr>
+<td>Light grey</td>
+<td>solid</td>
+<td>—</td>
+<td>Soft</td>
+<td>Plain light grey background.</td>
+</tr>
+<tr>
+<td>Dark grey</td>
+<td>solid</td>
+<td>—</td>
+<td>Bright</td>
+<td>Dark background, light cell edges, reflection panel.</td>
+</tr>
+<tr>
+<td>Black</td>
+<td>solid</td>
+<td>—</td>
+<td>Bright</td>
+<td>Black background, light cell edges, reflection panel.</td>
+</tr>
+<tr>
+<td>White to grey gradient</td>
+<td>gradient</td>
+<td>—</td>
+<td>Soft</td>
+<td>White at the top to light grey at the bottom.</td>
+</tr>
+<tr>
+<td>Blue to white gradient</td>
+<td>gradient</td>
+<td>—</td>
+<td>Soft</td>
+<td>Soft blue at the top to white at the bottom.</td>
+</tr>
+<tr>
+<td>White studio (soft shadows)</td>
+<td>solid</td>
+<td>white</td>
+<td>Studio</td>
+<td>White matte floor with soft shadows.</td>
+</tr>
+<tr>
+<td>Grey studio with floor</td>
+<td>solid</td>
+<td>grey</td>
+<td>Studio</td>
+<td>Mid-grey floor with soft shadows.</td>
+</tr>
+<tr>
+<td>Dark studio, reflective floor</td>
+<td>solid</td>
+<td>dark, reflective</td>
+<td>Bright</td>
+<td>Floor mirrors the structure; reflection panel.</td>
+</tr>
+<tr>
+<td>Clear sky</td>
+<td>sky</td>
+<td>—</td>
+<td>Bright</td>
+<td>Pale horizon to a blue zenith.</td>
+</tr>
+<tr>
+<td>Cloudy sky</td>
+<td>sky</td>
+<td>—</td>
+<td>Bright</td>
+<td>Blue sky with white clouds.</td>
+</tr>
+</tbody>
+</table>
+<p>Presets with dark backgrounds also switch the cell edges to a light colour.</p>
+<h3 id="background">Background<a class="headerlink" href="#background" title="Permanent link">&para;</a></h3>
+<p><strong>Type</strong> is <em>Solid colour</em>, <em>Vertical gradient</em> (top and bottom colours), or <em>Sky</em>
+(zenith and horizon colours, and <strong>Clouds</strong> from 0 to 100 %). Gradients and skies run
+from the bottom to the top of the output frame, whatever the orientation of the
+structure. <strong>Transparent PNG background</strong> gives rendered images an alpha channel; floors,
+gradients, and skies are then left out (transparent glass still lets the alpha through).</p>
+<h3 id="background-picture">Background picture<a class="headerlink" href="#background-picture" title="Permanent link">&para;</a></h3>
+<p>Type <em>Image</em> shows one of your own pictures behind the structure in the POV-Ray preview
+and the rendered PNG. <strong>Choose Image…</strong> imports a PNG or JPEG file (up to 64 MB, 12000
+pixels per side, and 50 megapixels); the panel shows its name and pixel size. <strong>Replace…</strong>
+swaps the picture and keeps the framing, <strong>Remove</strong> deletes it (the background colour
+remains). A file that cannot be read is refused with a message, and the current
+background stays. Camera-phone pictures with an EXIF orientation are shown upright.</p>
+<ul>
+<li><strong>Framing</strong>: <em>Fill</em> covers the whole output frame and crops what does not fit (the
+  default); <em>Fit</em> shows the whole picture, with margins in the <strong>Margin</strong> colour (the
+  background colour). The picture keeps its proportions; it is never stretched.</li>
+<li><strong>Zoom</strong> (10–1000 %) scales the filled or fitted picture about its centre.
+  <strong>Horizontal</strong> and <strong>Vertical</strong> move it by percentages of the output frame's width and
+  height (positive: right and up). <strong>Brightness</strong> (0–200 %) scales its colours; 100 %
+  shows them unchanged. <strong>Reset Framing</strong> returns to Fill, 100 %, centred.</li>
+<li>The picture belongs to the output frame: orbiting or zooming the structure does not
+  move it, and the preview and the final PNG show the same composition at any
+  resolution. Changing the output's aspect ratio refits it.</li>
+<li>Transparent pixels of a PNG show the margin colour.</li>
+</ul>
+<p>The picture is a backdrop, not a light: it does not light the structure, casts no
+shadows, and is not seen in reflections (reflective atoms reflect its average colour).
+Transparent and refractive materials such as glass show the picture through the atom,
+bent by refraction. The 3D view shows the picture's average colour; the POV-Ray preview
+is authoritative. A floor covers the picture in the orthographic view: the panel then
+says so and offers <strong>Turn Off Floor</strong>. With <strong>Transparent PNG background</strong> the picture
+is left out of renders but kept for later. Choosing an environment preset changes the
+background type but remembers the picture, so switching back to <em>Image</em> restores it.</p>
+<p>The picture is copied into the project when you save, so the original file is not needed
+afterwards (see <a href="#reusing-the-look-styles">Reusing the look</a>). <strong>File ▸ Export POV-Ray…</strong>
+copies it next to the <code>.pov</code> file as <code>bg_&lt;digest&gt;.png</code> (or <code>.jpg</code>) and refers to it by
+that relative name, so the export folder can be moved as a whole.</p>
+<h3 id="floor">Floor<a class="headerlink" href="#floor" title="Permanent link">&para;</a></h3>
+<p>A floor lies below the structure as seen in the frame, tilted slightly towards the
+viewer so that it catches shadows (and, with <strong>Reflection</strong>, mirrors the structure).
+<strong>Gap below atoms</strong> moves it down from the lowest atom. In the orthographic view the floor
+fills the whole background, so the live view simply shows its colour.</p>
+<h3 id="lighting">Lighting<a class="headerlink" href="#lighting" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Lighting</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Soft (default)</td>
+<td>Upper-left key light with a soft fill; Ycrystal's lighting since the first version.</td>
+</tr>
+<tr>
+<td>Studio (soft shadows)</td>
+<td>Large area key light from the upper left: soft shadows on floors.</td>
+</tr>
+<tr>
+<td>Bright</td>
+<td>Strong key and fill point lights; for dark backgrounds and skies.</td>
+</tr>
+<tr>
+<td>Dramatic side light</td>
+<td>Hard key light from the side with a weak fill: strong shading and shadows.</td>
+</tr>
+<tr>
+<td>Top light</td>
+<td>Area light from above: shadows fall straight down onto a floor.</td>
+</tr>
+<tr>
+<td>Flat (no shadows)</td>
+<td>Two even, shadowless lights from the front: low contrast for schematic figures.</td>
+</tr>
+</tbody>
+</table>
+<p>The controls below the preset adjust the <strong>Key light</strong> and <strong>Fill light</strong> intensities,
+the key-light direction (<strong>Key azimuth</strong> and <strong>Key elevation</strong>), <strong>Light size</strong>,
+<strong>Shadows</strong>, and the <strong>Reflection panel</strong>.</p>
+<h4 id="how-the-lights-are-placed">How the lights are placed<a class="headerlink" href="#how-the-lights-are-placed" title="Permanent link">&para;</a></h4>
+<p>Lights belong to the image, not to the crystal: they are placed relative to the output
+camera, so the key light always comes from the same side of the image while you orbit,
+roll, or pan.</p>
+<ul>
+<li><strong>Origin:</strong> the camera's focal point <em>F</em>, the point at the centre of the image.</li>
+<li><strong>Key azimuth:</strong> 0° points from <em>F</em> straight toward the camera (a light from the
+  viewer's position); positive values turn to the right of the image, negative to the
+  left; ±180° is behind the structure. The presets use −20° to −65° (upper left).</li>
+<li><strong>Key elevation:</strong> degrees above the image's horizontal, toward the top of the image;
+  −30° to 89°. When you roll the camera, the horizontal rolls with the image.</li>
+<li><strong>Distance:</strong> both lights sit at the same distance from <em>F</em>: 4 <em>R</em> + |<em>C</em> − <em>F</em>| +
+  10 Å, where <em>C</em> and <em>R</em> are the centre and radius of a sphere around the displayed
+  atoms and cell edges (boundary atoms and repeated cells included, hidden atoms left
+  out). Zooming or changing the output size does not move the lights; panning away from
+  the structure moves them a little further out. Light does not get weaker with
+  distance, so the distance changes the direction of shadows slightly, not the
+  brightness.</li>
+<li><strong>Fill light:</strong> a fixed direction at the lower right, in front of the structure
+  (azimuth +35°, elevation −11.6° in the same convention). It never casts shadows; only
+  its intensity can be changed.</li>
+<li><strong>Intensities</strong> are the brightness of white light (POV-Ray <code>color rgb</code>); 0 switches a
+  light off.</li>
+<li><strong>Light size:</strong> 0 is a point light with sharp shadows. A larger value makes the key
+  light a round area light whose <em>diameter</em> is the value times the scene radius <em>R</em>
+  (0.5 on a structure with <em>R</em> = 4.4 Å gives a light 2.2 Å across). POV-Ray turns the
+  round light toward each point it lights, so it behaves like a glowing ball of that
+  size. Shadows are sampled from a 5 × 5 grid of points on the light, refined
+  adaptively where a shadow edge needs it.</li>
+<li><strong>Reflection panel:</strong> an invisible bright disc on the key-light side of the structure
+  that only appears in reflections, so that metals and glass do not look black on dark
+  backgrounds. It is not a light source and does not light anything.</li>
+</ul>
+<h4 id="lighting-setup-window">Lighting Setup window<a class="headerlink" href="#lighting-setup-window" title="Permanent link">&para;</a></h4>
+<p><strong>Lighting Setup…</strong> (below the lighting controls, or <strong>View ▸ Lighting Setup…</strong>) opens a
+3D overview of the lights, the output camera, and a lightweight copy of the displayed
+structure:</p>
+<ul>
+<li>orange sphere: the key light; blue cube: the fill light; both with labels and guide
+  lines from <em>F</em>;</li>
+<li>black cross: <em>F</em>; purple octahedron: <em>C</em>;</li>
+<li>grey cone and line: the output camera's viewing direction (its distance does not
+  matter for an orthographic image); blue rectangle: the output frame;</li>
+<li>grey ring: the horizontal circle at the light distance, with the azimuth and elevation
+  arcs of the key light;</li>
+<li>wire sphere: the area-light diameter, when the light size is not 0; white disc: the
+  reflection panel, when it is on.</li>
+</ul>
+<p>Drag the orange key-light sphere to change azimuth and elevation together, or the flat
+orange disc on the ring to change only the azimuth. The angles are always measured in
+the output camera's frame, whichever way you have turned the overview, and they snap to
+whole degrees like the spin boxes. While you drag, the live view, the spin boxes, and
+the overview follow; releasing the button applies the change as one undoable step (and
+starts the automatic preview if it is on). Esc or the right mouse button cancels the
+drag and restores the previous direction. Elsewhere in the overview, drag to orbit,
+Shift-drag or middle-drag to pan, and use the wheel to zoom; this never changes the
+image. <strong>Reset Overview</strong> fits the overview again. The window also has azimuth and
+elevation spin boxes for the keyboard and a read-out of the resolved values.</p>
+<h4 id="what-the-live-view-shows">What the live view shows<a class="headerlink" href="#what-the-live-view-shows" title="Permanent link">&para;</a></h4>
+<p>The live view uses the key and fill lights at their real positions and intensities
+(without distance fall-off), so the shading direction matches the POV-Ray image. It
+does not show shadows, the softness of area lights, reflections, refraction, or the
+reflection panel; check those in the POV-Ray preview. The live view's shading is an
+approximation and is not expected to match the POV-Ray image pixel for pixel.</p>
+<p>Area lights (Studio, Top) soften shadows at little cost for opaque materials, but make
+transparent materials much slower to render, because POV-Ray traces shadow rays through
+the glass. While composing a glass figure, use <em>Soft</em> or <em>Bright</em> lighting or switch off
+<em>Update automatically</em> in the preview dock.</p>
+<h2 id="reusing-the-look-styles">Reusing the look: styles<a class="headerlink" href="#reusing-the-look-styles" title="Permanent link">&para;</a></h2>
+<p>Materials, colours, radii, the environment, and the lighting are saved in projects
+(<code>.ycrystal</code>, schema 8) and restored exactly when the project is reopened. Projects
+saved by earlier versions open with their original appearance. A project or style with
+a background picture is saved as a ZIP package that contains the picture (the suffix
+stays <code>.ycrystal</code> or <code>.ycstyle</code>); others remain a single JSON file. Ycrystal recognises
+both forms by their content. Damaged or unsafe packages, and packages that miss their
+picture, are refused with a message and nothing changes. Ycrystal 0.2.0 and older cannot
+open schema-6 or later projects or packages.</p>
+<p>Figures that belong together (in one paper, poster, or talk) should look alike: the
+same background, lighting, image size, and materials. A <strong>style</strong> keeps that look apart
+from any structure, so you design it once and reuse it. <strong>File ▸ Export Style…</strong> writes
+a <code>.ycstyle</code> file, and <strong>File ▸ Import Style…</strong> applies one to the open structure.
+The import dialog lets you choose the parts to apply:</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Materials, colours, and radii</td>
+<td>Default material; material, colour, and radius of each element; the appearance of vector arrows (never the vectors themselves); the <a href="rendering.html#element-legend">element legend</a></td>
+</tr>
+<tr>
+<td>Display</td>
+<td>Atom size, repetitions, boundary atoms, cell edges, bond length, radius, and pair rules</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Background (including a background picture), floor, lighting, transparency, and the cell-edge colour</td>
+</tr>
+<tr>
+<td>Output image size</td>
+<td>Width and height in pixels</td>
+</tr>
+</tbody>
+</table>
+<p>A style never changes the structure's coordinates, and it has no camera. The import is
+one undoable step. Settings that refer to something the new structure does not have are
+left out, and a message lists them:</p>
+<ul>
+<li>Element settings (material, colour, radius) and bond-pair rules apply to the elements
+  the structure contains; those of other elements are left out, unless you map them
+  (see <a href="#element-mapping-a-style-for-another-composition">element mapping</a>).</li>
+<li>Per-atom materials and hidden atoms refer to individual atoms of the original
+  structure. They are applied only if the new structure has the same number of atoms
+  with the same element at every position (for example the same structure from another
+  file, or relaxed); otherwise they are left out.</li>
+<li>Repetitions that would display more than 20,000 atoms ask for confirmation first.</li>
+</ul>
+<p>A style can also be applied without a window, for example to render many structures
+with the same look from a script: <code>ycrystal FILE --style STYLE.ycstyle --render OUT.png</code>
+(see <a href="examples.html#apply-a-style-from-the-command-line">styles from the command line</a>).
+There, the display part is left out unless you ask for it.</p>
+<h3 id="element-mapping-a-style-for-another-composition">Element mapping: a style for another composition<a class="headerlink" href="#element-mapping-a-style-for-another-composition" title="Permanent link">&para;</a></h3>
+<p>Element settings in a style are stored by element symbol. That works for the same
+compound, but not for a related one: a style made for SrTiO3 has settings for Sr, Ti,
+and O, and applied to BaZrO3 only the O settings find their element. Yet the two
+perovskites have the same structure, with Ba where Sr is and Zr where Ti is, and a
+series of figures is easiest to compare when corresponding atoms look the same. An
+element mapping states that correspondence for drawing: give the Ti settings (for
+example chrome) to Zr, and the Sr settings to Ba. Map the elements while importing:</p>
+<ul>
+<li><strong>In the window:</strong> the Import Style dialog lists every element the style has
+  settings for, under <strong>Element settings go to</strong>, with the element of the open
+  structure that receives them. Each row starts at the same symbol, or <strong>Do not
+  transfer</strong> if the structure does not contain it, so pressing <strong>Apply</strong> without
+  changing anything works as before. Choose another element of the structure for a
+  row, or <strong>Do not transfer</strong> to leave its settings out. <strong>Match Symbols</strong> returns to
+  the start. Below the rows the dialog shows what will be applied and what is left out
+  (for example <code>Element settings applied: O, Sr → Ba, Ti → Zr.</code>) before you press
+  <strong>Apply</strong>. The import stays one undoable step.</li>
+<li><strong>From the command line:</strong> <code>--element-map Sr=Ba,Ti=Zr</code>, with <code>O=-</code> to leave the
+  settings of O out (see
+  <a href="examples.html#apply-a-style-from-the-command-line">styles from the command line</a>).</li>
+</ul>
+<p>The mapping moves the element materials, colours, and radii, and the bond-pair rules
+(an O–Ti rule becomes O–Zr). Elements you do not map keep matching by symbol. The
+choices must be unambiguous, or Ycrystal refuses them and says why:</p>
+<ul>
+<li>Each element of the structure receives the settings of one element at most:
+  mapping both Sr and Ti to Ba is refused.</li>
+<li>If the style also has settings for the target element itself, mapping another
+  element onto it is refused (Ti → O when the style has O settings). Map O elsewhere,
+  or leave its settings out, to make the choice explicit.</li>
+<li>Targets must be elements of the open structure; symbols are case-sensitive (<code>Zr</code>,
+  not <code>ZR</code>).</li>
+<li>An element mapped elsewhere does not also keep its own settings: with Sr → Ti in a
+  structure that contains Sr, the Sr atoms get no Sr settings (a note says so).</li>
+</ul>
+<p>The mapping is a <strong>presentation choice</strong>: it decides which colours and materials an
+element is drawn with. It does not claim chemical equivalence or that the sites of the
+two structures correspond, and it never changes atoms, element labels, coordinates,
+vectors, or which bonds exist. Per-atom materials and hidden atoms still transfer only
+to the same structure, mapping or not. The mapping is not stored in the style file;
+saving the project keeps the resulting appearance.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1956 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/guide/rendering.html">
+      
+      
+      
+        <link rel="prev" href="./appearance.html">
+      
+      
+        <link rel="next" href="./reproducibility.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Export and rendering - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Export and rendering
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./controls.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="rendering.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configure-and-check-pov-ray" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Configure and check POV-Ray
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-an-editable-scene" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Export an editable scene
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-size-and-frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Output size and frame
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output size and frame">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lock-aspect-ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Lock aspect ratio
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#element-legend" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Element legend
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#materials-and-backgrounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Materials and backgrounds
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pov-ray-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        POV-Ray preview
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#render-an-image-in-the-application-png-pdf-jpeg" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Render an image in the application (PNG, PDF, JPEG)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/validation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-port.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HANDOFF.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configure-and-check-pov-ray" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Configure and check POV-Ray
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-an-editable-scene" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Export an editable scene
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-size-and-frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Output size and frame
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output size and frame">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lock-aspect-ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Lock aspect ratio
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#element-legend" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Element legend
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#materials-and-backgrounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Materials and backgrounds
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pov-ray-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        POV-Ray preview
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#render-an-image-in-the-application-png-pdf-jpeg" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Render an image in the application (PNG, PDF, JPEG)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="export-and-rendering">Export and rendering<a class="headerlink" href="#export-and-rendering" title="Permanent link">&para;</a></h1>
+<h2 id="configure-and-check-pov-ray">Configure and check POV-Ray<a class="headerlink" href="#configure-and-check-pov-ray" title="Permanent link">&para;</a></h2>
+<p>On Linux Mint, install the distribution renderer with <code>sudo apt install povray</code>; on
+macOS, <code>brew install povray</code>; on Windows, POV-Ray for Windows 3.7 with its official
+installer, which the installation script installs with <code>winget</code> (see
+<a href="install.html#windows">installation</a>). The tested baseline is POV-Ray 3.7.
+In the GUI, discovery uses the first source that is set:</p>
+<ol>
+<li><strong>Render ▸ Set POV-Ray Executable…</strong> (saved on this machine).</li>
+<li>The <code>YCRYSTAL_POVRAY</code> environment variable.</li>
+<li><code>povray</code> on <code>PATH</code>.</li>
+<li>On Windows, POV-Ray for Windows in its installation folder (from the registry, or
+   <code>Program Files\POV-Ray\v3.7\bin\pvengine64.exe</code>); it is not on <code>PATH</code>.</li>
+</ol>
+<p>An invalid configured path fails immediately; discovery does not fall back. Choose
+the executable in the menu to replace a stale setting (<code>/usr/bin/povray</code> on Linux
+Mint, <code>/opt/homebrew/bin/povray</code> with Homebrew on Apple silicon, where
+<code>command -v povray</code> prints it; <code>C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe</code> on
+Windows). GUI settings are separate from projects. On Linux they normally live in
+<code>~/.config/Y-Matter Lab/Ycrystal.conf</code>, on macOS in
+<code>~/Library/Preferences/com.y-matter-lab.Ycrystal.plist</code>, and on Windows in the registry
+under <code>HKEY_CURRENT_USER\Software\Y-Matter Lab\Ycrystal</code>.</p>
+<p><strong>Render ▸ Check Renderer</strong> renders a small known scene, verifies dimensions,
+positions, and colours, and shows a verdict. It runs synchronously and briefly
+blocks the window. The command-line check needs no display:</p>
+<div class="highlight"><pre><span></span><code>.venv/bin/ycrystal<span class="w"> </span>--check-renderer
+.venv/bin/ycrystal<span class="w"> </span>--check-renderer<span class="w"> </span>--povray<span class="w"> </span>/usr/bin/povray
+</code></pre></div>
+<p>On Windows, in PowerShell:</p>
+<div class="highlight"><pre><span></span><code><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">ycrystal</span><span class="p">.</span><span class="n">exe</span> <span class="p">-</span><span class="n">-check-renderer</span>
+<span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">ycrystal</span><span class="p">.</span><span class="n">exe</span> <span class="p">-</span><span class="n">-check-renderer</span> <span class="p">-</span><span class="n">-povray</span> <span class="s2">"C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe"</span>
+</code></pre></div>
+<p><code>--povray</code> applies only to <code>--check-renderer</code>; that command does not read the path
+saved by the GUI. Without the option it uses the environment, then <code>PATH</code>, then (on
+Windows) the installation of POV-Ray for Windows. A pass
+prints <code>PASS: …</code>; a renderer failure prints <code>FAIL: …</code> and exits 1. The check creates
+temporary files and removes the completed job. It launches POV-Ray, but no Qt window.
+On Windows it fails at once, with the remedy, if POV-Ray for Windows is open or would
+ask about its missing editor (see <a href="troubleshooting.html#renderer">troubleshooting</a>).</p>
+<h2 id="export-an-editable-scene">Export an editable scene<a class="headerlink" href="#export-an-editable-scene" title="Permanent link">&para;</a></h2>
+<p><strong>File ▸ Export POV-Ray…</strong> writes <code>NAME.pov</code> and <code>NAME.ini</code> next to each other.
+It works without POV-Ray installed. Existing files are replaced; the dialog checks
+the <code>.pov</code> destination, but its companion <code>.ini</code> is replaced without another prompt.
+The directory must already exist.</p>
+<p>The <code>.pov</code> stores the orthographic camera of the output frame, visible spheres,
+bonds, cell edges, the material declarations, the background (with floor and backdrop),
+and lights in Cartesian Å. Its header records the Ycrystal version, the POV-Ray version
+found at export time (or that none was found), and the standard include files the
+materials need (none for Ycrystal's own recipes). Comments record the environment and
+lighting parameters and the native identifiers of each material. The <code>.ini</code> stores
+output size, PNG options, antialiasing, alpha for a
+transparent background, and the relative output name <code>NAME.png</code>. It sets
+<code>Verbose=on</code>, so a manual render prints progress lines.</p>
+<p>For the tutorial's exported files, run from the scene directory:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>artifacts/first-figure
+povray<span class="w"> </span>SrTiO3.ini
+</code></pre></div>
+<p>With POV-Ray for Windows, in PowerShell from the scene directory:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">Start-Process</span> <span class="n">-Wait</span> <span class="s2">"C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe"</span> <span class="s2">"/EXIT /NR SrTiO3.ini"</span>
+</code></pre></div>
+<p><code>-Wait</code> makes PowerShell wait for the image: POV-Ray for Windows is a window program,
+which PowerShell otherwise leaves running in the background. Without <code>/EXIT</code>, it stays
+open after the render; it also cannot start while another copy of it is open (its
+<em>Keep Single Instance</em> option).</p>
+<p>This produces or replaces <code>SrTiO3.png</code> there and retains the exported text files.
+Keep the <code>.pov</code> and <code>.ini</code> together. If you change the output aspect in the <code>.ini</code>,
+also regenerate the matching camera vectors; changing only dimensions can stretch
+the exported view. GUI render jobs are prepared afresh and do not use edits made
+to previously exported files.</p>
+<h2 id="output-size-and-frame">Output size and frame<a class="headerlink" href="#output-size-and-frame" title="Permanent link">&para;</a></h2>
+<p>Set the image size in the <strong>Scene ▸ Render</strong> tab: <strong>Width</strong> and <strong>Height</strong> in pixels
+(16 to 8000), an <strong>Aspect</strong> preset (1:1, 4:3, 3:2, 16:10, 16:9, and portrait 3:4 and
+2:3) that sets the height from the width, and <strong>Swap</strong> for portrait/landscape. The
+toolbar shows the current size.</p>
+<h3 id="lock-aspect-ratio">Lock aspect ratio<a class="headerlink" href="#lock-aspect-ratio" title="Permanent link">&para;</a></h3>
+<p>The padlock button beside Width and Height keeps the shape of the image while you change
+its resolution, as in Inkscape. It is locked by default (closed padlock, pressed button);
+click it or press Space when it has the keyboard focus to unlock (open padlock). The
+tooltip states the current state and the locked ratio.</p>
+<ul>
+<li><strong>Locked</strong>: Ycrystal keeps a target ratio <em>r</em> = Width ÷ Height. Changing Width sets
+  Height = round(Width ÷ <em>r</em>); changing Height sets Width = round(Height × <em>r</em>). The value
+  you typed is kept and the other is rounded to whole pixels; <em>r</em> itself is never
+  recomputed from the rounded numbers, so repeated edits do not drift. From 2400 × 1600:
+  Height 1920 gives 2880 × 1920, Width 3000 gives 3000 × 2000.</li>
+<li><strong>Unlocked</strong>: Width and Height change independently (from 2400 × 1600, Height 1920
+  gives 2400 × 1920). Locking again captures the ratio of the current size without
+  changing it.</li>
+<li><strong>Aspect presets</strong> keep the width and compute the height; when locked, the preset
+  becomes the locked ratio, when unlocked it is applied once. The menu shows <strong>Custom</strong>
+  when the size matches no preset.</li>
+<li><strong>Swap</strong> exchanges Width and Height in one step; the lock stays as it was, and a locked
+  ratio is inverted.</li>
+<li>If the computed dimension would fall outside 16–8000 px, the whole edit is refused:
+  both values stay as they were and a message below the controls (and in the status bar)
+  explains the limit. The lock is never broken silently.</li>
+</ul>
+<p>Each edit, preset, or Swap is one undo step (consecutive size changes merge) and triggers
+one automatic preview. Changing only the resolution keeps the composition: the camera,
+rotation, pan, and zoom stay, and nothing is refitted. The lock state and the locked
+ratio are saved in projects; projects from version 0.1.0 open locked to their own
+ratio. Toggling the lock is not an undo step (it does not change the image), but it
+marks the project as modified.</p>
+<p>A blue frame in the 3D view shows exactly the area of the image; the region outside
+it is dimmed. The frame is the largest rectangle with the output aspect ratio that
+fits inside the view with a small margin. Fit (F), Reset View, and the view-along
+buttons fit the structure into the frame. Changing the output size keeps the image
+centre and its visible height in Å; only the width follows the new aspect ratio.
+Resizing the window changes the frame on screen but not the image. Projects store the
+camera of the output image together with its size, so a project reopens with the same
+framing in a window of any shape.</p>
+<h2 id="element-legend">Element legend<a class="headerlink" href="#element-legend" title="Permanent link">&para;</a></h2>
+<p>A legend names the elements of the figure: a coloured circle for each element, followed
+by its symbol, such as <em>● Sr ● Ti ● O</em> beneath the structure. Switch it on with
+<strong>Show the element legend</strong> in the <strong>Scene ▸ Legend</strong> tab. The live view, the POV-Ray
+preview, and every rendered or exported image (PNG, PDF, JPEG, and <code>ycrystal --render</code>)
+then show it.</p>
+<ul>
+<li><strong>Entries.</strong> Ycrystal lists the elements that are displayed: hidden atoms, and
+  elements whose atoms are all hidden, do not count. Each marker has the colour of the
+  element's spheres, including your colour overrides and the colour of a material with
+  its own pigment (gold, copper, …). When you change the structure, a colour, or a
+  material, the legend follows.</li>
+<li><strong>Layout and position.</strong> Horizontal (one row) or vertical (one column), at the
+  <strong>Bottom</strong>, <strong>Top</strong>, <strong>Left</strong>, or <strong>Right</strong> of the image (centred along that edge, at
+  the <strong>Margin</strong> from it), or at a <strong>Custom</strong> place: the centre of the legend at <em>x</em> %
+  of the width and <em>y</em> % of the height. A custom legend stays inside the image.</li>
+<li><strong>Text.</strong> <strong>Font</strong> (the default is Arial or Helvetica where installed, otherwise
+  Liberation Sans, Nimbus Sans, or DejaVu Sans), <strong>Size</strong>, and <strong>Colour</strong>. The size is
+  a percentage of the image height, and the other sizes are multiples of the text height,
+  so a 480-pixel preview, the output image, and a 600-dpi export all show the same
+  legend relative to the structure.</li>
+<li><strong>Markers.</strong> <strong>Shaded sphere</strong> (a ball lit from the upper left, like the atoms) or
+  <strong>Flat disc</strong>, both with a thin darker outline so that white elements stay visible
+  on white; <strong>Size</strong> of the circles and <strong>Spacing</strong> between entries.</li>
+<li><strong>Background.</strong> An optional rounded box behind the legend, with its colour and
+  <strong>Opacity</strong>.</li>
+<li><strong>Order.</strong> As in the structure (order of first appearance in the atom list), by atomic
+  number, alphabetical, or custom: select an element and press <strong>Up</strong> or <strong>Down</strong>.</li>
+</ul>
+<p><strong>Making room.</strong> The legend is drawn on top of the image, so a structure that fills the
+frame would lie under it. With the legend at an edge, <strong>Fit View Beside Legend</strong> (and
+also Fit (F), Reset View, and the view-along buttons) fits the structure into the space
+the legend leaves free, with the margin between them. A saved view is never moved by
+itself: after you switch the legend on, press Fit when it overlaps.</p>
+<p><strong>Sharpness.</strong> The legend is not part of the 3D scene. POV-Ray renders the structure as
+before, and Ycrystal then paints the legend onto the rendered image at its full pixel
+size, with antialiased glyph outlines and no colour fringes, so it is as sharp as the
+image. In a PDF it is part of the embedded picture (not separate vector text). An
+exported <code>.pov</code> scene does not contain the legend.</p>
+<p>Every change is an undoable step. Projects save the legend (schema 8), and styles carry
+it with the materials and colours (see <a href="appearance.html#reusing-the-look-styles">styles</a>).
+Fonts are looked up on the computer that renders: a project that names a font that is
+not installed there is drawn with a similar one, and the panel marks it <em>(not
+installed)</em>.</p>
+<h2 id="materials-and-backgrounds">Materials and backgrounds<a class="headerlink" href="#materials-and-backgrounds" title="Permanent link">&para;</a></h2>
+<p>Materials (per default, element, or selected atom), element colours, backgrounds,
+floors, and lighting are described in
+<a href="appearance.html">Materials, backgrounds, and lighting</a>. Scenes that use native POV-Ray
+identifiers such as <code>T_Gold_3C</code> include the standard POV-Ray files that declare them;
+the export lists them and warns if one is not installed.</p>
+<h2 id="pov-ray-preview">POV-Ray preview<a class="headerlink" href="#pov-ray-preview" title="Permanent link">&para;</a></h2>
+<p><strong>Render ▸ Preview</strong> (F5, or the <strong>Preview</strong> button) renders the framed view with
+POV-Ray at a reduced size — same aspect ratio and background as the output, without
+antialiasing — and shows it in the <strong>POV-Ray preview</strong> dock. It is a real POV-Ray image
+of the same scene, not an approximation.</p>
+<p><strong>Resolution</strong> in the dock sets the preview's width: <strong>Small</strong> (480 px, the default),
+<strong>Medium</strong> (800 px), <strong>Large</strong> (1200 px), or <strong>Custom</strong> (type a width, 16–4000 px). The
+height follows the output's aspect ratio, rounded to whole pixels: for a 3:2 output
+480 × 320, 800 × 533, and 1200 × 800 px; for a 2:3 portrait output Small gives
+480 × 720 px. The line below shows the actual preview size next to the final PNG size.
+POV-Ray renders the preview at that size (it is not an enlarged small image), so higher
+resolutions show more detail but take longer. A preview is never larger than the final
+image; a very tall output is limited to 4000 px of preview height, and an extremely wide
+or tall output keeps each side at least 16 px, so the shape is never distorted. The
+resolution changes only the preview: the output size, camera, framing, materials, and
+lighting stay as they are. The choice is a personal preference, remembered between
+sessions and not stored in projects. Resizing the dock only rescales the shown image;
+it never starts a render.</p>
+<p>With <strong>Update automatically</strong> checked (the default; the choice is remembered), a new
+preview starts shortly after each change to the view, scene, appearance, or output size.
+Only one preview process runs at a time: a newer request cancels the running preview.
+Every change increases a scene revision number; a preview that finishes for an older
+revision, or for a resolution that has since changed, is discarded and the dock says so.
+When the shown preview no longer matches the view or the resolution, the dock marks it
+out of date; a new resolution then renders automatically if <strong>Update automatically</strong> is
+on, or when you press <strong>Preview</strong>. Preview problems (for example POV-Ray not
+found) appear in the dock, without a dialog.</p>
+<h2 id="render-an-image-in-the-application-png-pdf-jpeg">Render an image in the application (PNG, PDF, JPEG)<a class="headerlink" href="#render-an-image-in-the-application-png-pdf-jpeg" title="Permanent link">&para;</a></h2>
+<p>Choose <strong>Render ▸ Render Image…</strong> (Ctrl+R). One dialog sets the format, the size, and
+the file; <strong>Render</strong> starts POV-Ray. The defaults (PNG at the output size from the
+Render tab) give the same image as earlier versions. Antialiasing is always on in the
+GUI.</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>What is written</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PNG (<code>.png</code>)</td>
+<td>The POV-Ray image unchanged (8-bit sRGB, alpha with a transparent background), with the resolution stored in the file. With the <a href="#element-legend">element legend</a> on, the legend is painted onto it first; nothing else changes.</td>
+</tr>
+<tr>
+<td>PDF (<code>.pdf</code>)</td>
+<td>One page of the physical size of the figure, containing the POV-Ray image at full resolution, losslessly compressed. A transparent background stays transparent.</td>
+</tr>
+<tr>
+<td>JPEG (<code>.jpg</code>, <code>.jpeg</code>)</td>
+<td>The POV-Ray image encoded once with the chosen <strong>Quality</strong> (1–100, default 95), with the resolution stored in the file. JPEG has no transparency: a transparent background becomes white.</td>
+</tr>
+</tbody>
+</table>
+<p>All three formats contain the element legend when it is on. The PDF contains a raster
+image, like the PNG: it is <strong>not</strong> a vector drawing (nor is the legend's text) and does
+not become sharper when enlarged. Choose the size and resolution the figure needs.</p>
+<p><strong>Size.</strong> Choose one of:</p>
+<table>
+<thead>
+<tr>
+<th>Size</th>
+<th>Width</th>
+<th>Resolution</th>
+<th>Pixels (3:2 frame)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Output size (Render panel)</td>
+<td>Render tab width</td>
+<td>any</td>
+<td>for example 1200 × 800</td>
+</tr>
+<tr>
+<td>Single column</td>
+<td>85 mm</td>
+<td>600 dpi</td>
+<td>2008 × 1339</td>
+</tr>
+<tr>
+<td>Double column</td>
+<td>180 mm</td>
+<td>600 dpi</td>
+<td>4252 × 2835</td>
+</tr>
+<tr>
+<td>Custom</td>
+<td>any, in px or mm</td>
+<td>any</td>
+<td>computed</td>
+</tr>
+</tbody>
+</table>
+<p>The publication sizes are common defaults, not the rule of a particular journal: check
+the author guidelines and use <strong>Custom</strong> where they differ. Pixels are
+<code>millimetres / 25.4 × dpi</code>, rounded to whole pixels. With <strong>Keep the shape of the
+output frame</strong> (the default) the height follows the blue frame, so the image shows
+exactly the framed area at any size. Unchecked, width and height are independent: the
+image then shows a wider or narrower area at the same scale (the dialog says so);
+nothing is ever stretched.</p>
+<p>Editing a value of a preset switches to <strong>Custom</strong> and keeps the values. In millimetres,
+changing the resolution keeps the physical size (more or fewer pixels); in pixels it
+keeps the pixel size and changes only the stored resolution and the physical size. The
+dialog shows the pixel size POV-Ray renders and the physical size. <strong>Resolution (dpi)</strong>
+offers 300 and 600; any whole number from 1 to 100 000 can be typed. Images are limited
+to 16–20 000 px per side and 150 megapixels, and PDF pages to 5080 mm (200 inches) per
+side. The dialog remembers its settings until Ycrystal is closed.</p>
+<p>POV-Ray always renders at the pixel size shown; a small image is never enlarged. The
+render uses the current camera, structure, materials, and lighting; it does not change
+the scene, the Render tab, or the project. PDF page sizes are whole PostScript points
+(1/72 inch), so a page can differ from the exact physical size by up to 0.18 mm; the
+image is centred on it without distortion. The PNG stores the resolution in whole
+pixels per metre (600 dpi reads back as 599.999 dpi).</p>
+<p>After a synchronous version query (up to 15 seconds) and scene preparation,
+POV-Ray runs asynchronously through Qt's <code>QProcess</code>. The window stays responsive and
+the status bar shows the progress in percent as POV-Ray reports it. Only one final
+render runs at a time (a preview may run alongside it). <strong>Cancel Render</strong> in the
+toolbar or the Render menu stops the final render, or a running preview when no final
+render is active. A cancelled render leaves the destination untouched and shows no
+error. A failed render shows an explanation; the next render starts normally. Closing
+the window stops active processes after handling unsaved changes.</p>
+<p>Each job uses a new system temporary directory named <code>ycrystal-job-*</code>, containing
+<code>scene.pov</code>, <code>scene.ini</code>, and, on success, <code>scene.png</code>. Ycrystal writes the chosen
+format to <code>DESTINATION.part</code> next to the destination, checks that the file is complete
+and readable, and only then replaces the destination. If writing fails, an error
+explains why, the <code>.part</code> file is removed, and an existing file of that name is left
+unchanged. The GUI removes the job directory after handling the result, including
+failures and cancellations. The job files are not kept for editing; export a scene if
+you need them.</p>
+<p>The finished image uses the same displayed atoms, bonds, and framing as the preview and
+the frame in the live view. The live view uses the same key and fill light positions,
+but its shading is approximate and it has no shadows or reflections (see
+<a href="appearance.html#lighting">lighting</a>). Viewport orientation axes, the frame, and selection highlights are
+omitted. A transparent background adds an alpha channel; transparent materials let
+part of it through.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>

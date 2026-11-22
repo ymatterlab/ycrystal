@@ -1,0 +1,2567 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/HANDOFF.html">
+      
+      
+      
+        <link rel="prev" href="./PROGRESS.html">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="./assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Development handoff - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="./assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="./index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Development handoff
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="./index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/controls.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./guide/troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/validation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/windows-port.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./development/release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reference/structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reference/scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reference/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reference/io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reference/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reference/presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reference/cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reference/gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="HANDOFF.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#current-project-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Current project status
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latest-development-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Latest development session
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-recommended-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Next recommended steps
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-platform-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cross-platform status
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-platform status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hands-on-checks-on-a-mac" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Hands-on checks on a Mac
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-environment-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Development environment notes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#not-transferred-by-git" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Not transferred by Git
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decisions-and-deferred-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Decisions and deferred features
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handoff-and-maintenance-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Handoff and maintenance rules
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#current-project-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Current project status
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latest-development-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Latest development session
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-recommended-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Next recommended steps
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-platform-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cross-platform status
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-platform status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hands-on-checks-on-a-mac" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Hands-on checks on a Mac
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-environment-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Development environment notes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#not-transferred-by-git" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Not transferred by Git
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decisions-and-deferred-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Decisions and deferred features
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handoff-and-maintenance-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Handoff and maintenance rules
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="development-handoff">Development handoff<a class="headerlink" href="#development-handoff" title="Permanent link">&para;</a></h1>
+<p>The state of Ycrystal for continuing work on another machine: the Linux Mint laptop, the
+office Mac mini, or the Windows 11 laptop. Rules for Claude Code are in <code>CLAUDE.md</code> at
+the repository root; the detailed verification record is <a href="PROGRESS.html">PROGRESS.md</a>.</p>
+<p>This file records state. It does not authorize work: implement only what the user asks
+for in the current task (see <a href="#handoff-and-maintenance-rules">the rules at the end</a>).</p>
+<h2 id="current-project-status">Current project status<a class="headerlink" href="#current-project-status" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>In review: FR-QE-IBRAV-01, Quantum ESPRESSO input with <code>ibrav</code> other than 0</strong>
+  (requested 21 November 2026), branch <code>feature/qe-ibrav</code> from <code>main</code> at <code>1aae367</code>: all
+  20 lattices of pw.x, checked against pw.x's own output (17 lattices, 295 inputs of QE's
+  test suite) and the pw.x documentation (all 20); Fortran numbers (<code>16.D0</code>) in cards
+  and arithmetic in positions (<code>1/4</code>) read as pw.x reads them. User guide page
+  <code>docs/guide/qe-lattices.md</code>. Verified on the Linux laptop only; not merged. See
+  <a href="PROGRESS.html#fr-qe-ibrav-01-quantum-espresso-input-with-ibrav-other-than-0-post-040-21-november-2026">PROGRESS.md</a>.</li>
+<li><strong>FR-LEGEND-01, element legend</strong> (requested 21 November 2026): merged in PR #45
+  (merge commit <code>6735400</code>) after CI passed on every system. A <em>Scene ▸ Legend</em> tab and
+  a legend of the displayed elements painted onto the figure, its previews, renders, and
+  exports (project schema 8, style schema 3). Not yet in a release; no hands-on check
+  yet. See <a href="PROGRESS.html#fr-legend-01-element-legend-post-040-21-november-2026">PROGRESS.md</a>.</li>
+<li><strong>Milestone:</strong> version <strong>0.4.0</strong> (18 November 2026, at the user's request): the
+  source reports <code>0.4.0</code>, and <code>CHANGELOG.md</code> lists everything since <code>v0.3.0</code> (PRs
+  #23–#40) under 0.4.0 (<code>main</code> reported <code>0.4.0.dev0</code> until then).
+  The tag <code>v0.4.0</code> is set on the merge of the version change (see
+  <a href="development/release.html#checklist-for-040">the 0.4.0 checklist</a>). The GitHub release
+  <a href="https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0">Ycrystal 0.4.0</a> was
+  published on 18 November 2026, at the user's request, with
+  <code>Ycrystal-0.4.0-windows-x64-setup.exe</code> (built from the tag on the Windows laptop,
+  SHA-256 <code>B67AF22B…5ED40FB</code>). Earlier tags (no GitHub releases): <code>v0.1.0</code>, <code>v0.2.0</code>,
+  <code>v0.3.0</code> (commit <code>6ed6b03</code>, PR #22; the source there still reports 0.2.0).</li>
+<li><strong>Windows support</strong> (requested by the user on 17 November 2026), branch
+  <code>feature/windows</code>, PR #35: completed on a Windows 11 laptop on 18 November 2026. All
+  automated tests pass there with POV-Ray for Windows, and the user tested Ycrystal by
+  hand and reports that it works well. PR #35 was merged after CI passed (merge
+  commit <code>ae01f43</code>). PR #36 (branch <code>ci/windows-povray</code>) makes Windows CI render with
+  the real POV-Ray for Windows, installed from the <code>ci-assets</code> release (see
+  <a href="development/windows-port.html#pov-ray-for-windows-on-ci">docs/development/windows-port.md</a>);
+  merged. PR #39, branch <code>feature/windows-install</code> (the user's request for a simpler Windows
+  installation): <code>scripts\install-windows.ps1</code>, a Start-menu entry and <code>.ycrystal</code>
+  file type through <code>--install-desktop</code>, and POV-Ray's editor question reported
+  instead of waited for (see
+  <a href="development/windows-port.html#installation-in-one-command">windows-port.md</a>).
+  Merged before: FR-STYLE-CLI-01 (PR #28), FR-STYLE-MAP-01 (PR #29), FR-CAMERA-01
+  (PR #30), FR-BATCH-01 (PR #31), FR-REPRO-01 (PR #32; the user tested it by hand),
+  FR-VALIDATION-01 (PR #33), and FR-GALLERY-01 with the next-tests audit (PR #34,
+  merge commit <code>5b72f92</code>). Nothing else is open or authorized;
+  see <a href="#next-recommended-steps">Next recommended steps</a>.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Feature</th>
+<th>Merged</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.1.0</td>
+<td>Milestones M0–M6: import, projects, navigation, selection, supercells, bonds, materials, environments, previews, rendering, styles, desktop launcher</td>
+<td>tag <code>v0.1.0</code></td>
+</tr>
+<tr>
+<td>0.2.0</td>
+<td>FR-COLOR-01 colour dialog and names; FR-RENDER-01 aspect-ratio lock; FR-LIGHT-01 Lighting Setup window and live lighting</td>
+<td>PRs #13–#15, tag <code>v0.2.0</code></td>
+</tr>
+<tr>
+<td>0.3.0</td>
+<td>FR-MEASURE-01 distance and bond-angle measurements (Measurements panel)</td>
+<td>PR #16</td>
+</tr>
+<tr>
+<td>0.3.0</td>
+<td>FR-PREVIEW-01 adjustable POV-Ray preview resolution</td>
+<td>PR #17</td>
+</tr>
+<tr>
+<td>0.3.0</td>
+<td>FR-BGIMAGE-01 background pictures, ZIP project/style packages (project schema 6)</td>
+<td>PR #18</td>
+</tr>
+<tr>
+<td>0.3.0</td>
+<td>FR-MATERIAL-01 custom material variants (Customize Material…, personal materials)</td>
+<td>PR #18</td>
+</tr>
+<tr>
+<td>0.3.0</td>
+<td>FR-VECTOR-01 atom-attached direction/magnetic-moment vectors (project schema 7)</td>
+<td>PR #19</td>
+</tr>
+<tr>
+<td>0.3.0</td>
+<td>Maintenance: macOS (Apple silicon) support, Ubuntu + macOS CI</td>
+<td>PR #22, tag <code>v0.3.0</code></td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi</td>
+<td>PR #23</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>Maintenance: new application icon and logo, logo-rendering script; Linux launcher refreshes the icon cache</td>
+<td>PRs #25, #26</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-STYLE-CLI-01 <code>--style</code>/<code>--style-parts</code> apply a <code>.ycstyle</code> before <code>--render</code>/<code>--export-pov</code></td>
+<td>PR #28</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-STYLE-MAP-01 element mapping for styles (<code>--element-map</code>, Import Style dialog)</td>
+<td>PR #29</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-CAMERA-01 <code>--view</code>, <code>--camera-policy</code>, <code>--fit-margin</code>, <code>--view-height</code> (shared with View along)</td>
+<td>PR #30</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-BATCH-01 <code>--batch MANIFEST --output-dir DIR</code> (<code>--dry-run</code>, <code>--overwrite</code>), report JSON</td>
+<td>PR #31</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-REPRO-01 <code>--save-project FIGURE.ycrystal</code>, manifest <code>save_projects</code>, provenance records</td>
+<td>PR #32</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-VALIDATION-01 validation tests, <code>scripts/benchmark_render.py</code>, <code>scripts/replay_check.py</code>, evidence report (no application change)</td>
+<td>PR #33</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-GALLERY-01 publication gallery (<code>examples/publication/</code>, <code>scripts/make_gallery.py</code>), gallery and manuscript-figure pages (no application change)</td>
+<td>PR #34</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>Maintenance: Windows 11 support with POV-Ray for Windows 3.7 (no FR ID)</td>
+<td>PR #35 (<code>ae01f43</code>)</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>Maintenance: Windows CI with the real POV-Ray for Windows (<code>ci-assets</code> release)</td>
+<td>PR #36 (<code>8051f04</code>)</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>Graphical Windows installer (PyInstaller + Inno Setup), coexisting with the developer installation (no FR ID)</td>
+<td>branch <code>feature/windows-installer</code></td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>Maintenance: Windows installation script, Start-menu entry and <code>.ycrystal</code> file type (<code>--install-desktop</code> on Windows), editor question reported (no FR ID)</td>
+<td>PR #39</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-QE-IBRAV-01 QE input with <code>ibrav</code> other than 0 (all pw.x lattices)</td>
+<td>branch <code>feature/qe-ibrav</code> (not merged)</td>
+</tr>
+<tr>
+<td>unreleased</td>
+<td>FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3</td>
+<td>PR #45 (<code>6735400</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Each has automated checks recorded in <a href="PROGRESS.html">PROGRESS.md</a>. Hands-on checks by a
+person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
+and FR-REPRO-01 working, and Ycrystal on Windows working well.</p>
+<p>Known limitations and unresolved issues:</p>
+<ul>
+<li>Background pictures show only their average colour in the live VTK view; there is no
+  rename/delete UI for personal materials; live-view speed with thousands of vector
+  arrows is unmeasured; the Lighting Setup overview does not draw vector arrows.</li>
+<li>macOS: Ycrystal runs from the source checkout. There is no application bundle, so the
+  Dock and the menu bar show "Python", and <code>.ycrystal</code> files do not open by double click.</li>
+<li>macOS: nothing has been checked by hand yet, and no Retina display was available (see
+  <a href="#cross-platform-status">Cross-platform status</a>).</li>
+<li>Windows: Ycrystal runs from the source checkout, installed by
+  <code>scripts\install-windows.ps1</code> and started from the Start menu (or
+  <code>.venv\Scripts\ycrystal.exe</code>). POV-Ray for Windows renders
+  one copy at a time (Ycrystal reports a copy the user has open), reports no progress
+  percentage, and takes the keyboard focus during renders started from a terminal.
+  POV-Ray for Windows shows its About box at its second start and then every 14 days;
+  renders wait until the user clicks OK (documented; Ycrystal changes no POV-Ray
+  setting). Its question about a missing editor at every start is now reported by
+  Ycrystal instead of waited for. Rendering with a <code>%TEMP%</code> path outside a legacy
+  code page (for example a Chinese user name on a Western-European Windows) is
+  unverified.</li>
+<li>FR-EXPORT-01: the PDF holds the POV-Ray raster image (not vector graphics); PDF page
+  sizes are whole points (up to 0.18 mm from the exact size); JPEG fills a transparent
+  background with white. Not yet run on Linux or checked by hand.</li>
+<li>FR-REPRO-01: pixel differences of snapshot replays between systems or POV-Ray builds
+  are unmeasured (same machine: identical pixels, never identical PNG bytes); not run
+  on macOS; snapshots only for PNG renders from the command line.</li>
+<li>FR-VALIDATION-01: everything was measured on the Linux laptop only. Not run: the
+  benchmark and the validation tests on the Mac, the full benchmark set (too heavy for
+  the laptop), and replays between two machines (commands in
+  <code>docs/development/validation.md</code>). The comparison with VESTA, OVITO, and CView is
+  from their documentation only. No independent evaluation has taken place.</li>
+<li>FR-GALLERY-01: the gallery was rendered on the Linux laptop only. Its snapshots
+  have not been replayed on another machine. Figure 1 (schematic, screenshot) and the
+  plots of Figure 4 are still to be made (<code>docs/development/manuscript-figures.md</code>).</li>
+<li>JAC submission: referees need anonymous access to the program and a web page with
+  documentation (per the journal's instructions; recheck them). The repository is now
+  public, so the program can be cloned without an account; the documentation web page
+  is still to be decided.</li>
+<li>Found during FR-REPRO-01, not changed: <code>save_project</code> (and so every project and
+  snapshot) is written through <code>mkstemp</code> and ends up readable by the owner only (mode
+  0600 on Linux/macOS), which matters for shared folders. The new provenance records
+  behave the same. Decide whether to change it (a separate task).</li>
+</ul>
+<h2 id="latest-development-session">Latest development session<a class="headerlink" href="#latest-development-session" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Date and machine:</strong> 21 November 2026, the Linux Mint laptop (Python 3.12.3, PySide6
+  6.12.0, VTK 9.7.2, POV-Ray 3.7.0.10; no Xvfb installed, so GUI tests opened windows on
+  the desktop).</li>
+<li><strong>Done first:</strong> the copyright holder and author changed from "Y-Matter Lab" to the
+  owner's name in the licence, package metadata, README, and Windows installer metadata
+  (PR #44, merged at <code>844775d</code>). The <code>QSettings</code> organisation name and data folders stay
+  "Y-Matter Lab" on purpose, so existing settings keep working.</li>
+<li><strong>Then:</strong> FR-LEGEND-01 on <code>feature/element-legend</code>, PR #45 (details and evidence in
+  <a href="PROGRESS.html#fr-legend-01-element-legend-post-040-21-november-2026">PROGRESS.md</a>).
+  The legend is a 2D layer painted with Qt onto the rendered PNG in <code>finish_job</code>; the
+  live view draws the same layout as an overlay; Fit keeps the structure beside it.</li>
+<li><strong>Then:</strong> the first CI run of PR #45 failed on Windows only: <code>QImageWriter</code> keeps its
+  output file open until it is destroyed, so the legend's temporary PNG could not be
+  renamed over the image ("being used by another process"). Fixed by encoding into a
+  <code>QBuffer</code> (<code>ee6f04a</code>); CI then passed everywhere (run 44911218624: Ubuntu 963 passed,
+  10 skipped on each of Python 3.12, 3.13, and 3.14; macOS 781 passed, 10 skipped;
+  Windows 789 passed, 2 skipped, with POV-Ray for Windows; docs, pre-commit, Windows
+  installer). Merged at <code>6735400</code>, as the user asked.</li>
+<li><strong>Not done:</strong> hands-on use of the Legend tab on any system; GUI tests on macOS and
+  Windows (CI runs only the tests without windows there).</li>
+<li><strong>Then:</strong> FR-QE-IBRAV-01 on <code>feature/qe-ibrav</code> (details in
+  <a href="PROGRESS.html#fr-qe-ibrav-01-quantum-espresso-input-with-ibrav-other-than-0-post-040-21-november-2026">PROGRESS.md</a>).
+  ASE 3.29 does not read <code>ibrav</code> ≠ 0; the <code>utils/</code> function is ASE 3.22.1's old
+  <code>ibrav_to_cell</code> (LGPL), so it served as a cross-check, and Ycrystal has its own
+  implementation from the pw.x documentation (full suite at the end: 1115 passed,
+  10 skipped, Windows-only). An audit of every <code>ibrav</code> added a reader
+  test for all 20 lattices in both forms and compared 289 inputs of QE's test suite
+  with pw.x's output (all agree); −9, 91, −13 have no pw.x reference in QE. Then, at
+  the user's request, Fortran numbers (<code>16.D0</code>) in cards and arithmetic in positions
+  (<code>1/4</code>) are read as pw.x reads them; 295 of 295 QE inputs agree. Full suite
+  1043 passed, 10 skipped
+  (Windows-only). Not done: commit, push, CI (only when the user asks); opening such a
+  file in the window by hand.</li>
+</ul>
+<p>Earlier, on 18 November 2026:</p>
+<ul>
+<li><strong>Date and machine:</strong> 18 November 2026, a Windows 11 laptop (x64, 125 % display
+  scale, Python 3.12.10 from python.org, POV-Ray for Windows 3.7.0 from the official
+  installer).</li>
+<li><strong>Done:</strong> the Windows port on <code>feature/windows</code>, continuing PR #35 (summary
+  in <a href="PROGRESS.html#windows-port-continued-on-a-windows-computer-18-november-2026">PROGRESS.md</a>,
+  details in <a href="development/windows-port.html">windows-port.md</a>):</li>
+<li>experiments with the real POV-Ray for Windows answered the takeover's ten
+    questions; its source code (GitHub, <code>3.7-stable</code>) explained the single-instance
+    and command-line rules;</li>
+<li>it takes the keyboard focus (now held by the window while it runs) and keeps a
+    single instance (now checked first and explained; Ycrystal's own renders take turns);</li>
+<li>the window's renders of POV-Ray for Windows run through <code>subprocess.Popen</code>, since
+    PySide6's <code>QProcess</code> cannot start a program minimised;</li>
+<li>include files and settings found through the registry's <code>DocPath</code>; taskbar
+    identity and an <code>.exe</code> filter for the executable dialog;</li>
+<li>a bug of the new process backend (renders waiting for ever after a window closed
+    mid-render) found by the GUI tests and fixed, with a regression test.</li>
+<li><strong>Then:</strong> the user tested Ycrystal by hand on the laptop ("it works well") and asked
+  for a documentation audit (Windows commands name <code>ycrystal.exe</code> and <code>python.exe</code>; the
+  <code>py</code> launcher needs a terminal opened after Python's installation), a commit, and the
+  merge of PR #35 once CI passes. CI passed (Ubuntu, macOS, Windows, docs,
+  pre-commit) after one test fix (<code>metals.inc</code> exists in Ubuntu's system include
+  folder); merged at <code>ae01f43</code>.</li>
+<li><strong>Then (PR #36):</strong> the user chose to keep the official POV-Ray for Windows installer
+  as an asset of a <code>ci-assets</code> release (povray.org blocks CI downloads). Screenshots
+  taken by the probe on the runner showed two POV-Ray dialogs that wait even with
+  <code>/EXIT</code> (the editor question; the About box from the second start on); the job now
+  pre-sets <code>UseEditors=0</code> and <code>ItsAboutTime</code>. The Windows job is no longer
+  experimental: 727 passed, 2 skipped (POSIX-only), with
+  <code>YCRYSTAL_REQUIRE_INTEGRATION=1</code>.</li>
+<li><strong>Then:</strong> PR #36's CI passed on its last commit <code>3535387</code> (run 44255680680: Ubuntu
+  900 passed, 1 skipped; macOS 728 passed, 1 skipped; Windows 727 passed, 2 skipped;
+  docs and pre-commit pass), and the user merged it (<code>8051f04</code>).</li>
+<li><strong>Then (PR #39, branch <code>feature/windows-install</code>):</strong> the user asked whether Windows could be
+  installed more simply, and to implement it like the other work. Done (details in
+  <a href="PROGRESS.html#windows-installation-in-one-command-18-november-2026">PROGRESS.md</a>):</li>
+<li><code>scripts\install-windows.ps1</code>: Python 3.12 and POV-Ray for Windows through
+    <code>winget</code> (whose POV-Ray package is the official installer), <code>.venv</code>, the
+    Start-menu entry, and the renderer check, in one command;</li>
+<li><code>--install-desktop</code> on Windows: a Start-menu shortcut with Ycrystal's
+    application id, an icon, and the <code>.ycrystal</code> file type;</li>
+<li>POV-Ray's question about its missing editor is reported at once instead of
+    waited for.</li>
+</ul>
+<p>Tried on the laptop: the script on a fresh copy of the checkout, and the Start-menu
+  entry and a project opened by scripted clicks. The laptop's Start menu now has
+  <strong>Ycrystal</strong>, pointing at its checkout's <code>.venv</code> (<code>--uninstall-desktop</code> removes it).
+- <strong>Not done:</strong> nothing run on Linux or macOS on a real machine in this session (CI ran
+  them); GUI tests on Windows CI (run them on a Windows computer).
+- <strong>Then, on the Linux laptop (Python versions):</strong> the user merged PR #38 (3.13 on
+  macOS, <code>e5cf291</code>) and asked for Python 3.12, 3.13, and 3.14 on PR #39:
+  <code>requires-python &gt;=3.12</code>, the installation script accepting 3.12–3.14, and CI jobs
+  for 3.13 and 3.14 within twice the 3.12 CI cost. Commit <code>f581801</code>; CI run
+  44366127112 passed, Ubuntu 904 passed / 5 skipped on each of 3.12, 3.13, and 3.14,
+  at 1.8× the job time (details in
+  <a href="PROGRESS.html#python-312-313-and-314-18-november-2026">PROGRESS.md</a>). Not run: 3.13
+  and 3.14 on Windows and on a real Linux machine, the script's <code>py</code> search for them.
+- <strong>Then, on the Windows laptop (Python 3.13 and 3.14 on Windows):</strong> the user asked to
+  test them there. Python 3.13.17 and 3.14.10 (python.org builds, <code>winget</code>, per user)
+  were installed next to 3.12.10. For each, the installation script in Windows
+  PowerShell 5.1 (<code>-Python</code>, <code>-Dev</code>, <code>-NoStartMenu</code>) on a fresh copy of the checkout:
+  "Ycrystal is ready.", renderer check passed, every pin from wheels. Then the full
+  suite with real windows and POV-Ray for Windows: <strong>906 passed, 3 skipped</strong> on both,
+  as on 3.12 (details in
+  <a href="PROGRESS.html#python-313-and-314-on-windows-18-november-2026">PROGRESS.md</a>). Still not
+  run: the script's <code>py</code> search finding 3.13 or 3.14 when no 3.12 is installed; 3.14 on
+  macOS; 3.13 and 3.14 on a real Linux machine.
+- <strong>Then (installation without Git):</strong> at the user's remark, the README and the install
+  guide make Git optional: download the ZIP from GitHub, unpack, install in
+  <code>ycrystal-main</code>. Tried on the Windows laptop: a downloaded ZIP of the branch, no <code>.git</code>,
+  the installation script passed ("Ycrystal is ready."). Not tried on Linux or macOS
+  (see <a href="PROGRESS.html#installation-without-git-18-november-2026">PROGRESS.md</a>).
+- <strong>Then (graphical Windows installer, branch <code>feature/windows-installer</code>):</strong> after PR
+  #39 was merged (<code>5c37201</code>), the user asked for a graphical installer (PyInstaller,
+  Inno Setup), recommended for users, with the PowerShell installation kept for
+  developers and the two coexisting.
+  - Built: <code>packaging/windows</code> and the <em>Windows installer</em> workflow.
+  - Changed for coexistence: the source Start-menu entry is now <strong>Ycrystal
+    (development)</strong>; the packaged program has its own application id and file type;
+    each side removes only its own parts; the source installation no longer takes the
+    <code>.ycrystal</code> default from another file type.
+  - Tried on the laptop: build, packaged command line and window, the coexistence check
+    (27 checks), and opening from the Start menu and a project file (details in
+    <a href="PROGRESS.html#windows-installer-18-november-2026">PROGRESS.md</a>).
+  - The laptop now has both: <strong>Ycrystal</strong> (installed per user, in
+    <code>%LOCALAPPDATA%\Programs\Ycrystal</code>, the <code>.ycrystal</code> default) and <strong>Ycrystal
+    (development)</strong> (this checkout's <code>.venv</code>). Inno Setup 6.7.3 (per user) and Python
+    3.13 and 3.14 are installed too.
+  - Not done: the wizard clicked through by a person; an all-users installation; the
+    GUI and POV-Ray tests of this branch on the laptop (the user was working at it);
+    code signing.</p>
+<p>Earlier, on 17 November 2026:</p>
+<ul>
+<li><strong>Date and machine:</strong> 17 November 2026, the Linux laptop (Linux Mint 22.1, Intel
+  Core Ultra 5 135U, 14 logical CPUs, 7.2 GiB, Python 3.12.3, POV-Ray 3.7.0.10 from
+  apt).</li>
+<li><strong>Done first:</strong> FR-GALLERY-01 and the next-tests audit, PR #34. CI passed (Ubuntu
+  881 passed, macOS 709 passed, the gallery script running there for the first
+  time); merged at <code>5b72f92</code>, as the user asked.</li>
+<li><strong>Then:</strong> the Windows port, on the user's request and decisions (native Ycrystal +
+  POV-Ray for Windows; a pushed branch with an experimental Windows CI job). The
+  user then chose to continue it on a real Windows computer: this session leaves the
+  groundwork and <a href="development/windows-port.html">a takeover page</a> on <code>feature/windows</code>,
+  draft PR #35. Local check: <code>pytest -m "not gui"</code> 718 passed, 1 skipped (the
+  Windows-only test).</li>
+</ul>
+<p>Earlier in the same session:</p>
+<p>Summary of FR-GALLERY-01 changes (no file under <code>src/</code> changed):</p>
+<ul>
+<li><code>examples/publication/</code>:</li>
+<li>README (cases, files, provenance, licences, commands);</li>
+<li><code>gallery.json</code> (five jobs, mapping Sr → Ba and Ti → Zr, a 9 Å scale for both
+    perovskites, <code>save_projects</code>);</li>
+<li><code>styles/paper.ycstyle</code> and <code>styles/cover.ycstyle</code>, generated by
+    <code>scripts/make_examples.py::publication_styles</code>;</li>
+<li><code>structures/</code>: SrTiO3 and BaZrO3 copied from the fixtures, and kyanite from the
+    COD (entry 1008755, CC0, authors credited; also in <code>THIRD_PARTY_NOTICES.md</code>).</li>
+<li><code>scripts/make_gallery.py</code>:</li>
+<li>runs the batch from a temporary copy of the inputs;</li>
+<li>renders two variants from the SrTiO3 snapshot;</li>
+<li>deletes the inputs and replays every snapshot;</li>
+<li>writes the figure-methods table and, optionally, thumbnails.</li>
+<li>Documentation:</li>
+<li><code>docs/guide/gallery.md</code>, with thumbnails in <code>docs/assets/gallery/</code> (seven JPEGs,
+    17–26 KB) and the recorded methods table;</li>
+<li><code>docs/development/manuscript-figures.md</code>;</li>
+<li>the independent evaluation checklist now uses the supplied style and manifest;</li>
+<li>examples guide, CONTRIBUTING, changelog.</li>
+<li><code>tests/test_gallery.py</code> (new, 7 tests; 1 runs the whole script with real POV-Ray).</li>
+</ul>
+<p>Tests and runs on the laptop:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/make_gallery.py --out artifacts/gallery --thumbnails docs/assets/gallery</code> (1600 × 1200)</td>
+<td>7 figures rendered; 7 of 7 snapshots replayed with identical pixels after the inputs were deleted; methods table written</td>
+</tr>
+<tr>
+<td><code>tests/test_gallery.py</code> with <code>YCRYSTAL_REQUIRE_INTEGRATION=1</code></td>
+<td>7 passed</td>
+</tr>
+<tr>
+<td><code>YCRYSTAL_REQUIRE_INTEGRATION=1 pytest -m "not gui" -q</code></td>
+<td>709 passed, 172 GUI tests deselected, none skipped</td>
+</tr>
+<tr>
+<td><code>scripts/docs_examples.py</code>, <code>pre-commit</code> on the new and changed files, <code>zensical build --clean --strict</code></td>
+<td>Clean</td>
+</tr>
+</tbody>
+</table>
+<p>Not done: GUI tests (no GUI code changed), macOS, replays on another machine, CI;
+hands-on runs by a person.</p>
+<h2 id="next-recommended-steps">Next recommended steps<a class="headerlink" href="#next-recommended-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li>FR-QE-IBRAV-01 (branch <code>feature/qe-ibrav</code>): once the user asks, commit, push, and
+   open a pull request; check CI on macOS and Windows; run <code>scripts/check_qe_ibrav.py</code>
+   once on the Mac and on Windows (<code>docs/development/next-tests.md</code>, step 1f); open an
+   <code>ibrav</code> file in the window by hand (for example <code>tests/fixtures/Si_ibrav2.pw.in</code>).</li>
+<li>
+<p>FR-LEGEND-01 (merged in PR #45): a hands-on check of the Legend tab on Linux, the
+   Mac, and Windows: switch the legend on, Fit, try each position, layout, font, and
+   order, render PNG/PDF/JPEG, and compare the image with the frame; run the GUI legend
+   tests (<code>tests/test_gui_legend.py</code>) on the Mac and on Windows.</p>
+</li>
+<li>
+<p>On the Mac mini, first: <code>git checkout main &amp;&amp; git pull</code>, then check whether PR #36
+   is merged (<code>gh pr view 36</code>); if not, merge it when the user asks (its CI passed).
+   Reinstall into the existing <code>.venv</code> (<code>.venv/bin/python -m pip install -e ".[dev]" -c
+   constraints.txt</code>; no dependency changed) and run the full suite with real windows
+   (900 passed, 1 skipped expected). The Windows changes keep <code>povray</code> on macOS on the
+   same <code>QProcess</code> path as before, but nothing of them has run on a real Mac yet.</p>
+</li>
+<li>Windows, later: a fuller hands-on check on a second Windows computer when one is
+   available; decide whether Ycrystal should notice POV-Ray for Windows' About box (see
+   <a href="development/windows-port.html#still-open">windows-port.md</a>).</li>
+<li>Run the tests of <a href="development/next-tests.html">docs/development/next-tests.md</a>
+   (audited 17 November 2026, counts updated 18 November), in its order:</li>
+<li>on the Mac mini: the full suite with real windows (900 passed and 1 skipped
+     expected, as on Ubuntu CI for PR #36), the memory
+     check, the benchmark, replays of the Linux reference sets, and the gallery;</li>
+<li>by hand on the Mac and the laptop;</li>
+<li>a clean-computer dry run.</li>
+</ul>
+<p>Record results only as they are obtained.
+4. For the manuscript: draw the workflow schematic and take the window screenshot
+   (Figure 1), make the plots of Figure 4 from the recorded data, and have two
+   independent evaluators work through the checklist.
+5. Try the mapping rows of the Import Style dialog by hand once (only scripted GUI
+   checks so far), for example with <code>tests/fixtures/BaZrO3.cif</code> and
+   <code>examples/grey-studio.ycstyle</code> as in the examples guide; and the View along buttons
+   in every order (the camera fix of PR #30).
+6. Watch CI for an intermittent failure: one local full run of PR #30's suite reported
+   1 failure that did not reproduce (PR #30's CI and three later full runs passed); its
+   name was not captured.
+7. Optional check (no new work): place an exported PDF in a LaTeX or Word document and
+   check its size there.</p>
+<p>Every request of the private plan's section 15 is now merged or in review. Nothing
+further is authorized by this record; new work needs its own request.</p>
+<p>Still open from the macOS task: the <a href="#hands-on-checks-on-a-mac">hands-on macOS checklist</a>.</p>
+<p>Suggestions only — not approved, ask before starting any of them:</p>
+<ul>
+<li>
+<p>FR-LEGEND-01 follow-ups: dragging the legend in the view; a <code>--legend</code> command-line
+  option (today the legend comes from a project or style); a picture of the legend in
+  the user guide.</p>
+</li>
+<li>
+<p>A command-line option for PDF/JPEG (<code>--render figure.pdf --dpi 600</code>); the CLI still
+  writes PNG only.</p>
+</li>
+<li>A macOS application bundle or launcher (name and icon in the Dock, opening
+  <code>.ycrystal</code> files from Finder).</li>
+<li>Windows: progress percentages from POV-Ray for Windows' window title (see
+  windows-port.md); code signing of the graphical installer (needs a certificate);
+  attaching the installer to the next release (release procedure, step 5).</li>
+<li>From earlier sessions: hide the disabled Bottom/Clouds rows for the Image background
+  type; a way to manage personal materials; hands-on checks of the unreleased features,
+  then the next release (FR-EXPORT-01 and the branding): move the changelog's
+  "Unreleased" section under a version, bump <code>__version__</code>, and run the checklist in
+  <code>docs/development/release.md</code> before tagging, when the user decides.</li>
+</ul>
+<p>Dependencies and blockers:</p>
+<ul>
+<li>The repository is public, so GitHub's standard hosted runners, macOS included, cost
+  nothing. If it became private again, macOS minutes would be billed at a higher rate
+  than Linux minutes; then restrict the macOS job (for example to <code>main</code> and manual runs).</li>
+<li>GitHub's hosted Macs have no GPU, so the GUI tests cannot run there reliably; they
+  need a real Mac.</li>
+<li>Windows: POV-Ray for Windows is a GUI program without a <code>povray</code> command. Ycrystal
+  drives <code>pvengine64.exe</code> with <code>/EXIT /NR +GAscene.log scene.ini</code> (PR #35);
+  confirmed on a Windows 11 laptop on 18 November 2026. It cannot render while a copy
+  of it is open with <em>Keep Single Instance</em> on (its default); Ycrystal says so.</li>
+</ul>
+<h2 id="cross-platform-status">Cross-platform status<a class="headerlink" href="#cross-platform-status" title="Permanent link">&para;</a></h2>
+<p>Status words: <strong>verified</strong> (tested on that system, date given), <strong>partial</strong> (some of it
+tested), <strong>not tested</strong>, <strong>known issue</strong>. Linux results for the macOS changes are the
+user's report for PR #22.</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Linux Mint 22.1 / Ubuntu 24.04</th>
+<th>macOS 15 (Apple silicon)</th>
+<th>Windows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Install from source with <code>constraints.txt</code></td>
+<td>Verified on <code>main</code> (CI, PR #19)</td>
+<td>Verified 16 Nov 2026</td>
+<td>Verified 18 Nov 2026 (Windows 11 laptop, Python 3.12.10 from python.org); also CI (PR #35)</td>
+</tr>
+<tr>
+<td>Command line: <code>--version</code>, <code>--check-renderer</code>, <code>--render</code>, <code>--export-pov</code></td>
+<td>Verified (PR #22, user report)</td>
+<td>Verified 16 Nov 2026</td>
+<td>Verified 18 Nov 2026 (POV-Ray for Windows 3.7.0)</td>
+</tr>
+<tr>
+<td>POV-Ray discovery and include files</td>
+<td>Verified (PR #22, user report)</td>
+<td>Verified 16 Nov 2026 (Homebrew)</td>
+<td>Verified 18 Nov 2026: <code>pvengine64.exe</code> found outside <code>PATH</code> (registry, Program Files), include files in <code>Documents\POV-Ray\v3.7</code> (registry <code>DocPath</code>); CI installs it from the <code>ci-assets</code> release (PR #36)</td>
+</tr>
+<tr>
+<td>Tests without windows (structures, projects, export, rendering, <code>QProcess</code>)</td>
+<td>Verified (PR #22, user report)</td>
+<td>Verified 16 Nov 2026</td>
+<td>Verified 18 Nov 2026 with POV-Ray for Windows (full suite: 898 passed, 3 skipped by design); CI with POV-Ray for Windows since PR #36</td>
+</tr>
+<tr>
+<td>GUI tests (real windows, OpenGL)</td>
+<td>Verified (PR #22, user report; CI under Xvfb)</td>
+<td>Verified 16 Nov 2026 (non-Retina display)</td>
+<td>Verified 18 Nov 2026 (172 GUI tests in the full suite, 125 % display scale)</td>
+</tr>
+<tr>
+<td>PNG/PDF/JPEG export (FR-EXPORT-01)</td>
+<td>Verified by CI (PR #23, Ubuntu, full suite)</td>
+<td>Verified 16 Nov 2026 (automated, real POV-Ray; CI without windows); the user reports it working</td>
+<td>Verified 18 Nov 2026 (automated, POV-Ray for Windows, one laptop)</td>
+</tr>
+<tr>
+<td>Styles from the command line (FR-STYLE-CLI-01)</td>
+<td>Verified by CI (PR #28, Ubuntu, full suite)</td>
+<td>Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows)</td>
+<td>Verified 18 Nov 2026 (automated, POV-Ray for Windows, one laptop)</td>
+</tr>
+<tr>
+<td>Element mapping for styles (FR-STYLE-MAP-01)</td>
+<td>Verified by CI (PR #29, Ubuntu, full suite)</td>
+<td>Verified 17 Nov 2026 (automated, real POV-Ray, scripted dialog screenshots; CI without windows)</td>
+<td>Verified 18 Nov 2026 (automated, POV-Ray for Windows, one laptop)</td>
+</tr>
+<tr>
+<td>View and framing policies (FR-CAMERA-01)</td>
+<td>Verified by CI (PR #30, Ubuntu, full suite)</td>
+<td>Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows)</td>
+<td>Verified 18 Nov 2026 (automated, POV-Ray for Windows, one laptop)</td>
+</tr>
+<tr>
+<td>Batch manifests (FR-BATCH-01)</td>
+<td>Verified by CI (PR #31, Ubuntu, full suite under Xvfb)</td>
+<td>Verified 17 Nov 2026 (automated, real POV-Ray; CI without windows)</td>
+<td>Verified 18 Nov 2026 (automated, POV-Ray for Windows, one laptop)</td>
+</tr>
+<tr>
+<td>Snapshots and provenance (FR-REPRO-01)</td>
+<td>Verified 17 Nov 2026 on the Mint laptop (automated, real POV-Ray 3.7.0.10; the user's hand test) and by CI (PR #32, full suite under Xvfb)</td>
+<td>CI only (PR #32, tests without windows, real POV-Ray); not run on the Mac itself</td>
+<td>Verified 18 Nov 2026 (automated, POV-Ray for Windows, one laptop); no replay between machines</td>
+</tr>
+<tr>
+<td>Validation suite and benchmark (FR-VALIDATION-01)</td>
+<td>Verified 17 Nov 2026 on the Mint laptop (tests with real POV-Ray; benchmark quick set at half size; replay check on the same machine) and by CI (PR #33, full suite under Xvfb)</td>
+<td>CI only (PR #33, tests without windows, real POV-Ray); benchmark and replay check not run on the Mac</td>
+<td>Validation tests verified 18 Nov 2026 (automated); benchmark and replay scripts only as run by the tests</td>
+</tr>
+<tr>
+<td>Publication gallery (FR-GALLERY-01)</td>
+<td>Verified 17 Nov 2026 on the Mint laptop (full-size render of all 7 figures, replay of all snapshots, gallery tests); CI of PR #34</td>
+<td>Not tested</td>
+<td>Gallery test verified 18 Nov 2026 (the script at test size); full-size gallery not rendered</td>
+</tr>
+<tr>
+<td>Hands-on use of the window</td>
+<td>Partial (the user's own use; most post-0.2.0 features not checked by hand)</td>
+<td>Not tested</td>
+<td>The user reports it working well (hands-on test, 18 Nov 2026); a scripted run of the window passed</td>
+</tr>
+<tr>
+<td>HiDPI / Retina display</td>
+<td>Not tested</td>
+<td>Partial: emulated 2× scale only</td>
+<td>Partial: 125 % scale (device pixel ratio 1.25), GUI tests and a scripted run</td>
+</tr>
+<tr>
+<td>Menu launcher, file association</td>
+<td>Verified on <code>main</code> (<code>--install-desktop</code>)</td>
+<td>Known issue: none exists; the option refuses</td>
+<td>Verified 18 Nov 2026 on one laptop: Start-menu entry starts the window without a console, a <code>.ycrystal</code> file opens from File Explorer (scripted clicks); pinning to the taskbar not tried</td>
+</tr>
+<tr>
+<td>Installation script</td>
+<td>Not applicable</td>
+<td>Not applicable</td>
+<td>Verified 18 Nov 2026 on one laptop with Python and POV-Ray already installed (Windows PowerShell 5.1, fresh <code>.venv</code>, rerun); the <code>winget</code> installs of Python and POV-Ray and the editor prompt not run</td>
+</tr>
+<tr>
+<td>Element legend (FR-LEGEND-01)</td>
+<td>Verified 21 Nov 2026 on the Mint laptop: full suite with real windows and POV-Ray, windowless <code>--render</code> in a new process (<code>offscreen</code> plug-in), scripted window screenshots; CI (PR #45, full suite under Xvfb)</td>
+<td>CI only (PR #45: tests without windows, real POV-Ray, windowless <code>--render</code> with the <code>offscreen</code> plug-in); not run on the Mac</td>
+<td>CI only (PR #45: tests without windows, POV-Ray for Windows, windowless <code>--render</code> with the native plug-in; the file-locking bug was found and fixed there); not run on a Windows computer</td>
+</tr>
+<tr>
+<td>QE input with any <code>ibrav</code> (FR-QE-IBRAV-01)</td>
+<td>Verified 21 Nov 2026 on the Mint laptop: full suite; every <code>ibrav</code> of QE's test suite against pw.x's output (<code>scripts/check_qe_ibrav.py</code>)</td>
+<td>Not tested (CI runs the tests without windows once the branch is pushed)</td>
+<td>Not tested (same)</td>
+</tr>
+<tr>
+<td>Graphical installer (packaged)</td>
+<td>Not applicable</td>
+<td>Not applicable</td>
+<td>Partial, 18 Nov 2026 on one laptop: built, installed per user, window and command line, Start menu and file type, coexistence with the developer installation (27 checks); wizard not clicked through by a person, all-users installation not tried, not signed</td>
+</tr>
+<tr>
+<td>Continuous integration</td>
+<td>Verified (PR #22, user report)</td>
+<td>Job runs without GUI tests by design (PR #22, user report)</td>
+<td>Verified: tests without windows with POV-Ray for Windows on every pull request (PR #36, 18 Nov 2026)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hands-on-checks-on-a-mac">Hands-on checks on a Mac<a class="headerlink" href="#hands-on-checks-on-a-mac" title="Permanent link">&para;</a></h3>
+<p>Automated tests cannot establish these. Start with <code>.venv/bin/ycrystal --sample
+perovskite</code> and note what fails.</p>
+<ul>
+<li>[ ] The window opens, the structure is drawn sharply, and it fills the whole view
+      (on a Retina display: not a quarter of it, not blurred).</li>
+<li>[ ] Mouse: left drag orbits, Shift + left drag pans, right drag and the wheel zoom.
+      Trackpad: two-finger scrolling zooms at a usable speed; pinching zooms.</li>
+<li>[ ] Click selects the atom under the cursor (also on a Retina display); ⌘ + click
+      toggles; Delete (⌫) hides; Esc clears.</li>
+<li>[ ] Menus: Ycrystal's Quit is in the application menu; ⌘O, ⌘S, ⇧⌘S, ⌘Z, ⇧⌘Z, ⌘R, ⌘M,
+      ⌘← / ⌘→, F (Fit), and F5 (Preview; may need Fn) work with the 3D view focused.</li>
+<li>[ ] File dialogs: Open lists POSCAR/CONTCAR files without an extension, <code>.cif</code>,
+      <code>.pw.in</code>; Save Project adds <code>.ycrystal</code>; Render Image… (PNG, PDF, JPEG) and
+      Export POV-Ray… save.</li>
+<li>[ ] Render ▸ Set POV-Ray Executable… starts in the folder of the found executable;
+      Render ▸ Check Renderer passes.</li>
+<li>[ ] Preview with <strong>Update automatically</strong> on: one preview per change, no repeated
+      re-rendering while idle, also in a small window.</li>
+<li>[ ] Supercell handles, measurement modes, Lighting Setup window (drag the key
+      light), Vectors window, Customize Material… (saving a personal material creates
+      its thumbnail), background picture.</li>
+<li>[ ] Appearance: readable in macOS dark mode; colour dialog and galleries.</li>
+<li>[ ] A long render can be cancelled; closing the window during a render exits cleanly.</li>
+<li>[ ] A project saved on Linux opens on the Mac and renders the same image, and the
+      reverse.</li>
+</ul>
+<h2 id="development-environment-notes">Development environment notes<a class="headerlink" href="#development-environment-notes" title="Permanent link">&para;</a></h2>
+<p>Common to all systems: one virtual environment per machine and per checkout (<code>.venv</code>;
+<code>.venv-docs</code> for the documentation). A virtual environment copied from another
+operating system does not work: recreate it with <code>python3.12 -m venv --clear .venv</code>.</p>
+<p>Linux Mint 22 / Ubuntu 24.04:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>git<span class="w"> </span>povray<span class="w"> </span>povray-includes<span class="w"> </span>libxcb-cursor0<span class="w"> </span>python3.12-venv
+/usr/bin/python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w">          </span><span class="c1"># the system Python, not Conda</span>
+</code></pre></div>
+<p>macOS (Homebrew; verified on macOS 15.8, Apple silicon):</p>
+<div class="highlight"><pre><span></span><code>xcode-select<span class="w"> </span>--install<span class="w">                  </span><span class="c1"># Git and command-line tools, if missing</span>
+brew<span class="w"> </span>install<span class="w"> </span>python@3.12<span class="w"> </span>povray<span class="w">         </span><span class="c1"># POV-Ray 3.7 with its include files</span>
+python3.12<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+</code></pre></div>
+<p>Then, on either system, from the repository root:</p>
+<div class="highlight"><pre><span></span><code>.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev]"</span><span class="w"> </span>-c<span class="w"> </span>constraints.txt
+.venv/bin/ycrystal<span class="w"> </span>--version<span class="w">            </span><span class="c1"># ycrystal 0.4.0</span>
+.venv/bin/ycrystal<span class="w"> </span>--check-renderer<span class="w">     </span><span class="c1"># PASS: POV-Ray 3.7… passed</span>
+.venv/bin/ycrystal<span class="w"> </span>--sample<span class="w"> </span>perovskite<span class="w">  </span><span class="c1"># opens the window</span>
+.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>-rs<span class="w">       </span><span class="c1"># GUI tests open windows for about 1.5 minutes</span>
+.venv/bin/pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files
+python3.12<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv-docs<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>.venv-docs/bin/python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>docs/requirements.txt
+.venv-docs/bin/zensical<span class="w"> </span>build<span class="w"> </span>--clean<span class="w"> </span>--strict
+</code></pre></div>
+<p>POV-Ray is found in this order: the path saved with <em>Render ▸ Set POV-Ray Executable…</em>,
+the environment variable <code>YCRYSTAL_POVRAY</code>, then <code>povray</code> on <code>PATH</code> (<code>command -v povray</code>
+shows it: <code>/usr/bin/povray</code> from apt, <code>/opt/homebrew/bin/povray</code> from Homebrew on Apple
+silicon). The include files are looked up in the installation of that executable.</p>
+<p>Troubleshooting:</p>
+<ul>
+<li>Linux: "Could not initialize GLX" or an xcb plugin error: use <code>/usr/bin/python3</code>
+  outside Conda and install <code>libxcb-cursor0</code>. Without a desktop session run the tests
+  with <code>xvfb-run -a</code>.</li>
+<li>macOS: <code>python3.12: command not found</code> — install <code>python@3.12</code> with Homebrew; the
+  system <code>python3</code> is too old. Conda's Python is unverified.</li>
+<li>macOS: Qt prints "Can not manage visual effect areas in views without a container
+  layer" for the 3D view; it had no visible effect in the tests.</li>
+<li>macOS: GUI tests take the keyboard focus while they run; leave the machine alone or
+  run <code>pytest -m "not gui"</code>.</li>
+</ul>
+<p>Windows 11 (set up 18 November 2026 on a laptop with a 125 % display scale; PowerShell
+from the repository root). The installation script installs Python 3.12 and POV-Ray for
+Windows with <code>winget</code> where missing, <code>.venv</code> with the developer tools (<code>-Dev</code>), the
+Start-menu entry, and checks the renderer:</p>
+<div class="highlight"><pre><span></span><code><span class="n">powershell</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="n">scripts</span><span class="p">\</span><span class="nb">install-windows</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-Dev</span>
+<span class="c"># By hand instead: winget install --id Python.Python.3.12 --exact --scope user;</span>
+<span class="c"># winget install --id PersistenceOfVisionRaytracer.POVRay --exact; a new terminal;</span>
+<span class="c"># py -3.12 -m venv .venv; .venv\Scripts\python.exe -m pip install -e ".[dev]" -c constraints.txt</span>
+<span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">ycrystal</span><span class="p">.</span><span class="n">exe</span> <span class="p">-</span><span class="n">-check-renderer</span>
+<span class="nv">$env:YCRYSTAL_REQUIRE_INTEGRATION</span> <span class="p">=</span> <span class="s2">"1"</span>
+<span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">python</span><span class="p">.</span><span class="n">exe</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-q</span> <span class="n">-rs</span>      <span class="c"># GUI tests open windows for several minutes</span>
+<span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">pre-commit</span><span class="p">.</span><span class="n">exe</span> <span class="n">run</span> <span class="p">-</span><span class="n">-all-files</span>
+<span class="n">py</span> <span class="p">-</span><span class="n">3</span><span class="p">.</span><span class="n">12</span> <span class="n">-m</span> <span class="n">venv</span> <span class="p">.</span><span class="n">venv-docs</span><span class="p">;</span> <span class="p">.</span><span class="n">venv-docs</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">python</span><span class="p">.</span><span class="n">exe</span> <span class="n">-m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">-r</span> <span class="n">docs</span><span class="p">/</span><span class="n">requirements</span><span class="p">.</span><span class="n">txt</span>
+<span class="p">.</span><span class="n">venv-docs</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">zensical</span><span class="p">.</span><span class="n">exe</span> <span class="n">build</span> <span class="p">-</span><span class="n">-clean</span> <span class="p">-</span><span class="n">-strict</span>
+</code></pre></div>
+<ul>
+<li>Windows: the <code>python</code> on <code>PATH</code> of a fresh Windows is a Microsoft Store alias that
+  opens the Store (and hangs a script); use <code>py -3.12</code> or the venv's <code>python.exe</code>.
+  "The term 'py' is not recognized" means the terminal was opened before Python was
+  installed (VS Code's terminal until VS Code restarts): open a new one.</li>
+<li>Windows: a clone made from <code>main</code> before <code>.gitattributes</code> existed has CRLF text files
+  (Git for Windows sets <code>core.autocrlf=true</code>), and switching to a branch with
+  <code>.gitattributes</code> does not rewrite them; tests that hash tracked files then fail. Use a
+  fresh clone of a branch that has <code>.gitattributes</code>. (On 18 November 2026 the files of
+  this checkout were converted to LF only where the result hashed to the blob in the
+  index, then <code>git add -u</code> refreshed Git's file information; nothing was staged.)</li>
+<li>Windows: POV-Ray for Windows must not be open while tests or Ycrystal render (it
+  keeps a single instance; Ycrystal reports it). Run nothing else that renders in
+  parallel with the test suite.</li>
+</ul>
+<h2 id="not-transferred-by-git">Not transferred by Git<a class="headerlink" href="#not-transferred-by-git" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IMPLEMENTATION_PLAN.md</code></td>
+<td>Private, gitignored</td>
+<td>Copy manually (USB drive or private storage) to the repository root; keep it untracked</td>
+</tr>
+<tr>
+<td>Other private planning files at the root (older plan copies, the owner's notes)</td>
+<td>Untracked; excluded in this checkout's <code>.git/info/exclude</code>, not in <code>.gitignore</code></td>
+<td>Copy manually if wanted, and add them to <code>.git/info/exclude</code> in the new checkout; never <code>git add -A</code> without checking</td>
+</tr>
+<tr>
+<td><code>.venv/</code>, <code>.venv-docs/</code></td>
+<td>Gitignored</td>
+<td>Recreate on each machine (never copy between systems)</td>
+</tr>
+<tr>
+<td><code>artifacts/</code></td>
+<td>Gitignored</td>
+<td>Local screenshots and renders. Exception: the reference sets for replays between machines, <code>artifacts/gallery/figures/</code> and <code>artifacts/validation/bench-linux/snapshots/</code>, must be copied byte for byte to the other computer (see <code>docs/development/next-tests.md</code>)</td>
+</tr>
+<tr>
+<td><code>build/</code>, <code>dist/</code>, <code>.cache/</code>, <code>site/</code></td>
+<td>Gitignored</td>
+<td>Generated; recreate if needed</td>
+</tr>
+<tr>
+<td>Ycrystal settings</td>
+<td>Outside the repository</td>
+<td>Preferences, favourites, and personal materials are per machine (<code>QSettings</code>): <code>~/.config/Y-Matter Lab/</code> on Linux; <code>~/Library/Preferences/com.y-matter-lab.Ycrystal.plist</code> and <code>~/Library/Application Support/Y-Matter Lab/Ycrystal/</code> on macOS; the registry key <code>HKEY_CURRENT_USER\Software\Y-Matter Lab\Ycrystal</code> and <code>%APPDATA%\Y-Matter Lab\Ycrystal\</code> on Windows</td>
+</tr>
+<tr>
+<td>Claude Code memory</td>
+<td>Outside the repository</td>
+<td>Local to each machine; <code>CLAUDE.md</code> and this file replace it</td>
+</tr>
+</tbody>
+</table>
+<h2 id="decisions-and-deferred-features">Decisions and deferred features<a class="headerlink" href="#decisions-and-deferred-features" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>FR-VECTOR-02 (CSV/TSV vector tables) is deferred.</strong> Its specification is kept in the
+  private plan for possible future use; do not implement or scaffold it unless the user
+  explicitly asks to reactivate it. No feature request has been rejected so far.</li>
+<li>One repository and one codebase for all systems; no platform branches. Platform checks
+  stay in <code>gui/native.py</code>, <code>desktop.py</code>, <code>render/povray.py</code>, and <code>tests/conftest.py</code>.</li>
+<li>A resize of the view is not a change of the figure (16 November 2026).</li>
+<li>macOS CI runs without GUI tests; the GUI is verified on a real Mac.</li>
+<li>Python: 3.12, 3.13, and 3.14 are supported; <code>requires-python &gt;=3.12</code> (18 November
+  2026). CI runs 3.12 on every system and 3.13 and 3.14 on Ubuntu only, within the
+  user's limit of twice the 3.12-only CI cost; check this when adding jobs. Windows
+  with 3.13 and 3.14 was verified by hand on the laptop (full suite, 18 November 2026),
+  not in CI.</li>
+<li>Vectors: Cartesian components in the structure frame; magnetic moments in μB,
+  directions dimensionless; source defaults plus image overrides/suppressions; no
+  inferred signs or magnetic symmetry; styles carry arrow appearance, never vectors.</li>
+<li>Pictures and custom materials are content-addressed (SHA-256 / content-derived ids);
+  projects embed the custom definitions they use, so they open on a clean profile.</li>
+<li>Projects/styles are ZIP packages only when they carry a picture; otherwise JSON.</li>
+<li>Personal materials are stored in <code>QSettings</code> (<code>materials/personal</code>) with thumbnails in
+  a <code>material-thumbnails/</code> folder (per machine, not in Git; locations above).</li>
+<li>Preview resolution presets are widths (Small 480, Medium 800, Large 1200, Custom).</li>
+<li>Gallery (FR-GALLERY-01):</li>
+<li>The low-symmetry case uses kyanite, COD 1008755 (real, ordered, P-1, CC0, authors
+    credited), not the invented triclinic fixture.</li>
+<li>The SrTiO3 variants are rendered from the paper figure's snapshot with the cover
+    style, so geometry, camera, and size are identical by construction.</li>
+<li>Full-size renders stay out of Git. The docs carry only 480 px JPEG thumbnails of
+    real renders, regenerated by the gallery script.</li>
+<li>The independent-user sheet is the existing checklist, extended; no second sheet.</li>
+<li>Validation (FR-VALIDATION-01):</li>
+<li>Images are checked by measured properties, never against stored pixels.</li>
+<li>Tolerances: sphere centre 0.5 px, disc area 8 %, fitted bounds 1.5 px, scene file
+    5e-7 Å; each is justified in <code>docs/development/validation.md</code>.</li>
+<li>Views for image checks are chosen analytically on a 10° grid.</li>
+<li>The benchmark uses the production command in new processes (median and range;
+    peak memory through a launcher process, see PROGRESS.md).</li>
+<li>The comparison with other programs rests on their documentation only, quoted with
+    links.</li>
+<li>Evaluator answers are written only by the evaluators.</li>
+<li>Snapshots (FR-REPRO-01): the snapshot is an ordinary <code>.ycrystal</code> project (no new
+  recipe format, no project schema change) holding the resolved scene, camera, and
+  output size; the image is rendered from the saved snapshot; image, snapshot, and
+  record are moved into place only after a successful render, the record last.
+  Snapshots drop the absolute <code>path</code> from the structure's import record; provenance
+  paths are relative to the record's folder, files outside it get <code>path: null</code> (name and
+  SHA-256 only). Existing snapshot/record files need <code>--overwrite</code>; the input, style,
+  image, or manifest are never replaced; <code>--render</code> still replaces its PNG. Manifest key
+  <code>save_projects</code> is top-level (schema 1 kept; older Ycrystal refuses the unknown key);
+  report schema 1 gains <code>project</code>/<code>provenance</code> per job. The image SHA-256 is a
+  fingerprint only: POV-Ray writes the render time into every PNG.</li>
+<li>Batch (FR-BATCH-01): validate the whole manifest first, report every problem, render
+  nothing if any (status 2); sequential jobs; no overwriting without <code>--overwrite</code>; a
+  failed job does not stop the others (status 1); PNG only; paths relative to the
+  manifest; unknown keys refused; <code>max_atoms</code> default 20,000.</li>
+<li>Views (FR-CAMERA-01): one rule for the window and <code>--view</code> (<code>core/camera.py::axis_view</code>);
+  a, b, c are real-space vectors; a saved camera is kept unless a view, a fixed height,
+  or <code>--camera-policy fit</code> is asked for; fitted views include whole arrows; a fixed
+  visible height that does not fit is an error, never a crop. No reverse views on the
+  command line (<code>--view -a</code> would clash with option parsing).</li>
+<li>Element mapping (FR-STYLE-MAP-01): explicit only, never inferred; unmapped elements
+  match by symbol; ambiguity (shared targets, a mapped element landing on one with its
+  own settings) is an error, never resolved by order; per-atom settings never follow a
+  mapping; the mapping is not stored in the style. CLI syntax <code>SOURCE=TARGET</code>, <code>-</code> to
+  leave out. The dialog hook is now <code>MainWindow.ask_style_import</code> (was
+  <code>ask_style_parts</code>).</li>
+<li>Styles from the command line (FR-STYLE-CLI-01): default parts
+  <code>appearance,environment,output</code> (<code>ycrystal.batch.CLI_STYLE_PARTS</code>), <code>display</code> on
+  request; the GUI's Import Style dialog is unchanged. A saved project keeps its camera.
+  A style may not raise the display above 20,000 atoms (<code>LARGE_DISPLAY_ATOMS</code>) from
+  the command line; there is no override. Notes are <code>WARNING:</code> lines on stderr.</li>
+<li>QE <code>ibrav</code> (FR-QE-IBRAV-01, 21 November 2026): pw.x's lattice vectors exactly
+  (<code>INPUT_PW</code>, <code>latgen.f90</code>), all 20 lattices, pw.x's parameter checks; <code>ibrav = -13</code>
+  with the axes of QE 6.5 and later (5.2.0–6.4.1 used others); a <code>CELL_PARAMETERS</code> card with <code>ibrav</code> ≠ 0 is
+  refused as pw.x does; <code>crystal_sg</code> stays unsupported. QE's GPL test files are not
+  copied into the repository; <code>scripts/check_qe_ibrav.py</code> downloads them.</li>
+<li>Element legend (FR-LEGEND-01, 21 November 2026): a 2D layer, never part of the 3D
+  scene or the <code>.pov</code> export; painted onto the rendered PNG at full size after POV-Ray
+  (all image paths), and as an overlay in the live view, by one layout. Sizes are
+  relative: text height in % of the image height, the rest in text heights. Entries come
+  from <code>DisplayGeometry</code> (drawn colours; majority colour per element). Stored in
+  <code>SceneSettings.legend</code> (project schema 8, style schema 3, appearance part). Fitting
+  (window and fitted command-line views) leaves the legend's area free; saved cameras
+  are never moved. Default font: Arial, Helvetica, Liberation Sans, Nimbus Sans, or
+  DejaVu Sans, the first installed. Disabled by default; then images are unchanged.</li>
+<li>Export (FR-EXPORT-01): one POV-Ray render per export at the export pixel size; pixels
+  and dpi are the source of truth (mm derived); no resampling; JPEG transparency →
+  white; PDF = raster image on a page of the physical size, never called vector; the
+  export does not change the project's output size; dialog settings last for the
+  session only (not <code>QSettings</code>).</li>
+</ul>
+<h2 id="handoff-and-maintenance-rules">Handoff and maintenance rules<a class="headerlink" href="#handoff-and-maintenance-rules" title="Permanent link">&para;</a></h2>
+<ul>
+<li>This file is a record of the project's state, <strong>not</strong> an authorization to implement
+  anything. The order of authority is in <code>CLAUDE.md</code> ("Priority of instructions").</li>
+<li>At the start of a session read <code>CLAUDE.md</code>, this file, and the requirements that
+  concern the task; then check <code>git status</code> and the recent <code>git log</code> to see the actual
+  state. If a document disagrees with the code or the history, investigate; do not
+  assume the document is right.</li>
+<li>After a substantial task, update "Latest development session", the status table, and
+  the next steps, from results you observed. Do not report unrun tests as passed or
+  planned work as done.</li>
+<li>Keep entries short and actionable. Move finished detail to PROGRESS.md instead of
+  growing this file, and keep unresolved issues until they are resolved.</li>
+<li>No machine-specific absolute paths, personal details, or credentials in this file.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":".","features":[],"redirect":null,"search":"./assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="./assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>

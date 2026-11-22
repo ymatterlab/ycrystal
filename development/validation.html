@@ -1,0 +1,2254 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/development/validation.html">
+      
+      
+      
+        <link rel="prev" href="./examples.html">
+      
+      
+        <link rel="next" href="./comparison.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Validation and benchmarks - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Validation and benchmarks
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/controls.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="validation.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#questions-and-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Questions and status
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-structures" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Test structures
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-geometry-from-the-scene-file-to-the-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A. Geometry, from the scene file to the image
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b-styles-do-not-change-the-science" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        B. Styles do not change the science
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c-snapshots-give-the-same-figure-again" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        C. Snapshots give the same figure again
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d-render-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        D. Render cost
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-ray-traced-effects" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        E. Ray-traced effects
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#f-quantum-espresso-lattices-ibrav-other-than-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        F. Quantum ESPRESSO lattices (<code>ibrav</code> other than 0)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reproduce
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Results files
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations-and-unsupported-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Limitations and unsupported input
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./windows-port.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HANDOFF.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#questions-and-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Questions and status
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-structures" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Test structures
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-geometry-from-the-scene-file-to-the-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A. Geometry, from the scene file to the image
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b-styles-do-not-change-the-science" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        B. Styles do not change the science
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c-snapshots-give-the-same-figure-again" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        C. Snapshots give the same figure again
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d-render-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        D. Render cost
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-ray-traced-effects" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        E. Ray-traced effects
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#f-quantum-espresso-lattices-ibrav-other-than-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        F. Quantum ESPRESSO lattices (<code>ibrav</code> other than 0)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reproduce
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Results files
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations-and-unsupported-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Limitations and unsupported input
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="scientific-validation-and-benchmarks">Scientific validation and benchmarks<a class="headerlink" href="#scientific-validation-and-benchmarks" title="Permanent link">&para;</a></h1>
+<p>Evidence for the claims a paper about Ycrystal would make (FR-VALIDATION-01): what was
+tested, how, with which tolerance, and what was observed. Everything here was measured
+by running the named tests and scripts; anything not run is marked <strong>unverified</strong>,
+with the command that would run it. A reading of the source code is not counted as
+validation.</p>
+<p>All measurements below were made on 17 November 2026 on one machine: a Linux Mint 22.1
+laptop with an Intel Core Ultra 5 135U (14 logical CPUs, 7.2 GiB of memory), Python 3.12.3, and
+POV-Ray 3.7.0.10 from the distribution package. They were not repeated on macOS, on
+Windows, or with another POV-Ray build.</p>
+<h2 id="questions-and-status">Questions and status<a class="headerlink" href="#questions-and-status" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer from the evidence</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A. Does the POV-Ray scene, and the ray-traced image, show the structure where it is (atoms, periodic images, bonds, cell, vectors, projection, handedness), with nothing cut off?</td>
+<td>Yes, within the tolerances below, for every fixture tested</td>
+<td>Verified on Linux; macOS unverified</td>
+</tr>
+<tr>
+<td>B. Can one style be applied to different materials without changing their scientific data?</td>
+<td>Yes: no coordinate, cell, element, label, occupancy, flag, or vector changed, for 8 inputs × 2 sets of style parts</td>
+<td>Verified (no renderer involved)</td>
+</tr>
+<tr>
+<td>C. Do snapshots give the same figure again, in a new session and on other installations?</td>
+<td>Same machine: the same scene exactly and identical pixels (tests, and 9 of 9 benchmark figures), also in a new process with the sources deleted. Other installations: not yet measured</td>
+<td>Same machine verified; <strong>other machines unverified</strong></td>
+</tr>
+<tr>
+<td>D. How much time and memory do modest, medium, and large figures take?</td>
+<td>See <a href="#d-render-cost">render cost</a> for this laptop</td>
+<td>Measured on Linux only; macOS unverified</td>
+</tr>
+<tr>
+<td>E. Are the ray-traced effects real: shadows, soft shadows, reflection, refraction?</td>
+<td>Yes, each measured as a property of the image</td>
+<td>Verified on Linux</td>
+</tr>
+</tbody>
+</table>
+<h2 id="test-structures">Test structures<a class="headerlink" href="#test-structures" title="Permanent link">&para;</a></h2>
+<p>Small input files written for this project (MIT licence); see <code>tests/fixtures/README.md</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Structure</th>
+<th>Kind</th>
+<th>Used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SrTiO3, Pm-3m, <code>tests/fixtures/SrTiO3.cif</code> (also <code>.vasp</code>, <code>.pw.in</code>)</td>
+<td>Real compound, rounded textbook constant (a = 3.905 Å)</td>
+<td>Cubic cell with boundary images, styles, effects</td>
+</tr>
+<tr>
+<td>BaZrO3, Pm-3m, <code>tests/fixtures/BaZrO3.cif</code></td>
+<td>Real compound, rounded constant (a = 4.19 Å), for demonstration</td>
+<td>Second perovskite for element mapping (Ti → Zr)</td>
+</tr>
+<tr>
+<td>MgB2, P6/mmm, <code>tests/fixtures/MgB2.cif</code> (also <code>.vasp</code>, <code>.pw.in</code>)</td>
+<td>Real compound, rounded constants</td>
+<td>Hexagonal cell</td>
+</tr>
+<tr>
+<td>Triclinic P1, <code>tests/fixtures/triclinic.cif</code></td>
+<td><strong>Synthetic</strong>: invented cell and atoms</td>
+<td>Low symmetry, skewed axes</td>
+</tr>
+<tr>
+<td>Antiferromagnet, <code>examples/vectors-synthetic-afm.ycrystal</code></td>
+<td><strong>Synthetic</strong>: not a real material; ±2.2 μB assigned by hand</td>
+<td>Atom-attached vectors</td>
+</tr>
+<tr>
+<td>Si, diamond, <code>tests/fixtures/Si_conventional.cif</code></td>
+<td>Real compound, rounded constant</td>
+<td>Style transfer</td>
+</tr>
+</tbody>
+</table>
+<h2 id="a-geometry-from-the-scene-file-to-the-image">A. Geometry, from the scene file to the image<a class="headerlink" href="#a-geometry-from-the-scene-file-to-the-image" title="Permanent link">&para;</a></h2>
+<p>The live view and the POV-Ray writer draw one shared geometry
+(<code>DisplayGeometry</code>). The checks go in three steps:</p>
+<ol>
+<li>The geometry is right.</li>
+<li>The scene file for POV-Ray holds exactly that geometry.</li>
+<li>POV-Ray draws it where the camera model says.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Test (<code>tests/…</code>)</th>
+<th>Tolerance</th>
+<th>Observed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Periodic images are exact lattice translations of their source atoms and lie inside the displayed cells</td>
+<td><code>test_validation.py::test_periodic_images_are_exact_lattice_translations</code> (5 structures)</td>
+<td>1e-9 Å</td>
+<td>Pass</td>
+</tr>
+<tr>
+<td>The scene file has one sphere per displayed atom with its position, radius, element, and image; each bond as one cylinder or two halves between the atom centres; cell edges between lattice points along a lattice vector</td>
+<td><code>test_validation.py::test_pov_scene_holds_exactly_the_shared_geometry</code> (5)</td>
+<td>5e-7 Å (the file has 6 decimals)</td>
+<td>Pass</td>
+</tr>
+<tr>
+<td>Looking down a, b, or c, the other two lattice vectors turn counter-clockwise on screen (no mirror image), and the named axis faces the viewer</td>
+<td><code>test_validation.py::test_lattice_views_keep_the_cell_right_handed_on_screen</code> (3 cells × 3 axes)</td>
+<td>Exact sign</td>
+<td>Pass</td>
+</tr>
+<tr>
+<td>Every displayed image of an atom carries its source's vector: parallel, same sign, centred, of the set length</td>
+<td><code>test_validation.py::test_vectors_keep_attachment_direction_and_sign_in_every_image</code></td>
+<td>1e-9</td>
+<td>Pass (2 × 2 × 2 cells, 35 arrows)</td>
+</tr>
+<tr>
+<td><strong>Rendered</strong> atoms and periodic images: every sphere found, at the projected centre, of the projected size, with the right colour; the mirror image does not match</td>
+<td><code>test_validation.py::test_rendered_atoms_and_periodic_images_follow_the_camera_model</code> (SrTiO3, SrTiO3 2 × 2 × 1, MgB2 2 × 2 × 1, triclinic 2 × 1 × 1, BaZrO3)</td>
+<td>Centre 0.5 px; area 8 %; mirror &gt; 5 px</td>
+<td>Largest centre error 0.19 px (others 0.08–0.16); largest area error 3.5 %; mirror errors 51–119 px; 10 to 42 spheres each</td>
+</tr>
+<tr>
+<td><strong>Rendered</strong> bonds: at ¼ and ¾ of each bond the pixel is opaque and has the colour of the atom of that half</td>
+<td><code>test_validation.py::test_rendered_half_bonds_join_their_own_atoms</code> (3)</td>
+<td>Dominant colour channel</td>
+<td>All samples not hidden by an atom: 16 (SrTiO3, 30 bonds), 16 (MgB2, 8 bonds), 4 (triclinic, 2 bonds)</td>
+</tr>
+<tr>
+<td><strong>Rendered</strong> vector arrows: arrow colour near each projected head; no arrow colour outside the projected arrows</td>
+<td><code>test_validation.py::test_rendered_vector_arrows_follow_the_shared_geometry</code></td>
+<td>±2 px around the head point</td>
+<td>22 of 22 heads</td>
+</tr>
+<tr>
+<td><strong>Rendered</strong> fitted views are never cut off: transparent border on all four sides, drawn extent inside the projected framing bounds (equal to them without arrows), landscape and portrait</td>
+<td><code>test_validation.py::test_fitted_views_are_not_clipped_in_the_render</code> (4 scenes × 2 shapes)</td>
+<td>1.5 px</td>
+<td>Border pixels transparent in all 8; drawn extent within 0.76 px of the bounds without arrows; with arrows up to 4.5 px inside them (the arrow bounds are conservative); nearest border 8 px</td>
+</tr>
+<tr>
+<td>Synthetic arrangement, rotated, rolled, panned view; mirrored and shifted controls</td>
+<td><code>test_render_alignment.py</code> (existing)</td>
+<td>1 px</td>
+<td>Pass</td>
+</tr>
+<tr>
+<td>Camera model equal to VTK's matrices; fitted views never clip; arrows included in the framing</td>
+<td><code>test_camera.py</code> (existing)</td>
+<td>1e-9</td>
+<td>Pass</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why these tolerances.</strong>
+- <em>Sphere centres, 0.5 px.</em> The centroid of a disc found in the image is its centre to
+  well below a pixel, even with anti-aliasing. Half a pixel is far smaller than any
+  visible misplacement, and twice the largest error observed.
+- <em>Disc areas, 8 %.</em> An edge pixel counts as inside when its alpha is ≥ 128. For the
+  smallest discs (radius about 4 px) that changes the area by several per cent.
+- <em>Bounds, 1.5 px.</em> The drawn extent is quantised to whole pixels (up to 1 px), and
+  anti-aliasing may leave a barely covered edge pixel transparent.
+- <em>Analytic checks.</em> These use the precision of the numbers involved: 1e-9 Å in
+  memory, 5e-7 Å in the scene file.</p>
+<p>Views for the image checks are chosen from the camera model alone. The test searches a
+fixed 10° grid of orientations for the one where projected atoms are farthest apart,
+then requires every atom to be visible (a gap of more than 4 px between discs). The
+render then shows whether POV-Ray agrees.</p>
+<h2 id="b-styles-do-not-change-the-science">B. Styles do not change the science<a class="headerlink" href="#b-styles-do-not-change-the-science" title="Permanent link">&para;</a></h2>
+<p><code>test_validation.py::test_styles_never_change_the_scientific_data</code> applies
+<code>examples/grey-studio.ycstyle</code> to 8 inputs:</p>
+<ul>
+<li>SrTiO3 as CIF and as POSCAR with selective dynamics;</li>
+<li>BaZrO3 with the element mapping Ti → Zr;</li>
+<li>MgB2 as CIF and as Quantum ESPRESSO input;</li>
+<li>the triclinic cell;</li>
+<li>silicon;</li>
+<li>the vector project.</li>
+</ul>
+<p>It does this with the default command-line parts and with all four parts. The test
+then checks:</p>
+<ul>
+<li><strong>Data unchanged.</strong> Cell, positions, atomic numbers, labels, periodicity, occupancy,
+  movable flags, import record (except the time of reading), and vectors are identical
+  to a separately read copy.</li>
+<li><strong>Input object untouched.</strong> The input object itself is unchanged.</li>
+<li><strong>Same atoms drawn.</strong> Without the display part, the same atoms are drawn at the same
+  positions.</li>
+<li><strong>Files untouched.</strong> Neither the input nor the style file is written.</li>
+</ul>
+<p>All 16 cases pass.</p>
+<p>Related existing tests:
+- <code>test_style.py</code>: transfer rules, element mapping, packaged styles;
+- <code>test_release.py</code>: command line;
+- <code>test_batch_manifest.py</code>: a real POV-Ray series with inputs unchanged byte for byte;
+- <code>test_camera.py</code>: view policies.</p>
+<h2 id="c-snapshots-give-the-same-figure-again">C. Snapshots give the same figure again<a class="headerlink" href="#c-snapshots-give-the-same-figure-again" title="Permanent link">&para;</a></h2>
+<p>Same machine, verified (<code>tests/test_reproducibility.py</code>, FR-REPRO-01):</p>
+<ul>
+<li><strong>Same scene.</strong> The replayed scene file is identical except for its date line, for:</li>
+<li>styles with element mapping;</li>
+<li>fixed, fitted, and saved cameras;</li>
+<li>vectors;</li>
+<li>a background picture;</li>
+<li>a custom material.</li>
+<li><strong>Identical pixels.</strong> Real POV-Ray replays had identical pixels: the tests allow 1 of
+  255 per channel, and every replay had a difference of 0. This held:</li>
+<li>after the structure, style, and picture were deleted;</li>
+<li>in a new process with an empty home folder;</li>
+<li>for three batch jobs.</li>
+<li><strong>PNG bytes always differ.</strong> POV-Ray writes the render time into the file, so a
+  replay never has the original's SHA-256.</li>
+</ul>
+<p>Other installations: <strong>unverified.</strong> To measure them:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># On machine A: renders the benchmark cases once and saves their snapshots.</span>
+python<span class="w"> </span>scripts/benchmark_render.py<span class="w"> </span>--quick<span class="w"> </span>--scale<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>--repeats<span class="w"> </span><span class="m">3</span><span class="w"> </span>--out<span class="w"> </span>bench-A
+<span class="c1"># Copy bench-A/snapshots to machine B, then on machine B:</span>
+python<span class="w"> </span>scripts/replay_check.py<span class="w"> </span>bench-A/snapshots<span class="w"> </span>--out<span class="w"> </span>replay-on-B
+</code></pre></div>
+<p><code>replay_check.py</code> first checks the recorded SHA-256 of every reference image and
+snapshot. It then renders each snapshot with the production command line and reports
+per figure:
+- the largest and the mean difference per 8-bit channel;
+- the fraction of pixels beyond the tolerance;
+- both systems and POV-Ray versions.</p>
+<p>The result is written to <code>replay-check.json</code>. As a control, the check was run on the
+same laptop with the snapshots of the benchmark run below. All 9 figures had identical
+pixels (largest difference 0), including glass, chrome, and the studio's area-light
+shadows; see <a href="#results-files">results</a>.</p>
+<h2 id="d-render-cost">D. Render cost<a class="headerlink" href="#d-render-cost" title="Permanent link">&para;</a></h2>
+<p><code>scripts/benchmark_render.py</code> times the production command (<code>ycrystal INPUT --render
+OUT.png --width W --height H</code>), each run in a new process.</p>
+<ul>
+<li><strong>Warm-up.</strong> One untimed run per case, which also saves the snapshot for question C.</li>
+<li><strong>Timed runs.</strong> Then the timed repeats.</li>
+<li><strong>Reported.</strong> The median, minimum, and maximum of:</li>
+<li>the wall time of the whole command;</li>
+<li>the render time that <code>ycrystal</code> prints (0.1 s resolution);</li>
+<li>the peak resident memory of the largest process, the Python process or POV-Ray,
+    from <code>wait4</code>, read by a small launcher process. On Linux, a child's peak memory also
+    counts the size of the process that started it, so measuring from the benchmark
+    process itself would report that process's size. The first recorded attempt did
+    exactly that and was discarded. On Linux it was verified that the launcher reports
+    a 200 MB grandchild (199.9 MiB) and not a 300 MB benchmark process (11.2 MiB for a
+    trivial command). The launcher's own size, about 10 MiB, is the smallest value it
+    can report. On macOS this is unverified.</li>
+<li><strong>Not controlled.</strong> CPU frequency scaling, other programs, and the thermal state.
+  POV-Ray uses every core.</li>
+</ul>
+<p>Results on the laptop: <code>benchmark_render.py --quick --scale 0.5 --repeats 3</code>, so
+1 warm-up and 3 timed runs per case, at half the default image sizes. Raw data:
+<a href="#results-files">results files</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Displayed atoms</th>
+<th>Bonds</th>
+<th>Image (px)</th>
+<th>Wall time, s: median (min–max)</th>
+<th>Printed render time, s (median)</th>
+<th>Peak memory, MiB (median)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>srtio3-1</code>: SrTiO3 1×1×1, satin, white</td>
+<td>15</td>
+<td>30</td>
+<td>400 × 300</td>
+<td>1.68 (1.65–1.71)</td>
+<td>1.4</td>
+<td>71.5</td>
+</tr>
+<tr>
+<td><code>srtio3-4</code>: SrTiO3 4×4×4, satin, white</td>
+<td>429</td>
+<td>1,344</td>
+<td>400 × 300</td>
+<td>1.93 (1.91–1.98)</td>
+<td>1.6</td>
+<td>72.3</td>
+</tr>
+<tr>
+<td><code>srtio3-8</code>: SrTiO3 8×8×8, satin, white</td>
+<td>2,969</td>
+<td>9,984</td>
+<td>400 × 300</td>
+<td>2.57 (2.48–2.59)</td>
+<td>2.2</td>
+<td>79.2</td>
+</tr>
+<tr>
+<td><code>srtio3-4-small</code>: SrTiO3 4×4×4, satin, white</td>
+<td>429</td>
+<td>1,344</td>
+<td>200 × 150</td>
+<td>1.78 (1.77–1.80)</td>
+<td>1.5</td>
+<td>72.5</td>
+</tr>
+<tr>
+<td><code>effects-plain</code>: SrTiO3 2×2×2, satin, white</td>
+<td>71</td>
+<td>192</td>
+<td>400 × 300</td>
+<td>1.74 (1.74–1.77)</td>
+<td>1.4</td>
+<td>71.6</td>
+</tr>
+<tr>
+<td><code>effects-studio</code>: SrTiO3 2×2×2, satin, studio (floor, area light, soft shadows)</td>
+<td>71</td>
+<td>192</td>
+<td>400 × 300</td>
+<td>2.21 (2.19–2.27)</td>
+<td>1.9</td>
+<td>71.6</td>
+</tr>
+<tr>
+<td><code>effects-chrome</code>: SrTiO3 2×2×2, chrome (reflection), studio</td>
+<td>71</td>
+<td>192</td>
+<td>400 × 300</td>
+<td>3.39 (3.38–3.44)</td>
+<td>3.1</td>
+<td>71.4</td>
+</tr>
+<tr>
+<td><code>effects-glass</code>: SrTiO3 2×2×2, glass (refraction), studio</td>
+<td>71</td>
+<td>192</td>
+<td>400 × 300</td>
+<td>65.48 (56.21–74.95)</td>
+<td>65.1</td>
+<td>71.5</td>
+</tr>
+<tr>
+<td><code>mgb2-style</code>: MgB2 with --style grey-studio.ycstyle</td>
+<td>10</td>
+<td>1</td>
+<td>400 × 300</td>
+<td>2.05 (2.03–2.06)</td>
+<td>1.1</td>
+<td>85.0</td>
+</tr>
+</tbody>
+</table>
+<p>What the numbers show, for this laptop only:</p>
+<ul>
+<li><strong>Atom count.</strong> From 15 to 2,969 displayed atoms (9,984 bonds), the whole command
+  takes 1.7 to 2.6 s at 400 × 300 px. A fixed cost dominates: Python start-up, reading
+  the input, and POV-Ray's start-up and parsing, about 1.4 s of the printed render time
+  even for 15 atoms.</li>
+<li><strong>Image size.</strong> Halving the image size (<code>srtio3-4-small</code>) saves only 0.15 s at this
+  scale.</li>
+<li><strong>Effects.</strong></li>
+<li>The studio (floor, area light, soft shadows) adds about 0.5 s to the plain scene.</li>
+<li>In the same studio, chrome (reflection) instead of satin adds about 1.2 s.</li>
+<li><strong>Glass (refraction) in the studio takes about 65 s</strong>, some 30 times the satin
+    studio scene. Its runs also vary most (56–75 s). The cause was not investigated;
+    the laptop may lower its clock under long full load.</li>
+<li><strong>Memory.</strong> The largest process of each command used 71–85 MiB. The measurement
+  does not say whether that was the Python process or POV-Ray.</li>
+<li><strong>Larger cases not run.</strong> The 12 × 12 × 12 case and 1600 × 1200 images were not run
+  (too heavy for this laptop). In an interrupted trial at 800 × 600, process listings
+  showed single renders of about 3 min for SrTiO3 12 × 12 × 12 and more than 3.5 min
+  for the glass studio scene. These are rough observations, not recorded results.</li>
+</ul>
+<p><strong>Caveats.</strong>
+- <strong>Settings dominate the cost.</strong> Render time depends on the image size, the materials
+  (glass refracts and chrome reflects, so each ray spawns more rays), area lights
+  (5 × 5 samples with adaptive refinement), floors and shadows, and the hardware.
+- <strong>Not an estimate for other figures.</strong> These numbers describe these cases on this
+  laptop, nothing more.
+- <strong>Not run here.</strong> The full default set at 800 × 600, with 1 + 5 runs per case, takes
+  far longer on this laptop and was <strong>not run</strong>. The command for a faster machine:
+  <code>python scripts/benchmark_render.py --out bench-full</code>.</p>
+<h2 id="e-ray-traced-effects">E. Ray-traced effects<a class="headerlink" href="#e-ray-traced-effects" title="Permanent link">&para;</a></h2>
+<p><code>test_validation.py::test_cast_shadows_and_soft_shadows_of_area_lights</code> and
+<code>::test_polished_metal_reflects_and_glass_transmits</code> render SrTiO3. Each comparison
+changes exactly one setting, with the same geometry and camera.</p>
+<table>
+<thead>
+<tr>
+<th>Effect</th>
+<th>Measurement</th>
+<th>Required</th>
+<th>Observed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cast shadows (studio: floor and area key light)</td>
+<td>Fraction of pixels darker by more than 15 of 255 than with shadows off</td>
+<td>&gt; 5 %</td>
+<td>20.4 %</td>
+</tr>
+<tr>
+<td>Soft shadows of the area light</td>
+<td>Fraction of shadow pixels between 20 % and 80 % of the full darkening, area light vs point light</td>
+<td>Area &gt; point + 0.05</td>
+<td>0.46 vs 0.31</td>
+</tr>
+<tr>
+<td>Polished metal reflects a red floor</td>
+<td>Red excess (red minus the mean of green and blue) in the lower part of each grey sphere</td>
+<td>Chrome &gt; 30; matte and satin &lt; 5</td>
+<td>Chrome 84–124; matte 0.0; satin 0.0</td>
+</tr>
+<tr>
+<td>Glass transmits a blue background</td>
+<td>Blue excess in the centre of each grey sphere</td>
+<td>Glass &gt; 20; satin &lt; 5</td>
+<td>Glass 49–78; satin 0.0</td>
+</tr>
+</tbody>
+</table>
+<p>The existing tests add:
+- glass showing a background picture (<code>test_background_image.py</code>);
+- custom material parameters changing the image (<code>test_custom_materials.py</code>);
+- vector arrows (<code>test_vectors.py</code>).</p>
+<h2 id="f-quantum-espresso-lattices-ibrav-other-than-0">F. Quantum ESPRESSO lattices (<code>ibrav</code> other than 0)<a class="headerlink" href="#f-quantum-espresso-lattices-ibrav-other-than-0" title="Permanent link">&para;</a></h2>
+<p>A pw.x input with <code>ibrav</code> other than 0 gives its atoms in a cell that pw.x builds from
+<code>celldm</code> or <code>A, B, C, cos…</code>; crystal coordinates are only right if Ycrystal builds the
+same vectors (<code>ycrystal.io.qe_lattice</code>). Checks of 21 November 2026, audited for every
+<code>ibrav</code> the same day:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Lattices</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vectors as written in the pw.x input documentation (<code>tests/test_qe_lattice.py</code>), and the conventional cell and centring vectors as whole-number combinations of them</td>
+<td>All 20</td>
+<td>Equal within 1e-12</td>
+</tr>
+<tr>
+<td>pw.x's own output: <code>scripts/check_qe_ibrav.py</code> reads the inputs of QE's test suite (<code>test-suite/pw_lattice-ibrav</code>, branch <code>develop</code>) and compares with the crystal axes and positions pw.x printed</td>
+<td>17 (QE has no test for −9, 91, −13)</td>
+<td>Axes within 4.7e-7 alat (pw.x prints 6 decimals), positions within 1.5e-8 alat</td>
+</tr>
+<tr>
+<td>pw.x's own output for every applicable input with <code>ibrav</code> ≠ 0 in QE's test suite (<code>scripts/check_qe_ibrav.py --qe-checkout</code>)</td>
+<td>17; 295 inputs, both parameter forms for 1, 2, 4, 6, 14</td>
+<td>All agree within pw.x's printed precision</td>
+</tr>
+<tr>
+<td>Every lattice through the reader, <code>celldm</code> and <code>A, B, C, cos…</code> forms, against the documented vectors (<code>tests/test_readers.py</code>)</td>
+<td>All 20</td>
+<td>Within 1e-9 Å</td>
+</tr>
+<tr>
+<td>Same structures as other formats: Si (<code>ibrav = 2</code>), MgB2 (4, from <code>A</code>, <code>C</code>), SrTiO3 (1), the triclinic cell (14, from <code>A, B, C, cos…</code>) against the POSCAR, CIF, and <code>ibrav = 0</code> files (<code>tests/test_readers.py</code>)</td>
+<td>1, 2, 4, 14</td>
+<td>Equivalent within 1e-6 Å</td>
+</tr>
+<tr>
+<td>Independent code: ASE 3.22.1's former <code>ibrav_to_cell</code> in a local copy (not in the repository, so not rerunnable from it), 200 random parameter sets per lattice in both forms</td>
+<td>19 (that code has no 91)</td>
+<td>Within 4e-15 Å</td>
+</tr>
+</tbody>
+</table>
+<p>Without options the script downloads QE's 17 lattice tests (network access; QE's files
+are GPL and not part of Ycrystal); with <code>--qe-checkout PATH</code> it compares every applicable
+input of a local copy of QE's test suite (commands in
+<a href="../guide/qe-lattices.html#check-it-yourself">Check it yourself</a>). The applicable and
+refused cases, the dependence on the QE version (only <code>ibrav = −13</code> changed, in QE 6.5),
+and what was not tested are described in
+<a href="../guide/qe-lattices.html">Quantum ESPRESSO lattices</a>.</p>
+<h2 id="reproduce">Reproduce<a class="headerlink" href="#reproduce" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># A, B, E (and C on one machine): about 70 s on the laptop.</span>
+.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/test_validation.py<span class="w"> </span>tests/test_reproducibility.py<span class="w"> </span>tests/test_validation_scripts.py<span class="w"> </span>-q
+<span class="c1"># The observed values above, as JUnit XML properties:</span>
+.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/test_validation.py<span class="w"> </span>-o<span class="w"> </span><span class="nv">junit_family</span><span class="o">=</span>legacy<span class="w"> </span>--junitxml<span class="o">=</span>validation.xml
+<span class="c1"># D and the reference set for C:</span>
+.venv/bin/python<span class="w"> </span>scripts/benchmark_render.py<span class="w"> </span>--quick<span class="w"> </span>--scale<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>--repeats<span class="w"> </span><span class="m">3</span><span class="w"> </span>--out<span class="w"> </span>bench
+.venv/bin/python<span class="w"> </span>scripts/replay_check.py<span class="w"> </span>bench/snapshots<span class="w"> </span>--out<span class="w"> </span>replay
+</code></pre></div>
+<p>Tests that need POV-Ray are skipped without it, unless <code>YCRYSTAL_REQUIRE_INTEGRATION=1</code>
+is set, which makes them fail instead.</p>
+<h2 id="results-files">Results files<a class="headerlink" href="#results-files" title="Permanent link">&para;</a></h2>
+<p>The raw, machine-readable results of the runs reported here, unedited (they contain no
+paths, user names, or host names):</p>
+<ul>
+<li><a href="validation-results/benchmark-linux-2026-11-17.json"><code>validation-results/benchmark-linux-2026-11-17.json</code></a>:
+  <code>benchmark_render.py --quick --scale 0.5 --repeats 3</code> on the laptop (every run,
+  inputs and their SHA-256, system);</li>
+<li><a href="validation-results/replay-check-linux-2026-11-17.json"><code>validation-results/replay-check-linux-2026-11-17.json</code></a>:
+  <code>replay_check.py</code> of that run's snapshots on the same laptop. This is the control
+  experiment; checks between different machines are still to be run.</li>
+</ul>
+<p>The images, snapshots, and generated inputs of the run stay outside Git (in
+<code>artifacts/validation/</code>, which is ignored). Rerun the commands above to regenerate
+them.</p>
+<h2 id="limitations-and-unsupported-input">Limitations and unsupported input<a class="headerlink" href="#limitations-and-unsupported-input" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Platforms.</strong> Everything here was measured on one Linux laptop. Unverified:</li>
+<li>macOS (the CI job runs the tests without windows and with real POV-Ray, but not
+    the benchmark);</li>
+<li>Windows (the validation tests pass there with POV-Ray for Windows on one laptop,
+    18 November 2026, but the benchmark and the replay check were not run);</li>
+<li>other POV-Ray builds;</li>
+<li>pixel differences between machines.</li>
+<li><strong>Not checked by hand.</strong> These checks are automated and involve no window. Hands-on
+  use of the window is listed in <a href="../HANDOFF.html">HANDOFF.md</a>.</li>
+<li><strong>Unsupported input.</strong> Refused rather than drawn:</li>
+<li>CIF files with partial occupancy or overlapping sites;</li>
+<li>Quantum ESPRESSO input with <code>crystal_sg</code> positions, or with lattice parameters that
+    pw.x would refuse.</li>
+</ul>
+<p>VASP 4 files need the elements: the window asks for them, and the command line
+  refuses the file. See <a href="../FORMATS.html">supported formats</a>.
+- <strong>Not vector graphics.</strong> The PDF export holds a raster image.
+- <strong>The test structures are small</strong> (5 to 42 atoms in the image checks). Large scenes
+  are covered by the benchmark only, for cost, not for correctness.
+- <strong>Comparison with other programs.</strong> See <a href="comparison.html">the comparison</a>. It rests on
+  their documentation only; none of them was run.
+- <strong>Independent users.</strong> The <a href="independent-evaluation.html">evaluation checklist</a> is
+  prepared; no evaluation has taken place.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>

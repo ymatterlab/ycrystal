@@ -1,0 +1,3703 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/reference/camera.html">
+      
+      
+      
+        <link rel="prev" href="./scene.html">
+      
+      
+        <link rel="next" href="./io.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Camera and picking - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Camera and picking
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/controls.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/validation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-port.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="camera.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        camera
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Camera
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Camera">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.distance" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        distance
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.basis" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        basis
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.visible_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        visible_size
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.project" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        project
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.pixels_per_angstrom" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        pixels_per_angstrom
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.orbit" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        orbit
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.roll" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        roll
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.rotate_about" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        rotate_about
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.pan" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        pan
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.zoom" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        zoom
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.fitted" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        fitted
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.placed_in" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        placed_in
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.looking_along" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        looking_along
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        to_dict
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.from_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        from_dict
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.default_camera" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        default_camera
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#view-policies-fr-camera-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        View policies (FR-CAMERA-01)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.VIEWS" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        VIEWS
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.CAMERA_POLICIES" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        CAMERA_POLICIES
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.DEFAULT_DIRECTION" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        DEFAULT_DIRECTION
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.DEFAULT_MARGIN" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        DEFAULT_MARGIN
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.CameraPolicyError" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        CameraPolicyError
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.axis_view" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        axis_view
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.ViewPolicy" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ViewPolicy
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.picking.pick_sphere" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        pick_sphere
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HANDOFF.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        camera
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Camera
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Camera">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.distance" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        distance
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.basis" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        basis
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.visible_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        visible_size
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.project" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        project
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.pixels_per_angstrom" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        pixels_per_angstrom
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.orbit" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        orbit
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.roll" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        roll
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.rotate_about" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        rotate_about
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.pan" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        pan
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.zoom" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        zoom
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.fitted" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        fitted
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.placed_in" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        placed_in
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.looking_along" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        looking_along
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        to_dict
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.Camera.from_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        from_dict
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.default_camera" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        default_camera
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#view-policies-fr-camera-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        View policies (FR-CAMERA-01)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.VIEWS" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        VIEWS
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.CAMERA_POLICIES" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        CAMERA_POLICIES
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.DEFAULT_DIRECTION" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        DEFAULT_DIRECTION
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.DEFAULT_MARGIN" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        DEFAULT_MARGIN
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.CameraPolicyError" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        CameraPolicyError
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.axis_view" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        axis_view
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.camera.ViewPolicy" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ViewPolicy
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ycrystal.core.picking.pick_sphere" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        pick_sphere
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="camera-and-picking">Camera and picking<a class="headerlink" href="#camera-and-picking" title="Permanent link">&para;</a></h1>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="ycrystal.core.camera" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">camera</span>
+
+
+<a href="#ycrystal.core.camera" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Renderer-independent orthographic camera.</p>
+<p>The VTK viewport, atom picking, and the POV-Ray writer share these conventions:</p>
+<ul>
+<li>World coordinates are right-handed Cartesian coordinates in ångström (Å), the same
+  coordinates as the structure. Angles are in degrees.</li>
+<li>The viewing direction is <code>d = normalize(focal_point - position)</code>.</li>
+<li>Screen right is <code>r = normalize(d × view_up)</code> and screen up is <code>u = r × d</code>, as in
+  VTK. <code>(r, u, -d)</code> is a right-handed basis: x to the right, y up, z toward the
+  viewer.</li>
+<li><code>parallel_scale</code> is half of the visible height in Å (VTK's definition). The visible
+  width follows from the output aspect ratio: <code>2 * parallel_scale * W / H</code> for an image
+  of <code>W</code> × <code>H</code> pixels, so a wider image shows more of the scene at the same scale
+  and is never stretched.</li>
+<li>Pixel coordinates are continuous, with the origin at the top-left image corner, x to
+  the right, and y downward; the centre of pixel <code>(i, j)</code> is <code>(i + 0.5, j + 0.5)</code>.
+  The focal point projects to the image centre.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="ycrystal.core.camera.Camera" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">Camera</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#ycrystal.core.camera.Camera" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Camera</span><span class="p">(</span><span class="n">position</span><span class="p">:</span> <span class="n">Vec3</span><span class="p">,</span> <span class="n">focal_point</span><span class="p">:</span> <span class="n">Vec3</span><span class="p">,</span> <span class="n">view_up</span><span class="p">:</span> <span class="n">Vec3</span><span class="p">,</span> <span class="n">parallel_scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">projection</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'orthographic'</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Orthographic camera shared by the viewport, picking, and the POV-Ray writer.</p>
+<p>Instances are immutable; the navigation methods return new cameras. Vector
+arguments may be any array-like with three elements and are stored as tuples of
+floats.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.camera.Camera.position">position</span></code></b>
+              (<code><span title="ycrystal.core.camera.Vec3">Vec3</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Eye position in Å. Under orthographic projection only the direction from
+<code>position</code> to <code>focal_point</code> affects the image; the distance matters only for
+clipping in the live view.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.camera.Camera.focal_point">focal_point</span></code></b>
+              (<code><span title="ycrystal.core.camera.Vec3">Vec3</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Point in Å that appears at the image centre.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.camera.Camera.view_up">view_up</span></code></b>
+              (<code><span title="ycrystal.core.camera.Vec3">Vec3</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Approximate screen-up direction. It need not be normalized or perpendicular to
+the viewing direction: <a class="autorefs autorefs-internal" title="basis" href="#ycrystal.core.camera.Camera.basis"><code>basis</code></a> uses its
+component perpendicular to the viewing direction.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.camera.Camera.parallel_scale">parallel_scale</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Half of the visible image height in Å. Larger values show more of the scene.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.camera.Camera.projection">projection</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Always <code>"orthographic"</code>; perspective projection is not implemented.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If a vector is not finite, <code>parallel_scale</code> is not a positive finite number,
+<code>position</code> and <code>focal_point</code> are less than 1e-9 Å apart, <code>view_up</code> is zero or
+parallel to the viewing direction, or <code>projection</code> is not <code>"orthographic"</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <ul>
+<li><a class="autorefs autorefs-internal" title="camera" href="gui.html#ycrystal.viewport.qt_viewport.StructureViewport.camera"><code>StructureViewport.camera</code></a>:
+  the camera of the live view.</li>
+<li><a class="autorefs autorefs-internal" title="scene_to_pov" href="rendering.html#ycrystal.render.pov_writer.scene_to_pov"><code>scene_to_pov</code></a>: writes the camera
+  as an explicit POV-Ray camera.</li>
+</ul>
+</details>
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <p>A camera on the +z axis looking at the origin, with +y up, so that screen right
+is +x:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ycrystal.core.camera</span><span class="w"> </span><span class="kn">import</span> <span class="n">Camera</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">camera</span> <span class="o">=</span> <span class="n">Camera</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">focal_point</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">view_up</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">parallel_scale</span><span class="o">=</span><span class="mf">5.0</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">camera</span><span class="o">.</span><span class="n">visible_size</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>  <span class="c1"># width and height in Å of a 400 x 200 px image</span>
+<span class="go">(20.0, 10.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">camera</span><span class="o">.</span><span class="n">project</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+<span class="go">array([[200., 100.],</span>
+<span class="go">       [220., 100.],</span>
+<span class="go">       [200.,  80.]])</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="ycrystal.core.camera.Camera.distance" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">distance</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#ycrystal.core.camera.Camera.distance" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">distance</span><span class="p">:</span> <span class="nb">float</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Distance from <code>position</code> to <code>focal_point</code> in Å.</p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.basis" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">basis</span>
+
+
+<a href="#ycrystal.core.camera.Camera.basis" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">basis</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the orthonormal screen basis.</p>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>right</code></b> (              <code>ndarray</code>
+)          –
+          <div class="doc-md-description">
+            <p>Unit screen-right vector <code>normalize(direction × view_up)</code>, shape <code>(3,)</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+<b><code>up</code></b> (              <code>ndarray</code>
+)          –
+          <div class="doc-md-description">
+            <p>Unit screen-up vector <code>right × direction</code>, shape <code>(3,)</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+<b><code>direction</code></b> (              <code>ndarray</code>
+)          –
+          <div class="doc-md-description">
+            <p>Unit viewing direction from <code>position</code> toward <code>focal_point</code>, shape
+<code>(3,)</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="note" open>
+  <summary>Notes</summary>
+  <p><code>(right, up, -direction)</code> is right-handed. New arrays are returned on every
+call.</p>
+</details>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.visible_size" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">visible_size</span>
+
+
+<a href="#ycrystal.core.camera.Camera.visible_size" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">visible_size</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the visible width and height in Å for an image size in pixels.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Image width in pixels.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Image height in pixels.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code>tuple of float</code>
+          –
+          <div class="doc-md-description">
+            <p><code>(2 * parallel_scale * width / height, 2 * parallel_scale)</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>width</code> or <code>height</code> is not positive.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.project" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">project</span>
+
+
+<a href="#ycrystal.core.camera.Camera.project" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">project</span><span class="p">(</span><span class="n">points</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Project world points to continuous pixel coordinates.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>points</code></b>
+              (<code><span title="typing.Any">Any</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Points in Å; any array-like that reshapes to <code>(K, 3)</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Image width in pixels.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Image height in pixels.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code>ndarray</code>
+          –
+          <div class="doc-md-description">
+            <p>Pixel coordinates <code>(x, y)</code>, shape <code>(K, 2)</code>, with the origin at the
+top-left image corner, x to the right, and y downward. Depth is ignored:
+points outside the image or behind the eye are projected as well.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>width</code> or <code>height</code> is not positive.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.pixels_per_angstrom" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">pixels_per_angstrom</span>
+
+
+<a href="#ycrystal.core.camera.Camera.pixels_per_angstrom" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">pixels_per_angstrom</span><span class="p">(</span><span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the image scale in pixels per Å for an image <code>height</code> pixels high.</p>
+<p>Pixels are square, so the same scale applies horizontally.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.orbit" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">orbit</span>
+
+
+<a href="#ycrystal.core.camera.Camera.orbit" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">orbit</span><span class="p">(</span><span class="n">azimuth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">elevation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Rotate the eye about the focal point.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>azimuth</code></b>
+              (<code><span title="float">float</span></code>, default:
+                  <code>0.0</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Rotation in degrees about the screen-up axis through the focal point.
+Positive values move the eye toward screen right.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>elevation</code></b>
+              (<code><span title="float">float</span></code>, default:
+                  <code>0.0</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Rotation in degrees about the (already turned) screen-right axis. Positive
+values move the eye toward screen up.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>
+          –
+          <div class="doc-md-description">
+            <p>A camera with the same focal point, distance, and <code>parallel_scale</code>, and a
+rotated <code>view_up</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<details class="note" open>
+  <summary>Notes</summary>
+  <p>The axes and signs match <code>vtkCamera.Azimuth</code> followed by
+<code>vtkCamera.Elevation</code> applied to a camera whose view-up vector is
+orthogonal to the viewing direction; the tests compare both.</p>
+</details>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.roll" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">roll</span>
+
+
+<a href="#ycrystal.core.camera.Camera.roll" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">roll</span><span class="p">(</span><span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Rotate the view about the viewing direction.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>angle</code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Rotation in degrees. Positive values tilt the up vector toward screen
+right, so the image turns counter-clockwise.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>
+          –
+          <div class="doc-md-description">
+            <p>A camera with the same position, focal point, and <code>parallel_scale</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.rotate_about" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">rotate_about</span>
+
+
+<a href="#ycrystal.core.camera.Camera.rotate_about" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">rotate_about</span><span class="p">(</span><span class="n">axis</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Turn the view so that the scene appears rotated about a fixed world axis.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>axis</code></b>
+              (<code><span title="typing.Any">Any</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Rotation axis in world coordinates (any length), through the focal point;
+for example a lattice vector or a Cartesian axis.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>angle</code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Apparent rotation of the scene in degrees, right-handed about <code>axis</code>. The
+eye and the view-up vector turn by <code>-angle</code>; the structure itself is not
+changed.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>
+          –
+          <div class="doc-md-description">
+            <p>A camera with the same focal point, distance, and <code>parallel_scale</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>axis</code> has zero length.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <p>Looking down -z with y up, a 90° turn about y brings the scene's -x side to the
+front (where +z was), so the eye ends up on the -x side:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ycrystal.core.camera</span><span class="w"> </span><span class="kn">import</span> <span class="n">Camera</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cam</span> <span class="o">=</span> <span class="n">Camera</span><span class="o">.</span><span class="n">looking_along</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">parallel_scale</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">turned</span> <span class="o">=</span> <span class="n">cam</span><span class="o">.</span><span class="n">rotate_about</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">90</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">turned</span><span class="o">.</span><span class="n">position</span><span class="p">],</span> <span class="n">turned</span><span class="o">.</span><span class="n">view_up</span>
+<span class="go">([-50.0, 0.0, 0.0], (0.0, 1.0, 0.0))</span>
+</code></pre></div>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.pan" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">pan</span>
+
+
+<a href="#ycrystal.core.camera.Camera.pan" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">pan</span><span class="p">(</span><span class="n">dx</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">dy</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Move the eye and the focal point within the screen plane.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>dx</code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Shift in Å along screen right.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dy</code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Shift in Å along screen up.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>
+          –
+          <div class="doc-md-description">
+            <p>The shifted camera. The scene appears to move the opposite way.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.zoom" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">zoom</span>
+
+
+<a href="#ycrystal.core.camera.Camera.zoom" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">zoom</span><span class="p">(</span><span class="n">factor</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return a camera that magnifies the image by <code>factor</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>factor</code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Magnification; values above 1 zoom in. The new <code>parallel_scale</code> is
+<code>parallel_scale / factor</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>
+          –
+          <div class="doc-md-description">
+            <p>The zoomed camera.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>factor</code> is not positive.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.fitted" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">fitted</span>
+
+
+<a href="#ycrystal.core.camera.Camera.fitted" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">fitted</span><span class="p">(</span><span class="n">points</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">radii</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">aspect</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.06</span><span class="p">,</span> <span class="n">region</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Centre and scale the view on spheres, keeping the orientation.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>points</code></b>
+              (<code><span title="typing.Any">Any</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Sphere centres in Å; any array-like that reshapes to <code>(K, 3)</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>radii</code></b>
+              (<code><span title="typing.Any">Any</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Sphere radii in Å: one value for all spheres or one per sphere.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>aspect</code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Output width divided by output height.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>margin</code></b>
+              (<code><span title="float">float</span></code>, default:
+                  <code>0.06</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Extra space as a fraction of the fitted half-height; 0.06 adds 6 %.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>region</code></b>
+              (<code><span title="tuple">tuple</span>[<span title="float">float</span>, <span title="float">float</span>, <span title="float">float</span>, <span title="float">float</span>] | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Part of the frame the spheres are fitted into, as <code>(left, top, right,
+bottom)</code> fractions of the frame width and height (top-left origin), for
+example the space an element legend leaves free; <code>None</code> is the whole
+frame (see <a class="autorefs autorefs-internal" title="placed_in" href="#ycrystal.core.camera.Camera.placed_in"><code>placed_in</code></a>).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>
+          –
+          <div class="doc-md-description">
+            <p>A camera with the same viewing direction and up vector. The focal point
+moves within the screen plane to the centre of the projected spheres, and
+<code>parallel_scale</code> is the smallest value that shows all of them at this
+aspect ratio, enlarged by <code>margin</code>. The eye is moved back if necessary so
+that it lies in front of every sphere. If <code>points</code> is empty, this camera
+is returned unchanged.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>aspect</code> is not positive or <code>region</code> is not inside the frame.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <p>Fitted into the upper 80 % of the frame, the view is 1.25 times as tall and the
+spheres sit 10 % of the frame height above its centre:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">cam</span> <span class="o">=</span> <span class="n">Camera</span><span class="o">.</span><span class="n">looking_along</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">points</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">full</span> <span class="o">=</span> <span class="n">cam</span><span class="o">.</span><span class="n">fitted</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">upper</span> <span class="o">=</span> <span class="n">cam</span><span class="o">.</span><span class="n">fitted</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">upper</span><span class="o">.</span><span class="n">parallel_scale</span> <span class="o">/</span> <span class="n">full</span><span class="o">.</span><span class="n">parallel_scale</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="go">1.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">upper</span><span class="o">.</span><span class="n">project</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">6</span><span class="p">))</span>
+<span class="go">40.0</span>
+</code></pre></div>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.placed_in" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">placed_in</span>
+
+
+<a href="#ycrystal.core.camera.Camera.placed_in" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">placed_in</span><span class="p">(</span><span class="n">region</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">aspect</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the camera whose frame shows this camera's view inside <code>region</code>.</p>
+<p>This camera's image (at the aspect ratio of <code>region</code>) appears, unchanged in
+scale, in the part <code>(left, top, right, bottom)</code> of the new frame, given as
+fractions of its width and height (top-left origin); the new frame has the
+aspect ratio <code>aspect</code>. Only the focal point, the eye, and the parallel scale
+change; the orientation is kept.</p>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>aspect</code> is not positive or <code>region</code> is not inside the frame.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.looking_along" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">looking_along</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#ycrystal.core.camera.Camera.looking_along" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">looking_along</span><span class="p">(</span><span class="n">direction</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">view_up</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">focal_point</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">50.0</span><span class="p">,</span> <span class="n">parallel_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Create a camera that looks along a direction at a focal point.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>direction</code></b>
+              (<code><span title="typing.Any">Any</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Viewing direction; normalized internally.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>view_up</code></b>
+              (<code><span title="typing.Any">Any</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Approximate screen-up direction; must not be parallel to <code>direction</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>focal_point</code></b>
+              (<code><span title="typing.Any">Any</span></code>, default:
+                  <code>(0, 0, 0)</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Point in Å at the image centre.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>distance</code></b>
+              (<code><span title="float">float</span></code>, default:
+                  <code>50.0</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Distance in Å from the eye to the focal point.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>parallel_scale</code></b>
+              (<code><span title="float">float</span></code>, default:
+                  <code>10.0</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Half of the visible height in Å.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>
+          –
+          <div class="doc-md-description">
+            <p>The new camera, with its eye at <code>focal_point - distance * direction</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If the resulting camera is invalid, for example because <code>view_up</code> is
+parallel to <code>direction</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.to_dict" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">to_dict</span>
+
+
+<a href="#ycrystal.core.camera.Camera.to_dict" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">to_dict</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return a JSON-compatible dictionary, as stored in project files.</p>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="dict">dict</span></code>
+          –
+          <div class="doc-md-description">
+            <p>Keys <code>projection</code>, <code>position</code>, <code>focal_point</code>, <code>view_up</code> (lists of
+three floats), and <code>parallel_scale</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ycrystal.core.camera.Camera.from_dict" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">from_dict</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#ycrystal.core.camera.Camera.from_dict" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Create a camera from the output of <a class="autorefs autorefs-internal" title="to_dict" href="#ycrystal.core.camera.Camera.to_dict"><code>to_dict</code></a>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>data</code></b>
+              (<code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Dictionary with <code>position</code>, <code>focal_point</code>, <code>view_up</code>, and
+<code>parallel_scale</code>; <code>projection</code> is optional.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>
+          –
+          <div class="doc-md-description">
+            <p>The validated camera.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="KeyError">KeyError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If a required key is missing.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If a value is invalid (see <a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+  " href="#ycrystal.core.camera.Camera"><code>Camera</code></a>).</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="ycrystal.core.camera.default_camera" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">default_camera</span>
+
+
+<a href="#ycrystal.core.camera.default_camera" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">default_camera</span><span class="p">(</span><span class="n">points</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">radii</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">aspect</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Camera</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Return the initial view, fitted to the given spheres.</p>
+<p>The view looks along <code>(-0.42, 1.0, -0.38)</code>, slightly from above, with Cartesian
++z as the up direction. This puts the c axis up only when c points along z, as for
+orthogonal and hexagonal cells read from CIF files (a along x, b in the xy plane).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>points</code></b>
+              (<code><span title="typing.Any">Any</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Sphere centres in Å, shape <code>(K, 3)</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>radii</code></b>
+              (<code><span title="typing.Any">Any</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Sphere radii in Å: one value or one per sphere.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>aspect</code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Output width divided by output height.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>
+          –
+          <div class="doc-md-description">
+            <p>The fitted camera (see <a class="autorefs autorefs-internal" title="fitted" href="#ycrystal.core.camera.Camera.fitted"><code>Camera.fitted</code></a>).</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div><h2 id="view-policies-fr-camera-01">View policies (FR-CAMERA-01)<a class="headerlink" href="#view-policies-fr-camera-01" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="ycrystal.core.camera.VIEWS" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">VIEWS</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#ycrystal.core.camera.VIEWS" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">VIEWS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'default'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'b'</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'z'</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Views of <a class="autorefs autorefs-internal" title="ViewPolicy
+
+
+  
+      dataclass
+  " href="#ycrystal.core.camera.ViewPolicy"><code>ViewPolicy</code></a>: the default view, the
+real-space lattice vectors a, b, c, and the Cartesian axes x, y, z.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="ycrystal.core.camera.CAMERA_POLICIES" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">CAMERA_POLICIES</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#ycrystal.core.camera.CAMERA_POLICIES" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">CAMERA_POLICIES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'saved'</span><span class="p">,</span> <span class="s1">'fit'</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p><code>saved</code>: use the saved camera as it is; <code>fit</code>: refit the framing to the scene.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="ycrystal.core.camera.DEFAULT_DIRECTION" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">DEFAULT_DIRECTION</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#ycrystal.core.camera.DEFAULT_DIRECTION" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">DEFAULT_DIRECTION</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.42</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.38</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Viewing direction of the default view (slightly from above, Cartesian +z up).</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="ycrystal.core.camera.DEFAULT_MARGIN" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">DEFAULT_MARGIN</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#ycrystal.core.camera.DEFAULT_MARGIN" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">DEFAULT_MARGIN</span> <span class="o">=</span> <span class="mf">0.06</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Extra space around fitted views, as a fraction of the fitted half-height.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="ycrystal.core.camera.CameraPolicyError" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">CameraPolicyError</span>
+
+
+<a href="#ycrystal.core.camera.CameraPolicyError" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="ValueError">ValueError</span></code></p>
+
+
+
+        <p>A view or framing cannot be produced; <code>str(error)</code> is a message for the user.</p>
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="ycrystal.core.camera.axis_view" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">axis_view</span>
+
+
+<a href="#ycrystal.core.camera.axis_view" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">axis_view</span><span class="p">(</span><span class="n">axis</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cell</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reverse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Return <code>(viewing direction, view up)</code> for looking down a lattice or Cartesian axis.</p>
+<p>The named axis points toward the viewer (away from the viewer with <code>reverse</code>), as
+with the view buttons of the window. <code>a</code>, <code>b</code>, <code>c</code> are the <strong>real-space</strong>
+lattice vectors (the rows of <code>cell</code>), not normals of lattice planes (hkl): in a
+non-orthogonal cell, looking down c is not looking at the (001) plane face-on.
+Screen up is the first of c, b, a (or z, y, x) that is not parallel to the viewing
+direction, projected onto the screen; looking down a or b therefore puts c up,
+looking down c puts b up.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>direction, up = axis_view("c", np.diag([3.0, 3.0, 5.0]))
+direction.tolist(), up.tolist()
+([-0.0, -0.0, -1.0], [0.0, 3.0, 0.0])</p>
+</blockquote>
+</blockquote>
+</blockquote>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="CameraPolicyError (ycrystal.core.camera.CameraPolicyError)" href="#ycrystal.core.camera.CameraPolicyError">CameraPolicyError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>axis</code> is not one of a, b, c, x, y, z, or a lattice axis is requested for
+a structure without a cell (<code>cell</code> is <code>None</code> or has a zero-length vector).</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="ycrystal.core.camera.ViewPolicy" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ViewPolicy</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#ycrystal.core.camera.ViewPolicy" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ViewPolicy</span><span class="p">(</span><span class="n">camera</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">view</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_MARGIN</span><span class="p">,</span> <span class="n">visible_height</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>How to choose the camera of a figure without a window.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.camera.ViewPolicy.camera">camera</span></code></b>
+              (<code><span title="str">str</span> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p><code>"saved"</code> keeps a saved camera exactly; <code>"fit"</code> refits the framing (centre
+and scale) to the scene, keeping the saved orientation unless <code>view</code> is set.
+<code>None</code> (the default) means <code>"fit"</code> when <code>view</code> or <code>visible_height</code> is set,
+and <code>"saved"</code> otherwise.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.camera.ViewPolicy.view">view</span></code></b>
+              (<code><span title="str">str</span> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Orientation: <code>"default"</code>, <code>"a"</code>, <code>"b"</code>, <code>"c"</code>, <code>"x"</code>, <code>"y"</code>, or
+<code>"z"</code> (see <a class="autorefs autorefs-internal" title="axis_view" href="#ycrystal.core.camera.axis_view"><code>axis_view</code></a>); <code>None</code> keeps the
+saved orientation, or the default view if there is no saved camera.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.camera.ViewPolicy.margin">margin</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Extra space around a fitted view as a fraction of its half-height (0–1).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.camera.ViewPolicy.visible_height">visible_height</span></code></b>
+              (<code><span title="float">float</span> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Fixed visible height of the image in Å instead of fitting the scale, so that
+figures of different structures share one physical scale. The scene is still
+centred. If the scene does not fit, that is an error, never a silent crop.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="CameraPolicyError (ycrystal.core.camera.CameraPolicyError)" href="#ycrystal.core.camera.CameraPolicyError">CameraPolicyError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If a value is out of range, or <code>camera="saved"</code> is combined with <code>view</code> or
+<code>visible_height</code> (they change the camera).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <p>Without options the saved camera is used unchanged; without a saved camera, the
+default view is fitted, exactly as before this policy existed:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">points</span><span class="p">,</span> <span class="n">radii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]),</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ViewPolicy</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">radii</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span> <span class="o">==</span> <span class="n">default_camera</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">radii</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">along_x</span> <span class="o">=</span> <span class="n">ViewPolicy</span><span class="p">(</span><span class="n">view</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">radii</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">along_x</span><span class="o">.</span><span class="n">basis</span><span class="p">()[</span><span class="mi">2</span><span class="p">]]</span>
+<span class="go">[-1.0, 0.0, 0.0]</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="ycrystal.core.picking.pick_sphere" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">pick_sphere</span>
+
+
+<a href="#ycrystal.core.picking.pick_sphere" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">pick_sphere</span><span class="p">(</span><span class="n">camera</span><span class="p">:</span> <span class="n">Camera</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pixel</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">centers</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">radii</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Return the front-most sphere under a pixel.</p>
+<p>The viewing ray through <code>pixel</code> is parallel to the viewing direction (orthographic
+projection) and is intersected analytically with every sphere.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>camera</code></b>
+              (<code><a class="autorefs autorefs-internal" title="Camera
+
+
+  
+      dataclass
+   (ycrystal.core.camera.Camera)" href="#ycrystal.core.camera.Camera">Camera</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Camera of the view.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Image width in pixels (device pixels in the GUI).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Image height in pixels.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>pixel</code></b>
+              (<code><span title="tuple">tuple</span>[<span title="float">float</span>, <span title="float">float</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Continuous pixel coordinates <code>(x, y)</code> with the origin at the top-left corner,
+x to the right, and y downward, as returned by
+<a class="autorefs autorefs-internal" title="project" href="#ycrystal.core.camera.Camera.project"><code>Camera.project</code></a>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>centers</code></b>
+              (<code><span title="numpy.ndarray">ndarray</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Sphere centres in Å, shape <code>(K, 3)</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>radii</code></b>
+              (<code><span title="numpy.ndarray">ndarray</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Sphere radii in Å, shape <code>(K,)</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="int">int</span> or None</code>
+          –
+          <div class="doc-md-description">
+            <p>Index into <code>centers</code> of the sphere whose surface the ray meets first, coming
+from the viewer's side, or <code>None</code> if the ray misses every sphere.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <p>Two unit spheres on the viewing axis; the one nearer the eye (at +z) is picked:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ycrystal.core.camera</span><span class="w"> </span><span class="kn">import</span> <span class="n">Camera</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ycrystal.core.picking</span><span class="w"> </span><span class="kn">import</span> <span class="n">pick_sphere</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">camera</span> <span class="o">=</span> <span class="n">Camera</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">focal_point</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">view_up</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">parallel_scale</span><span class="o">=</span><span class="mf">5.0</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pick_sphere</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="p">(</span><span class="mf">200.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">),</span> <span class="n">centers</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]))</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pick_sphere</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">centers</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]))</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</code></pre></div>
+
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>

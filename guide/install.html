@@ -1,0 +1,2096 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/guide/install.html">
+      
+      
+      
+        <link rel="prev" href="../index.html">
+      
+      
+        <link rel="next" href="./examples.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Install and launch - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Install and launch
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="install.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#without-git" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Without Git
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linux-mint" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Linux Mint
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        macOS
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-the-installer-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows: the installer (recommended)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windows-developer-installation-powershell" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows: developer installation (PowerShell)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windows: developer installation (PowerShell)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#developer-installation-step-by-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Developer installation, step by step
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pov-ray-for-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        POV-Ray for Windows
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#both-installations-on-one-computer" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Both installations on one computer
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-the-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Check the installation
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#menu-entry" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Menu entry
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-and-uninstall" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Update and uninstall
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#launch-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Launch options
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./controls.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/validation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-port.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HANDOFF.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#without-git" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Without Git
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linux-mint" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Linux Mint
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        macOS
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-the-installer-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows: the installer (recommended)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windows-developer-installation-powershell" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows: developer installation (PowerShell)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windows: developer installation (PowerShell)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#developer-installation-step-by-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Developer installation, step by step
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pov-ray-for-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        POV-Ray for Windows
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#both-installations-on-one-computer" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Both installations on one computer
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-the-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Check the installation
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#menu-entry" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Menu entry
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-and-uninstall" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Update and uninstall
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#launch-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Launch options
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="install-and-launch">Install and launch<a class="headerlink" href="#install-and-launch" title="Permanent link">&para;</a></h1>
+<p>The integration baseline is Linux Mint 22.1 / Ubuntu 24.04 with the system Python
+3.12, an X11 desktop, and working OpenGL. macOS 15 on Apple silicon is supported from
+the same source and passes the same automated tests. Windows 11 with POV-Ray for
+Windows 3.7 is supported from the same source too: it passes the automated tests and
+was tested by hand on one computer; there, a graphical installer is the recommended
+way (<a href="#windows">Windows</a>). Python 3.12, 3.13, and 3.14 are supported; where
+each was tested is in the <a href="support.html">support matrix</a>. Ycrystal is installed from its
+source folder into its own virtual environment; no <code>sudo</code> is needed except for the
+system packages.</p>
+<h2 id="without-git">Without Git<a class="headerlink" href="#without-git" title="Permanent link">&para;</a></h2>
+<p>The sections below get the source with <code>git clone</code>, which makes updating a <code>git pull</code>.
+Git is not needed otherwise: download
+<a href="https://github.com/ymatterlab/ycrystal/archive/refs/heads/main.zip">the source as a ZIP file</a>
+(also under the green <strong>Code</strong> button on GitHub), unpack it, and run the remaining
+commands of your system in the unpacked folder <code>ycrystal-main</code> instead of <code>ycrystal</code>:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-L<span class="w"> </span>-o<span class="w"> </span>ycrystal.zip<span class="w"> </span>https://github.com/ymatterlab/ycrystal/archive/refs/heads/main.zip
+unzip<span class="w"> </span>ycrystal.zip<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>ycrystal-main
+</code></pre></div>
+<p>On Windows, in PowerShell (or unpack with File Explorer's <em>Extract All</em>):</p>
+<div class="highlight"><pre><span></span><code><span class="nb">Invoke-WebRequest</span> <span class="n">https</span><span class="p">://</span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="p">/</span><span class="n">ymatterlab</span><span class="p">/</span><span class="n">ycrystal</span><span class="p">/</span><span class="n">archive</span><span class="p">/</span><span class="n">refs</span><span class="p">/</span><span class="n">heads</span><span class="p">/</span><span class="n">main</span><span class="p">.</span><span class="n">zip</span> <span class="n">-OutFile</span> <span class="n">ycrystal</span><span class="p">.</span><span class="n">zip</span>
+<span class="nb">Expand-Archive</span> <span class="n">ycrystal</span><span class="p">.</span><span class="n">zip</span> <span class="p">.</span> <span class="p">;</span> <span class="nb">cd </span><span class="n">ycrystal-main</span>
+</code></pre></div>
+<p>To update without Git, download and unpack the new ZIP file, install again in the new
+folder (on Linux also <code>--install-desktop</code> again if you use the menu launcher; on
+Windows run the installation script there, which also moves the Start-menu entry to
+it), and delete the old folder.</p>
+<h2 id="linux-mint">Linux Mint<a class="headerlink" href="#linux-mint" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>git<span class="w"> </span>povray<span class="w"> </span>povray-includes<span class="w"> </span>libxcb-cursor0<span class="w"> </span>python3.12-venv
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ymatterlab/ycrystal.git
+<span class="nb">cd</span><span class="w"> </span>ycrystal
+/usr/bin/python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>-c<span class="w"> </span>constraints.txt
+.venv/bin/ycrystal
+</code></pre></div>
+<p>Use <code>/usr/bin/python3</code>: Miniconda/Anaconda's bundled <code>libstdc++</code> can prevent Mesa
+from loading and cause “Could not initialize GLX”. <code>libxcb-cursor0</code> is needed by Qt
+on X11. POV-Ray is optional for opening structures and exporting scenes, and required
+for previews and rendering PNGs; <code>povray-includes</code> provides the standard include files
+that native POV-Ray materials (gold, marble, <code>M_Glass</code>, …) need. The <code>pip install</code>
+step downloads about 300 MB of wheels (Qt, VTK) the first time. To install developer
+tools, use <code>-e ".[dev]"</code> instead of <code>-e .</code>.</p>
+<p>If using <code>uv</code>, the equivalent environment setup is:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>venv<span class="w"> </span>--python<span class="w"> </span>/usr/bin/python3.12<span class="w"> </span>.venv
+uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span>.venv/bin/python<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>-c<span class="w"> </span>constraints.txt
+</code></pre></div>
+<h2 id="macos">macOS<a class="headerlink" href="#macos" title="Permanent link">&para;</a></h2>
+<p>With <a href="https://brew.sh/">Homebrew</a> on macOS 15 (Apple silicon):</p>
+<div class="highlight"><pre><span></span><code>xcode-select<span class="w"> </span>--install<span class="w">            </span><span class="c1"># Git and the command-line tools, if missing</span>
+brew<span class="w"> </span>install<span class="w"> </span>python@3.12<span class="w"> </span>povray
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ymatterlab/ycrystal.git
+<span class="nb">cd</span><span class="w"> </span>ycrystal
+python3.12<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>-c<span class="w"> </span>constraints.txt
+.venv/bin/ycrystal
+</code></pre></div>
+<p>Homebrew's <code>povray</code> is POV-Ray 3.7 and contains the standard include files; Ycrystal
+finds it on <code>PATH</code> (<code>/opt/homebrew/bin/povray</code>). The window is started from the
+terminal: there is no application bundle or Dock launcher yet, so the Dock and the
+menu bar show “Python”, and <code>--install-desktop</code> (below) applies to Linux and Windows
+only.
+Shortcuts use ⌘ where this guide says Ctrl. A virtual environment cannot be copied
+between Linux and macOS: create it on each machine.</p>
+<h2 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h2>
+<p>There are two installations for Windows 11 (x64). Most users want the first:</p>
+<ul>
+<li><strong>the installer</strong> (recommended): a graphical setup program that installs Ycrystal
+  with everything it needs except POV-Ray; no Python, Git, or PowerShell;</li>
+<li><strong>the developer installation</strong>: Ycrystal from its source folder, set up by a
+  PowerShell script, for working on Ycrystal or running its newest source.</li>
+</ul>
+<p>Both can be on one computer: they have separate Start-menu entries (<strong>Ycrystal</strong> and
+<strong>Ycrystal (development)</strong>), and uninstalling one leaves the other working (see
+<a href="#both-installations-on-one-computer">both installations</a>). Both need POV-Ray for
+Windows 3.7 for previews and images (<a href="#pov-ray-for-windows">below</a>).</p>
+<h3 id="windows-the-installer-recommended">Windows: the installer (recommended)<a class="headerlink" href="#windows-the-installer-recommended" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Download <code>Ycrystal-&lt;version&gt;-windows-x64-setup.exe</code> from the
+   <a href="https://github.com/ymatterlab/ycrystal/releases">Releases page</a> (version 0.4.0 is
+   the first with it). The installer of the newest source, between releases, can be
+   downloaded with a GitHub account from the latest run of the
+   <a href="https://github.com/ymatterlab/ycrystal/actions/workflows/windows-installer.yml"><em>Windows installer</em> workflow</a>
+   (artifact <code>ycrystal-windows-installer</code>: a ZIP file with the installer inside).</li>
+<li>Run it. The installer is not signed yet, so Windows may show "Windows protected your
+   PC": choose <em>More info</em>, then <em>Run anyway</em>.</li>
+<li>Follow the wizard. By default it installs for you alone, without administrator
+   rights, into <code>%LOCALAPPDATA%\Programs\Ycrystal</code>; an administrator can choose an
+   installation for all users (<code>Program Files</code>). It adds <strong>Ycrystal</strong> to the Start
+   menu and, unless you untick it, opens <code>.ycrystal</code> projects with Ycrystal from File
+   Explorer. If it does not find POV-Ray for Windows, it says so and offers its
+   download page at the end.</li>
+<li>Start <strong>Ycrystal</strong> from the Start menu.</li>
+</ol>
+<p>The installed folder also holds <code>ycrystal-cli.exe</code>, the command line (the <code>ycrystal</code>
+command of the other installations), for example in PowerShell:
+<code>&amp; "$env:LOCALAPPDATA\Programs\Ycrystal\ycrystal-cli.exe" --check-renderer</code>. To
+update, run the installer of the new version: it replaces the old one. To uninstall,
+use <em>Settings ▸ Apps ▸ Installed apps ▸ Ycrystal ▸ Uninstall</em>. Settings, favourites,
+and personal materials are kept in both cases.</p>
+<h3 id="windows-developer-installation-powershell">Windows: developer installation (PowerShell)<a class="headerlink" href="#windows-developer-installation-powershell" title="Permanent link">&para;</a></h3>
+<p>In PowerShell. Install <a href="https://git-scm.com/download/win">Git for Windows</a>
+first if it is missing (<code>winget install --id Git.Git --exact</code>, then open a new
+PowerShell window), or get the source <a href="#without-git">without Git</a> and skip the first
+two lines:</p>
+<div class="highlight"><pre><span></span><code><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">://</span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="p">/</span><span class="n">ymatterlab</span><span class="p">/</span><span class="n">ycrystal</span><span class="p">.</span><span class="n">git</span>
+<span class="nb">cd </span><span class="n">ycrystal</span>
+<span class="n">powershell</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="n">scripts</span><span class="p">\</span><span class="nb">install-windows</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre></div>
+<p>The script installs what is missing and checks the result:</p>
+<ol>
+<li>Python 3.12 with <code>winget</code>, for the current user, unless <code>py</code> finds Python 3.12,
+   3.13, or 3.14 (in this order);</li>
+<li>the virtual environment <code>.venv</code> in the checkout, with Ycrystal and the tested
+   package versions of <code>constraints.txt</code> (about 300 MB the first time);</li>
+<li>POV-Ray for Windows 3.7 with <code>winget</code>, unless it is installed: its official
+   installer from povray.org, which asks Windows for administrator permission;</li>
+<li>if POV-Ray for Windows would ask at every start whether to download its editor,
+   it opens once so that you can answer for good: <em>No</em>, then untick
+   <em>Options ▸ Other Settings ▸ Use Editor</em>, and close it (details below);</li>
+<li><strong>Ycrystal (development)</strong> in the Start menu, and <code>.ycrystal</code> projects opening
+   with it from File Explorer unless the installed Ycrystal already opens them
+   (<a href="#menu-entry">menu entry</a>);</li>
+<li>the renderer check (<code>--check-renderer</code>).</li>
+</ol>
+<p>Then start <strong>Ycrystal (development)</strong> from the Start menu. The script can run again at any time: after
+<code>git pull</code> it updates the installation. It ends with "Ycrystal is ready." (exit status
+0), or with a list of what is not ready yet. Its options: <code>-Python C:\path\to\python.exe</code>
+(another Python, 3.12 or newer, for <code>.venv</code>; newer than 3.14 with a warning; ignored
+once <code>.venv</code> exists, so delete <code>.venv</code> to change it), <code>-Dev</code> (also the developer tools),
+<code>-NoPovray</code>, and <code>-NoStartMenu</code>; <code>Get-Help .\scripts\install-windows.ps1 -Detailed</code>
+describes them. <code>-ExecutionPolicy Bypass</code> lets this one PowerShell run the script,
+which Windows' default policy refuses otherwise; it changes no setting.</p>
+<p>POV-Ray for Windows is a window program. For each preview and render, Ycrystal starts
+it minimised (its button appears on the taskbar while it runs) and it closes by itself.
+It cannot render for Ycrystal while you have POV-Ray for Windows open yourself: close it
+first, or turn off <em>Options ▸ Keep Single Instance</em> in POV-Ray (see
+<a href="troubleshooting.html#renderer">troubleshooting</a>).</p>
+<h4 id="developer-installation-step-by-step">Developer installation, step by step<a class="headerlink" href="#developer-installation-step-by-step" title="Permanent link">&para;</a></h4>
+<p>The same installation without the script:</p>
+<div class="highlight"><pre><span></span><code><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Python</span><span class="p">.</span><span class="n">Python</span><span class="p">.</span><span class="n">3</span><span class="p">.</span><span class="n">12</span> <span class="p">-</span><span class="o">-exact</span> <span class="p">-</span><span class="n">-scope</span> <span class="n">user</span>       <span class="c"># or python.org's installer</span>
+<span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">PersistenceOfVisionRaytracer</span><span class="p">.</span><span class="n">POVRay</span> <span class="p">-</span><span class="o">-exact</span>   <span class="c"># or povray.org's installer</span>
+<span class="c"># Then open a NEW PowerShell window (restart VS Code for its terminal), so that py is found.</span>
+<span class="nb">cd </span><span class="n">ycrystal</span>
+<span class="n">py</span> <span class="p">-</span><span class="n">3</span><span class="p">.</span><span class="n">12</span> <span class="n">-m</span> <span class="n">venv</span> <span class="p">.</span><span class="n">venv</span>
+<span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">python</span><span class="p">.</span><span class="n">exe</span> <span class="n">-m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">-e</span> <span class="p">.</span> <span class="n">-c</span> <span class="n">constraints</span><span class="p">.</span><span class="n">txt</span>
+<span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">ycrystal</span><span class="p">.</span><span class="n">exe</span> <span class="p">-</span><span class="n">-install-desktop</span>
+<span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">ycrystal</span><span class="p">.</span><span class="n">exe</span>
+</code></pre></div>
+<p><code>py</code> is the Python launcher that python.org's installer (and <code>winget</code>) puts on <code>PATH</code>. A
+terminal that was open before the installation keeps its old <code>PATH</code>, also VS Code's
+integrated terminal until VS Code is restarted; there PowerShell answers "The term 'py'
+is not recognized". In a new terminal, <code>py --list</code> shows the installed versions. Once
+<code>.venv</code> exists, use its own programs (<code>.venv\Scripts\python.exe</code>,
+<code>.venv\Scripts\ycrystal.exe</code>); they need nothing on <code>PATH</code>. The Windows Store <code>python</code>
+command (an alias that opens the Store) is not used.</p>
+<h3 id="pov-ray-for-windows">POV-Ray for Windows<a class="headerlink" href="#pov-ray-for-windows" title="Permanent link">&para;</a></h3>
+<p>Both installations render with POV-Ray for Windows 3.7, installed separately. The
+developer script installs it with <code>winget</code> if it is missing; for the installer version,
+install it yourself:</p>
+<div class="highlight"><pre><span></span><code><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">PersistenceOfVisionRaytracer</span><span class="p">.</span><span class="n">POVRay</span> <span class="p">-</span><span class="o">-exact</span>   <span class="c"># or povray.org's installer</span>
+</code></pre></div>
+<p>The <code>winget</code> package of POV-Ray for Windows 3.7 runs its official installer from
+<a href="https://www.povray.org/download/">povray.org</a> (<code>povwin-3.7-agpl3-setup.exe</code>, the same
+file and checksum), which can also be run by hand; keep its user files: they include
+the standard include files, which go to <code>Documents\POV-Ray\v3.7\include</code>. Ycrystal
+finds <code>pvengine64.exe</code> in POV-Ray's installation folder by itself (POV-Ray for Windows
+has no <code>povray</code> command and is not on <code>PATH</code>); <strong>Render ▸ Set POV-Ray Executable…</strong> or
+<code>YCRYSTAL_POVRAY</code> choose another one.</p>
+<p>After installing it, <strong>start POV-Ray for Windows once from the Start menu</strong>. It asks
+whether to download its editor ("Could not load internal editor – download it?"): the
+AGPL installer does not include it. Either install the editor from the page that <em>Yes</em>
+opens, or answer <em>No</em> and untick <em>Options ▸ Other Settings ▸ Use Editor</em>. Otherwise it
+asks at every start; Ycrystal then refuses to render and says so, because each render
+would wait for that answer. Then close POV-Ray.</p>
+<h3 id="both-installations-on-one-computer">Both installations on one computer<a class="headerlink" href="#both-installations-on-one-computer" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Installer version</th>
+<th>Developer installation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start-menu entry</td>
+<td><strong>Ycrystal</strong> (<code>Ycrystal.exe</code> in the installation folder)</td>
+<td><strong>Ycrystal (development)</strong> (the checkout's <code>.venv\Scripts\pythonw.exe</code>)</td>
+</tr>
+<tr>
+<td>Taskbar</td>
+<td>its own button and identity</td>
+<td>its own: the windows of the two never group together</td>
+</tr>
+<tr>
+<td><code>.ycrystal</code> file type</td>
+<td>registered by the installer, which opens projects</td>
+<td>added to <em>Open with</em>; opens projects only if no other program does</td>
+</tr>
+<tr>
+<td>Removed by</td>
+<td><em>Settings ▸ Apps</em> (its uninstaller)</td>
+<td><code>.venv\Scripts\ycrystal.exe --uninstall-desktop</code></td>
+</tr>
+<tr>
+<td>POV-Ray, settings, personal materials</td>
+<td>shared</td>
+<td>shared</td>
+</tr>
+</tbody>
+</table>
+<p>Each removes only what it added, so uninstalling one leaves the other working.
+<code>--install-desktop</code> belongs to the developer installation; the installed
+<code>ycrystal-cli.exe</code> refuses it. A Start-menu entry named <strong>Ycrystal</strong> made by an earlier
+developer installation is renamed <strong>Ycrystal (development)</strong> when the script or
+<code>--install-desktop</code> runs again.</p>
+<h2 id="check-the-installation">Check the installation<a class="headerlink" href="#check-the-installation" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>.venv/bin/ycrystal<span class="w"> </span>--version<span class="w">          </span><span class="c1"># ycrystal 0.4.0</span>
+.venv/bin/ycrystal<span class="w"> </span>--check-renderer<span class="w">   </span><span class="c1"># PASS: POV-Ray 3.7… passed</span>
+.venv/bin/ycrystal<span class="w"> </span>examples/SrTiO3-studio.ycrystal<span class="w"> </span>--render<span class="w"> </span>SrTiO3.png
+</code></pre></div>
+<p>On Windows, in PowerShell:</p>
+<div class="highlight"><pre><span></span><code><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">ycrystal</span><span class="p">.</span><span class="n">exe</span> <span class="p">-</span><span class="n">-version</span>          <span class="c"># ycrystal 0.4.0</span>
+<span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">ycrystal</span><span class="p">.</span><span class="n">exe</span> <span class="p">-</span><span class="n">-check-renderer</span>   <span class="c"># PASS: POV-Ray 3.7.0.0 at C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe passed…</span>
+<span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">ycrystal</span><span class="p">.</span><span class="n">exe</span> <span class="n">examples</span><span class="p">\</span><span class="n">SrTiO3-studio</span><span class="p">.</span><span class="n">ycrystal</span> <span class="p">-</span><span class="n">-render</span> <span class="n">SrTiO3</span><span class="p">.</span><span class="n">png</span>
+</code></pre></div>
+<p>The last command renders an <a href="examples.html">example project</a> without opening a window.
+The other commands of this guide work the same way on Windows, with
+<code>.venv\Scripts\ycrystal.exe</code> for <code>.venv/bin/ycrystal</code>, <code>.venv\Scripts\python.exe</code> for
+<code>.venv/bin/python</code>, and backslashes in paths.</p>
+<h2 id="menu-entry">Menu entry<a class="headerlink" href="#menu-entry" title="Permanent link">&para;</a></h2>
+<p>On Linux,</p>
+<div class="highlight"><pre><span></span><code>.venv/bin/ycrystal<span class="w"> </span>--install-desktop
+</code></pre></div>
+<p>adds <strong>Ycrystal</strong> to the Linux Mint menu (category <em>Science</em>), with an icon, and makes
+<code>.ycrystal</code> projects open in Ycrystal from the file manager. It writes three files for
+the current user only, under <code>~/.local/share</code> (<code>applications/ycrystal.desktop</code>,
+<code>icons/hicolor/scalable/apps/ycrystal.svg</code>, <code>mime/packages/ycrystal.xml</code>). The launcher
+starts this checkout's <code>.venv/bin/ycrystal</code> by absolute path: run the command again if
+you move the checkout. <code>.venv/bin/ycrystal --uninstall-desktop</code> removes the files. The
+menu may need a moment (or a new login) to show the entry.</p>
+<p>On Windows, in the developer installation, <code>.venv\Scripts\ycrystal.exe
+--install-desktop</code> (the installation script runs it) adds <strong>Ycrystal (development)</strong> to
+the Start menu, for the current user, without administrator rights. The installer
+version has its own entry, <strong>Ycrystal</strong>, made by its installer (see
+<a href="#both-installations-on-one-computer">both installations</a>).</p>
+<ul>
+<li>the shortcut <code>Ycrystal (development).lnk</code> in the user's Start-menu folder. It starts
+  this checkout's <code>.venv\Scripts\pythonw.exe</code> with <code>-I -m ycrystal.app</code>, so that no
+  console window opens, and it carries the application id that this installation's
+  window uses on the taskbar (<code>YMatterLab.Ycrystal</code>; the installer version uses
+  another one);</li>
+<li>its icon, <code>%LOCALAPPDATA%\Y-Matter Lab\Ycrystal\ycrystal.ico</code>, drawn from the
+  application's SVG icon;</li>
+<li>the file type <code>Ycrystal.Project</code> of <code>.ycrystal</code> projects, under
+  <code>HKEY_CURRENT_USER\Software\Classes</code>. It is added to the <em>Open with</em> list, and opens
+  projects from File Explorer if no other program does: when the installer version
+  is installed, it keeps opening them. A program that you chose for <code>.ycrystal</code> files
+  in Windows' <em>Open with</em> dialog stays your choice.</li>
+</ul>
+<p>Run the command again if you move the checkout. <code>--uninstall-desktop</code> removes the
+shortcut, the icon, and the file type, and nothing of the installer version. Started this way, Ycrystal has no console for
+messages; to see them, start it from PowerShell with <code>.venv\Scripts\ycrystal.exe</code>.</p>
+<h2 id="update-and-uninstall">Update and uninstall<a class="headerlink" href="#update-and-uninstall" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>ycrystal
+git<span class="w"> </span>pull
+.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>-c<span class="w"> </span>constraints.txt
+</code></pre></div>
+<p>On Linux, if you installed the menu launcher, refresh it after updating:</p>
+<div class="highlight"><pre><span></span><code>.venv/bin/ycrystal<span class="w"> </span>--install-desktop
+</code></pre></div>
+<p>The launcher uses a separate copy of the application icon under <code>~/.local/share</code>;
+<code>git pull</code> updates the source SVG but does not replace that installed copy.</p>
+<p>The installer version on Windows is updated by running the installer of the new
+version, and uninstalled in <em>Settings ▸ Apps</em>; the rest of this section is about
+installations from source.</p>
+<p>On Windows, update with <code>git pull</code>, then run the installation script again
+(<code>powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1</code>): it updates
+<code>.venv</code> and the Start-menu entry. Without the script, run the <code>pip install</code> line with
+<code>.venv\Scripts\python.exe</code>, then <code>.venv\Scripts\ycrystal.exe --install-desktop</code>.</p>
+<p>Projects and styles from earlier versions keep opening; newer project files are refused
+by older versions with a message to update. To uninstall, run
+<code>.venv/bin/ycrystal --uninstall-desktop</code> (Linux; on Windows
+<code>.venv\Scripts\ycrystal.exe --uninstall-desktop</code>), then delete the checkout directory.
+On Windows, Python and POV-Ray for Windows stay installed; remove them in <em>Settings ▸
+Apps</em> if nothing else needs them.
+Settings (POV-Ray path, favourites, last folder) are in
+<code>~/.config/Y-Matter Lab/Ycrystal.conf</code> on Linux and in
+<code>~/Library/Preferences/com.y-matter-lab.Ycrystal.plist</code> on macOS, where the thumbnails
+of personal materials are in <code>~/Library/Application Support/Y-Matter Lab/Ycrystal</code>. On
+Windows the settings are in the registry (<code>HKEY_CURRENT_USER\Software\Y-Matter
+Lab\Ycrystal</code>) and the thumbnails in <code>%APPDATA%\Y-Matter Lab\Ycrystal</code>, for both
+Windows installations; neither uninstallation deletes them.</p>
+<h2 id="launch-options">Launch options<a class="headerlink" href="#launch-options" title="Permanent link">&para;</a></h2>
+<p>Run these from the checkout root:</p>
+<div class="highlight"><pre><span></span><code>.venv/bin/ycrystal<span class="w"> </span>--sample<span class="w"> </span>perovskite
+.venv/bin/ycrystal<span class="w"> </span>--sample<span class="w"> </span>triclinic
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/MgB2.cif
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/Si.pw.in<span class="w"> </span>--format<span class="w"> </span>qe
+.venv/bin/ycrystal<span class="w"> </span>--check-renderer
+.venv/bin/ycrystal<span class="w"> </span>--help
+</code></pre></div>
+<p>The default sample is cubic SrTiO3: 5 scientific atoms, displayed as 15 balls with
+boundary images. The triclinic sample contains O, Fe, S, Cl, and N at general positions
+in a skewed cell, so it shows 5 balls. Both are synthetic and require no downloaded
+data. There is no sample chooser in the current GUI; choose one at launch.</p>
+<p>A file argument opens after the window appears. If import fails, a message explains
+why and the sample stays. <strong>File ▸ Open…</strong> (Ctrl+O) opens structures or projects;
+<strong>File ▸ Open As…</strong> overrides format detection. The checkout's <code>tests/fixtures/</code>
+contains small valid inputs and deliberate rejection cases; see
+<a href="../FORMATS.html">supported formats</a>.</p>
+<p><code>--check-renderer</code> runs without a window or display and exits with status 0 for
+<code>PASS</code>, 1 for <code>FAIL</code>. See <a href="rendering.html#configure-and-check-pov-ray">renderer setup</a>.
+For documentation-only installation, see the <a href="../development/documentation.html">documentation workflow</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>

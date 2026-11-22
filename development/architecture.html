@@ -1,0 +1,1705 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/development/architecture.html">
+      
+      
+      
+        <link rel="prev" href="../guide/troubleshooting.html">
+      
+      
+        <link rel="next" href="./documentation.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Architecture - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/controls.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="architecture.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#shared-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Shared contracts
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Extension points
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./validation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./windows-port.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HANDOFF.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#shared-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Shared contracts
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Extension points
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
+<p>Ycrystal keeps scientific data separate from presentation and rendering backends.
+The Python interfaces are still evolving; inspect their source and tests when
+extending them.</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Responsibility and dependency direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core/structure.py</code></td>
+<td>Scientific cell, positions, elements, labels, occupancy, movable flags, provenance. Lattice rows and positions are Cartesian Å. Array inputs are copied and stored read-only; metadata remains mutable.</td>
+</tr>
+<tr>
+<td><code>core/scene.py</code></td>
+<td><code>SceneSettings</code> and <code>Environment</code> describe presentation. <code>build_geometry</code> resolves repetitions, boundary images, hidden IDs, periodic bonds, radii, colours, and cell edges into the shared <code>DisplayGeometry</code>. No Qt or VTK.</td>
+</tr>
+<tr>
+<td><code>core/camera.py</code>, <code>core/picking.py</code></td>
+<td>Immutable orthographic camera and analytic picking. Projection uses top-left continuous pixel coordinates. Navigation returns new cameras. No GUI dependency.</td>
+</tr>
+<tr>
+<td><code>io/readers.py</code>, <code>io/qe_lattice.py</code>, <code>io/project.py</code></td>
+<td>File detection, ASE-backed readers (QE lattices with <code>ibrav</code> other than 0, which ASE does not read, are built by <code>qe_lattice</code> with pw.x's conventions), provenance, and versioned JSON projects. Questions are exceptions that the caller can answer and retry; no GUI dependency.</td>
+</tr>
+<tr>
+<td><code>gui/main_window.py</code>, <code>gui/commands.py</code></td>
+<td>Qt actions, dialogs, project state, selection, and display-setting undo stack. Coordinates are never edited by navigation or hiding.</td>
+</tr>
+<tr>
+<td><code>core/background.py</code>, <code>io/images.py</code>, <code>io/package.py</code></td>
+<td>Background pictures: the framing reference stored in an <code>Environment</code> and the shared placement arithmetic (no Qt/VTK); checked, content-addressed picture storage (Pillow); and the defensive ZIP container that projects and styles use when they carry a picture.</td>
+</tr>
+<tr>
+<td><code>presets/custom.py</code>, <code>gui/material_editor.py</code></td>
+<td>Custom material variants: typed parameter schemas for Ycrystal's own recipes, content-derived ids, generated POV-Ray recipe text; and the <em>Customize Material…</em> dialog with the personal list in <code>QSettings</code>.</td>
+</tr>
+<tr>
+<td><code>core/vectors.py</code>, <code>gui/vector_dialog.py</code></td>
+<td>Atom-attached vectors: typed records (Cartesian components, meaning), source defaults and image overrides, arrow appearance, and the single resolver that turns them into arrow geometry for <code>DisplayGeometry</code> (drawn by both renderers; no Qt/VTK); and the <em>Vectors</em> window and editor.</td>
+</tr>
+<tr>
+<td><code>core/measure.py</code></td>
+<td>Distances and bond angles between displayed instances (<code>AtomId</code>), computed from the structure's coordinates and cell only, plus the session state of the measurement modes. No Qt or VTK; nothing is saved in projects.</td>
+</tr>
+<tr>
+<td><code>core/lighting.py</code></td>
+<td><code>resolve_lighting</code> turns an environment's relative light values into a world-space <code>LightingRig</code> (key, fill, reflection panel) for an output camera and a displayed geometry. Shared by the POV writer, the live view, and the Lighting Setup window; nothing is stored. No Qt or VTK.</td>
+</tr>
+<tr>
+<td><code>viewport/qt_viewport.py</code></td>
+<td>The VTK/PyVistaQt adapter. It consumes shared geometry, exchanges <code>Camera</code> objects, draws overlays, and reports clicks. VTK objects stay here. Its two scene lights come from the resolved rig.</td>
+</tr>
+<tr>
+<td><code>viewport/interactor.py</code></td>
+<td>The PyVistaQt interactor used by both views. Its <code>render()</code> draws before it returns on every platform (PyVistaQt alone defers the drawing to the event loop on macOS), which the start-of-render bookkeeping (output camera, lights, frame overlay) relies on.</td>
+</tr>
+<tr>
+<td><code>viewport/lighting_view.py</code></td>
+<td>The Lighting Setup overview: a second VTK window with its own camera that draws the rig and reports main-light handle drags as angles. Its graphics never reach the main view, picking, fitting, or exports.</td>
+</tr>
+<tr>
+<td><code>render/pov_writer.py</code></td>
+<td>Pure text export of shared geometry/camera into POV-Ray 3.7 and INI output. No renderer process or display needed.</td>
+</tr>
+<tr>
+<td><code>render/jobs.py</code>, <code>render/povray.py</code></td>
+<td>Isolated job directories, discovery, synchronous execution, results, and image copying. The caller owns cleanup. POV-Ray is found through the saved setting, <code>YCRYSTAL_POVRAY</code>, <code>PATH</code>, and on Windows the installation of POV-Ray for Windows (registry, Program Files); its standard include files are located from the executable's installation, never from a fixed system path alone. <code>render/povray.py</code> holds every renderer platform difference: POV-Ray for Windows (<code>pvengine64.exe</code>) is a window program that gets <code>/EXIT /NR +GAscene.log</code>, starts minimised, writes its messages to a log file, is kept from taking the keyboard focus, and is not started while another copy of it that keeps a single instance is open, or while it would ask at start-up whether to download its missing editor.</td>
+</tr>
+<tr>
+<td><code>gui/native.py</code>, <code>desktop.py</code></td>
+<td>The platform-dependent choices of the interface, kept in one place: modifier-key names in help texts, the folder for personal-material thumbnails, the taskbar identity and the program file filter on Windows, and the menu entry of <code>--install-desktop</code> (Linux: freedesktop launcher; Windows: Start-menu shortcut and <code>.ycrystal</code> file type under <code>HKEY_CURRENT_USER</code>; none on macOS). Each takes the platform as a parameter, so every branch is tested on any system.</td>
+</tr>
+<tr>
+<td><code>windows_shortcut.py</code>, <code>scripts/install-windows.ps1</code></td>
+<td>Windows only. Shortcuts (<code>.lnk</code>) with the application id that the window sets, so that its taskbar button belongs to the Start-menu entry, written through the shell's COM interfaces with <code>ctypes</code> (no extra package). The PowerShell installation script (the developer installation) installs Python and POV-Ray for Windows with <code>winget</code> where missing, <code>.venv</code>, the Start-menu entry <strong>Ycrystal (development)</strong>, and runs the renderer check; Windows CI runs it.</td>
+</tr>
+<tr>
+<td><code>packaging/windows/</code></td>
+<td>The graphical Windows installer (recommended for users): a PyInstaller specification that freezes <code>ycrystal.app.main</code> into <code>Ycrystal.exe</code> (window) and <code>ycrystal-cli.exe</code> (command line) sharing one folder, an Inno Setup script, the build script, and a coexistence check. The packaged program runs the same code; <code>desktop.is_packaged()</code> (<code>sys.frozen</code>) gives it its own application id and refuses <code>--install-desktop</code>. Its shortcut, application id, and file type differ from the developer installation's, and each side removes only its own (see <a href="windows-installer.html">Windows installer</a>).</td>
+</tr>
+<tr>
+<td><code>core/export.py</code>, <code>render/formats.py</code>, <code>gui/export_dialog.py</code></td>
+<td>Image export (FR-EXPORT-01): formats, publication sizes, and mm/px/dpi arithmetic without Qt; writing the POV-Ray PNG as PNG (resolution chunk added, pixels untouched), JPEG, or PDF (<code>QPdfWriter</code>, lossless) through a checked <code>.part</code> file; and the <em>Render Image</em> dialog. All formats share one POV-Ray job; only the last step differs.</td>
+</tr>
+<tr>
+<td><code>core/legend.py</code>, <code>render/legend.py</code>, <code>gui/panels/legend_panel.py</code></td>
+<td>Element legend (FR-LEGEND-01): <code>LegendSettings</code> (in <code>SceneSettings.legend</code>) and the entries, read from <code>DisplayGeometry</code> so the markers have the drawn colours (no Qt); one <code>QPainter</code> layout and painter (QtGui only, no window) that draws the legend onto the rendered PNG in <code>finish_job</code>, draws the live view's overlay, and gives the frame region it leaves free for fitting; and the <em>Legend</em> tab. The legend is a 2D layer: the POV-Ray scene and the geometry never contain it.</td>
+</tr>
+<tr>
+<td><code>render/process.py</code></td>
+<td>Asynchronous <code>QProcess</code> adapter. Needs a running Qt event loop (<code>QCoreApplication</code> is enough), not a window. POV-Ray for Windows runs instead as a <code>subprocess.Popen</code> checked by a timer (PySide6's <code>QProcess</code> cannot start a program minimised), and the program's own runs of it take turns, since only one copy can render at a time.</td>
+</tr>
+<tr>
+<td><code>render/selftest.py</code>, <code>render/imagecheck.py</code></td>
+<td>Small renderer diagnostic and analytic/image alignment measurements. Runs without a display, but the diagnostic invokes POV-Ray.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="shared-contracts">Shared contracts<a class="headerlink" href="#shared-contracts" title="Permanent link">&para;</a></h2>
+<p>Both VTK and POV-Ray consume the same resolved geometry. A displayed atom is
+identified by <code>(source_index, (na, nb, nc))</code>, with position equal to the input
+position plus the offset multiplied by the row-vector lattice. Hiding removes that
+ID from the shared geometry; it leaves all scientific data intact. Selection holds
+IDs rather than array row indices because rows change when atoms disappear.</p>
+<p>The <a href="../reference/camera.html">camera reference</a> defines direction, handedness,
+half-height scale, and pixels. Two cameras exist in the GUI: VTK's camera for the
+whole view, and the <strong>output camera</strong> for the image inside the output frame (same
+orientation and centre, parallel scale multiplied by the frame-to-view height ratio).
+Export, preview, render, and projects use the output camera with the explicit output
+size; resizing the window keeps it, so a resize is not a change of the figure (no
+new scene revision, and a preview stays current). POV-Ray export writes explicit camera vectors and
+may move the orthographic eye backward to put all geometry in front of it without
+changing projection. VTK uses the key and fill lights of the shared lighting rig and a
+material's live approximation; axes, the frame, and selection are overlays only.</p>
+<p>Materials, environments, and lighting are presets (<code>ycrystal.presets</code>: JSON manifests
+in <code>presets/materials/</code> and <code>presets/environments/</code>, and <code>presets/lighting.json</code>). A
+material manifest names its declaration kind (finish, pigment, texture, or material),
+the native POV-Ray identifiers and the include files that declare them, whether it
+keeps the element colour, its texture space, and a live approximation. Scene settings
+store material ids at three levels (default, element, displayed atom);
+<code>build_geometry</code> resolves them per atom (<code>DisplayGeometry.materials</code>) together with the
+colours, so the POV writer and the viewport draw the same choice. The environment is a
+plain dataclass that a preset initialises; the writer turns it into a background, a
+frame-aligned backdrop (gradient or sky, unlit through an empty <code>light_group</code>), a
+tilted floor, camera-relative lights, and an optional <code>no_image</code> reflection panel.
+Gallery thumbnails are genuine POV-Ray renders of fixed scenes
+(<code>ycrystal.render.thumbnails</code>), shipped with the package; <code>index.json</code> records a digest
+of each thumbnail scene, and a test fails when a recipe changes without re-rendering
+(<code>scripts/render_thumbnails.py</code>). Previews and final renders run as <code>QProcess</code> jobs;
+previews go through a <code>RenderQueue</code> (one process, newest request wins) and are tagged with the window's scene
+revision so that stale results are discarded.</p>
+<p>Projects embed the structure and provenance, plus camera and presentation state.
+They do not store the machine's renderer path or last-used directory; those belong
+to <code>QSettings</code> (as do gallery favourites, the handle visibility, and nothing else).
+Schema 5 stores repetitions, cell mode, bond rules, atom size and element radii, the
+default material with element and atom overrides, element colours, the full environment
+(background, floor, lighting), and the explicit output size; the saved camera is the
+output camera for that size (as it already was for schemas 1–4). Schema-1 projects load
+with bonds off, schema-1/2 projects with the satin material, and schema-1–3 projects
+without floor, backdrop, overrides, or new lighting, to preserve their appearance.</p>
+<p>Styles (<code>ycrystal.io.style</code>) are the presentation part of a project in the same JSON
+layout, plus the source's element sequence. <code>apply_style</code> is a pure function from
+(style, target structure, current settings) to new settings and user notes; the window
+applies the result as one undo command. Element-keyed settings transfer to elements the
+target contains; atom-keyed settings (per-atom materials, hidden IDs) transfer only when
+the element sequence is identical.</p>
+<p>All figure changes go through <code>SceneSettingsCommand</code>, which carries scene settings and,
+optionally, the environment and the output size, so a style import, a handle drag, or a
+size change is one undo step; consecutive commands with the same merge key (spin boxes)
+merge. Camera navigation stays outside the undo stack.</p>
+<p>Supercell handles and axis-constrained rotation live in the viewport. The input filter
+routes left drags that start on a handle, or any left drag while a rotation axis is set,
+to the viewport instead of VTK's trackball; clicks are still detected on release. Handles
+are 2D overlays recomputed before every render from the camera, the cell, and the (preview)
+repetitions; the drag emits preview and final repetitions, and the window builds the
+geometry once on release. Axis rotation uses <code>Camera.rotate_about</code>, so the scene turns
+about a fixed world axis while the structure's coordinates stay unchanged.</p>
+<h2 id="extension-points">Extension points<a class="headerlink" href="#extension-points" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Add future readers in <code>io/readers.py</code>, producing <code>Structure</code> and provenance.
+  Keep questions/errors GUI-free, wire the format into GUI/CLI detection, and add
+  equivalence/rejection fixtures. Do not put parsing logic in the viewport.</li>
+<li>Add material or environment presets as JSON manifests in <code>src/ycrystal/presets/</code>
+  (declaration kind, recipe or native identifier, includes, live approximation,
+  provenance), render their thumbnails with <code>scripts/render_thumbnails.py</code>, inspect
+  them, and commit manifest, PNG, and <code>index.json</code> together. <code>tests/test_presets.py</code>
+  renders every entry individually; native identifiers must exist in POV-Ray 3.7's
+  standard include files. Assignment selects presets and never modifies coordinates.</li>
+<li>Extend rendering options in <code>render/pov_writer.py</code> and their scene/output models;
+  extend job lifecycle in <code>render/jobs.py</code> / <code>render/process.py</code>. Keep GUI orchestration
+  in the interface. The output frame is the shared aspect contract: keep exported,
+  previewed, and rendered images defined by the output camera and output size.</li>
+<li>Keep scientific editing separate from the existing display repetitions and bonds.
+  Display expansion always starts from the original structure, and is undoable.
+  Future scientific editing needs explicit data-layer operations and provenance.
+  <code>core.compare.supercell</code> currently exists for reader comparisons and discards labels,
+  flags, and metadata.</li>
+<li>New presentation settings belong in <code>SceneSettings</code> or <code>Environment</code> (so that undo,
+  projects, and styles pick them up), with a schema bump in <code>io/project.py</code>, a transfer
+  rule in <code>io/style.py</code>, and a line in the undo-coverage test.</li>
+</ul>
+<p>Read the <a href="../reference/index.html">curated reference</a> and
+<a href="documentation.html#writing-docstrings">documentation convention</a> before extending an
+interface. The repository's
+<a href="https://github.com/ymatterlab/ycrystal/blob/main/CONTRIBUTING.md">contributor guide</a>
+covers application tests and maintenance tooling.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>

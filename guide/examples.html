@@ -1,0 +1,2052 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/guide/examples.html">
+      
+      
+      
+        <link rel="prev" href="./install.html">
+      
+      
+        <link rel="next" href="./first-figure.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Examples and the command line - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Examples and the command line
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="examples.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#render-without-a-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Render without a window
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reuse-the-example-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reuse the example style
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#apply-a-style-from-the-command-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Apply a style from the command line
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Apply a style from the command line">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#map-elements-to-another-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Map elements to another composition
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choose-the-view-and-framing" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Choose the view and framing
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#render-a-series-from-a-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Render a series from a manifest
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Render a series from a manifest">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The manifest
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-happens" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What happens
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./controls.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/validation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-port.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HANDOFF.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#render-without-a-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Render without a window
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reuse-the-example-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reuse the example style
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#apply-a-style-from-the-command-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Apply a style from the command line
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Apply a style from the command line">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#map-elements-to-another-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Map elements to another composition
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choose-the-view-and-framing" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Choose the view and framing
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#render-a-series-from-a-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Render a series from a manifest
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Render a series from a manifest">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The manifest
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-happens" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What happens
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="examples-and-the-command-line">Examples and the command line<a class="headerlink" href="#examples-and-the-command-line" title="Permanent link">&para;</a></h1>
+<p>The checkout's <code>examples/</code> directory contains ready-made projects and a style. They are
+ordinary <code>.ycrystal</code> files with the structure embedded, so they open anywhere:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>examples/SrTiO3-studio.ycrystal</code></td>
+<td>SrTiO3 2 × 2 × 1, chrome Ti and ceramic O, grey studio with floor shadows, 800 × 600</td>
+</tr>
+<tr>
+<td><code>examples/MgB2-gradient.ycrystal</code></td>
+<td>MgB2 3 × 3 × 1 (from <code>tests/fixtures/MgB2.cif</code>), glossy B, blue gradient, 700 × 700</td>
+</tr>
+<tr>
+<td><code>examples/triclinic-transparent.ycrystal</code></td>
+<td>Low-symmetry triclinic cell, matte, transparent PNG background, 900 × 600</td>
+</tr>
+<tr>
+<td><code>examples/vectors-synthetic-afm.ycrystal</code></td>
+<td>Synthetic two-site cubic cell (not a real material) with opposite magnetic-moment arrows (±2.2 μB along z) assigned by hand, 800 × 600</td>
+</tr>
+<tr>
+<td><code>examples/grey-studio.ycstyle</code></td>
+<td>The style of the SrTiO3 example (chrome Ti, ceramic O, grey studio, 800 × 600, 2 × 2 × 1 cells), to apply to other structures in the window or <a href="#apply-a-style-from-the-command-line">with <code>--style</code></a></td>
+</tr>
+<tr>
+<td><code>examples/batch-series.json</code></td>
+<td>A batch manifest: the grey studio style for SrTiO3, BaZrO3 (Ti → Zr), MgB2 (down c), a triclinic cell, and the vector example, all 600 × 450; see <a href="#render-a-series-from-a-manifest">render a series</a></td>
+</tr>
+<tr>
+<td><code>examples/publication/</code></td>
+<td>The publication gallery: two styles (paper and cover), a manifest with snapshots, and structure inputs including kyanite from the Crystallography Open Database; see the <a href="gallery.html">figure gallery</a></td>
+</tr>
+</tbody>
+</table>
+<p>Open one with <strong>File ▸ Open…</strong>, or <code>.venv/bin/ycrystal examples/MgB2-gradient.ycrystal</code>.
+<code>python scripts/make_examples.py</code> regenerates them.</p>
+<h2 id="render-without-a-window">Render without a window<a class="headerlink" href="#render-without-a-window" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>.venv/bin/ycrystal<span class="w"> </span>examples/SrTiO3-studio.ycrystal<span class="w"> </span>--render<span class="w"> </span>SrTiO3.png
+.venv/bin/ycrystal<span class="w"> </span>examples/SrTiO3-studio.ycrystal<span class="w"> </span>--render<span class="w"> </span>small.png<span class="w"> </span>--width<span class="w"> </span><span class="m">400</span><span class="w"> </span>--height<span class="w"> </span><span class="m">300</span>
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/MgB2.cif<span class="w"> </span>--render<span class="w"> </span>MgB2.png
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/MgB2.cif<span class="w"> </span>--export-pov<span class="w"> </span>out/MgB2.pov
+</code></pre></div>
+<p><code>--render</code> draws a project exactly as saved (camera, output size, materials,
+environment) or a structure file with the default settings and view, runs POV-Ray, and
+writes the PNG; <code>--width</code>/<code>--height</code> override the size (the image keeps its centre and
+height, as in the window). <code>--export-pov</code> writes <code>NAME.pov</code> and <code>NAME.ini</code> and needs no
+POV-Ray; the directory must exist. Both need no display, so they also work over SSH or
+in scripts. <code>--povray PATH</code> chooses the POV-Ray executable. Errors print <code>ERROR: …</code> and
+exit with status 1. Files that need a question answered (format, CIF data block, VASP 4
+elements) must be opened in the window first and saved as a project.</p>
+<p>A project (or a style applied with <code>--style</code>) whose
+<a href="rendering.html#element-legend">element legend</a> is on gets the legend in the PNG as well;
+Ycrystal paints it after POV-Ray, without a window. A fitted view (a structure file,
+<code>--view</code>, <code>--camera-policy fit</code>) keeps the structure beside a legend at an edge; a saved
+camera is used as it is. <code>--export-pov</code> notes that the <code>.pov</code> scene does not contain the
+legend.</p>
+<p>On the development laptop (Intel Core Ultra 5 135U), each example renders at 400 × 300
+in about 1–2 seconds.</p>
+<h2 id="reuse-the-example-style">Reuse the example style<a class="headerlink" href="#reuse-the-example-style" title="Permanent link">&para;</a></h2>
+<p>Open your own structure, choose <strong>File ▸ Import Style…</strong>, and pick
+<code>examples/grey-studio.ycstyle</code>. Element settings apply to the elements your structure
+contains; see <a href="appearance.html#reusing-the-look-styles">styles</a>.</p>
+<p>For a structure with other elements, map them in the same dialog. For example, to give
+BaZrO3 the chrome that the style gives Ti:</p>
+<ol>
+<li>Open <code>tests/fixtures/BaZrO3.cif</code> (<strong>File ▸ Open…</strong>).</li>
+<li>Choose <strong>File ▸ Import Style…</strong> and pick <code>examples/grey-studio.ycstyle</code>.</li>
+<li>Under <strong>Element settings go to</strong>, the row <code>O →</code> shows <code>O</code> (matching symbol) and the
+   row <code>Ti →</code> shows <strong>Do not transfer</strong> (BaZrO3 has no Ti). The text below reads
+   <code>Element settings applied: O.</code> and <code>Left out: Ti.</code></li>
+<li>Set the <code>Ti →</code> row to <code>Zr</code>. The text changes to
+   <code>Element settings applied: O, Ti → Zr.</code></li>
+<li>Press <strong>Apply</strong>. Zr is now chrome and O ceramic, in the grey studio; <strong>Edit ▸ Undo</strong>
+   removes the whole import in one step.</li>
+</ol>
+<p>Setting the <code>Ti →</code> row to <code>O</code> instead is refused before <strong>Apply</strong>: the dialog explains
+that O would receive the settings of both O and Ti, and <strong>Apply</strong> stays disabled until
+you choose differently (or set the <code>O →</code> row to <strong>Do not transfer</strong>).</p>
+<h2 id="apply-a-style-from-the-command-line">Apply a style from the command line<a class="headerlink" href="#apply-a-style-from-the-command-line" title="Permanent link">&para;</a></h2>
+<p><strong>Why.</strong> Figures in one paper or talk usually share a look: the same background,
+lighting, floor, image size, and materials. Design that look once in the window, save it
+as a style (<strong>File ▸ Export Style…</strong>), and give it to every other structure from the
+command line, for example from a script that renders a whole series. The figures stay
+consistent, and nobody has to repeat the same clicks for each structure.</p>
+<p><code>--style</code> applies a <code>.ycstyle</code> file to <code>FILE</code> before <code>--render</code> or <code>--export-pov</code>, without
+a window. A style has two kinds of settings:</p>
+<ul>
+<li>settings that suit <strong>any structure</strong>: the environment (background, floor, lighting),
+  the output size, and the default material;</li>
+<li>settings <strong>for particular elements</strong>: element materials, colours, and radii, and
+  bond-pair rules (for example "Ti is chrome").</li>
+</ul>
+<p>The first kind always applies. The second kind applies to the elements the structure
+contains. The style designed for SrTiO3 therefore gives MgB2 the same grey studio, even
+though MgB2 has neither Ti nor O (a warning says that those settings were not used):</p>
+<div class="highlight"><pre><span></span><code>.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/MgB2.cif<span class="w"> </span>--style<span class="w"> </span>examples/grey-studio.ycstyle<span class="w"> </span>--render<span class="w"> </span>MgB2.png
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/MgB2.cif<span class="w"> </span>--style<span class="w"> </span>examples/grey-studio.ycstyle<span class="w"> </span>--export-pov<span class="w"> </span>out/MgB2.pov
+.venv/bin/ycrystal<span class="w"> </span>examples/vectors-synthetic-afm.ycrystal<span class="w"> </span>--style<span class="w"> </span>examples/grey-studio.ycstyle<span class="w"> </span>--render<span class="w"> </span>afm.png
+</code></pre></div>
+<p>The first command prints
+<code>WARNING: Element overrides for O, Ti were not applied: the structure has no O, Ti.</code>
+on standard error and renders an 800 × 600 PNG (the style's size).</p>
+<ul>
+<li><strong>Parts.</strong> By default the command line applies <code>appearance</code> (default material, element
+  materials, colours, and radii, arrow appearance), <code>environment</code> (background including a
+  background picture, floor, lighting, transparency), and <code>output</code> (image size).
+  <code>display</code> (atom size, repetitions, cell edges, bonds, hidden atoms) is left out,
+  because the repetitions and hidden atoms of the style's structure rarely suit another
+  one. Choose the parts with <code>--style-parts</code>, a comma-separated list, for example
+  <code>--style-parts appearance,display,environment,output</code> for everything, or
+  <code>--style-parts environment</code> for the studio only. In the window, <strong>File ▸ Import
+  Style…</strong> offers all four parts as before.</li>
+<li><strong>Transfer rules.</strong> The same as in the window: element settings apply to the elements
+  the structure contains; per-atom materials and hidden atoms only to the same structure
+  (same atoms in the same order). What is left out is printed as <code>WARNING: …</code> lines;
+  the command still succeeds.</li>
+<li><strong>What is kept.</strong> The coordinates, the cell, and the vectors of <code>FILE</code> are never
+  changed, and neither <code>FILE</code> nor the style file is written. A saved project keeps its
+  camera (with <code>display</code>, a warning says if the style's repetitions may not fit in it);
+  a structure file gets the default view, fitted to the styled structure.</li>
+<li><strong>Size.</strong> <code>--width</code> and <code>--height</code> override the style's size, each on its own:
+  <code>--width 400</code> with the 800 × 600 style gives 400 × 600.</li>
+<li><strong>Large displays.</strong> With <code>display</code>, a style may not raise the number of displayed
+  atoms above 20,000; the command stops with an error before writing anything. Apply
+  such a style in the window (which asks) and save a project, or leave out <code>display</code>.</li>
+<li><strong>Errors.</strong> A missing or damaged style file prints <code>ERROR: …</code>, writes nothing, and
+  exits with status 1. <code>--style</code> without <code>--render</code> or <code>--export-pov</code>, or an unknown
+  part in <code>--style-parts</code>, is a usage error (status 2) and opens no window.</li>
+<li>A style package with a background picture or custom materials carries them, so it
+  works on a machine where the picture and the personal materials do not exist.</li>
+</ul>
+<p><code>--render</code> still writes PNG only; PDF and JPEG come from <strong>Render Image…</strong> in the window.</p>
+<h3 id="map-elements-to-another-composition">Map elements to another composition<a class="headerlink" href="#map-elements-to-another-composition" title="Permanent link">&para;</a></h3>
+<p><strong>Why.</strong> Element settings are stored by element symbol, so they are lost when the
+composition changes, even when the figures should match. SrTiO3 and BaZrO3 are both
+ABO3 perovskites: Zr sits where Ti sits, at the centre of the oxygen octahedron. In a
+series of perovskite figures you will usually want the B-site atom drawn the same way in
+every figure, so readers can compare them at a glance. A mapping says which element of
+the new structure takes over which element's look. You decide the correspondence;
+Ycrystal never guesses it.</p>
+<p>The grey studio style has settings for Ti (chrome) and O (ceramic). BaZrO3
+(<code>tests/fixtures/BaZrO3.cif</code>, an illustrative cubic perovskite) has O but no Ti, so
+without a mapping its Zr atoms keep the default material. <code>--element-map</code> gives the Ti
+settings to Zr:</p>
+<div class="highlight"><pre><span></span><code>.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/BaZrO3.cif<span class="w"> </span>--style<span class="w"> </span>examples/grey-studio.ycstyle<span class="w"> </span>--element-map<span class="w"> </span><span class="nv">Ti</span><span class="o">=</span>Zr<span class="w"> </span>--render<span class="w"> </span>BaZrO3.png
+</code></pre></div>
+<p>This renders chrome Zr and ceramic O in the grey studio, with no warning. Two more
+examples, with the messages they print:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># A deliberately partial mapping: Ti's chrome goes to Mg; MgB2 has no O.</span>
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/MgB2.cif<span class="w"> </span>--style<span class="w"> </span>examples/grey-studio.ycstyle<span class="w"> </span>--element-map<span class="w"> </span><span class="nv">Ti</span><span class="o">=</span>Mg<span class="w"> </span>--render<span class="w"> </span>MgB2-chrome.png
+<span class="c1"># WARNING: Element overrides for O were not applied: the structure has no O.</span>
+
+<span class="c1"># Ti's chrome to Zr, and leave the style's O settings out (O keeps its default look).</span>
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/BaZrO3.cif<span class="w"> </span>--style<span class="w"> </span>examples/grey-studio.ycstyle<span class="w"> </span>--element-map<span class="w"> </span><span class="nv">Ti</span><span class="o">=</span>Zr,O<span class="o">=</span>-<span class="w"> </span>--render<span class="w"> </span>BaZrO3-no-O.png
+<span class="c1"># WARNING: Element settings for O were left out by the element mapping.</span>
+</code></pre></div>
+<p>Nothing is guessed: B in MgB2 gets no settings, because no element is mapped to it.</p>
+<ul>
+<li><strong>Syntax.</strong> <code>SOURCE=TARGET</code> pairs separated by commas: <code>--element-map Sr=Ba,Ti=Zr</code>.
+  <code>SOURCE=-</code> leaves the style's settings for <code>SOURCE</code> out: <code>--element-map O=-</code>.
+  Symbols are case-sensitive; spaces around them are ignored. Elements that are not
+  listed keep matching by symbol. <code>--element-map</code> needs <code>--style</code>.</li>
+<li><strong>What moves.</strong> The element materials, colours, and radii of the <code>appearance</code> part,
+  and the bond-pair rules of the <code>display</code> part (when requested with <code>--style-parts</code>).
+  Atoms, element labels, coordinates, vectors, and which bonds exist are never changed,
+  and per-atom settings still transfer only to the same structure.</li>
+<li><strong>Warnings.</strong> A source element the style has no settings for is reported (with
+  <code>--element-map Sr=Ba</code> the grey studio prints <code>WARNING: The style has no element
+  settings for Sr; its mapping changes nothing.</code>), as are settings left out with <code>=-</code>.</li>
+<li><strong>Errors.</strong> A malformed entry, an unknown or wrongly capitalised symbol (<code>ti</code>), or an
+  element mapped twice is a usage error (status 2). A target the structure does not
+  contain (<code>Ti=Mg</code> for BaZrO3), two elements mapped to one target, or a mapping onto an
+  element that keeps its own settings (<code>Ti=O</code>, while the style also has O settings) is
+  an error (status 1). In every case nothing is written and POV-Ray does not start.</li>
+</ul>
+<p>The mapping is a presentation choice, not a statement of chemical equivalence or site
+correspondence; see <a href="appearance.html#element-mapping-a-style-for-another-composition">element mapping</a>.</p>
+<h2 id="choose-the-view-and-framing">Choose the view and framing<a class="headerlink" href="#choose-the-view-and-framing" title="Permanent link">&para;</a></h2>
+<p><strong>Why.</strong> Without options, <code>--render</code> and <code>--export-pov</code> draw a project with its saved
+camera and a structure file with the default view. That suits one figure. For a series,
+or for figures made by a script, you usually want every structure seen along the same
+crystallographic direction, framed so that nothing is cut off, and sometimes drawn at
+the same physical scale so that sizes can be compared. These options choose the camera
+without opening the window; the structure itself is never rotated or moved.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Look down the c axis of MgB2 (the hexagonal cell seen from above):</span>
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/MgB2.cif<span class="w"> </span>--view<span class="w"> </span>c<span class="w"> </span>--render<span class="w"> </span>MgB2-c.png
+<span class="c1"># Two perovskites along a, at the same scale: 9 Å of height in both images.</span>
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/SrTiO3.cif<span class="w"> </span>--view<span class="w"> </span>a<span class="w"> </span>--view-height<span class="w"> </span><span class="m">9</span><span class="w"> </span>--width<span class="w"> </span><span class="m">600</span><span class="w"> </span>--height<span class="w"> </span><span class="m">600</span><span class="w"> </span>--render<span class="w"> </span>SrTiO3-a.png
+.venv/bin/ycrystal<span class="w"> </span>tests/fixtures/BaZrO3.cif<span class="w"> </span>--view<span class="w"> </span>a<span class="w"> </span>--view-height<span class="w"> </span><span class="m">9</span><span class="w"> </span>--width<span class="w"> </span><span class="m">600</span><span class="w"> </span>--height<span class="w"> </span><span class="m">600</span><span class="w"> </span>--render<span class="w"> </span>BaZrO3-a.png
+<span class="c1"># A saved project after a style changed its cells: keep its orientation, refit the frame.</span>
+.venv/bin/ycrystal<span class="w"> </span>examples/MgB2-gradient.ycrystal<span class="w"> </span>--style<span class="w"> </span>examples/grey-studio.ycstyle<span class="w"> </span>--style-parts<span class="w"> </span>display<span class="w"> </span>--camera-policy<span class="w"> </span>fit<span class="w"> </span>--render<span class="w"> </span>MgB2-refit.png
+</code></pre></div>
+<p>In the second pair the BaZrO3 cell (a = 4.19 Å) is visibly larger than the SrTiO3 cell
+(a = 3.905 Å), because both images show 9 Å of height.</p>
+<ul>
+<li><strong><code>--view</code></strong> <code>default</code>, <code>a</code>, <code>b</code>, <code>c</code>, <code>x</code>, <code>y</code>, or <code>z</code>: the named axis points toward
+  the viewer, as with the window's <strong>View along</strong> buttons (same rule, same camera). <code>a</code>,
+  <code>b</code>, <code>c</code> are the <strong>real-space lattice vectors</strong>, not normals of lattice planes (hkl);
+  for skewed cells they differ from each other and from x, y, z. Screen up is the first
+  of c, b, a (z, y, x) that is not parallel to the axis: down a or b, c is up; down c,
+  b is up. A structure without a cell has no a, b, c views (an error says so); <code>x</code>, <code>y</code>,
+  <code>z</code>, and <code>default</code> always work.</li>
+<li><strong><code>--camera-policy</code></strong> <code>saved</code> or <code>fit</code>. <code>saved</code> (the default without <code>--view</code>) uses
+  a project's saved camera exactly as saved; a structure file, which has none, gets the
+  default view. <code>fit</code> keeps the saved orientation but refits the centre and scale to
+  what is drawn now, useful after a style changed the repetitions. <code>--view</code> and
+  <code>--view-height</code> imply <code>fit</code>; combining them with <code>--camera-policy saved</code> is a usage
+  error.</li>
+<li><strong>Fitting</strong> includes everything drawn: atoms, cell edges, and whole vector arrows.
+  Nothing is clipped at any output shape, portrait or landscape. <code>--fit-margin</code> sets the
+  space around it as a fraction of the half-height, 0–1 (default 0.06).</li>
+<li><strong><code>--view-height ANGSTROM</code></strong> shows a fixed height of the scene (in Å) instead of
+  fitting the scale, centred on the scene; the width follows the image's shape. If the
+  scene does not fit, the command stops with an error that gives the height needed (for
+  example <code>it needs at least 5.85 Å</code> for SrTiO3 along a at 1200 × 800) instead of
+  cutting the figure.</li>
+<li><strong>Without these options nothing changes</strong>: the camera is chosen exactly as before.</li>
+<li><strong>Errors.</strong> An unknown view, a margin outside 0–1, a non-positive height, or
+  <code>--camera-policy saved</code> with <code>--view</code> is a usage error (status 2); these options
+  without <code>--render</code> or <code>--export-pov</code> are a usage error too, and open no window. A
+  lattice view without a cell, or a scene too large for <code>--view-height</code>, is an error
+  (status 1). Nothing is written in either case.</li>
+</ul>
+<p>Orthographic projection is used throughout, so atoms at the back are as large as atoms
+at the front, and the visible height in Å is a true scale of the structure.</p>
+<h2 id="render-a-series-from-a-manifest">Render a series from a manifest<a class="headerlink" href="#render-a-series-from-a-manifest" title="Permanent link">&para;</a></h2>
+<p><strong>Why.</strong> A paper often needs the same kind of figure for many structures: one style,
+one orientation, one size, perhaps with an element mapping for some of them. Running
+one command per structure works, but the settings end up scattered over a shell
+script. A <strong>batch manifest</strong> states them once, in a small JSON file that you can keep
+next to the data, check in, and rerun later. Ycrystal checks the whole manifest before
+it renders anything, renders the figures one after the other, and writes a report of
+what happened.</p>
+<div class="highlight"><pre><span></span><code>.venv/bin/ycrystal<span class="w"> </span>--batch<span class="w"> </span>examples/batch-series.json<span class="w"> </span>--output-dir<span class="w"> </span>renders<span class="w"> </span>--dry-run
+.venv/bin/ycrystal<span class="w"> </span>--batch<span class="w"> </span>examples/batch-series.json<span class="w"> </span>--output-dir<span class="w"> </span>renders
+</code></pre></div>
+<p>The first command checks everything and lists what would be rendered, without
+rendering or writing anything:</p>
+<div class="highlight"><pre><span></span><code>WARNING: MgB2: Element overrides for O, Ti were not applied: the structure has no O, Ti.
+WARNING: afm-vectors: Element overrides for O, Ti were not applied: the structure has no O, Ti.
+SrTiO3: would render SrTiO3.png (600 × 450, 15 atoms)
+BaZrO3: would render BaZrO3.png (600 × 450, 15 atoms)
+MgB2: would render MgB2.png (600 × 450, 10 atoms)
+triclinic: would render triclinic.png (600 × 450, 5 atoms)
+afm-vectors: would render vectors/afm.png (600 × 450, 22 atoms)
+Checked 5 job(s); nothing was rendered (--dry-run).
+</code></pre></div>
+<p>The second renders the five PNGs into <code>renders/</code> (about 6 s on the development Mac)
+and writes <code>renders/ycrystal-batch-report.json</code>.</p>
+<h3 id="the-manifest">The manifest<a class="headerlink" href="#the-manifest" title="Permanent link">&para;</a></h3>
+<p><code>examples/batch-series.json</code>, shortened:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w"> </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ycrystal-batch"</span><span class="p">,</span>
+<span class="w"> </span><span class="nt">"schema_version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w"> </span><span class="nt">"defaults"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"style"</span><span class="p">:</span><span class="w"> </span><span class="s2">"grey-studio.ycstyle"</span><span class="p">,</span><span class="w"> </span><span class="nt">"view"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a"</span><span class="p">,</span><span class="w"> </span><span class="nt">"width"</span><span class="p">:</span><span class="w"> </span><span class="mi">600</span><span class="p">,</span><span class="w"> </span><span class="nt">"height"</span><span class="p">:</span><span class="w"> </span><span class="mi">450</span><span class="p">},</span>
+<span class="w"> </span><span class="nt">"jobs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SrTiO3"</span><span class="p">,</span><span class="w"> </span><span class="nt">"input"</span><span class="p">:</span><span class="w"> </span><span class="s2">"../tests/fixtures/SrTiO3.cif"</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BaZrO3"</span><span class="p">,</span><span class="w"> </span><span class="nt">"input"</span><span class="p">:</span><span class="w"> </span><span class="s2">"../tests/fixtures/BaZrO3.cif"</span><span class="p">,</span><span class="w"> </span><span class="nt">"element_map"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"Ti"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Zr"</span><span class="p">}},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MgB2"</span><span class="p">,</span><span class="w"> </span><span class="nt">"input"</span><span class="p">:</span><span class="w"> </span><span class="s2">"../tests/fixtures/MgB2.cif"</span><span class="p">,</span><span class="w"> </span><span class="nt">"view"</span><span class="p">:</span><span class="w"> </span><span class="s2">"c"</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"triclinic"</span><span class="p">,</span><span class="w"> </span><span class="nt">"input"</span><span class="p">:</span><span class="w"> </span><span class="s2">"../tests/fixtures/triclinic.cif"</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">"style_parts"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"environment"</span><span class="p">,</span><span class="w"> </span><span class="s2">"output"</span><span class="p">]},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"afm-vectors"</span><span class="p">,</span><span class="w"> </span><span class="nt">"input"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vectors-synthetic-afm.ycrystal"</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">"output"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vectors/afm.png"</span><span class="p">,</span><span class="w"> </span><span class="nt">"camera_policy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fit"</span><span class="p">}</span>
+<span class="w"> </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><code>format</code> and <code>schema_version</code> identify the file. <code>jobs</code> lists the figures, rendered
+  in this order. Each job needs an <code>id</code> (letters, digits, <code>.</code>, <code>_</code>, <code>-</code>; unique) and an
+  <code>input</code>: a structure file or a <code>.ycrystal</code> project.</li>
+<li><code>defaults</code> holds settings for every job; a job can set any of them for itself, which
+  replaces the default. The settings are those of the single-figure options:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Meaning</th>
+<th>Command-line equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>output</code></td>
+<td>PNG file in the output folder (default <code>&lt;id&gt;.png</code>); subfolders allowed</td>
+<td><code>--render</code></td>
+</tr>
+<tr>
+<td><code>format</code></td>
+<td><code>poscar</code>, <code>cif</code>, <code>qe</code>, or <code>project</code> (default: detected)</td>
+<td><code>--format</code></td>
+</tr>
+<tr>
+<td><code>style</code></td>
+<td><code>.ycstyle</code> file, or <code>null</code> for none</td>
+<td><code>--style</code></td>
+</tr>
+<tr>
+<td><code>style_parts</code></td>
+<td>List of parts, default <code>["appearance", "environment", "output"]</code></td>
+<td><code>--style-parts</code></td>
+</tr>
+<tr>
+<td><code>element_map</code></td>
+<td><code>{"Ti": "Zr"}</code>; <code>null</code> as a value leaves an element's settings out</td>
+<td><code>--element-map Ti=Zr</code> (<code>O=-</code>)</td>
+</tr>
+<tr>
+<td><code>view</code></td>
+<td><code>default</code>, <code>a</code>, <code>b</code>, <code>c</code>, <code>x</code>, <code>y</code>, <code>z</code></td>
+<td><code>--view</code></td>
+</tr>
+<tr>
+<td><code>camera_policy</code></td>
+<td><code>saved</code> or <code>fit</code></td>
+<td><code>--camera-policy</code></td>
+</tr>
+<tr>
+<td><code>fit_margin</code></td>
+<td>0–1, default 0.06</td>
+<td><code>--fit-margin</code></td>
+</tr>
+<tr>
+<td><code>view_height</code></td>
+<td>Fixed visible height in Å</td>
+<td><code>--view-height</code></td>
+</tr>
+<tr>
+<td><code>width</code>, <code>height</code></td>
+<td>Image size, 16–8000 px (default: the input's, or the style's)</td>
+<td><code>--width</code>, <code>--height</code></td>
+</tr>
+<tr>
+<td><code>max_atoms</code></td>
+<td>Largest number of displayed atoms allowed, default 20,000</td>
+<td>(none)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Paths are relative to the manifest's folder, so a manifest works wherever the folder
+  is copied with its data. Absolute input and style paths are accepted too; outputs
+  must stay inside the output folder (no <code>..</code>, no absolute paths).</li>
+<li>Unknown keys are refused (a misspelt <code>"veiw"</code> is an error, not silently ignored). A
+  <code>"comment"</code> key at the top level is allowed for notes.</li>
+<li><code>"save_projects": true</code> at the top level also saves, next to each image, the figure's
+  self-contained snapshot (<code>SrTiO3.ycrystal</code>) and its provenance record
+  (<code>SrTiO3.provenance.json</code>); see <a href="reproducibility.html#a-series-save_projects-in-a-batch-manifest">reproducible figures</a>.</li>
+</ul>
+<h3 id="what-happens">What happens<a class="headerlink" href="#what-happens" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Everything is checked first.</strong> Ycrystal reads every input and style, applies the
+   styles and element mappings, chooses every camera, and checks every output name. It
+   reports <strong>all</strong> problems of <strong>all</strong> jobs at once (for example a missing input, an
+   unknown element, two jobs writing the same file, <code>../</code> in an output, a scene larger
+   than <code>max_atoms</code> or than <code>view_height</code>) and then stops with status 2, before
+   rendering or writing anything.</li>
+<li><strong>Existing images are not replaced</strong> unless you add <code>--overwrite</code>; without it, an
+   existing image or report is one of the problems of step 1.</li>
+<li><strong>Jobs run one after the other</strong>, in manifest order. POV-Ray already uses all
+   processor cores for one image, so jobs are not run in parallel. A job that fails
+   (for example a POV-Ray error) is recorded and the others continue; an image is
+   written only when its render succeeded, never half-written.</li>
+<li><strong>The report</strong> <code>ycrystal-batch-report.json</code> lists every job in order with its
+   status (<code>rendered</code> or <code>failed</code>), time, size, number of atoms, warnings, and error
+   message, plus the Ycrystal and POV-Ray versions. Paths are written as given in the
+   manifest. With <code>save_projects</code>, <code>project</code> and <code>provenance</code> name each job's snapshot
+   and record (otherwise they are <code>null</code>).</li>
+<li><strong>Exit status:</strong> 0 when every job was rendered; 1 when any job failed (or POV-Ray is
+   missing, then nothing is rendered); 2 when the manifest is invalid.</li>
+</ol>
+<p><code>--batch</code> takes all settings from the manifest: combining it with <code>FILE</code>, <code>--render</code>,
+<code>--style</code>, <code>--view</code>, or the other single-figure options is a usage error. Batch
+rendering writes PNG files; PDF and JPEG come from <strong>Render Image…</strong> in the window.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1947 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reproducible crystal-structure figures rendered with POV-Ray">
+      
+      
+      
+        <link rel="canonical" href="https://ymatterlab.github.io/ycrystal/guide/controls.html">
+      
+      
+      
+        <link rel="prev" href="./first-figure.html">
+      
+      
+        <link rel="next" href="../FORMATS.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.1.1">
+    
+    
+      
+        <title>Controls and display - Ycrystal</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ebb7f775.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Ycrystal" class="md-header__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ycrystal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Controls and display
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Ycrystal" class="md-nav__button md-logo" aria-label="Ycrystal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Ycrystal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ymatterlab/ycrystal" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install and launch
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples and the command line
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./first-figure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first crystal figure
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="controls.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Controls and display
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#boundary-atoms-and-hiding" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Boundary atoms and hiding
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-framing" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Output framing
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supercells-bonds-and-directions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Supercells, bonds, and directions
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supercells, bonds, and directions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supercell-handles" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Supercell handles
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotation-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rotation modes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#measurements" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Measurements
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vectors-arrows-on-atoms" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Vectors (arrows on atoms)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FORMATS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure files and projects
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./qe-lattices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quantum ESPRESSO lattices (ibrav)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Materials, backgrounds, and lighting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Export and rendering
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./reproducibility.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reproducible figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gallery.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Figure gallery
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Supported formats and platforms
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting and limitations
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developer guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developer guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/documentation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation workflow
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/validation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Validation and benchmarks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/comparison.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Comparison with other programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/independent-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Independent evaluation checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/manuscript-figures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Proposed manuscript figures
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/next-tests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Next tests on other computers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-port.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows port
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/windows-installer.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Windows installer
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/release.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Release procedure and checklist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Structure and samples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/scene.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scene and geometry
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Camera and picking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/io.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Readers, projects, and styles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rendering.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  POV export and render jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/presets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Material, environment, and lighting presets
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Command line, batch rendering, and desktop
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/gui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GUI adapters
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROGRESS.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Progress and roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HANDOFF.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development handoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#boundary-atoms-and-hiding" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Boundary atoms and hiding
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-framing" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Output framing
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supercells-bonds-and-directions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Supercells, bonds, and directions
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supercells, bonds, and directions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supercell-handles" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Supercell handles
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotation-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rotation modes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#measurements" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Measurements
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vectors-arrows-on-atoms" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Vectors (arrows on atoms)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="controls-and-display">Controls and display<a class="headerlink" href="#controls-and-display" title="Permanent link">&para;</a></h1>
+<p>Use the mouse and view shortcuts over the 3D viewport. VTK's default keys such as
+<code>q</code> (quit) and <code>w</code> (wireframe) are disabled. <strong>Help ▸ Mouse Controls</strong> (F1) opens
+the in-app summary.</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Left drag</td>
+<td>Orbit about the view centre (or turn about the chosen axis, see below)</td>
+</tr>
+<tr>
+<td>Middle drag or Shift + left drag</td>
+<td>Pan</td>
+</tr>
+<tr>
+<td>Wheel or right drag</td>
+<td>Zoom</td>
+</tr>
+<tr>
+<td>F / toolbar Fit</td>
+<td>Fit the displayed geometry, preserving orientation</td>
+</tr>
+<tr>
+<td>View ▸ Reset View</td>
+<td>Restore the default orientation and fit</td>
+</tr>
+<tr>
+<td>Left click without dragging</td>
+<td>Select the front-most ball; empty space clears</td>
+</tr>
+<tr>
+<td>Ctrl + click</td>
+<td>Add/remove a ball from the selection</td>
+</tr>
+<tr>
+<td>Esc</td>
+<td>Clear selection (in a measurement mode: cancel the incomplete measurement)</td>
+</tr>
+<tr>
+<td><strong>Distance</strong> / <strong>Bond angle</strong> (View along toolbar, Edit menu)</td>
+<td>Measure between clicked atoms; see <a href="#measurements">Measurements</a></td>
+</tr>
+<tr>
+<td><strong>Edit ▸ Vectors…</strong></td>
+<td>Attach direction or magnetic-moment arrows to atoms; see <a href="#vectors-arrows-on-atoms">Vectors</a></td>
+</tr>
+<tr>
+<td>Delete or Backspace</td>
+<td>Hide selected displayed atoms</td>
+</tr>
+<tr>
+<td>Ctrl+M</td>
+<td>Material for the selected atoms (Edit ▸ Material for Selection…)</td>
+</tr>
+<tr>
+<td>Drag an <strong>a</strong>, <strong>b</strong>, or <strong>c</strong> handle</td>
+<td>Add or remove whole cells along that axis</td>
+</tr>
+<tr>
+<td>Esc or right button during a handle drag</td>
+<td>Cancel the drag</td>
+</tr>
+<tr>
+<td>Drag a light handle in <strong>Lighting Setup</strong></td>
+<td>Set the key-light direction (one undo step; Esc cancels)</td>
+</tr>
+<tr>
+<td>Ctrl+Left / Ctrl+Right</td>
+<td>Turn by the step angle about the rotation axis</td>
+</tr>
+<tr>
+<td>Ctrl+Z</td>
+<td>Undo a display-setting change</td>
+</tr>
+<tr>
+<td>Ctrl+Shift+Z or Ctrl+Y</td>
+<td>Redo a display-setting change</td>
+</tr>
+<tr>
+<td>Ctrl+O</td>
+<td>Open a structure or project</td>
+</tr>
+<tr>
+<td>Ctrl+S / Ctrl+Shift+S</td>
+<td>Save Project / Save Project As…</td>
+</tr>
+<tr>
+<td>F5</td>
+<td>POV-Ray preview of the framed view</td>
+</tr>
+<tr>
+<td>Ctrl+R</td>
+<td>Render Image… as PNG, PDF, or JPEG (toolbar <strong>Cancel Render</strong> stops it)</td>
+</tr>
+<tr>
+<td>Ctrl+Q</td>
+<td>Quit (asks about unsaved changes)</td>
+</tr>
+</tbody>
+</table>
+<p>On macOS, read <strong>Ctrl</strong> as <strong>⌘</strong> (Command) throughout: ⌘ + click toggles the
+selection (Control + click is a right click there), ⌘Z undoes, ⌘R renders. The
+function keys F1 and F5 may need the Fn key, depending on the keyboard settings. A
+mouse or trackpad without a middle button pans with Shift + left drag.</p>
+<h2 id="boundary-atoms-and-hiding">Boundary atoms and hiding<a class="headerlink" href="#boundary-atoms-and-hiding" title="Permanent link">&para;</a></h2>
+<p><strong>View ▸ Show Boundary Atoms</strong> is on by default. Atoms are wrapped along periodic
+cell directions and repeated on equivalent faces, edges, and corners. A corner atom
+can appear eight times. Turning the option off shows each input atom once per repeated cell at its
+original position plus the cell translation. Repetition controls expand the display from the original structure without changing
+the scientific atom count.</p>
+<p>Each ball has its own identity: the source atom (0-based internally, 1-based in the
+status bar) and an integer image offset <code>(na, nb, nc)</code>. The offset is relative to the
+input position. A selected ball's Cartesian position is
+<code>input_position + image_offset @ cell</code>, with lattice vectors as cell rows.</p>
+<p>Delete hides only selected balls, including from POV exports and renders. Other
+images of the same atom stay visible. <strong>View ▸ Show All Atoms</strong> restores all hidden
+IDs. Hidden IDs survive toggling boundary images off and on. Selection highlights
+are viewport overlays and do not appear in the figure.</p>
+<p>Undo/redo covers every change to the figure: hiding, Show All Atoms, boundary images,
+repetitions (including handle drags), cell-edge modes, bond settings, atom size and
+element radii, materials (default, element, and atom), element colours, environments,
+backgrounds, floors, lighting, the output size, and style imports. A handle drag or a
+style import is one step; consecutive spin-box adjustments of the same value merge into
+one step. Camera navigation (orbit, pan, zoom, rotation, view directions) is not on the
+undo stack; <strong>View ▸ Reset View</strong> returns to the default orientation. File opens and
+saves are not undoable; opening a new file clears the undo history. A changed camera
+still marks the project modified. The aspect-ratio lock in the Render tab is saved in
+projects but is not an undo step; see <a href="rendering.html#lock-aspect-ratio">lock aspect ratio</a>.</p>
+<h2 id="output-framing">Output framing<a class="headerlink" href="#output-framing" title="Permanent link">&para;</a></h2>
+<p>The output size is set in <strong>Scene ▸ Render</strong> (width and height, 16 to 8000 pixels,
+with aspect presets). A blue frame in the 3D view marks the rendered area; outside it
+the view is dimmed. Resizing the window moves the frame on screen but does not change
+the image. Projection is orthographic; atoms do not shrink with distance from the
+camera. See <a href="rendering.html#output-size-and-frame">output size and frame</a>.</p>
+<p>The structure's coordinates, occupancies, and movable flags are scientific data.
+Camera, radii, colours, boundary images, hiding, materials, background, and lighting
+are presentation state; see
+<a href="appearance.html">Materials, backgrounds, and lighting</a> for the <strong>Scene ▸ Appearance</strong>
+tab and the galleries. There is no atom editor.</p>
+<h2 id="supercells-bonds-and-directions">Supercells, bonds, and directions<a class="headerlink" href="#supercells-bonds-and-directions" title="Permanent link">&para;</a></h2>
+<p>The <strong>Scene</strong> dock has <strong>Structure</strong>, <strong>Bonds</strong>, <strong>Appearance</strong>, <strong>Legend</strong> (the
+<a href="rendering.html#element-legend">element legend</a>), and <strong>Render</strong> tabs. If closed, reopen
+it from
+<strong>View ▸ Scene</strong>. Under Structure, set repetitions along a, b, c (1 to 20),
+use <strong>+ all</strong> / <strong>− all</strong>, or reset with <strong>1 × 1 × 1</strong>. Typed counts apply on Enter
+or focus change. The view refits after a repetition change. Expansions above 20,000
+displayable atoms ask for confirmation before building geometry. Non-periodic axes
+are not repeated. Hidden IDs persist across expansion and shrinking. <strong>Atom size</strong> sets
+the sphere radius as a multiple of the covalent radius (per-element radii are in the
+Appearance tab).</p>
+<h3 id="supercell-handles">Supercell handles<a class="headerlink" href="#supercell-handles" title="Permanent link">&para;</a></h3>
+<p>Coloured <strong>a</strong> (red), <strong>b</strong> (green), and <strong>c</strong> (blue) handles sit outside the repeated
+block, on the line through the centre of its far face along each lattice direction.
+Drag a handle outward to add cells along that axis, inward to remove them (at least one
+cell remains). While you drag, an orange outline shows the new block and a label gives
+the cell counts and the number of atoms; orbiting is disabled. The geometry is rebuilt
+when you release the button, as one undoable step; Esc or the right button cancels the
+drag. Handles are hidden for non-periodic axes, for structures without a cell, and for
+directions that point almost at the viewer (rotate the view to reach them).
+<strong>View ▸ Supercell Handles</strong> switches them off. Handles exist only in the live view; they
+never appear in exports or renders.</p>
+<p><strong>Cell edges</strong> offers <strong>All unit cells</strong>, <strong>Outline of the repeated block</strong>,
+<strong>Original cell only</strong>, or <strong>None</strong>. The boundary option applies to the repeated block.</p>
+<p>Under Bonds, <strong>Show bonds</strong> controls visibility. <strong>Max. length</strong> ranges from 0.80
+through 1.50 times the sum of covalent radii; <strong>Radius</strong> ranges from 0.02 through
+0.50 Å. Element-pair checkboxes override the default rule: metal–metal pairs start
+off in compounds containing non-metals. The pair list reports candidates and length
+ranges <strong>per original cell</strong>, not the number drawn in the repeated block. A bond
+appears only when both endpoint atoms are displayed; hiding an atom removes its bonds.
+These are geometric contacts, not calculated chemical bond orders.</p>
+<p>The <strong>View along</strong> toolbar offers <strong>a, b, c</strong> and <strong>x, y, z</strong>. The selected positive
+axis points toward the viewer; hold <strong>Shift</strong> when clicking to reverse it. Screen up is
+the first of c, b, a (for x, y, z: z, y, x) that is not parallel to the chosen axis, so
+looking down a or b puts c up and looking down c puts b up. <strong>a, b, c are the real-space
+lattice vectors</strong>, not normals of lattice planes: in a skewed cell, looking down c is
+not the same as looking at the (001) plane face-on, and lattice directions differ from
+Cartesian directions. These actions fit the view and affect the camera only; they are
+outside the display-setting undo stack. <code>ycrystal --view</code> uses exactly the same rule
+(see <a href="examples.html#choose-the-view-and-framing">choose the view</a>).</p>
+<h2 id="rotation-modes">Rotation modes<a class="headerlink" href="#rotation-modes" title="Permanent link">&para;</a></h2>
+<p>The <strong>Rotate</strong> menu in the View along toolbar chooses how a left drag rotates:</p>
+<ul>
+<li><strong>freely</strong> (default): trackball rotation in all directions.</li>
+<li><strong>about a, b, c</strong> (lattice vectors) or <strong>about x, y, z</strong> (Cartesian axes): the
+  rotation is restricted to that axis through the view centre. The axis keeps its
+  direction on screen while the structure turns around it. Drag across the axis as it
+  appears on screen; when the axis points at you, move the mouse in a circle around the
+  view centre instead.</li>
+</ul>
+<p>The <strong>⟲</strong> and <strong>⟳</strong> buttons (Ctrl+Left, Ctrl+Right) turn by the angle chosen next to
+them (5° to 90°) about the rotation axis, or about the line of sight in free mode, for
+exact orientations. Clicks still select atoms, and Shift + left drag still pans. Rotation
+changes only the view: coordinates are unchanged, and the mode is not saved in projects.
+Lattice axes are unavailable for structures without a cell.</p>
+<h2 id="measurements">Measurements<a class="headerlink" href="#measurements" title="Permanent link">&para;</a></h2>
+<p><strong>Distance</strong> and <strong>Bond angle</strong> in the View along toolbar (also <strong>Edit ▸ Measure
+Distance</strong> and <strong>Edit ▸ Measure Bond Angle</strong>) switch from selecting to measuring. The
+two modes exclude each other; click the active button again to return to ordinary
+selection. Navigation is unchanged: a drag still orbits, pans, or zooms and never picks
+an atom, and only a click without dragging counts.</p>
+<ul>
+<li><strong>Distance</strong>: click atom A, then atom B. The result is their separation in Å.</li>
+<li><strong>Bond angle</strong>: click A, then B, then C. The result is the angle A–B–C in degrees
+  (0° to 180°) with <strong>B as the vertex</strong>, from the arms A − B and C − B. No bond needs to
+  be drawn between the atoms.</li>
+</ul>
+<p>The bold text in the status bar says which atom to click next, for example
+“Bond angle: select atom B — angle vertex”. The picked atoms get a teal wire cage and a
+boxed letter (A, B, or “B vertex”); a dashed line joins them, and an angle shows a small
+arc at the vertex. <strong>Esc</strong> cancels an incomplete measurement and removes these marks (a
+second Esc clears the ordinary selection); switching modes also cancels it. After a
+measurement the mode stays on, so the next click starts a new one. Clicking empty space
+keeps the atoms picked so far; clicking the same ball twice in one measurement is
+refused with an explanation.</p>
+<p><strong>Which atoms are measured.</strong> Each ball is one displayed instance: a source atom and its
+periodic image offset <code>[na nb nc]</code> (see <a href="#boundary-atoms-and-hiding">Boundary atoms and hiding</a>).
+Ycrystal measures exactly the instances you click, at <code>input_position + [na nb nc] @ cell</code>,
+also in supercells, with boundary images, and in non-orthogonal cells. It does <strong>not</strong>
+replace them by the nearest periodic image (no minimum-image convention): to measure
+across a cell boundary, click the image on the other side. Two images of the same atom
+are different balls and can be measured against each other. The values come from the
+structure's coordinates and cell only, so the camera, zoom, atom size, materials, and
+lighting never change them.</p>
+<p><strong>The Measurements panel</strong> opens at the bottom of the window, under the 3D view, with
+the first completed measurement (<strong>View ▸ Measurements</strong> shows or hides it later). Each
+row gives the type, the atoms (element, input label, 1-based atom number, and image, e.g.
+<code>A: O #3 [0 0 0] · B (vertex): Ti #2 [0 0 0] · C: O #4 [0 1 0]</code>), and the result, e.g.
+<code>1.9525 Å</code> or <code>90.00° — vertex B</code>. New measurements are added below the earlier ones.
+Distances show four decimals and angles two; the full value is in the tooltip, and the
+decimals do not express an uncertainty. <strong>Copy Selected</strong> (or Ctrl+C in the table)
+copies the selected rows as text with atoms, units, and the vertex, for example
+<code>Angle A–B–C: 90.00° — vertex B (A = O #3 [0 0 0], B = Ti #2 [0 0 0], C = O #4 [0 0 0])</code>.
+<strong>Remove Selected</strong> and <strong>Clear All</strong> delete rows.</p>
+<p>Measurements are inspection data for the current session: they are not saved in
+projects, styles, or exports, and the marks never appear in the POV-Ray preview, the
+rendered PNG, or the <code>.pov</code> file; they do not affect Fit, the lights, or picking.
+Opening another structure or project clears all measurements. When a measured ball
+disappears from the display (boundary atoms off, fewer repetitions, hiding), the
+measurements that use it are removed and the panel says so; the others stay, because
+each identity still denotes the same position in the same structure. Undoing the change
+does not bring removed measurements back.</p>
+<h2 id="vectors-arrows-on-atoms">Vectors (arrows on atoms)<a class="headerlink" href="#vectors-arrows-on-atoms" title="Permanent link">&para;</a></h2>
+<p><strong>Edit ▸ Vectors…</strong> (or <strong>Vectors…</strong> in the Appearance tab) attaches arrows to atoms, for
+example to illustrate a magnetic structure. You enter the vectors yourself; Ycrystal does
+not compute, read, or infer magnetic moments.</p>
+<p><strong>What a vector is.</strong> Three Cartesian components in the structure's own right-handed
+frame, the frame of the atom positions (not fractional or lattice coordinates, and not a
+DFT code's spin axes). The camera never changes them. Each vector has a meaning:</p>
+<ul>
+<li><strong>Magnetic moment</strong>: components in Bohr magnetons (μB);</li>
+<li><strong>Direction</strong>: a dimensionless illustration, never presented as a measured moment.</li>
+</ul>
+<p>The table shows the components and the modulus. A zero vector is kept as data (modulus 0)
+and draws no arrow; vectors with a modulus up to 10⁻⁹ count as zero.</p>
+<p><strong>Attaching.</strong> Select atoms in the 3D view, then <strong>Add/Set for Selection…</strong>. The editor
+asks where the vector goes:</p>
+<ul>
+<li><strong>Selected displayed atom(s) only</strong>: exactly those balls (source atom and periodic
+  image), as an <em>image override</em>;</li>
+<li><strong>All periodic images of their source atom(s)</strong>: a <em>source default</em> that every image
+  of the atom shows, with the same components in every cell.</li>
+</ul>
+<p>An image override takes precedence over its source default, and <strong>Suppress on Selected
+Images</strong> removes the arrow from chosen balls even if their source has a default. Each ball
+shows at most one vector. Atoms of the same element are never grouped: two iron atoms can
+carry opposite moments. Ycrystal infers no alternating signs, propagation vector, or
+magnetic symmetry, so an antiferromagnetic pattern has to be assigned explicitly (per
+source atom, per image, or with a magnetic repeat cell as the structure).</p>
+<p>While the editor is open, the 3D view and the POV-Ray preview show the new vector without
+an undo step; selecting other atoms does not change the editor's targets. <strong>Apply</strong> is
+one undo step (also for many atoms at once), <strong>Cancel</strong> restores the previous state.</p>
+<p>The table lists every source default, image override, and suppression with its atom,
+image, components, meaning, modulus, and how many displayed balls show it. Choosing rows
+selects their balls in the 3D view. <strong>Edit…</strong> changes the components of the chosen rows,
+<strong>Reverse</strong> negates them, <strong>Show/Hide</strong> hides arrows without deleting the data, and
+<strong>Remove</strong> deletes rows (removing an image override brings back the source default). Each
+action is one undo step.</p>
+<p><strong>Arrow appearance</strong> (all arrows): <strong>Placement</strong> <em>Centred on atom</em> (the default; the arrow
+runs from <code>r − L u/2</code> to <code>r + L u/2</code>) or <em>Tail at atom centre</em> (<code>r</code> to <code>r + L u</code>), where
+<code>u</code> is the unit direction and <code>L</code> the total length, head included. <strong>Length</strong> is either
+<em>uniform</em> (<code>L</code> in Å for every arrow) or <em>proportional</em> (<code>L</code> = scale × modulus, with scale
+in Å per μB for moments and Å per unit for directions). Switching never changes the
+components. Shaft radius, head length and radius, colour, and material (built-in or one
+of your custom materials) are separate from the atoms; materials with their own colours
+ignore the arrow colour. On short arrows the head takes at most 60 % of the length and
+the whole arrow gets thinner in proportion; the length itself is never changed. A short
+arrow can be hidden inside its atom: make it longer or the atom smaller.</p>
+<p><strong>In figures.</strong> Arrows are part of the figure: the POV-Ray preview, the PNG, and the
+<code>.pov</code> file contain them (as a cylinder and a cone each, with a comment naming the atom
+and the components), lit and shadowed like the atoms. <strong>Fit</strong> and the render keep whole
+arrows in view, including their heads; adding or editing a vector does not move the
+camera by itself. The lights stay where they are (they depend on the atoms and cell
+only). Arrows are never picked by clicks and do not change measurements, bonds, or atom
+counts.</p>
+<p><strong>What happens when the display changes.</strong> Hiding an atom hides its arrow. Fewer
+repetitions hide the arrows of images that are no longer displayed, without deleting
+their overrides; more repetitions bring them back. Changing atom radii does not change
+arrows. Opening another structure starts without vectors.</p>
+<p><strong>Saving.</strong> Projects store all vectors at full precision (since project schema 7), including
+suppressions and the arrow appearance, and the definition of a custom arrow material.
+Styles carry only the arrow appearance (with the <em>Materials, colours, and radii</em> part);
+they never transfer vectors to another structure, and importing a style keeps the
+current structure's vectors. <code>examples/vectors-synthetic-afm.ycrystal</code> shows a small
+synthetic two-site cell with opposite moments assigned by hand.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":[],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      
+    
+  </body>
+</html>
