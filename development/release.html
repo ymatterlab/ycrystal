@@ -1617,9 +1617,16 @@
 
 
 <h1 id="release-procedure-and-checklist">Release procedure and checklist<a class="headerlink" href="#release-procedure-and-checklist" title="Permanent link">&para;</a></h1>
-<p>How a Ycrystal release is prepared, and the checklists of versions 0.3.0, 0.2.0, and 0.1.0. Publication
+<p>How a Ycrystal release is prepared, and the checklists of versions 0.4.0, 0.3.0,
+0.2.0, and 0.1.0. Publication
 (tag, GitHub release, making the repository public) is the maintainer's decision and
 is not part of this procedure.</p>
+<p>The latest public release is
+<a href="https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0">Ycrystal 0.4.0</a>,
+published on 18 November 2026 with a Windows installer and tagged source archives.
+The checklists below record verification for each release at the time it was
+prepared. Later merges into <code>main</code> do not change the contents of those tags or
+downloadable installers; see the <a href="../HANDOFF.html#current-project-status">current feature table</a>.</p>
 <h2 id="procedure">Procedure<a class="headerlink" href="#procedure" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Update <code>__version__</code> in <code>src/ycrystal/__init__.py</code> and <code>CHANGELOG.md</code>.</li>
@@ -1687,8 +1694,8 @@ tag; each feature was verified when merged (see <code>docs/PROGRESS.md</code>).<
 </tr>
 <tr>
 <td>Tests at the tagged commit</td>
-<td>See the version pull request's CI</td>
-<td></td>
+<td>Passed</td>
+<td>CI run <a href="https://github.com/ymatterlab/ycrystal/actions/runs/44408274074">44408274074</a>: Ubuntu Python 3.12, 3.13, 3.14, macOS, Windows, docs, pre-commit; Windows installer run <a href="https://github.com/ymatterlab/ycrystal/actions/runs/44408273918">44408273918</a> also passed at <code>34c803d</code></td>
 </tr>
 <tr>
 <td>Projects compatible</td>
