@@ -5,6 +5,10 @@ before 1.0 the Python interface may change between minor versions.
 
 ## Unreleased
 
+These changes are merged into `main` after `v0.4.0` and available in source
+installations from `main`. They are not included in the published `v0.4.0`
+Windows installer or tagged source archives.
+
 ### Added
 - **Element legend (FR-LEGEND-01).** A new **Scene ▸ Legend** tab shows a legend of the
   displayed elements on the figure: a coloured circle and the symbol of each element, in

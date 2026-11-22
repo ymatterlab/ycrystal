@@ -1,8 +1,16 @@
 # Release procedure and checklist
 
-How a Ycrystal release is prepared, and the checklists of versions 0.3.0, 0.2.0, and 0.1.0. Publication
+How a Ycrystal release is prepared, and the checklists of versions 0.4.0, 0.3.0,
+0.2.0, and 0.1.0. Publication
 (tag, GitHub release, making the repository public) is the maintainer's decision and
 is not part of this procedure.
+
+The latest public release is
+[Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0),
+published on 18 November 2026 with a Windows installer and tagged source archives.
+The checklists below record verification for each release at the time it was
+prepared. Later merges into `main` do not change the contents of those tags or
+downloadable installers; see the [current feature table](../HANDOFF.md#current-project-status).
 
 ## Procedure
 
@@ -60,7 +68,7 @@ tag; each feature was verified when merged (see `docs/PROGRESS.md`).
 | --- | --- | --- |
 | Version | Updated before the tag | `__version__ = "0.4.0"`; changelog section 0.4.0 (PRs #23–#40); README badge and version line; sample outputs in the guides |
 | Tests at the last feature merge | Passed | CI run 44401632629 on PR #40: Ubuntu 24.04 with Python 3.12, 3.13, 3.14 (910 passed, 10 skipped each, GUI tests under Xvfb), macOS 15 (738 passed, 10 skipped), Windows Server 2022 (746 passed, 2 skipped), docs, pre-commit; *Windows installer* run 44401632704 (installer built, packaged render, 27 coexistence checks) |
-| Tests at the tagged commit | See the version pull request's CI | |
+| Tests at the tagged commit | Passed | CI run [44408274074](https://github.com/ymatterlab/ycrystal/actions/runs/44408274074): Ubuntu Python 3.12, 3.13, 3.14, macOS, Windows, docs, pre-commit; Windows installer run [44408273918](https://github.com/ymatterlab/ycrystal/actions/runs/44408273918) also passed at `34c803d` |
 | Projects compatible | Passed | Schema 7 unchanged since 0.3.0; older projects open (`test_project.py`) |
 | Windows installer | Built by CI (artifact `ycrystal-windows-installer`); built and installed on the Windows laptop | Not signed; built from the tag on the laptop (541 s, 129 MB), installed as an upgrade (reports 0.4.0), and attached to the GitHub release. SHA-256 `B67AF22B46E3B1DCE3A6F646496BBAFDBC64F42F26423C6FC80A5CB9F5ED40FB` |
 | Clean install by a person, wheel build | Not run for 0.4.0 | |
