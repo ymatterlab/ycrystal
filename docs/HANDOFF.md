@@ -9,6 +9,13 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 
 ## Current project status
 
+- **Documentation published (22 November 2026):** the generated `gh-pages` branch
+  serves [ymatterlab.github.io/ycrystal](https://ymatterlab.github.io/ycrystal/).
+  GitHub Pages uses that branch's root, with HTTPS enforced; the first deployment
+  succeeded. Source configuration, website links, and automatic publishing are
+  prepared on `docs/github-pages` for review. The automatic workflow has not run;
+  it becomes active after merging that source branch into `main`. See
+  [the publication record](PROGRESS.md#documentation-publication-22-november-2026).
 - **In review: FR-QE-IBRAV-01, Quantum ESPRESSO input with `ibrav` other than 0**
   (requested 21 November 2026), branch `feature/qe-ibrav` from `main` at `1aae367`: all
   20 lattices of pw.x, checked against pw.x's own output (17 lattices, 295 inputs of QE's
@@ -115,8 +122,8 @@ Known limitations and unresolved issues:
   plots of Figure 4 are still to be made (`docs/development/manuscript-figures.md`).
 - JAC submission: referees need anonymous access to the program and a web page with
   documentation (per the journal's instructions; recheck them). The repository is now
-  public, so the program can be cloned without an account; the documentation web page
-  is still to be decided.
+  public, so the program can be cloned without an account; the
+  [documentation website](https://ymatterlab.github.io/ycrystal/) is now published.
 - Found during FR-REPRO-01, not changed: `save_project` (and so every project and
   snapshot) is written through `mkstemp` and ends up readable by the owner only (mode
   0600 on Linux/macOS), which matters for shared folders. The new provenance records

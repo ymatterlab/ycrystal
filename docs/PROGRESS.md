@@ -2,6 +2,35 @@
 
 Last updated: 21 November 2026 (FR-QE-IBRAV-01, Quantum ESPRESSO input with `ibrav` other than 0, branch `feature/qe-ibrav`). Before that: FR-LEGEND-01, element legend, merged in PR #45 at `6735400`. Before that: 18 November 2026 (graphical Windows installer, branch `feature/windows-installer`). Before that: Python 3.13 and 3.14 on Windows, verified on the laptop (PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
 
+## Documentation publication (22 November 2026)
+
+At the user's request, created and pushed `gh-pages` with only the generated
+Zensical site and `.nojekyll`, starting an independent history at `199b419`.
+GitHub Pages reports source `gh-pages`, path `/`, build type `legacy`, HTTPS
+enforced, and status `built`. The documentation is publicly available at
+[ymatterlab.github.io/ycrystal](https://ymatterlab.github.io/ycrystal/).
+
+Prepared source changes on `docs/github-pages`: canonical `site_url`, links from
+the README and home page, publication instructions, and a workflow that strictly
+builds documentation on `main`, updates `gh-pages` without force, and explicitly
+requests a Pages build. It uses the existing documentation lock and the standard
+`GITHUB_TOKEN`; no additional secret is needed. Automatic publishing remains
+unverified until that source branch is merged and its workflow runs.
+
+Verified:
+
+- `.venv-docs/bin/zensical build --clean --strict`: no issues.
+- Checked 36 generated HTML pages and 5,310 local links, anchors, and assets:
+  all targets resolve; sitemap uses the canonical GitHub Pages URL.
+- First GitHub Pages deployment: successful
+  ([Actions run](https://github.com/ymatterlab/ycrystal/actions/runs/45013771249)).
+- Live HTTP 200 responses for the home, installation, first-figure tutorial,
+  camera reference, documentation workflow, logo, rendered example, search index,
+  and sitemap; home-page styles and scripts also load. Confirmed the deployed
+  `Camera.project` anchor.
+- Pre-commit hooks passed on the publishing workflow, site configuration, README,
+  documentation home, and publication instructions; workflow YAML and TOML parsed.
+
 ## Milestones
 
 | Milestone | Goal | Status |

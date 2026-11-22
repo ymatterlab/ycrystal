@@ -1,5 +1,6 @@
 [project]
 site_name = "Ycrystal"
+site_url = "https://ymatterlab.github.io/ycrystal/"
 site_description = "Reproducible crystal-structure figures rendered with POV-Ray"
 repo_url = "https://github.com/ymatterlab/ycrystal"
 docs_dir = "docs"

@@ -38,5 +38,5 @@ and default camera. The live viewport uses approximate lighting and also shows
 orientation axes. [Regenerate the image](development/documentation.md#visual-assets).
 
 The Python interfaces are evolving developer functionality. They do not currently
-carry a stable public API guarantee. This site is built locally from the repository;
-publication is a separate setup step.
+carry a stable public API guarantee. This site is built from the repository and
+published at [ymatterlab.github.io/ycrystal](https://ymatterlab.github.io/ycrystal/).
