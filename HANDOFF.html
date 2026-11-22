@@ -1620,6 +1620,13 @@ the repository root; the detailed verification record is <a href="PROGRESS.html"
 for in the current task (see <a href="#handoff-and-maintenance-rules">the rules at the end</a>).</p>
 <h2 id="current-project-status">Current project status<a class="headerlink" href="#current-project-status" title="Permanent link">&para;</a></h2>
 <ul>
+<li><strong>Documentation published (22 November 2026):</strong> the generated <code>gh-pages</code> branch
+  serves <a href="https://ymatterlab.github.io/ycrystal/">ymatterlab.github.io/ycrystal</a>.
+  GitHub Pages uses that branch's root, with HTTPS enforced; the first deployment
+  succeeded. Source configuration, website links, and automatic publishing are
+  prepared on <code>docs/github-pages</code> for review. The automatic workflow has not run;
+  it becomes active after merging that source branch into <code>main</code>. See
+  <a href="PROGRESS.html#documentation-publication-22-november-2026">the publication record</a>.</li>
 <li><strong>In review: FR-QE-IBRAV-01, Quantum ESPRESSO input with <code>ibrav</code> other than 0</strong>
   (requested 21 November 2026), branch <code>feature/qe-ibrav</code> from <code>main</code> at <code>1aae367</code>: all
   20 lattices of pw.x, checked against pw.x's own output (17 lattices, 295 inputs of QE's
@@ -1825,8 +1832,8 @@ and FR-REPRO-01 working, and Ycrystal on Windows working well.</p>
   plots of Figure 4 are still to be made (<code>docs/development/manuscript-figures.md</code>).</li>
 <li>JAC submission: referees need anonymous access to the program and a web page with
   documentation (per the journal's instructions; recheck them). The repository is now
-  public, so the program can be cloned without an account; the documentation web page
-  is still to be decided.</li>
+  public, so the program can be cloned without an account; the
+  <a href="https://ymatterlab.github.io/ycrystal/">documentation website</a> is now published.</li>
 <li>Found during FR-REPRO-01, not changed: <code>save_project</code> (and so every project and
   snapshot) is written through <code>mkstemp</code> and ends up readable by the owner only (mode
   0600 on Linux/macOS), which matters for shared folders. The new provenance records

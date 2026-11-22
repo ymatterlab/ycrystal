@@ -1311,6 +1311,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#documentation-publication-22-november-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Documentation publication (22 November 2026)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#milestones" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2088,6 +2099,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#documentation-publication-22-november-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Documentation publication (22 November 2026)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#milestones" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2812,6 +2834,32 @@
 
 <h1 id="ycrystal-progress-record">Ycrystal progress record<a class="headerlink" href="#ycrystal-progress-record" title="Permanent link">&para;</a></h1>
 <p>Last updated: 21 November 2026 (FR-QE-IBRAV-01, Quantum ESPRESSO input with <code>ibrav</code> other than 0, branch <code>feature/qe-ibrav</code>). Before that: FR-LEGEND-01, element legend, merged in PR #45 at <code>6735400</code>. Before that: 18 November 2026 (graphical Windows installer, branch <code>feature/windows-installer</code>). Before that: Python 3.13 and 3.14 on Windows, verified on the laptop (PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at <code>8051f04</code>). Before that: the Windows port on a Windows computer (PR #35, merged at <code>ae01f43</code>). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag <code>v0.1.0</code>). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the <a href="development/release.html#checklist-for-020">0.2.0 checklist</a>. Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag <code>v0.3.0</code> covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.</p>
+<h2 id="documentation-publication-22-november-2026">Documentation publication (22 November 2026)<a class="headerlink" href="#documentation-publication-22-november-2026" title="Permanent link">&para;</a></h2>
+<p>At the user's request, created and pushed <code>gh-pages</code> with only the generated
+Zensical site and <code>.nojekyll</code>, starting an independent history at <code>199b419</code>.
+GitHub Pages reports source <code>gh-pages</code>, path <code>/</code>, build type <code>legacy</code>, HTTPS
+enforced, and status <code>built</code>. The documentation is publicly available at
+<a href="https://ymatterlab.github.io/ycrystal/">ymatterlab.github.io/ycrystal</a>.</p>
+<p>Prepared source changes on <code>docs/github-pages</code>: canonical <code>site_url</code>, links from
+the README and home page, publication instructions, and a workflow that strictly
+builds documentation on <code>main</code>, updates <code>gh-pages</code> without force, and explicitly
+requests a Pages build. It uses the existing documentation lock and the standard
+<code>GITHUB_TOKEN</code>; no additional secret is needed. Automatic publishing remains
+unverified until that source branch is merged and its workflow runs.</p>
+<p>Verified:</p>
+<ul>
+<li><code>.venv-docs/bin/zensical build --clean --strict</code>: no issues.</li>
+<li>Checked 36 generated HTML pages and 5,310 local links, anchors, and assets:
+  all targets resolve; sitemap uses the canonical GitHub Pages URL.</li>
+<li>First GitHub Pages deployment: successful
+  (<a href="https://github.com/ymatterlab/ycrystal/actions/runs/45013771249">Actions run</a>).</li>
+<li>Live HTTP 200 responses for the home, installation, first-figure tutorial,
+  camera reference, documentation workflow, logo, rendered example, search index,
+  and sitemap; home-page styles and scripts also load. Confirmed the deployed
+  <code>Camera.project</code> anchor.</li>
+<li>Pre-commit hooks passed on the publishing workflow, site configuration, README,
+  documentation home, and publication instructions; workflow YAML and TOML parsed.</li>
+</ul>
 <h2 id="milestones">Milestones<a class="headerlink" href="#milestones" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

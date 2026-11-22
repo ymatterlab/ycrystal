@@ -1609,8 +1609,10 @@ that script uses the triclinic sample and mouse navigation.</p>
 <code>site_url</code> in <code>zensical.toml</code> includes the repository's <code>/ycrystal/</code> base path.
 Source Markdown and configuration stay on <code>main</code>; the <code>gh-pages</code> branch contains
 only the generated site and a <code>.nojekyll</code> file, with its own history.</p>
-<p><code>.github/workflows/documentation.yml</code> runs on pushes to <code>main</code> and can also be run
-manually from the Actions tab. It installs the documentation lock, builds with
+<p>The publishing setup on <code>docs/github-pages</code> adds
+<code>.github/workflows/documentation.yml</code>. Once merged into <code>main</code>, it runs on pushes
+to <code>main</code> and can also be run manually from the Actions tab. It installs the
+documentation lock, builds with
 <code>zensical build --clean --strict</code>, and uses the locked <code>ghp-import</code> to update
 <code>gh-pages</code> without force-pushing. The job has <code>contents: write</code> and <code>pages: write</code>
 permissions. Because pushes using <code>GITHUB_TOKEN</code> do not trigger a Pages build,
