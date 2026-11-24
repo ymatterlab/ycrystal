@@ -127,6 +127,12 @@ To pick a drawn bond directly, enable **Select bonds in view** in
 **Remove selected bond**. The edit applies to that displayed bond and can be
 undone. Turn the selection mode off to pick atoms again.
 
+For a periodic structure, **Remove symmetry equivalents** removes all currently
+shown bonds related to the selected bond in one undoable edit. For crystals and
+layers Ycrystal matches both endpoints using Spglib with a tolerance of 0.001 Å.
+For wires, or if symmetry cannot be determined, it matches lattice translations
+of that bond. The edit applies to the displayed bonds and is saved in the project.
+
 In **Scene ▸ Polyhedra**, choose **Add…** to select a centre element, ligand
 element, and maximum centre–ligand distance in Å. Set the face colour, opacity,
 and whether to draw the edges. A polyhedron uses the convex hull of its periodic

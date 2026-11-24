@@ -49,6 +49,7 @@ rich==15.0.0
 rich-rst==2.2.0
 ruff==0.17.5
 scipy==1.18.1
+spglib==2.8.0
 scooby==0.12.1
 shiboken6==6.12.0
 typing-extensions==4.16.0

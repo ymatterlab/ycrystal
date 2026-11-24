@@ -54,6 +54,7 @@ class ScenePanel(QTabWidget):
     selected_bond_requested = Signal(object)
     bond_selection_requested = Signal(bool)
     remove_bond_requested = Signal()
+    remove_equivalent_bonds_requested = Signal()
     radius_scale_requested = Signal(float)
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -203,6 +204,13 @@ class ScenePanel(QTabWidget):
         self.remove_bond_button.setEnabled(False)
         self.remove_bond_button.clicked.connect(self.remove_bond_requested)
         layout.addWidget(self.remove_bond_button)
+        self.remove_equivalent_bonds_button = QPushButton("Remove symmetry equivalents")
+        self.remove_equivalent_bonds_button.setToolTip(
+            "Remove the selected bond and its displayed symmetry equivalents in one edit"
+        )
+        self.remove_equivalent_bonds_button.setEnabled(False)
+        self.remove_equivalent_bonds_button.clicked.connect(self.remove_equivalent_bonds_requested)
+        layout.addWidget(self.remove_equivalent_bonds_button)
         return tab
 
     def sync_selected_bond(self, can_show: bool, can_hide: bool, has_override: bool) -> None:

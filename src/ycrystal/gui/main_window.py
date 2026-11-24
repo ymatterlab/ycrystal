@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
 from ycrystal import presets as presets_module
 from ycrystal.core import aspect, measure
 from ycrystal.core.annotation import TextAnnotation
+from ycrystal.core.bond_symmetry import equivalent_displayed_bonds
 from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
 from ycrystal.core.camera import Camera, CameraPolicyError, axis_view, default_camera
 from ycrystal.core.export import ExportOptions, format_label, path_for_format
@@ -426,6 +427,7 @@ class MainWindow(QMainWindow):
         self.scene_panel.selected_bond_requested.connect(self.set_selected_bond)
         self.scene_panel.bond_selection_requested.connect(self.set_bond_selection_mode)
         self.scene_panel.remove_bond_requested.connect(self.remove_selected_bond)
+        self.scene_panel.remove_equivalent_bonds_requested.connect(self.remove_equivalent_bonds)
         self.scene_panel.radius_scale_requested.connect(self.set_radius_scale)
         self.appearance_panel = AppearancePanel(self)
         self.render_panel = RenderPanel(self)
@@ -1414,6 +1416,17 @@ class MainWindow(QMainWindow):
             new = self.scene_settings.with_bond_override(*self.selected_bond, False)
             self._push_settings(new, "Remove Selected Bond")
 
+    def remove_equivalent_bonds(self) -> None:
+        """Hide the selected bond and its shown symmetry orbit in one undoable edit."""
+        if self.selected_bond is None:
+            return
+        bonds = equivalent_displayed_bonds(self.structure, self.geometry, self.selected_bond)
+        overrides = dict(self.scene_settings.bond_overrides)
+        overrides.update((bond, False) for bond in bonds)
+        settings = replace(self.scene_settings, bond_overrides=tuple(overrides.items()))
+        if self._push_settings(settings, "Remove Symmetry-Equivalent Bonds"):
+            self.statusBar().showMessage(f"Removed {_count(len(bonds), 'displayed bond')}", 5000)
+
     # ----- measurements -------------------------------------------------------------
     def measurement_mode(self) -> str | None:
         """Return ``"distance"``, ``"angle"``, or ``None`` (ordinary selection)."""
@@ -1983,6 +1996,9 @@ class MainWindow(QMainWindow):
             self.selected_bond = None
         self.viewport.set_bond_highlight(bond_row)
         self.scene_panel.remove_bond_button.setEnabled(bond_row is not None)
+        self.scene_panel.remove_equivalent_bonds_button.setEnabled(
+            bond_row is not None and self.structure.has_cell and any(self.structure.pbc)
+        )
         bond_mode = self.viewport.bond_selection_mode
         self.hide_action.setText("Remove Selected Bond" if bond_mode else "Hide Selected Atoms")
         self.hide_action.setEnabled(bond_row is not None if bond_mode else bool(self.selection))

@@ -78,6 +78,31 @@ def test_click_a_bond_and_delete_only_that_bond(window):
     assert not window.scene_panel.bond_selection_check.isChecked()
 
 
+def test_remove_displayed_equivalents_as_one_undo_step(window):
+    window.set_repetitions((2, 2, 1))
+    before = window.geometry
+    titanium = [
+        index
+        for index, (a, b) in enumerate(before.bonds)
+        if {before.elements[a], before.elements[b]} == {"Ti", "O"}
+    ]
+    assert len(titanium) == 24
+    window.set_bond_selection_mode(True)
+    window.viewport.bond_clicked.emit(titanium[0])
+    undo_count = window.undo_stack.count()
+    button = window.scene_panel.remove_equivalent_bonds_button
+    assert button.isEnabled()
+    button.click()
+    assert len(window.geometry.bonds) == len(before.bonds) - 24
+    assert window.undo_stack.count() == undo_count + 1
+    assert all(
+        {window.geometry.elements[a], window.geometry.elements[b]} == {"Sr", "O"}
+        for a, b in window.geometry.bonds
+    )
+    window.undo_stack.undo()
+    np.testing.assert_array_equal(window.geometry.bonds, before.bonds)
+
+
 def test_polyhedra_and_figure_text_are_optional_live_overlays(window):
     assert not window.viewport.polyhedron_actors
     assert not window.viewport._annotation_actor.GetVisibility()

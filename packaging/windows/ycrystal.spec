@@ -14,7 +14,12 @@ import re
 import sys
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import (
+    collect_data_files,
+    collect_delvewheel_libs_directory,
+    collect_dynamic_libs,
+    collect_submodules,
+)
 from PyInstaller.utils.win32.versioninfo import (
     FixedFileInfo,
     StringFileInfo,
@@ -38,6 +43,9 @@ NUMBERS = tuple(int(n) for n in re.match(r"(\d+)\.(\d+)\.(\d+)", VERSION).groups
 # readers by name at run time and reads data files (space groups) of its own.
 HIDDEN = collect_submodules("ycrystal") + collect_submodules("ase.io") + ["PySide6.QtSvg"]
 DATAS = collect_data_files("ycrystal") + collect_data_files("ase")
+# Spglib ships symspg.dll beside its extension and a C++ runtime in spglib.libs.
+SPGLIB_DATAS, SPGLIB_LIBS = collect_delvewheel_libs_directory("spglib")
+DATAS += SPGLIB_DATAS
 EXCLUDES = ["tkinter", "_tkinter", "PyQt5", "PyQt6", "PySide2", "IPython", "pytest"]
 
 # Licence texts of the bundled Python and of every installed distribution except the
@@ -92,7 +100,7 @@ def analysis(script):
     return Analysis(  # noqa: F821 - defined by PyInstaller
         [str(HERE / script)],
         pathex=[],
-        binaries=[],
+        binaries=collect_dynamic_libs("spglib") + SPGLIB_LIBS,
         datas=DATAS + licence_files(),
         hiddenimports=HIDDEN,
         excludes=EXCLUDES,

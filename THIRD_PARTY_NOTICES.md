@@ -30,6 +30,7 @@ made with it. POV-Ray is not included in the installer.
 | ase (Atomic Simulation Environment) | 3.29.0 | LGPL-2.1-or-later |
 | numpy | 2.5.4 | BSD-3-Clause (and bundled permissive licences) |
 | scipy | 1.18.1 | BSD-3-Clause |
+| spglib | 2.8.0 | BSD-3-Clause |
 | matplotlib | 3.11.2 | Matplotlib licence (PSF-based) |
 | pillow | 13.0.0 | MIT-CMU |
 | Other transitive packages (attrs, certifi, charset-normalizer, contourpy, cycler, cyclopts, docstring_parser, fonttools, idna, kiwisolver, markdown-it-py, mdurl, packaging, platformdirs, pooch, Pygments, pyparsing, python-dateutil, pyvista-validation, requests, rich, rich-rst, scooby, typing_extensions, tzdata, urllib3) | see `constraints.txt` | MIT, BSD, Apache-2.0, PSF-2.0, or MPL-2.0 (certifi) |

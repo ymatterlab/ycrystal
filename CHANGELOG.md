@@ -7,6 +7,8 @@ before 1.0 the Python interface may change between minor versions.
 
 - **Individual bonds.** Select two displayed atoms to show a bond, hide it, or
   restore automatic bonding. The override follows the selected periodic images.
+  In bond selection mode, click a drawn cylinder and press Delete to remove it.
+  A separate action removes all displayed symmetry equivalents in one undo step.
 - **Coordination polyhedra.** Add centre and ligand rules with a distance cutoff,
   face colour, opacity, and optional edges. Rules use periodic ligand positions.
 - **Figure text.** Add editable titles and captions to the output frame. The text
