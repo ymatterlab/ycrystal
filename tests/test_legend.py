@@ -181,7 +181,7 @@ def test_projects_store_the_legend_exactly(tmp_path):
     path = save_project(tmp_path / "legend.ycrystal", project)
     assert load_project(path).scene.legend == legend
     data = json.loads(path.read_text())
-    assert data["schema_version"] == 8 and data["scene"]["legend"]["custom_order"] == ["O", "Ti"]
+    assert data["schema_version"] == 9 and data["scene"]["legend"]["custom_order"] == ["O", "Ti"]
 
 
 def test_older_projects_open_without_a_legend_and_damaged_ones_are_refused():

@@ -88,6 +88,7 @@ STYLE_FORMAT = "ycrystal-style"
 """Value of the ``format`` key that identifies a style file."""
 
 STYLE_SCHEMA_VERSION = 3
+STYLE_PROJECT_SCHEMA_VERSION = 8  # project schema of the shared fields in style schema 3
 """Style schema written by this Ycrystal; newer versions are refused on load."""
 
 STYLE_DOCUMENT = "style.json"
@@ -556,11 +557,15 @@ def style_to_dict(style: Style) -> dict[str, Any]:
     return {
         "format": STYLE_FORMAT,
         "schema_version": STYLE_SCHEMA_VERSION,
-        "project_schema": project["schema_version"],
+        "project_schema": STYLE_PROJECT_SCHEMA_VERSION,
         "generator": f"Ycrystal {__version__}",
         "saved_at": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
         "source": {"composition": style.source_name, "symbols": list(style.source_symbols)},
-        "scene": {key: value for key, value in project["scene"].items() if key != "vectors"},
+        "scene": {
+            key: value
+            for key, value in project["scene"].items()
+            if key not in ("vectors", "bond_overrides")
+        },
         "environment": project["environment"],
         "materials": project["materials"],
         "output": {"width": style.output_size[0], "height": style.output_size[1]},

@@ -417,6 +417,7 @@ class MainWindow(QMainWindow):
         self.scene_panel.bond_tolerance_requested.connect(self.set_bond_tolerance)
         self.scene_panel.bond_radius_requested.connect(self.set_bond_radius)
         self.scene_panel.bond_pair_requested.connect(self.set_bond_pair)
+        self.scene_panel.selected_bond_requested.connect(self.set_selected_bond)
         self.scene_panel.radius_scale_requested.connect(self.set_radius_scale)
         self.appearance_panel = AppearancePanel(self)
         self.render_panel = RenderPanel(self)
@@ -1580,6 +1581,27 @@ class MainWindow(QMainWindow):
         verb = "Show" if enabled else "Hide"
         self._push_settings(replace(self.scene_settings, bonds=bonds), f"{verb} {a}–{b} Bonds")
 
+    def set_selected_bond(self, visible: bool | None) -> None:
+        """Set or clear a visibility override for the two selected displayed atoms."""
+        if len(self.selection) != 2:
+            return
+        a, b = sorted(self.selection)
+        if visible is True:
+            i, j = self.geometry.index_of(a), self.geometry.index_of(b)
+            if (
+                i is None
+                or j is None
+                or np.linalg.norm(self.geometry.positions[i] - self.geometry.positions[j]) <= 1e-9
+            ):
+                return
+        new = self.scene_settings.with_bond_override(a, b, visible)
+        text = {
+            True: "Show Selected Bond",
+            False: "Hide Selected Bond",
+            None: "Restore Automatic Bond",
+        }
+        self._push_settings(new, text[visible])
+
     # ----- rotation modes -----------------------------------------------------------------
     def rotation_mode(self) -> str:
         """Return the rotation mode: ``"free"`` or an axis name (a, b, c, x, y, z)."""
@@ -1883,6 +1905,15 @@ class MainWindow(QMainWindow):
         self.viewport.set_highlight([i for i in indices if i is not None])
         self.hide_action.setEnabled(bool(self.selection))
         self.selection_material_action.setEnabled(bool(self.selection))
+        override = None
+        if len(self.selection) == 2:
+            override = dict(self.scene_settings.bond_overrides).get(tuple(sorted(self.selection)))
+        pair_selected = len(self.selection) == 2
+        self.scene_panel.sync_selected_bond(
+            pair_selected and override is not True,
+            pair_selected and override is not False,
+            override is not None,
+        )
         self._sync_appearance()
         self.selection_label.setText(self.selection_text())
 

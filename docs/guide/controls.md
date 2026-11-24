@@ -115,6 +115,13 @@ ranges **per original cell**, not the number drawn in the repeated block. A bond
 appears only when both endpoint atoms are displayed; hiding an atom removes its bonds.
 These are geometric contacts, not calculated chemical bond orders.
 
+To control a specific bond, select two displayed atoms with Ctrl+click. In
+**Bond between selected atoms**, choose **Show**, **Hide**, or **Automatic**.
+**Show** can draw a connection beyond the automatic distance limit. **Automatic**
+restores the distance and element-pair rules. The override applies to the two
+selected periodic images and is saved in the project. **Show bonds** controls
+visibility for the whole scene.
+
 The **View along** toolbar offers **a, b, c** and **x, y, z**. The selected positive
 axis points toward the viewer; hold **Shift** when clicking to reverse it. Screen up is
 the first of c, b, a (for x, y, z: z, y, x) that is not parallel to the chosen axis, so

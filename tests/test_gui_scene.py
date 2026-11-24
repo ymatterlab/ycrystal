@@ -34,6 +34,23 @@ def all_visible(win) -> bool:
     return bool(np.all((pixels > 0) & (pixels < (width, height))))
 
 
+def test_selected_bond_buttons_change_one_periodic_pair_and_undo(window):
+    panel = window.scene_panel
+    assert not panel.selected_bond_hide.isEnabled()
+    pair = ((1, (0, 0, 0)), (2, (0, 0, 0)))
+    window.select(set(pair))
+    count = len(window.geometry.bonds)
+    panel.selected_bond_hide.click()
+    assert window.scene_settings.bond_overrides == ((pair, False),)
+    assert len(window.geometry.bonds) == count - 1
+    window.undo_stack.undo()
+    assert len(window.geometry.bonds) == count
+    window.undo_stack.redo()
+    panel.selected_bond_auto.click()
+    assert len(window.geometry.bonds) == count
+    assert not window.scene_settings.bond_overrides
+
+
 def test_repetition_spin_boxes_undo_redo_and_refit(window):
     panel = window.scene_panel
     positions = window.structure.positions.copy()

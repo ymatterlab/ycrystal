@@ -105,9 +105,9 @@ asks whether to save, discard, or cancel.
 The camera is stored for the explicit output size, so a project reopens with the same
 framing in a window of any shape.
 
-Current project schema is 8 (schema 6 added background pictures, stored in ZIP
+Current project schema is 9 (schema 6 added background pictures, stored in ZIP
 packages, and custom material definitions; schema 7 added atom-attached vectors; schema
-8 added the element legend, `scene.legend`). Older projects remain readable with their
+8 added the element legend, and schema 9 adds individual bond visibility overrides). Older projects remain readable with their
 original appearance and no legend (schema-1 projects load with bonds switched off, as they were drawn). Newer
 schemas are rejected with a message to update Ycrystal.
 

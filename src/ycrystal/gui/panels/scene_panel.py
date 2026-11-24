@@ -51,6 +51,7 @@ class ScenePanel(QTabWidget):
     bond_tolerance_requested = Signal(float)
     bond_radius_requested = Signal(float)
     bond_pair_requested = Signal(tuple, bool)
+    selected_bond_requested = Signal(object)
     radius_scale_requested = Signal(float)
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -164,7 +165,38 @@ class ScenePanel(QTabWidget):
         )
         note.setWordWrap(True)
         layout.addWidget(note)
+
+        selected = QGroupBox("Bond between selected atoms")
+        selected_layout = QVBoxLayout(selected)
+        instructions = QLabel("Select two atoms in the view (Ctrl+click).")
+        instructions.setWordWrap(True)
+        selected_layout.addWidget(instructions)
+        buttons = QHBoxLayout()
+        self.selected_bond_show = QPushButton("Show")
+        self.selected_bond_hide = QPushButton("Hide")
+        self.selected_bond_auto = QPushButton("Automatic")
+        self.selected_bond_show.setToolTip("Draw a bond even beyond the automatic distance limit")
+        self.selected_bond_hide.setToolTip("Hide the bond between these two displayed atoms")
+        self.selected_bond_auto.setToolTip("Restore the distance and element-pair rules")
+        for button, visible in (
+            (self.selected_bond_show, True),
+            (self.selected_bond_hide, False),
+            (self.selected_bond_auto, None),
+        ):
+            button.clicked.connect(
+                lambda _checked, value=visible: self.selected_bond_requested.emit(value)
+            )
+            button.setEnabled(False)
+            buttons.addWidget(button)
+        selected_layout.addLayout(buttons)
+        layout.addWidget(selected)
         return tab
+
+    def sync_selected_bond(self, can_show: bool, can_hide: bool, has_override: bool) -> None:
+        """Update the available actions for the currently selected pair."""
+        self.selected_bond_show.setEnabled(can_show)
+        self.selected_bond_hide.setEnabled(can_hide)
+        self.selected_bond_auto.setEnabled(has_override)
 
     # ----- requests ------------------------------------------------------------------
     def repetitions(self) -> tuple[int, int, int]:

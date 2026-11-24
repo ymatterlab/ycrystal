@@ -47,6 +47,9 @@ outside the cell is displayed with a nonzero offset when boundary images are on.
 RGB = tuple[float, float, float]
 """A colour as ``(red, green, blue)`` sRGB components between 0 and 1."""
 
+BondId = tuple[AtomId, AtomId]
+"""The two displayed atom IDs of a bond, in ascending order."""
+
 
 @dataclass(frozen=True)
 class SceneSettings:
@@ -84,6 +87,9 @@ class SceneSettings:
         the original cell. show_cell can disable all edges.
     bonds
         BondSettings controlling candidate distances, enabled pairs, and radius.
+    bond_overrides
+        Per-bond visibility overrides keyed by two displayed atom IDs. They take
+        precedence over automatic rules while bonds are enabled.
     material
         Id of the default material preset for atoms and bonds (see
         [`ycrystal.presets`][ycrystal.presets]); ``"satin"`` is Ycrystal's original
@@ -142,6 +148,7 @@ class SceneSettings:
     vectors: VectorSet = field(default_factory=VectorSet)
     vector_style: VectorStyle = field(default_factory=VectorStyle)
     legend: LegendSettings = field(default_factory=LegendSettings)
+    bond_overrides: tuple[tuple[BondId, bool], ...] = ()
 
     def __post_init__(self) -> None:
         reps = tuple(int(r) for r in self.repetitions)
@@ -168,6 +175,22 @@ class SceneSettings:
         object.__setattr__(self, "element_radii", tuple(sorted(radii.items())))
         if not self.radius_scale > 0:
             raise ValueError("radius_scale must be positive")
+        bonds: dict[BondId, bool] = {}
+        for (a, b), visible in self.bond_overrides:
+            if a == b or min(a[0], b[0]) < 0:
+                raise ValueError("a bond override needs two distinct atoms")
+            bonds[(a, b) if a < b else (b, a)] = visible
+        object.__setattr__(self, "bond_overrides", tuple(sorted(bonds.items())))
+
+    def with_bond_override(self, a: AtomId, b: AtomId, visible: bool | None) -> SceneSettings:
+        """Show, hide, or restore automatic visibility (None) for a displayed pair."""
+        pair = (a, b) if a < b else (b, a)
+        overrides = dict(self.bond_overrides)
+        if visible is None:
+            overrides.pop(pair, None)
+        else:
+            overrides[pair] = visible
+        return replace(self, bond_overrides=tuple(overrides.items()))
 
     def material_for(self, atom_id: AtomId, element: str) -> str:
         """Return the material id of one displayed atom (atom > element > default).
@@ -734,7 +757,8 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
     own pigment, which get the material's representative colour. Cell edges are drawn
     when ``settings.show_cell`` is true and the structure has a cell. Repetitions are
     display state: scientific arrays stay unchanged. A bond is drawn only when both
-    endpoint IDs are displayed and its pair is enabled. Arrows are resolved for the
+    endpoint IDs are displayed and its automatic rule or explicit override enables it.
+    Arrows are resolved for the
     displayed atoms only ([`resolve_arrows`][ycrystal.core.vectors.resolve_arrows]), at
     the exact positions of their instances, independent of radii and camera.
 
@@ -780,7 +804,7 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
         _resolved_colors(numbers, elements, materials, settings), dtype=float
     ).reshape(-1, 3)
     edges = cell_edge_segments(structure, settings)
-    bonds = _displayed_bonds(structure, settings, atom_ids)
+    bonds = _displayed_bonds(structure, settings, atom_ids, positions)
     arrows = resolve_arrows(atom_ids, positions, settings.vectors, settings.vector_style)
     for array in (positions, radii, colors, edges, bonds):
         array.setflags(write=False)
@@ -828,9 +852,12 @@ def _resolved_colors(
 
 
 def _displayed_bonds(
-    structure: Structure, settings: SceneSettings, atom_ids: tuple[AtomId, ...]
+    structure: Structure,
+    settings: SceneSettings,
+    atom_ids: tuple[AtomId, ...],
+    positions: np.ndarray,
 ) -> np.ndarray:
-    """Index pairs of displayed atoms joined by an enabled periodic bond."""
+    """Resolve automatic periodic bonds and apply per-image overrides."""
     if not settings.bonds.enabled or not atom_ids:
         return np.zeros((0, 2), dtype=int)
     periodic = periodic_bonds(structure, settings.bonds)
@@ -848,4 +875,15 @@ def _displayed_bonds(
             q = index.get(other)
             if q is not None:
                 pairs.append((k, q))
+    if settings.bond_overrides:
+        overridden = set(pairs)
+        for (a, b), visible in settings.bond_overrides:
+            i, j = index.get(a), index.get(b)
+            if i is None or j is None:
+                continue
+            if visible and np.linalg.norm(positions[i] - positions[j]) > 1e-9:
+                overridden.add((i, j))
+            else:
+                overridden.discard((i, j))
+        pairs = sorted(overridden)
     return np.array(pairs, dtype=int).reshape(-1, 2)

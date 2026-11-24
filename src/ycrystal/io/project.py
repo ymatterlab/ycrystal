@@ -59,7 +59,7 @@ from ycrystal.core.background import BackgroundImage
 from ycrystal.core.bonds import BondSettings
 from ycrystal.core.camera import Camera
 from ycrystal.core.legend import LegendSettings
-from ycrystal.core.scene import AtomId, Environment, SceneSettings
+from ycrystal.core.scene import AtomId, BondId, Environment, SceneSettings
 from ycrystal.core.structure import Structure
 from ycrystal.core.vectors import VectorRecord, VectorSet, VectorStyle
 from ycrystal.render.pov_writer import RenderSettings
@@ -67,7 +67,7 @@ from ycrystal.render.pov_writer import RenderSettings
 PROJECT_FORMAT = "ycrystal-project"
 """Value of the ``format`` key that identifies a project file."""
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 """Schema version written by this Ycrystal; newer versions are refused on load."""
 
 PACKAGE_DOCUMENT = "project.json"
@@ -186,6 +186,13 @@ def project_to_dict(project: Project) -> dict[str, Any]:
             "vectors": _vectors_to_dict(scene.vectors),
             "vector_style": _vector_style_to_dict(scene.vector_style),
             "legend": _legend_to_dict(scene.legend),
+            "bond_overrides": [
+                {
+                    "atoms": [{"atom": source, "image": list(image)} for source, image in pair],
+                    "visible": visible,
+                }
+                for pair, visible in scene.bond_overrides
+            ],
             "bonds": {
                 "enabled": scene.bonds.enabled,
                 "tolerance": scene.bonds.tolerance,
@@ -515,6 +522,10 @@ def project_from_dict(data: Any) -> Project:
             f"The project file is damaged: a vector is attached to atom #{max(attached) + 1}, "
             f"but the structure has {len(structure)} atoms."
         )
+    if any(atom[0] >= len(structure) for pair, _ in scene.bond_overrides for atom in pair):
+        raise ProjectError(
+            "The project file is damaged: a bond override refers to an unknown atom."
+        )
     return Project(structure, scene, environment, camera, output)
 
 
@@ -555,6 +566,7 @@ def _scene_from(d: dict[str, Any], version: int = SCHEMA_VERSION) -> SceneSettin
         repetitions=tuple(int(v) for v in d.get("repetitions", defaults.repetitions)),
         cell_mode=str(d.get("cell_mode", defaults.cell_mode)),
         bonds=_bonds_from(d.get("bonds"), version),
+        bond_overrides=_bond_overrides_from(d.get("bond_overrides", [])),
         material=_known_material(str(d.get("material", defaults.material))),
         element_materials=tuple(
             (str(entry["element"]), _known_material(str(entry["material"])))
@@ -581,6 +593,17 @@ def _image(value: Any) -> tuple[int, int, int]:
     if len(image) != 3:
         raise ValueError("atom image offsets need three integers")
     return (image[0], image[1], image[2])
+
+
+def _bond_overrides_from(entries: Any) -> tuple[tuple[BondId, bool], ...]:
+    overrides = []
+    for entry in entries:
+        a, b = ((int(atom["atom"]), _image(atom["image"])) for atom in entry["atoms"])
+        visible = entry["visible"]
+        if not isinstance(visible, bool):
+            raise ValueError("bond override visibility must be a boolean")
+        overrides.append(((a, b), visible))
+    return tuple(overrides)
 
 
 def _known_material(material_id: str) -> str:
