@@ -3,11 +3,7 @@
 All notable changes to Ycrystal. Versions follow [semantic versioning](https://semver.org/);
 before 1.0 the Python interface may change between minor versions.
 
-## Unreleased
-
-These changes are merged into `main` after `v0.4.0` and available in source
-installations from `main`. They are not included in the published `v0.4.0`
-Windows installer or tagged source archives.
+## 0.5.0 — Element legends and Quantum ESPRESSO lattices (24 November 2026)
 
 ### Added
 - **Element legend (FR-LEGEND-01).** A new **Scene ▸ Legend** tab shows a legend of the
@@ -44,6 +40,8 @@ Windows installer or tagged source archives.
 ### Changed
 - Project schema 8 (`scene.legend`) and style schema 3; older files open with the legend
   off. Ycrystal 0.4.0 and older refuse the new files.
+- The [documentation site](https://ymatterlab.github.io/ycrystal/) is built and
+  published from `main`.
 
 ## 0.4.0 — Windows, export formats, and figures from the command line (18 November 2026)
 

@@ -9,25 +9,15 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 
 ## Current project status
 
-- **Latest public release: [Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0)**,
-  published on **18 November 2026**. The release page provides the downloadable
-  `Ycrystal-0.4.0-windows-x64-setup.exe` and tagged source archives. It is a published
-  release, not a draft or pre-release. Tag `v0.4.0` points to `34c803d` (PR #41)
-  and includes the feature and maintenance work in PRs #23–#40, including the
-  graphical Windows installer (PR #40). Installer build and checksum details are in
-  [the release checklist](development/release.md#checklist-for-040).
-- **Development on `main`:** the element legend (PR #45) and expanded Quantum
-  ESPRESSO reader (PR #47) were merged after `v0.4.0`. They are available when
-  installing from current `main`, but are not in the `v0.4.0` installer or tagged
-  source archives. Both `main` and the tag still report `0.4.0` in `__version__`;
-  use the tag or commit to identify the actual contents. This website follows
-  development documentation; it is not a frozen manual for `v0.4.0`.
+- **Ycrystal 0.5.0** includes the element legend (PR #45) and expanded Quantum
+  ESPRESSO reader (PR #47). The Windows installer and tagged source are listed on
+  the [release page](https://github.com/ymatterlab/ycrystal/releases/tag/v0.5.0).
+  This website follows development on `main`. See the
+  [release checklist](development/release.md#checklist-for-050) for verification.
 - **Documentation published (22 November 2026):** the generated `gh-pages` branch
   serves [ymatterlab.github.io/ycrystal](https://ymatterlab.github.io/ycrystal/).
-  GitHub Pages uses that branch's root, with HTTPS enforced; the first deployment
-  succeeded. Source configuration, website links, and automatic publishing are
-  prepared on `docs/github-pages` for review. The automatic workflow has not run;
-  it becomes active after merging that source branch into `main`. See
+  GitHub Pages uses that branch's root, with HTTPS enforced. The publishing
+  workflow was merged into `main` in PR #48. See
   [the publication record](PROGRESS.md#documentation-publication-22-november-2026).
 - **FR-QE-IBRAV-01, Quantum ESPRESSO input with `ibrav` other than 0:** merged in
   PR #47 on 21 November 2026 (merge commit `c2fa44a`), after `v0.4.0`. Supports all
@@ -40,8 +30,8 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 - **FR-LEGEND-01, element legend** (requested 21 November 2026): merged in PR #45
   (merge commit `6735400`) after CI passed on every system. A *Scene ▸ Legend* tab and
   a legend of the displayed elements painted onto the figure, its previews, renders, and
-  exports (project schema 8, style schema 3). Not yet in a release; no hands-on check
-  yet. See [PROGRESS.md](PROGRESS.md#fr-legend-01-element-legend-post-040-21-november-2026).
+  exports (project schema 8, style schema 3). Included in v0.5.0. See
+  [PROGRESS.md](PROGRESS.md#fr-legend-01-element-legend-post-040-21-november-2026).
 - **Windows support** (requested by the user on 17 November 2026), branch
   `feature/windows`, PR #35: completed on a Windows 11 laptop on 18 November 2026. All
   automated tests pass there with POV-Ray for Windows, and the user tested Ycrystal by
@@ -59,11 +49,9 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   FR-VALIDATION-01 (PR #33), and FR-GALLERY-01 with the next-tests audit (PR #34,
   merge commit `5b72f92`). All of this work is included in `v0.4.0`.
 
-The table gives the **first release tag containing each feature**, checked against
-Git ancestry on 22 November 2026. `v0.4.0` also includes every row from earlier
-versions. **Main only (after 0.4.0)** means merged and available from `main`, with
-no tagged release containing it yet. Earlier versions have Git tags; `v0.4.0` is
-the public GitHub release with a downloadable installer.
+The table gives the **first release tag containing each feature**. v0.5.0
+includes the features from earlier releases. GitHub release pages for v0.4.0
+and v0.5.0 provide Windows installers.
 
 | First release tag / availability | Feature | Merged |
 | --- | --- | --- |
@@ -89,8 +77,8 @@ the public GitHub release with a downloadable installer.
 | 0.4.0 | Graphical Windows installer (PyInstaller + Inno Setup), coexisting with the developer installation (no FR ID) | PR #40 (`2f427ac`) |
 | 0.4.0 | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | PR #39 |
 | 0.4.0 | Python 3.12–3.14 support; Python 3.13 verified on macOS and Python 3.13/3.14 on Windows | PRs #38, #39 |
-| Main only (after 0.4.0) | FR-QE-IBRAV-01 QE input with `ibrav` other than 0 (all pw.x lattices) | PR #47 (`c2fa44a`) |
-| Main only (after 0.4.0) | FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3 | PR #45 (`6735400`) |
+| 0.5.0 | FR-QE-IBRAV-01 QE input with `ibrav` other than 0 (all pw.x lattices) | PR #47 (`c2fa44a`) |
+| 0.5.0 | FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3 | PR #45 (`6735400`) |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
@@ -482,7 +470,7 @@ Then, on either system, from the repository root:
 
 ```bash
 .venv/bin/python -m pip install -e ".[dev]" -c constraints.txt
-.venv/bin/ycrystal --version            # ycrystal 0.4.0
+.venv/bin/ycrystal --version            # ycrystal 0.5.0
 .venv/bin/ycrystal --check-renderer     # PASS: POV-Ray 3.7… passed
 .venv/bin/ycrystal --sample perovskite  # opens the window
 .venv/bin/python -m pytest -q -rs       # GUI tests open windows for about 1.5 minutes

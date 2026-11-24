@@ -21,12 +21,10 @@ cells, rotate freely or about a lattice/Cartesian axis, and reuse a figure's sty
 another structure, in the window or [from the command line](guide/examples.md#apply-a-style-from-the-command-line);
 every figure change is undoable.
 
-The latest public release is
-[Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0),
-including the Windows installer. These pages describe current development on
-`main`: the element legend and support for Quantum ESPRESSO `ibrav` other than 0
-were added after that release and require a source installation from `main`.
-See the [release and feature status](HANDOFF.md#current-project-status) for details.
+[Ycrystal 0.5.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.5.0) includes
+the element legend and support for Quantum ESPRESSO `ibrav` other than 0 in both
+the Windows installer and tagged source. These pages follow `main`. See the
+[release and feature status](HANDOFF.md#current-project-status) for details.
 
 - [Install and launch](guide/install.md) on Linux Mint or macOS.
 - Follow [Your first crystal figure](guide/first-figure.md) using the built-in SrTiO3 sample.

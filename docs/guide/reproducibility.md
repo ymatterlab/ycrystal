@@ -99,7 +99,7 @@ Ycrystal and POV-Ray 3.7 with its standard include files, nothing else.
 
 ## The provenance record
 
-An excerpt of `figures/BaZrO3.provenance.json`:
+An excerpt of `figures/BaZrO3.provenance.json` from a run with Ycrystal 0.4.0:
 
 ```json
 {

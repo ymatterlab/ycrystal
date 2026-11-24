@@ -78,6 +78,25 @@ jobs:
           dist\windows\Ycrystal\ycrystal-cli.exe examples\SrTiO3-studio.ycrystal --width 160 --height 120 --render "$env:RUNNER_TEMP\packaged.png"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: The packaged command line renders an enabled legend
+        timeout-minutes: 5
+        run: |
+          $project = Join-Path $env:RUNNER_TEMP "legend.ycrystal"
+          @'
+          from dataclasses import replace
+          import sys
+
+          from ycrystal.core.legend import LegendSettings
+          from ycrystal.io.project import load_project, save_project
+
+          project = load_project("examples/SrTiO3-studio.ycrystal")
+          project.scene = replace(project.scene, legend=LegendSettings(enabled=True))
+          save_project(sys.argv[1], project)
+          '@ | & .\build\windows\venv\Scripts\python.exe - $project
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dist\windows\Ycrystal\ycrystal-cli.exe $project --width 320 --height 240 --render "$env:RUNNER_TEMP\packaged-legend.png"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Source installation next to it (scripts\install-windows.ps1)
         timeout-minutes: 15
         run: |

@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Colorblind Friendly](https://img.shields.io/badge/Colorblind-Friendly-0077B6)](docs/guide/appearance.md#choosing-colours)
 [![CI](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml/badge.svg)](https://github.com/ymatterlab/ycrystal/actions/workflows/ci.yml)
-[![Version: 0.4.0](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
+[![Version: 0.5.0](https://img.shields.io/badge/version-0.5.0-blue.svg)](CHANGELOG.md)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.24403163-1682D4.svg)](https://doi.org/10.5281/zenodo.24403163)
 [![Platforms: Linux | macOS | Windows](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](docs/guide/support.md)
 [![Python 3.12 | 3.13 | 3.14](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776AB.svg)](docs/guide/support.md)
@@ -181,7 +181,7 @@ Run these in the Ycrystal folder, without opening a window. On Windows, write
 .venv/bin/ycrystal MgB2-c.ycrystal --render MgB2-c-again.png
 ```
 
-Current version 0.4.0. See the
+Current version 0.5.0. See the
 [changelog](CHANGELOG.md), the [support matrix](docs/guide/support.md), and the
 [third-party notices](THIRD_PARTY_NOTICES.md).
 
