@@ -51,7 +51,7 @@ import numpy as np  # noqa: E402
 import pyvista as pv  # noqa: E402
 import qtpy  # noqa: E402
 from PySide6.QtCore import QEvent, QObject, QPointF, Qt, Signal  # noqa: E402
-from PySide6.QtGui import QKeyEvent, QKeySequence, QMouseEvent  # noqa: E402
+from PySide6.QtGui import QImage, QKeyEvent, QKeySequence, QMouseEvent  # noqa: E402
 from PySide6.QtWidgets import QVBoxLayout, QWidget  # noqa: E402
 from vtkmodules.vtkCommonTransforms import vtkTransform  # noqa: E402
 from vtkmodules.vtkFiltersGeneral import vtkTransformFilter  # noqa: E402
@@ -68,12 +68,14 @@ from vtkmodules.vtkRenderingCore import (  # noqa: E402
     vtkTexturedActor2D,
 )
 
+from ycrystal.core.annotation import TextAnnotation  # noqa: E402
 from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.legend import LegendEntry, LegendSettings, legend_entries  # noqa: E402
 from ycrystal.core.lighting import LightingRig, resolve_lighting_for_bounds  # noqa: E402
 from ycrystal.core.picking import pick_sphere  # noqa: E402
 from ycrystal.core.polyhedra import EDGE_RADIUS  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry, Environment  # noqa: E402
+from ycrystal.render.annotation import annotation_overlay  # noqa: E402
 from ycrystal.render.legend import legend_fit_region, legend_overlay  # noqa: E402
 from ycrystal.viewport.interactor import SynchronousInteractor  # noqa: E402
 
@@ -302,10 +304,11 @@ class StructureViewport(QWidget):
         self.legend_box: tuple[int, int, int, int] | None = None
         """Where the legend is drawn: ``(x, y, width, height)`` in device pixels of the
         view (top-left origin), or ``None`` when no legend is shown."""
-        self._legend_actor = vtkTexturedActor2D()
-        self._legend_actor.SetMapper(vtkPolyDataMapper2D())
-        self._legend_actor.SetPickable(False)
-        self._legend_actor.SetVisibility(False)
+        self._annotations: tuple[TextAnnotation, ...] = ()
+        self._annotation_key: tuple | None = None
+        self._annotation_actor = _figure_overlay_actor()
+        self._plotter.renderer.AddViewProp(self._annotation_actor)
+        self._legend_actor = _figure_overlay_actor()
         self._plotter.renderer.AddViewProp(self._legend_actor)
         # Measurement guide lines are drawn in a second, non-interactive layer with the
         # same camera, so that they stay visible in front of the atoms.
@@ -744,6 +747,12 @@ class StructureViewport(QWidget):
         if legend != self._legend:
             self._legend = legend
             self._entries = None
+            self._plotter.render()
+
+    def set_annotations(self, annotations: tuple[TextAnnotation, ...]) -> None:
+        """Show project text inside the output frame."""
+        if annotations != self._annotations:
+            self._annotations = annotations
             self._plotter.render()
 
     def legend_entries(self) -> tuple[LegendEntry, ...]:
@@ -1278,6 +1287,7 @@ class StructureViewport(QWidget):
         self._last_factor = factor
         self._update_lights()
         self._update_frame_overlay()
+        self._update_annotation_overlay()
         self._update_legend_overlay()
         self._update_handles()
 
@@ -1331,31 +1341,59 @@ class StructureViewport(QWidget):
         w, h = image.width(), image.height()
         left, top = round(x0) + x, round(y0) + y
         self.legend_box = (left, top, w, h)
-        rows = np.frombuffer(image.constBits(), dtype=np.uint8).reshape(h, image.bytesPerLine())
-        pixels = rows[:, : 4 * w].reshape(h, w, 4)[::-1]  # VTK images start at the bottom
-        texture = vtkTexture()
-        texture.SetInputData(pv.ImageData(dimensions=(w, h, 1)))
-        texture.GetInput().GetPointData().SetScalars(
-            pv.convert_array(np.ascontiguousarray(pixels).reshape(-1, 4))
-        )
-        texture.InterpolateOff()
-        bottom = height - (top + h)
-        quad = pv.PolyData(
-            np.array(
-                [
-                    (left, bottom, 0),
-                    (left + w, bottom, 0),
-                    (left + w, bottom + h, 0),
-                    (left, bottom + h, 0),
-                ],
-                dtype=float,
-            ),
-            faces=[4, 0, 1, 2, 3],
-        )
-        quad.active_texture_coordinates = np.array([(0, 0), (1, 0), (1, 1), (0, 1)], dtype=float)
-        self._legend_actor.GetMapper().SetInputData(quad)
-        self._legend_actor.SetTexture(texture)
-        self._legend_actor.SetVisibility(True)
+        _set_figure_overlay(self._legend_actor, image, left, top, height)
+
+    def _update_annotation_overlay(self) -> None:
+        x0, y0, w, h = (round(value) for value in self.frame_rect())
+        key = (self._annotations, x0, y0, w, h)
+        if key == self._annotation_key:
+            return
+        self._annotation_key = key
+        overlay = annotation_overlay(self._annotations, w, h)
+        if overlay is None:
+            self._annotation_actor.SetVisibility(False)
+            return
+        image, x, y = overlay
+        _set_figure_overlay(self._annotation_actor, image, x0 + x, y0 + y, self.render_size()[1])
+
+
+def _figure_overlay_actor() -> vtkTexturedActor2D:
+    actor = vtkTexturedActor2D()
+    actor.SetMapper(vtkPolyDataMapper2D())
+    actor.SetPickable(False)
+    actor.SetVisibility(False)
+    return actor
+
+
+def _set_figure_overlay(
+    actor: vtkTexturedActor2D, image: QImage, left: int, top: int, height: int
+) -> None:
+    w, h = image.width(), image.height()
+    rows = np.frombuffer(image.constBits(), dtype=np.uint8).reshape(h, image.bytesPerLine())
+    pixels = rows[:, : 4 * w].reshape(h, w, 4)[::-1]  # VTK images start at the bottom
+    texture = vtkTexture()
+    texture.SetInputData(pv.ImageData(dimensions=(w, h, 1)))
+    texture.GetInput().GetPointData().SetScalars(
+        pv.convert_array(np.ascontiguousarray(pixels).reshape(-1, 4))
+    )
+    texture.InterpolateOff()
+    bottom = height - (top + h)
+    quad = pv.PolyData(
+        np.array(
+            [
+                (left, bottom, 0),
+                (left + w, bottom, 0),
+                (left + w, bottom + h, 0),
+                (left, bottom + h, 0),
+            ],
+            dtype=float,
+        ),
+        faces=[4, 0, 1, 2, 3],
+    )
+    quad.active_texture_coordinates = np.array([(0, 0), (1, 0), (1, 1), (0, 1)], dtype=float)
+    actor.GetMapper().SetInputData(quad)
+    actor.SetTexture(texture)
+    actor.SetVisibility(True)
 
 
 def _sphere_actor(

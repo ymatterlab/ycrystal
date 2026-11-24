@@ -80,8 +80,8 @@ tab and the galleries. There is no atom editor.
 
 ## Supercells, bonds, and directions
 
-The **Scene** dock has **Structure**, **Bonds**, **Appearance**, **Legend** (the
-[element legend](rendering.md#element-legend)), and **Render** tabs. If closed, reopen
+The **Scene** dock has **Structure**, **Bonds**, **Polyhedra**, **Appearance**, **Legend**,
+**[Text](rendering.md#figure-text)**, and **Render** tabs. If closed, reopen
 it from
 **View ▸ Scene**. Under Structure, set repetitions along a, b, c (1 to 20),
 use **+ all** / **− all**, or reset with **1 × 1 × 1**. Typed counts apply on Enter

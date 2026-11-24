@@ -55,6 +55,7 @@ import numpy as np
 from ase.data import chemical_symbols
 
 from ycrystal import __version__
+from ycrystal.core.annotation import TextAnnotation
 from ycrystal.core.background import BackgroundImage
 from ycrystal.core.bonds import BondSettings
 from ycrystal.core.camera import Camera
@@ -205,6 +206,20 @@ def project_to_dict(project: Project) -> dict[str, Any]:
                     "enabled": rule.enabled,
                 }
                 for rule in scene.polyhedron_rules
+            ],
+            "annotations": [
+                {
+                    "text": label.text,
+                    "x": label.x,
+                    "y": label.y,
+                    "font_size": label.font_size,
+                    "font_family": label.font_family,
+                    "color": list(label.color),
+                    "alignment": label.alignment,
+                    "bold": label.bold,
+                    "enabled": label.enabled,
+                }
+                for label in scene.annotations
             ],
             "bonds": {
                 "enabled": scene.bonds.enabled,
@@ -591,6 +606,20 @@ def _scene_from(d: dict[str, Any], version: int = SCHEMA_VERSION) -> SceneSettin
                 enabled=bool(entry.get("enabled", True)),
             )
             for entry in d.get("polyhedra", [])
+        ),
+        annotations=tuple(
+            TextAnnotation(
+                text=entry["text"],
+                x=float(entry["x"]),
+                y=float(entry["y"]),
+                font_size=float(entry["font_size"]),
+                font_family=str(entry["font_family"]),
+                color=_rgb(entry["color"]),
+                alignment=str(entry["alignment"]),
+                bold=bool(entry.get("bold", False)),
+                enabled=bool(entry.get("enabled", True)),
+            )
+            for entry in d.get("annotations", [])
         ),
         material=_known_material(str(d.get("material", defaults.material))),
         element_materials=tuple(

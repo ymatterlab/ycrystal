@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 
 from ycrystal import presets as presets_module
 from ycrystal.core import aspect, measure
+from ycrystal.core.annotation import TextAnnotation
 from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
 from ycrystal.core.camera import Camera, CameraPolicyError, axis_view, default_camera
 from ycrystal.core.export import ExportOptions, format_label, path_for_format
@@ -66,6 +67,7 @@ from ycrystal.gui.material_editor import (
     save_personal_material,
 )
 from ycrystal.gui.native import executable_filter, native_keys, personal_thumbnail_directory
+from ycrystal.gui.panels.annotation_panel import AnnotationPanel
 from ycrystal.gui.panels.appearance_panel import AppearancePanel
 from ycrystal.gui.panels.legend_panel import LegendPanel
 from ycrystal.gui.panels.measurement_panel import MeasurementPanel, MeasurementRow
@@ -425,13 +427,16 @@ class MainWindow(QMainWindow):
         self.render_panel = RenderPanel(self)
         self.legend_panel = LegendPanel(self)
         self.polyhedra_panel = PolyhedraPanel(self)
+        self.annotation_panel = AnnotationPanel(self)
         self.scene_panel.addTab(self.polyhedra_panel, "Polyhedra")
         self.polyhedra_panel.rules_requested.connect(self.set_polyhedra)
         self.scene_panel.addTab(self.appearance_panel, "Appearance")
         self.scene_panel.addTab(self.legend_panel, "Legend")
+        self.scene_panel.addTab(self.annotation_panel, "Text")
         self.scene_panel.addTab(self.render_panel, "Render")
         self.legend_panel.legend_requested.connect(self.set_legend)
         self.legend_panel.fit_requested.connect(lambda: self.viewport.fit())
+        self.annotation_panel.annotations_requested.connect(self.set_annotations)
         self.width_spin = self.render_panel.width_spin
         self.height_spin = self.render_panel.height_spin
         panel = self.appearance_panel
@@ -1200,6 +1205,7 @@ class MainWindow(QMainWindow):
         self.geometry = geometry
         self.viewport.set_scene(geometry, self.environment)
         self.viewport.set_legend(self.scene_settings.legend)
+        self.viewport.set_annotations(self.scene_settings.annotations)
         self.viewport.set_supercell(
             self.structure.cell if self.structure.has_cell else None,
             self.scene_settings.repetitions,
@@ -1224,6 +1230,7 @@ class MainWindow(QMainWindow):
             len(geometry.polyhedra),
         )
         self._sync_legend_panel()
+        self.annotation_panel.sync(self.scene_settings.annotations)
         self._update_lighting_setup()
         self._scene_changed()
 
@@ -1288,20 +1295,26 @@ class MainWindow(QMainWindow):
         changed = settings != self.scene_settings or (
             environment is not None and environment != self.environment
         )
-        # The legend is drawn on top of the figure: no new geometry for it alone.
-        legend_only = (
+        overlays_only = (
             changed
             and (environment is None or environment == self.environment)
-            and replace(settings, legend=self.scene_settings.legend) == self.scene_settings
+            and replace(
+                settings,
+                legend=self.scene_settings.legend,
+                annotations=self.scene_settings.annotations,
+            )
+            == self.scene_settings
         )
         if environment is not None:
             self.environment = environment
         self.scene_settings = settings
-        if legend_only:
+        if overlays_only:
             if output_size is not None or aspect_ratio is not None:
                 self._apply_output_size(*(output_size or self._output_size), aspect_ratio)
             self.viewport.set_legend(settings.legend)
+            self.viewport.set_annotations(settings.annotations)
             self._sync_legend_panel()
+            self.annotation_panel.sync(settings.annotations)
             self._scene_changed()
             return
         if output_size is not None or aspect_ratio is not None:
@@ -2278,6 +2291,12 @@ class MainWindow(QMainWindow):
         self.undo_stack.push(SceneSettingsCommand(self, new, text, merge_key))
         return True
 
+    def set_annotations(
+        self, annotations: tuple[TextAnnotation, ...], text: str = "Change Figure Text"
+    ) -> None:
+        """Change the text in the output frame as an undoable step."""
+        self._push_settings(replace(self.scene_settings, annotations=annotations), text)
+
     def set_background(self, environment_id: str) -> None:
         """Apply environment preset ``environment_id`` (undoable).
 
@@ -2890,6 +2909,7 @@ class MainWindow(QMainWindow):
             self.environment,
             settings,
             legend=self.scene_settings.legend,
+            annotations=self.scene_settings.annotations,
             title=f"Ycrystal preview: {self.structure.composition()}",
         )
         self.preview_queue.submit(job, executable, request)
@@ -3023,6 +3043,8 @@ class MainWindow(QMainWindow):
             message += f" (needs POV-Ray include files: {', '.join(includes)})"
         if self.scene_settings.legend.enabled:
             message += "; the element legend is added to rendered images only, not to the scene"
+        if any(label.enabled for label in self.scene_settings.annotations):
+            message += "; figure text is added to rendered images only"
         self.last_export_missing_includes = missing
         if missing:
             self.show_error(
@@ -3166,6 +3188,7 @@ class MainWindow(QMainWindow):
             self.environment,
             settings,
             legend=self.scene_settings.legend,
+            annotations=self.scene_settings.annotations,
             title=f"Ycrystal scene: {self.structure.composition()}",
             renderer_note=f"POV-Ray {version or 'unknown version'} ({executable})",
         )

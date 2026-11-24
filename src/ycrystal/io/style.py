@@ -564,7 +564,7 @@ def style_to_dict(style: Style) -> dict[str, Any]:
         "scene": {
             key: value
             for key, value in project["scene"].items()
-            if key not in ("vectors", "bond_overrides", "polyhedra")
+            if key not in ("vectors", "bond_overrides", "polyhedra", "annotations")
         },
         "environment": project["environment"],
         "materials": project["materials"],

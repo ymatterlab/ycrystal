@@ -25,6 +25,7 @@ import numpy as np
 from ase.data import chemical_symbols, covalent_radii
 from ase.data.colors import jmol_colors
 
+from ycrystal.core.annotation import TextAnnotation
 from ycrystal.core.background import BackgroundImage
 from ycrystal.core.bonds import BondSettings, periodic_bonds
 from ycrystal.core.legend import LegendSettings
@@ -93,6 +94,8 @@ class SceneSettings:
         precedence over automatic rules while bonds are enabled.
     polyhedron_rules
         User-defined coordination shells, one rule per centre/ligand element pair.
+    annotations
+        Text over the output frame, in stacking order.
     material
         Id of the default material preset for atoms and bonds (see
         [`ycrystal.presets`][ycrystal.presets]); ``"satin"`` is Ycrystal's original
@@ -153,6 +156,7 @@ class SceneSettings:
     legend: LegendSettings = field(default_factory=LegendSettings)
     bond_overrides: tuple[tuple[BondId, bool], ...] = ()
     polyhedron_rules: tuple[PolyhedronRule, ...] = ()
+    annotations: tuple[TextAnnotation, ...] = ()
 
     def __post_init__(self) -> None:
         reps = tuple(int(r) for r in self.repetitions)
@@ -189,6 +193,7 @@ class SceneSettings:
         if len({(rule.centre, rule.ligand) for rule in polyhedra}) != len(polyhedra):
             raise ValueError("the same centre/ligand pair has more than one polyhedron rule")
         object.__setattr__(self, "polyhedron_rules", polyhedra)
+        object.__setattr__(self, "annotations", tuple(self.annotations))
 
     def with_bond_override(self, a: AtomId, b: AtomId, visible: bool | None) -> SceneSettings:
         """Show, hide, or restore automatic visibility (None) for a displayed pair."""

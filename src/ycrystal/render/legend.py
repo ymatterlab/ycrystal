@@ -45,7 +45,9 @@ from PySide6.QtGui import (
     QRadialGradient,
 )
 
+from ycrystal.core.annotation import TextAnnotation
 from ycrystal.core.legend import LegendEntry, LegendSettings
+from ycrystal.render.annotation import annotation_paths, paint_annotations
 
 DEFAULT_FONT_FAMILIES = ("Arial", "Helvetica", "Liberation Sans", "Nimbus Sans", "DejaVu Sans")
 """Families tried in turn for the default font (an empty ``font_family``): Arial or
@@ -386,7 +388,18 @@ def draw_legend_on_file(
     LegendError
         If the image cannot be read or written.
     """
-    if not settings.enabled or not entries:
+    return draw_figure_overlays_on_file(path, entries, settings)
+
+
+def draw_figure_overlays_on_file(
+    path: str | Path,
+    entries: Sequence[LegendEntry],
+    settings: LegendSettings | None,
+    annotations: Sequence[TextAnnotation] = (),
+) -> bool:
+    """Paint text and the legend onto the PNG in one lossless pass."""
+    draw_legend = bool(settings is not None and settings.enabled and entries)
+    if not draw_legend and not any(label.enabled for label in annotations):
         return False
     path = Path(path)
     ensure_gui_application()
@@ -404,11 +417,18 @@ def draw_legend_on_file(
         image = image.convertToFormat(
             QImage.Format.Format_ARGB32 if alpha else QImage.Format.Format_RGB32
         )
-    layout = legend_layout(entries, settings, image.width(), image.height())
-    if layout is None:
+    layout = (
+        legend_layout(entries, settings, image.width(), image.height())
+        if settings is not None and draw_legend
+        else None
+    )
+    paths = annotation_paths(annotations, image.width(), image.height())
+    if layout is None and not paths:
         return False
     painter = QPainter(image)
-    paint_legend(painter, layout, settings)
+    paint_annotations(painter, paths)
+    if layout is not None and settings is not None:
+        paint_legend(painter, layout, settings)
     painter.end()
     # Encoded in memory: a file written by QImageWriter stays open (and so cannot be
     # renamed on Windows) until the writer is destroyed.
@@ -420,7 +440,7 @@ def draw_legend_on_file(
     buffer.open(QIODevice.OpenModeFlag.WriteOnly)
     writer = QImageWriter(buffer, b"png")
     if not writer.write(image):
-        raise LegendError(f"Could not encode the image with its legend: {writer.errorString()}")
+        raise LegendError(f"Could not encode the image with its overlays: {writer.errorString()}")
     del writer
     data = bytes(buffer.data())
     buffer.close()

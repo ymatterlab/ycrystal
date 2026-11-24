@@ -426,6 +426,7 @@ def render_png(
         project.environment,
         settings,
         legend=project.scene.legend,
+        annotations=project.scene.annotations,
         title=f"Ycrystal scene: {project.structure.composition()}",
         renderer_note=f"{executable} ({version or 'version unknown'})",
     )
