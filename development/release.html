@@ -992,6 +992,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#checklist-for-050" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checklist for 0.5.0
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#checklist-for-040" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1503,6 +1514,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#checklist-for-050" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checklist for 0.5.0
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#checklist-for-040" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1617,16 +1639,12 @@
 
 
 <h1 id="release-procedure-and-checklist">Release procedure and checklist<a class="headerlink" href="#release-procedure-and-checklist" title="Permanent link">&para;</a></h1>
-<p>How a Ycrystal release is prepared, and the checklists of versions 0.4.0, 0.3.0,
-0.2.0, and 0.1.0. Publication
-(tag, GitHub release, making the repository public) is the maintainer's decision and
-is not part of this procedure.</p>
-<p>The latest public release is
-<a href="https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0">Ycrystal 0.4.0</a>,
-published on 18 November 2026 with a Windows installer and tagged source archives.
-The checklists below record verification for each release at the time it was
-prepared. Later merges into <code>main</code> do not change the contents of those tags or
-downloadable installers; see the <a href="../HANDOFF.html#current-project-status">current feature table</a>.</p>
+<p>How a Ycrystal release is prepared, and the checklists of released versions.
+The maintainer decides when to publish a Git tag or GitHub release.</p>
+<p>The <a href="https://github.com/ymatterlab/ycrystal/releases">GitHub release page</a> contains
+the Windows installers and tagged source archives. The checklists below record
+verification for each release. See the <a href="../HANDOFF.html#current-project-status">current feature table</a>
+for the release containing each feature.</p>
 <h2 id="procedure">Procedure<a class="headerlink" href="#procedure" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Update <code>__version__</code> in <code>src/ycrystal/__init__.py</code> and <code>CHANGELOG.md</code>.</li>
@@ -1666,6 +1684,41 @@ examples.
    item passed, failed, or unverified.</p>
 </li>
 </ol>
+<h2 id="checklist-for-050">Checklist for 0.5.0<a class="headerlink" href="#checklist-for-050" title="Permanent link">&para;</a></h2>
+<p>v0.5.0 includes the element legend, the expanded Quantum ESPRESSO reader, and
+automatic documentation publishing. Project schema 8 and style schema 3 require
+v0.5.0 or newer. Older projects and styles open with the legend disabled.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Version</td>
+<td>Updated</td>
+<td>Application, package and installer metadata derive from <code>__version__</code>; README and installation examples report 0.5.0</td>
+</tr>
+<tr>
+<td>Local release audit</td>
+<td>Passed</td>
+<td>On macOS, 933 passed and 10 Windows-only skips in the headless suite at <code>c2fa44a</code>; strict docs, pre-commit, and fresh offline source and wheel installs passed. Real Qt desktop tests could not run in that session</td>
+</tr>
+<tr>
+<td>Windows desktop and installer by hand</td>
+<td>Maintainer reported working</td>
+<td>24 November 2026</td>
+</tr>
+<tr>
+<td>Release artifacts and CI</td>
+<td>See release record</td>
+<td><a href="https://github.com/ymatterlab/ycrystal/releases/tag/v0.5.0">v0.5.0 release</a></td>
+</tr>
+</tbody>
+</table>
 <h2 id="checklist-for-040">Checklist for 0.4.0<a class="headerlink" href="#checklist-for-040" title="Permanent link">&para;</a></h2>
 <p>Requested by the user on 18 November 2026: tag <code>v0.4.0</code> once PR #40 (the Windows
 installer) passed CI, update the files that record the version, then audit the README

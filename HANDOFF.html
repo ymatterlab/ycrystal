@@ -1620,25 +1620,15 @@ the repository root; the detailed verification record is <a href="PROGRESS.html"
 for in the current task (see <a href="#handoff-and-maintenance-rules">the rules at the end</a>).</p>
 <h2 id="current-project-status">Current project status<a class="headerlink" href="#current-project-status" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Latest public release: <a href="https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0">Ycrystal 0.4.0</a></strong>,
-  published on <strong>18 November 2026</strong>. The release page provides the downloadable
-  <code>Ycrystal-0.4.0-windows-x64-setup.exe</code> and tagged source archives. It is a published
-  release, not a draft or pre-release. Tag <code>v0.4.0</code> points to <code>34c803d</code> (PR #41)
-  and includes the feature and maintenance work in PRs #23–#40, including the
-  graphical Windows installer (PR #40). Installer build and checksum details are in
-  <a href="development/release.html#checklist-for-040">the release checklist</a>.</li>
-<li><strong>Development on <code>main</code>:</strong> the element legend (PR #45) and expanded Quantum
-  ESPRESSO reader (PR #47) were merged after <code>v0.4.0</code>. They are available when
-  installing from current <code>main</code>, but are not in the <code>v0.4.0</code> installer or tagged
-  source archives. Both <code>main</code> and the tag still report <code>0.4.0</code> in <code>__version__</code>;
-  use the tag or commit to identify the actual contents. This website follows
-  development documentation; it is not a frozen manual for <code>v0.4.0</code>.</li>
+<li><strong>Ycrystal 0.5.0</strong> includes the element legend (PR #45) and expanded Quantum
+  ESPRESSO reader (PR #47). The Windows installer and tagged source are listed on
+  the <a href="https://github.com/ymatterlab/ycrystal/releases/tag/v0.5.0">release page</a>.
+  This website follows development on <code>main</code>. See the
+  <a href="development/release.html#checklist-for-050">release checklist</a> for verification.</li>
 <li><strong>Documentation published (22 November 2026):</strong> the generated <code>gh-pages</code> branch
   serves <a href="https://ymatterlab.github.io/ycrystal/">ymatterlab.github.io/ycrystal</a>.
-  GitHub Pages uses that branch's root, with HTTPS enforced; the first deployment
-  succeeded. Source configuration, website links, and automatic publishing are
-  prepared on <code>docs/github-pages</code> for review. The automatic workflow has not run;
-  it becomes active after merging that source branch into <code>main</code>. See
+  GitHub Pages uses that branch's root, with HTTPS enforced. The publishing
+  workflow was merged into <code>main</code> in PR #48. See
   <a href="PROGRESS.html#documentation-publication-22-november-2026">the publication record</a>.</li>
 <li><strong>FR-QE-IBRAV-01, Quantum ESPRESSO input with <code>ibrav</code> other than 0:</strong> merged in
   PR #47 on 21 November 2026 (merge commit <code>c2fa44a</code>), after <code>v0.4.0</code>. Supports all
@@ -1651,8 +1641,8 @@ for in the current task (see <a href="#handoff-and-maintenance-rules">the rules 
 <li><strong>FR-LEGEND-01, element legend</strong> (requested 21 November 2026): merged in PR #45
   (merge commit <code>6735400</code>) after CI passed on every system. A <em>Scene ▸ Legend</em> tab and
   a legend of the displayed elements painted onto the figure, its previews, renders, and
-  exports (project schema 8, style schema 3). Not yet in a release; no hands-on check
-  yet. See <a href="PROGRESS.html#fr-legend-01-element-legend-post-040-21-november-2026">PROGRESS.md</a>.</li>
+  exports (project schema 8, style schema 3). Included in v0.5.0. See
+  <a href="PROGRESS.html#fr-legend-01-element-legend-post-040-21-november-2026">PROGRESS.md</a>.</li>
 <li><strong>Windows support</strong> (requested by the user on 17 November 2026), branch
   <code>feature/windows</code>, PR #35: completed on a Windows 11 laptop on 18 November 2026. All
   automated tests pass there with POV-Ray for Windows, and the user tested Ycrystal by
@@ -1670,11 +1660,9 @@ for in the current task (see <a href="#handoff-and-maintenance-rules">the rules 
   FR-VALIDATION-01 (PR #33), and FR-GALLERY-01 with the next-tests audit (PR #34,
   merge commit <code>5b72f92</code>). All of this work is included in <code>v0.4.0</code>.</li>
 </ul>
-<p>The table gives the <strong>first release tag containing each feature</strong>, checked against
-Git ancestry on 22 November 2026. <code>v0.4.0</code> also includes every row from earlier
-versions. <strong>Main only (after 0.4.0)</strong> means merged and available from <code>main</code>, with
-no tagged release containing it yet. Earlier versions have Git tags; <code>v0.4.0</code> is
-the public GitHub release with a downloadable installer.</p>
+<p>The table gives the <strong>first release tag containing each feature</strong>. v0.5.0
+includes the features from earlier releases. GitHub release pages for v0.4.0
+and v0.5.0 provide Windows installers.</p>
 <table>
 <thead>
 <tr>
@@ -1795,12 +1783,12 @@ the public GitHub release with a downloadable installer.</p>
 <td>PRs #38, #39</td>
 </tr>
 <tr>
-<td>Main only (after 0.4.0)</td>
+<td>0.5.0</td>
 <td>FR-QE-IBRAV-01 QE input with <code>ibrav</code> other than 0 (all pw.x lattices)</td>
 <td>PR #47 (<code>c2fa44a</code>)</td>
 </tr>
 <tr>
-<td>Main only (after 0.4.0)</td>
+<td>0.5.0</td>
 <td>FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3</td>
 <td>PR #45 (<code>6735400</code>)</td>
 </tr>
@@ -2314,7 +2302,7 @@ python3.12<span class="w"> </span>-m<span class="w"> </span>venv<span class="w">
 </code></pre></div>
 <p>Then, on either system, from the repository root:</p>
 <div class="highlight"><pre><span></span><code>.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev]"</span><span class="w"> </span>-c<span class="w"> </span>constraints.txt
-.venv/bin/ycrystal<span class="w"> </span>--version<span class="w">            </span><span class="c1"># ycrystal 0.4.0</span>
+.venv/bin/ycrystal<span class="w"> </span>--version<span class="w">            </span><span class="c1"># ycrystal 0.5.0</span>
 .venv/bin/ycrystal<span class="w"> </span>--check-renderer<span class="w">     </span><span class="c1"># PASS: POV-Ray 3.7… passed</span>
 .venv/bin/ycrystal<span class="w"> </span>--sample<span class="w"> </span>perovskite<span class="w">  </span><span class="c1"># opens the window</span>
 .venv/bin/python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>-rs<span class="w">       </span><span class="c1"># GUI tests open windows for about 1.5 minutes</span>

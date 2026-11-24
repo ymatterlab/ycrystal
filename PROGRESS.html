@@ -1311,6 +1311,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#v050-release-preparation-24-november-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        v0.5.0 release preparation (24 November 2026)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#release-status-audit-22-november-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2110,6 +2121,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#v050-release-preparation-24-november-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        v0.5.0 release preparation (24 November 2026)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#release-status-audit-22-november-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2855,7 +2877,21 @@
 
 
 <h1 id="ycrystal-progress-record">Ycrystal progress record<a class="headerlink" href="#ycrystal-progress-record" title="Permanent link">&para;</a></h1>
-<p>Last updated: 22 November 2026 (release-status audit and documentation publication). Latest public release: <a href="https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0">Ycrystal 0.4.0</a>, published 18 November 2026. The element legend (PR #45) and expanded Quantum ESPRESSO reader (PR #47) are merged into <code>main</code> after that tag and await a subsequent release. The dated sections below preserve their original verification context; the repository is now public.</p>
+<p>Last updated: 24 November 2026 (v0.5.0 release preparation). The dated sections
+below preserve their original verification context.</p>
+<h2 id="v050-release-preparation-24-november-2026">v0.5.0 release preparation (24 November 2026)<a class="headerlink" href="#v050-release-preparation-24-november-2026" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The documentation source branch merged in PR #48 at <code>3ad60e0</code>.</li>
+<li>v0.5.0 includes the element legend (PR #45) and expanded Quantum ESPRESSO reader
+  (PR #47). The local macOS audit at <code>c2fa44a</code> passed 933 headless tests with
+  10 Windows-only skips, pre-commit, strict documentation, and fresh offline
+  installs from source and wheel. The wheel rendered both a project with the
+  legend enabled and a Quantum ESPRESSO <code>ibrav = 1</code> input.</li>
+<li>The maintainer reports the Windows desktop and installer work well.</li>
+<li>See the <a href="development/release.html#checklist-for-050">release checklist</a> and
+  <a href="https://github.com/ymatterlab/ycrystal/releases/tag/v0.5.0">v0.5.0 release record</a>
+  for packaging and release verification.</li>
+</ul>
 <h2 id="release-status-audit-22-november-2026">Release-status audit (22 November 2026)<a class="headerlink" href="#release-status-audit-22-november-2026" title="Permanent link">&para;</a></h2>
 <p>Audited the published release through GitHub's API and checked every PR referenced
 in the handoff's feature table against the Git tags using
