@@ -56,6 +56,8 @@ class ScenePanel(QTabWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setUsesScrollButtons(True)
+        self.setElideMode(Qt.TextElideMode.ElideRight)
         self.addTab(self._structure_tab(), "Structure")
         self.addTab(self._bonds_tab(), "Bonds")
 

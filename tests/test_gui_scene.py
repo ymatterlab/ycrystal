@@ -32,7 +32,7 @@ def window(qtbot):
 
 def all_visible(win) -> bool:
     width, height = win.viewport.render_size()
-    pixels = win.current_camera().project(win.geometry.positions, width, height)
+    pixels = win.viewport.vtk_project(win.geometry.positions)
     return bool(np.all((pixels > 0) & (pixels < (width, height))))
 
 

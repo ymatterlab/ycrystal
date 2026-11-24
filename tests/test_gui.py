@@ -71,7 +71,7 @@ def test_window_launches_with_sample_and_fitted_view(window):
     assert "5 atoms, 1 bond shown" in window.structure_label.text()
     width, height = window.viewport.render_size()
     assert width != height
-    pixels = window.current_camera().project(window.geometry.positions, width, height)
+    pixels = window.viewport.vtk_project(window.geometry.positions)
     assert np.all((pixels > 0) & (pixels < (width, height)))
 
 
@@ -283,8 +283,7 @@ def _click(widget, pixel, modifiers=Qt.KeyboardModifier.NoModifier):
 
 def _visible_pixels(window):
     """Map displayed atom index -> pixel where it is the front-most atom."""
-    width, height = window.viewport.render_size()
-    pixels = window.current_camera().project(window.geometry.positions, width, height)
+    pixels = window.viewport.vtk_project(window.geometry.positions)
     return {i: tuple(p) for i, p in enumerate(pixels) if window.viewport.pick(tuple(p)) == i}
 
 
