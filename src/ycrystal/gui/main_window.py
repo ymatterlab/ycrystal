@@ -40,7 +40,7 @@ from ycrystal import presets as presets_module
 from ycrystal.core import aspect, measure
 from ycrystal.core.annotation import TextAnnotation
 from ycrystal.core.bond_symmetry import equivalent_displayed_bonds
-from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
+from ycrystal.core.bonds import Pair, summarize_element_pairs
 from ycrystal.core.camera import Camera, CameraPolicyError, axis_view, default_camera
 from ycrystal.core.export import ExportOptions, format_label, path_for_format
 from ycrystal.core.legend import LegendSettings, legend_entries
@@ -1264,7 +1264,7 @@ class MainWindow(QMainWindow):
 
     def _sync_panel(self) -> None:
         settings = self.scene_settings
-        pairs = summarize_pairs(periodic_bonds(self.structure, settings.bonds))
+        pairs = summarize_element_pairs(self.structure, settings.bonds)
         self.scene_panel.sync(
             settings,
             pairs,

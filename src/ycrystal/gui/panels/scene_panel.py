@@ -162,6 +162,7 @@ class ScenePanel(QTabWidget):
         layout.addLayout(form)
         layout.addWidget(QLabel("Element pairs (bonds per original cell, lengths):"))
         self.pair_list = QListWidget()
+        self.pair_list.setAccessibleName("Element pairs")
         self.pair_list.itemChanged.connect(self._emit_pair)
         layout.addWidget(self.pair_list, 1)
         note = QLabel(
@@ -273,7 +274,7 @@ class ScenePanel(QTabWidget):
             for summary in pairs:
                 self.pair_list.addItem(_pair_item(summary))
             if not pairs:
-                placeholder = QListWidgetItem("No atoms within the bond tolerance")
+                placeholder = QListWidgetItem("No elements in the structure")
                 placeholder.setFlags(Qt.ItemFlag.NoItemFlags)
                 self.pair_list.addItem(placeholder)
         finally:
@@ -288,12 +289,17 @@ class ScenePanel(QTabWidget):
 
 
 def _pair_item(summary: PairSummary) -> QListWidgetItem:
-    a, b = summary.pair
-    if abs(summary.max_length - summary.min_length) < 5e-4:
-        lengths = f"{summary.min_length:.3f} Å"
-    else:
-        lengths = f"{summary.min_length:.3f}–{summary.max_length:.3f} Å"
-    item = QListWidgetItem(f"{a}–{b}   {summary.count} per cell   {lengths}")
+    text = f"{pair_label(summary.pair)}   {summary.count} per cell"
+    minimum, maximum = summary.min_length, summary.max_length
+    if minimum is not None and maximum is not None:
+        lengths = f"{minimum:.3f}" if maximum - minimum < 5e-4 else f"{minimum:.3f}–{maximum:.3f}"
+        text += f"   {lengths} Å"
+    item = QListWidgetItem(text)
+    if summary.count == 0:
+        item.setToolTip(
+            "No candidates within Max. length. The checkbox sets the rule for this pair "
+            "if candidates come within range."
+        )
     item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
     item.setCheckState(Qt.CheckState.Checked if summary.enabled else Qt.CheckState.Unchecked)
     item.setData(Qt.ItemDataRole.UserRole, list(summary.pair))

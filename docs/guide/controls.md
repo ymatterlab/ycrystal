@@ -109,11 +109,12 @@ never appear in exports or renders.
 
 Under Bonds, **Show bonds** controls visibility. **Max. length** ranges from 0.80
 through 1.50 times the sum of covalent radii; **Radius** ranges from 0.02 through
-0.50 Å. Element-pair checkboxes override the default rule: metal–metal pairs start
-off in compounds containing non-metals. The pair list reports candidates and length
-ranges **per original cell**, not the number drawn in the repeated block. A bond
-appears only when both endpoint atoms are displayed; hiding an atom removes its bonds.
-These are geometric contacts, not calculated chemical bond orders.
+0.50 Å. The list includes every pair of elements in the structure, including
+same-element pairs. A checkbox sets the rule even when a pair has zero candidates
+within **Max. length**. Metal–metal pairs start off in compounds containing
+non-metals. The counts and length ranges are **per original cell**. A bond appears
+only when both endpoint atoms are displayed, and hiding an atom removes its bonds.
+Bond candidates are based on interatomic distances.
 
 To control a specific bond, select two displayed atoms with Ctrl+click. In
 **Bond between selected atoms**, choose **Show**, **Hide**, or **Automatic**.

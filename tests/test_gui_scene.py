@@ -199,6 +199,33 @@ def test_bond_pairs_tolerance_and_visibility(window):
     assert len(window.geometry.bonds) == 0 and not panel.pair_list.isEnabled()
 
 
+def test_bond_pair_list_includes_same_element_pairs_outside_cutoff(window):
+    panel = window.scene_panel
+    window.set_repetitions((2, 1, 1))
+    panel.tolerance_spin.setValue(0.99)
+    rows = [panel.pair_list.item(i) for i in range(panel.pair_list.count())]
+    assert [row.text().split()[0] for row in rows] == [
+        "O–O",
+        "O–Sr",
+        "O–Ti",
+        "Sr–Sr",
+        "Sr–Ti",
+        "Ti–Ti",
+    ]
+
+    assert rows[-1].text() == "Ti–Ti   0 per cell"
+    assert rows[-1].checkState() == Qt.CheckState.Unchecked
+    rows[-1].setCheckState(Qt.CheckState.Checked)
+    assert ("Ti", "Ti", True) in window.scene_settings.bonds.overrides
+
+    panel.tolerance_spin.setValue(1.30)
+    row = panel.pair_list.item(5)
+    assert row.text() == "Ti–Ti   3 per cell   3.905 Å"
+    assert row.checkState() == Qt.CheckState.Checked
+    geometry = window.geometry
+    assert sum(geometry.elements[i] == geometry.elements[j] == "Ti" for i, j in geometry.bonds) == 1
+
+
 def test_cell_edge_modes_from_panel(window):
     panel = window.scene_panel
     window.set_repetitions((2, 2, 2))
