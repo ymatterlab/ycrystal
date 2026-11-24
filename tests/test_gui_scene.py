@@ -2,7 +2,8 @@
 
 import numpy as np
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPointF, Qt
+from PySide6.QtTest import QTest
 
 from ycrystal.core.annotation import TextAnnotation
 from ycrystal.core.camera import ViewPolicy
@@ -51,6 +52,30 @@ def test_selected_bond_buttons_change_one_periodic_pair_and_undo(window):
     panel.selected_bond_auto.click()
     assert len(window.geometry.bonds) == count
     assert not window.scene_settings.bond_overrides
+
+
+def test_click_a_bond_and_delete_only_that_bond(window):
+    geometry = window.geometry
+    points = geometry.positions[geometry.bonds].mean(axis=1)
+    pixels = window.viewport.vtk_project(points)
+    pixel = next(p for p in pixels if window.viewport.pick_bond(tuple(p)) is not None)
+    index = window.viewport.pick_bond(tuple(pixel))
+    pair = tuple(geometry.atom_ids[row] for row in geometry.bonds[index])
+
+    window.scene_panel.bond_selection_check.setChecked(True)
+    widget = window.viewport.interactor_widget
+    window.viewport.handle_click(QPointF(*(pixel / widget.devicePixelRatioF())), False)
+    assert window.selected_bond == pair
+    assert not window.selection and window.viewport._bond_highlight_actor is not None
+    QTest.keyClick(widget, Qt.Key.Key_Delete)
+    assert window.scene_settings.bond_overrides == ((pair, False),)
+    assert len(window.geometry.bonds) == len(geometry.bonds) - 1
+    assert window.selected_bond is None and window.viewport._bond_highlight_actor is None
+    assert window.undo_stack.count() == 1
+    window.undo_stack.undo()
+    np.testing.assert_array_equal(window.geometry.bonds, geometry.bonds)
+    window.set_measurement_mode("distance")
+    assert not window.scene_panel.bond_selection_check.isChecked()
 
 
 def test_polyhedra_and_figure_text_are_optional_live_overlays(window):

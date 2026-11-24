@@ -122,6 +122,11 @@ restores the distance and element-pair rules. The override applies to the two
 selected periodic images and is saved in the project. **Show bonds** controls
 visibility for the whole scene.
 
+To pick a drawn bond directly, enable **Select bonds in view** in
+**Scene ▸ Bonds** and click a cylinder. Press **Delete** or choose
+**Remove selected bond**. The edit applies to that displayed bond and can be
+undone. Turn the selection mode off to pick atoms again.
+
 In **Scene ▸ Polyhedra**, choose **Add…** to select a centre element, ligand
 element, and maximum centre–ligand distance in Å. Set the face colour, opacity,
 and whether to draw the edges. A polyhedron uses the convex hull of its periodic

@@ -72,7 +72,7 @@ from ycrystal.core.annotation import TextAnnotation  # noqa: E402
 from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.legend import LegendEntry, LegendSettings, legend_entries  # noqa: E402
 from ycrystal.core.lighting import LightingRig, resolve_lighting_for_bounds  # noqa: E402
-from ycrystal.core.picking import pick_sphere  # noqa: E402
+from ycrystal.core.picking import pick_bond, pick_sphere  # noqa: E402
 from ycrystal.core.polyhedra import EDGE_RADIUS  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry, Environment  # noqa: E402
 from ycrystal.render.annotation import annotation_overlay  # noqa: E402
@@ -241,6 +241,9 @@ class StructureViewport(QWidget):
     """A click without dragging: (index into the displayed atoms or -1 for empty
     space, whether Ctrl was held)."""
 
+    bond_clicked = Signal(int)
+    """Row of the clicked displayed bond, or −1 for empty space."""
+
     #: A key pressed in the 3D view that no window shortcut consumed
     key_pressed = Signal(QKeySequence)
     """A key pressed in the 3D view that no window shortcut consumed."""
@@ -277,6 +280,8 @@ class StructureViewport(QWidget):
         self.bond_actors: dict[str, vtkActor] = {}
         self.polyhedron_actors: list[vtkActor] = []
         self._highlight_actor: vtkActor | None = None
+        self._bond_highlight_actor: vtkActor | None = None
+        self.bond_selection_mode = False
         self.arrow_mesh: pv.PolyData | None = None
         """Mesh of the vector arrows drawn in the live view (``None`` without arrows)."""
         self.measurement_actors: list[vtkActor | vtkTextActor] = []
@@ -397,6 +402,9 @@ class StructureViewport(QWidget):
         if self._highlight_actor is not None:
             plotter.remove_actor(self._highlight_actor, render=False)
         self._highlight_actor = None
+        if self._bond_highlight_actor is not None:
+            plotter.remove_actor(self._bond_highlight_actor, render=False)
+            self._bond_highlight_actor = None
         plotter.remove_actor("cell_edges", render=False)
         plotter.remove_actor("vector_arrows", render=False)
         self.arrow_mesh = None
@@ -574,6 +582,28 @@ class StructureViewport(QWidget):
             self._highlight_actor = actor
         self._plotter.render()
 
+    def set_bond_highlight(self, index: int | None) -> None:
+        """Mark one displayed bond in the live view."""
+        actor = self._bond_highlight_actor
+        if actor is None and index is None:
+            return
+        if actor is not None:
+            self._plotter.remove_actor(actor, render=False)
+            self._bond_highlight_actor = None
+        geometry = self._geometry
+        if geometry is not None and index is not None:
+            a, b = geometry.positions[geometry.bonds[index]]
+            mesh = pv.Line(a, b).tube(radius=geometry.bond_radius * 1.35, n_sides=12)
+            self._bond_highlight_actor = self._plotter.add_mesh(
+                mesh,
+                color=HIGHLIGHT_COLOR,
+                ambient=0.65,
+                pickable=False,
+                reset_camera=False,
+                render=False,
+            )
+        self._plotter.render()
+
     def set_measurement(self, points: np.ndarray, radii: np.ndarray, kind: str | None) -> None:
         """Show the helpers of a measurement: picked atoms and a guide.
 
@@ -666,7 +696,7 @@ class StructureViewport(QWidget):
         )
 
     def handle_click(self, position: QPointF, toggle: bool) -> None:
-        """Pick at a click position and emit `atom_clicked`.
+        """Pick at a click position in the current selection mode.
 
         Parameters
         ----------
@@ -676,8 +706,29 @@ class StructureViewport(QWidget):
             Whether Ctrl was held.
         """
         ratio = self._plotter.devicePixelRatioF()
-        index = self.pick((position.x() * ratio, position.y() * ratio))
+        pixel = (position.x() * ratio, position.y() * ratio)
+        if self.bond_selection_mode:
+            index = self.pick_bond(pixel)
+            self.bond_clicked.emit(-1 if index is None else index)
+            return
+        index = self.pick(pixel)
         self.atom_clicked.emit(-1 if index is None else index, toggle)
+
+    def pick_bond(self, pixel: tuple[float, float]) -> int | None:
+        """Return the displayed bond under a device-pixel position."""
+        geometry = self._geometry
+        if geometry is None:
+            return None
+        return pick_bond(
+            self.camera(),
+            *self.render_size(),
+            pixel,
+            geometry.positions,
+            geometry.radii,
+            geometry.bonds,
+            geometry.bond_radius,
+            cushion_pixels=3 * self._plotter.devicePixelRatioF(),
+        )
 
     # ----- camera -----------------------------------------------------------------
     def camera(self) -> Camera:

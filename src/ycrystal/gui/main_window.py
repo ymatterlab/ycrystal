@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
-from PySide6.QtCore import QSettings, Qt, QTimer
+from PySide6.QtCore import QSettings, QSignalBlocker, Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap, QUndoStack
 from PySide6.QtWidgets import (
     QApplication,
@@ -48,6 +48,7 @@ from ycrystal.core.polyhedra import PolyhedronRule
 from ycrystal.core.scene import (
     LARGE_DISPLAY_ATOMS,
     AtomId,
+    BondId,
     DisplayGeometry,
     Environment,
     SceneSettings,
@@ -392,6 +393,7 @@ class MainWindow(QMainWindow):
         self.last_style_notes: list[str] = []
         self.last_info: tuple[str, str] | None = None
         self.selection: set[AtomId] = set()
+        self.selected_bond: BondId | None = None
         self.measurements = measure.MeasurementSession(self.structure)
         self._measure_revealed = False  # the panel opens by itself only once
         self.undo_stack = QUndoStack(self)
@@ -422,6 +424,8 @@ class MainWindow(QMainWindow):
         self.scene_panel.bond_radius_requested.connect(self.set_bond_radius)
         self.scene_panel.bond_pair_requested.connect(self.set_bond_pair)
         self.scene_panel.selected_bond_requested.connect(self.set_selected_bond)
+        self.scene_panel.bond_selection_requested.connect(self.set_bond_selection_mode)
+        self.scene_panel.remove_bond_requested.connect(self.remove_selected_bond)
         self.scene_panel.radius_scale_requested.connect(self.set_radius_scale)
         self.appearance_panel = AppearancePanel(self)
         self.render_panel = RenderPanel(self)
@@ -508,6 +512,7 @@ class MainWindow(QMainWindow):
         )
         self.viewport.camera_changed.connect(self._on_view_changed)
         self.viewport.atom_clicked.connect(self._on_atom_clicked)
+        self.viewport.bond_clicked.connect(self._on_bond_clicked)
         self.viewport.supercell_drag_changed.connect(self._on_supercell_drag_changed)
         self.viewport.supercell_drag_finished.connect(self._on_supercell_drag_finished)
         self.viewport.set_handles_visible(self.handles_action.isChecked())
@@ -595,13 +600,12 @@ class MainWindow(QMainWindow):
             "Hide Selected Atoms",
             self,
             enabled=False,
-            toolTip="Remove the selected balls from the view and exports (Delete). "
-            "The structure is unchanged.",
+            toolTip="Remove the selected atoms or bond from the figure (Delete).",
         )
         self.hide_action.setShortcuts(
             [QKeySequence(Qt.Key.Key_Delete), QKeySequence(Qt.Key.Key_Backspace)]
         )
-        self.hide_action.triggered.connect(self.hide_selected)
+        self.hide_action.triggered.connect(self._remove_selection)
         self.select_none_action = QAction(
             "Select None", self, shortcut=QKeySequence(Qt.Key.Key_Escape)
         )
@@ -914,6 +918,7 @@ class MainWindow(QMainWindow):
         self.project_path = path
         self.undo_stack.clear()
         self.selection = set()
+        self.selected_bond = None
         self.boundary_action.setChecked(project.scene.boundary_images)
         self.set_rotation_mode(self.rotation_mode())
         self._output_size = (project.output.width, project.output.height)
@@ -1353,10 +1358,11 @@ class MainWindow(QMainWindow):
     def select(self, atom_ids: set[AtomId]) -> None:
         """Replace the selection; IDs that are not displayed are ignored."""
         self.selection = {atom_id for atom_id in atom_ids if atom_id in self.geometry}
+        self.selected_bond = None
         self._update_selection()
 
     def clear_selection(self) -> None:
-        """Deselect all atoms (*Edit ▸ Select None*, Esc).
+        """Deselect the current atoms or bond (*Edit ▸ Select None*, Esc).
 
         During a supercell-handle, axis, or light-handle drag, Esc cancels the drag
         instead.
@@ -1370,6 +1376,44 @@ class MainWindow(QMainWindow):
             return
         self.select(set())
 
+    def set_bond_selection_mode(self, enabled: bool) -> None:
+        """Switch between selecting displayed atoms and bonds."""
+        if enabled and self.measurements.mode is not None:
+            self.set_measurement_mode(None)
+        self.viewport.bond_selection_mode = enabled
+        with QSignalBlocker(self.scene_panel.bond_selection_check):
+            self.scene_panel.bond_selection_check.setChecked(enabled)
+        self.select(set())
+
+    def _on_bond_clicked(self, index: int) -> None:
+        if index < 0:
+            self.selected_bond = None
+        else:
+            a, b = self.geometry.bonds[index]
+            self.selected_bond = (self.geometry.atom_ids[a], self.geometry.atom_ids[b])
+        self._update_selection()
+
+    def _selected_bond_row(self) -> int | None:
+        if self.selected_bond is None:
+            return None
+        a, b = (self.geometry.index_of(atom) for atom in self.selected_bond)
+        if a is None or b is None:
+            return None
+        rows = np.flatnonzero(np.all(self.geometry.bonds == sorted((a, b)), axis=1))
+        return int(rows[0]) if len(rows) else None
+
+    def _remove_selection(self) -> None:
+        if self.viewport.bond_selection_mode:
+            self.remove_selected_bond()
+        else:
+            self.hide_selected()
+
+    def remove_selected_bond(self) -> None:
+        """Hide the clicked bond as an undoable project change."""
+        if self.selected_bond is not None:
+            new = self.scene_settings.with_bond_override(*self.selected_bond, False)
+            self._push_settings(new, "Remove Selected Bond")
+
     # ----- measurements -------------------------------------------------------------
     def measurement_mode(self) -> str | None:
         """Return ``"distance"``, ``"angle"``, or ``None`` (ordinary selection)."""
@@ -1382,6 +1426,8 @@ class MainWindow(QMainWindow):
         navigation is unchanged. Switching modes cancels an incomplete measurement.
         The ordinary selection is kept.
         """
+        if mode is not None and self.viewport.bond_selection_mode:
+            self.set_bond_selection_mode(False)
         self.measurements.set_mode(mode)
         self.measure_distance_action.setChecked(mode == "distance")
         self.measure_angle_action.setChecked(mode == "angle")
@@ -1932,7 +1978,14 @@ class MainWindow(QMainWindow):
             self._sync_vector_panel()
         indices = [self.geometry.index_of(atom_id) for atom_id in self.selection]
         self.viewport.set_highlight([i for i in indices if i is not None])
-        self.hide_action.setEnabled(bool(self.selection))
+        bond_row = self._selected_bond_row()
+        if bond_row is None:
+            self.selected_bond = None
+        self.viewport.set_bond_highlight(bond_row)
+        self.scene_panel.remove_bond_button.setEnabled(bond_row is not None)
+        bond_mode = self.viewport.bond_selection_mode
+        self.hide_action.setText("Remove Selected Bond" if bond_mode else "Hide Selected Atoms")
+        self.hide_action.setEnabled(bond_row is not None if bond_mode else bool(self.selection))
         self.selection_material_action.setEnabled(bool(self.selection))
         override = None
         if len(self.selection) == 2:
@@ -1953,6 +2006,15 @@ class MainWindow(QMainWindow):
         and Cartesian (Å) coordinates, and movable flags if the file had any. For
         several atoms: the number per element.
         """
+        if self.selected_bond is not None:
+            a, b = self.selected_bond
+            distance = np.linalg.norm(
+                measure.atom_position(self.structure, a) - measure.atom_position(self.structure, b)
+            )
+            return (
+                f"Selected bond: {self.structure.symbols[a[0]]}–{self.structure.symbols[b[0]]}"
+                f" · {distance:.3f} Å"
+            )
         if not self.selection:
             return ""
         if len(self.selection) == 1:

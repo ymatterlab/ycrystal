@@ -52,6 +52,8 @@ class ScenePanel(QTabWidget):
     bond_radius_requested = Signal(float)
     bond_pair_requested = Signal(tuple, bool)
     selected_bond_requested = Signal(object)
+    bond_selection_requested = Signal(bool)
+    remove_bond_requested = Signal()
     radius_scale_requested = Signal(float)
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -192,6 +194,15 @@ class ScenePanel(QTabWidget):
             buttons.addWidget(button)
         selected_layout.addLayout(buttons)
         layout.addWidget(selected)
+
+        self.bond_selection_check = QCheckBox("Select bonds in view")
+        self.bond_selection_check.toggled.connect(self.bond_selection_requested)
+        layout.addWidget(self.bond_selection_check)
+        self.remove_bond_button = QPushButton("Remove selected bond")
+        self.remove_bond_button.setToolTip("Remove this displayed bond (Delete)")
+        self.remove_bond_button.setEnabled(False)
+        self.remove_bond_button.clicked.connect(self.remove_bond_requested)
+        layout.addWidget(self.remove_bond_button)
         return tab
 
     def sync_selected_bond(self, can_show: bool, can_hide: bool, has_override: bool) -> None:
