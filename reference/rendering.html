@@ -9685,7 +9685,7 @@ chunk contains none.</p>
 
 
 <a href="#ycrystal.render.jobs.prepare_job" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">prepare_job</span><span class="p">(</span><span class="n">geometry</span><span class="p">:</span> <span class="n">DisplayGeometry</span><span class="p">,</span> <span class="n">camera</span><span class="p">:</span> <span class="n">Camera</span><span class="p">,</span> <span class="n">environment</span><span class="p">:</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">RenderSettings</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">legend</span><span class="p">:</span> <span class="n">LegendSettings</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">writer_kwargs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenderJob</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">prepare_job</span><span class="p">(</span><span class="n">geometry</span><span class="p">:</span> <span class="n">DisplayGeometry</span><span class="p">,</span> <span class="n">camera</span><span class="p">:</span> <span class="n">Camera</span><span class="p">,</span> <span class="n">environment</span><span class="p">:</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">RenderSettings</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">legend</span><span class="p">:</span> <span class="n">LegendSettings</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">annotations</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TextAnnotation</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="o">**</span><span class="n">writer_kwargs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenderJob</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -9773,6 +9773,16 @@ temporary directory (<code>$TMPDIR</code>, usually <code>/tmp</code>).</p>
             <p>Element legend to paint onto the finished image (<code>SceneSettings.legend</code>);
 <code>None</code> or a disabled legend leaves the image exactly as POV-Ray renders it.
 The scene files do not contain it.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>annotations</code></b>
+              (<code><span title="tuple">tuple</span>[<span title="ycrystal.core.annotation.TextAnnotation">TextAnnotation</span>, ...]</code>, default:
+                  <code>()</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Text overlays to paint onto the finished image.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -10086,7 +10096,7 @@ the <code>.part</code> file is not removed.</p>
   </span>
 
 <a href="#ycrystal.render.jobs.RenderJob" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">RenderJob</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">pov_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">ini_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">image_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">RenderSettings</span><span class="p">,</span> <span class="n">legend</span><span class="p">:</span> <span class="n">LegendSettings</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">legend_entries</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LegendEntry</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">RenderJob</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">pov_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">ini_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">image_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">RenderSettings</span><span class="p">,</span> <span class="n">legend</span><span class="p">:</span> <span class="n">LegendSettings</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">legend_entries</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LegendEntry</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">annotations</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TextAnnotation</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -10168,6 +10178,14 @@ has rendered successfully.</p>
           –
           <div class="doc-md-description">
             <p>The legend's entries, resolved from the rendered geometry.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.render.jobs.RenderJob.annotations">annotations</span></code></b>
+              (<code><span title="tuple">tuple</span>[<span title="ycrystal.core.annotation.TextAnnotation">TextAnnotation</span>, ...]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Optional text anchored to the image frame.</p>
           </div>
         </li>
     </ul>

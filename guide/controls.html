@@ -1718,8 +1718,8 @@ are presentation state; see
 <a href="appearance.html">Materials, backgrounds, and lighting</a> for the <strong>Scene ▸ Appearance</strong>
 tab and the galleries. There is no atom editor.</p>
 <h2 id="supercells-bonds-and-directions">Supercells, bonds, and directions<a class="headerlink" href="#supercells-bonds-and-directions" title="Permanent link">&para;</a></h2>
-<p>The <strong>Scene</strong> dock has <strong>Structure</strong>, <strong>Bonds</strong>, <strong>Appearance</strong>, <strong>Legend</strong> (the
-<a href="rendering.html#element-legend">element legend</a>), and <strong>Render</strong> tabs. If closed, reopen
+<p>The <strong>Scene</strong> dock has <strong>Structure</strong>, <strong>Bonds</strong>, <strong>Polyhedra</strong>, <strong>Appearance</strong>, <strong>Legend</strong>,
+<strong><a href="rendering.html#figure-text">Text</a></strong>, and <strong>Render</strong> tabs. If closed, reopen
 it from
 <strong>View ▸ Scene</strong>. Under Structure, set repetitions along a, b, c (1 to 20),
 use <strong>+ all</strong> / <strong>− all</strong>, or reset with <strong>1 × 1 × 1</strong>. Typed counts apply on Enter
@@ -1743,11 +1743,34 @@ never appear in exports or renders.</p>
 <strong>Original cell only</strong>, or <strong>None</strong>. The boundary option applies to the repeated block.</p>
 <p>Under Bonds, <strong>Show bonds</strong> controls visibility. <strong>Max. length</strong> ranges from 0.80
 through 1.50 times the sum of covalent radii; <strong>Radius</strong> ranges from 0.02 through
-0.50 Å. Element-pair checkboxes override the default rule: metal–metal pairs start
-off in compounds containing non-metals. The pair list reports candidates and length
-ranges <strong>per original cell</strong>, not the number drawn in the repeated block. A bond
-appears only when both endpoint atoms are displayed; hiding an atom removes its bonds.
-These are geometric contacts, not calculated chemical bond orders.</p>
+0.50 Å. The list includes every pair of elements in the structure, including
+same-element pairs. A checkbox sets the rule even when a pair has zero candidates
+within <strong>Max. length</strong>. Metal–metal pairs start off in compounds containing
+non-metals. The counts and length ranges are <strong>per original cell</strong>. A bond appears
+only when both endpoint atoms are displayed, and hiding an atom removes its bonds.
+Bond candidates are based on interatomic distances.</p>
+<p>To control a specific bond, select two displayed atoms with Ctrl+click. In
+<strong>Bond between selected atoms</strong>, choose <strong>Show</strong>, <strong>Hide</strong>, or <strong>Automatic</strong>.
+<strong>Show</strong> can draw a connection beyond the automatic distance limit. <strong>Automatic</strong>
+restores the distance and element-pair rules. The override applies to the two
+selected periodic images and is saved in the project. <strong>Show bonds</strong> controls
+visibility for the whole scene.</p>
+<p>To pick a drawn bond directly, enable <strong>Select bonds in view</strong> in
+<strong>Scene ▸ Bonds</strong> and click a cylinder. Press <strong>Delete</strong> or choose
+<strong>Remove selected bond</strong>. The edit applies to that displayed bond and can be
+undone. Turn the selection mode off to pick atoms again.</p>
+<p>For a periodic structure, <strong>Remove symmetry equivalents</strong> removes all currently
+shown bonds related to the selected bond in one undoable edit. For crystals and
+layers Ycrystal matches both endpoints using Spglib with a tolerance of 0.001 Å.
+For wires, or if symmetry cannot be determined, it matches lattice translations
+of that bond. The edit applies to the displayed bonds and is saved in the project.</p>
+<p>In <strong>Scene ▸ Polyhedra</strong>, choose <strong>Add…</strong> to select a centre element, ligand
+element, and maximum centre–ligand distance in Å. Set the face colour, opacity,
+and whether to draw the edges. A polyhedron uses the convex hull of its periodic
+ligand positions. It appears when the centre and all of its hull vertices are
+displayed. For cubic SrTiO₃, use <strong>Ti</strong> as the centre, <strong>O</strong> as the ligand, and a
+cutoff of <strong>2.05 Å</strong>. The rule's checkbox controls its visibility independently
+of bonds. Rules are saved with the project and used by the view and POV-Ray.</p>
 <p>The <strong>View along</strong> toolbar offers <strong>a, b, c</strong> and <strong>x, y, z</strong>. The selected positive
 axis points toward the viewer; hold <strong>Shift</strong> when clicking to reverse it. Screen up is
 the first of c, b, a (for x, y, z: z, y, x) that is not parallel to the chosen axis, so

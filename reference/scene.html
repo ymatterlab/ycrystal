@@ -1228,6 +1228,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ycrystal.core.scene.SceneSettings.with_bond_override" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        with_bond_override
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ycrystal.core.scene.SceneSettings.with_element_color" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2832,6 +2843,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ycrystal.core.scene.SceneSettings.with_bond_override" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        with_bond_override
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ycrystal.core.scene.SceneSettings.with_element_color" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4262,7 +4284,7 @@ line may not raise the count above it (see <a class="autorefs autorefs-internal"
   </span>
 
 <a href="#ycrystal.core.scene.SceneSettings" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">SceneSettings</span><span class="p">(</span><span class="n">radius_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">show_cell</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">cell_edge_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.035</span><span class="p">,</span> <span class="n">cell_edge_color</span><span class="p">:</span> <span class="n">RGB</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">),</span> <span class="n">boundary_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">boundary_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">hidden</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">AtomId</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">repetitions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">cell_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'all'</span><span class="p">,</span> <span class="n">bonds</span><span class="p">:</span> <span class="n">BondSettings</span> <span class="o">=</span> <span class="n">BondSettings</span><span class="p">(),</span> <span class="n">material</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'satin'</span><span class="p">,</span> <span class="n">element_materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">atom_materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">AtomId</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">element_colors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RGB</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">element_radii</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">vectors</span><span class="p">:</span> <span class="n">VectorSet</span> <span class="o">=</span> <span class="n">VectorSet</span><span class="p">(),</span> <span class="n">vector_style</span><span class="p">:</span> <span class="n">VectorStyle</span> <span class="o">=</span> <span class="n">VectorStyle</span><span class="p">(),</span> <span class="n">legend</span><span class="p">:</span> <span class="n">LegendSettings</span> <span class="o">=</span> <span class="n">LegendSettings</span><span class="p">())</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">SceneSettings</span><span class="p">(</span><span class="n">radius_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">show_cell</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">cell_edge_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.035</span><span class="p">,</span> <span class="n">cell_edge_color</span><span class="p">:</span> <span class="n">RGB</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">),</span> <span class="n">boundary_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">boundary_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">hidden</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">AtomId</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">repetitions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">cell_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'all'</span><span class="p">,</span> <span class="n">bonds</span><span class="p">:</span> <span class="n">BondSettings</span> <span class="o">=</span> <span class="n">BondSettings</span><span class="p">(),</span> <span class="n">material</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'satin'</span><span class="p">,</span> <span class="n">element_materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">atom_materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">AtomId</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">element_colors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RGB</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">element_radii</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">vectors</span><span class="p">:</span> <span class="n">VectorSet</span> <span class="o">=</span> <span class="n">VectorSet</span><span class="p">(),</span> <span class="n">vector_style</span><span class="p">:</span> <span class="n">VectorStyle</span> <span class="o">=</span> <span class="n">VectorStyle</span><span class="p">(),</span> <span class="n">legend</span><span class="p">:</span> <span class="n">LegendSettings</span> <span class="o">=</span> <span class="n">LegendSettings</span><span class="p">(),</span> <span class="n">bond_overrides</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">BondId</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">polyhedron_rules</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PolyhedronRule</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">annotations</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TextAnnotation</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4370,6 +4392,31 @@ the original cell. show_cell can disable all edges.</p>
           –
           <div class="doc-md-description">
             <p>BondSettings controlling candidate distances, enabled pairs, and radius.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.scene.SceneSettings.bond_overrides">bond_overrides</span></code></b>
+              (<code><span title="tuple">tuple</span>[<span title="tuple">tuple</span>[<span title="ycrystal.core.scene.BondId">BondId</span>, <span title="bool">bool</span>], ...]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Per-bond visibility overrides keyed by two displayed atom IDs. They take
+precedence over automatic rules while bonds are enabled.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.scene.SceneSettings.polyhedron_rules">polyhedron_rules</span></code></b>
+              (<code><span title="tuple">tuple</span>[<span title="ycrystal.core.polyhedra.PolyhedronRule">PolyhedronRule</span>, ...]</code>)
+          –
+          <div class="doc-md-description">
+            <p>User-defined coordination shells, one rule per centre/ligand element pair.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.scene.SceneSettings.annotations">annotations</span></code></b>
+              (<code><span title="tuple">tuple</span>[<span title="ycrystal.core.annotation.TextAnnotation">TextAnnotation</span>, ...]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Text over the output frame, in stacking order.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -4611,6 +4658,26 @@ the geometry.</p>
     <div class="doc doc-contents ">
 
         <p>Return settings with material overrides of displayed atoms set or removed.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="ycrystal.core.scene.SceneSettings.with_bond_override" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">with_bond_override</span>
+
+
+<a href="#ycrystal.core.scene.SceneSettings.with_bond_override" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">with_bond_override</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">AtomId</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">AtomId</span><span class="p">,</span> <span class="n">visible</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SceneSettings</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Show, hide, or restore automatic visibility (None) for a displayed pair.</p>
 
 
     </div>
@@ -5228,7 +5295,8 @@ Jmol colours or <code>settings.element_colors</code>), except for atoms whose ma
 own pigment, which get the material's representative colour. Cell edges are drawn
 when <code>settings.show_cell</code> is true and the structure has a cell. Repetitions are
 display state: scientific arrays stay unchanged. A bond is drawn only when both
-endpoint IDs are displayed and its pair is enabled. Arrows are resolved for the
+endpoint IDs are displayed and its automatic rule or explicit override enables it.
+Arrows are resolved for the
 displayed atoms only (<a class="autorefs autorefs-internal" title="resolve_arrows" href="#ycrystal.core.vectors.resolve_arrows"><code>resolve_arrows</code></a>), at
 the exact positions of their instances, independent of radii and camera.</p>
 </details>
@@ -5278,7 +5346,7 @@ the exact positions of their instances, independent of radii and camera.</p>
   </span>
 
 <a href="#ycrystal.core.scene.SceneSettings" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">SceneSettings</span><span class="p">(</span><span class="n">radius_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">show_cell</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">cell_edge_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.035</span><span class="p">,</span> <span class="n">cell_edge_color</span><span class="p">:</span> <span class="n">RGB</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">),</span> <span class="n">boundary_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">boundary_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">hidden</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">AtomId</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">repetitions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">cell_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'all'</span><span class="p">,</span> <span class="n">bonds</span><span class="p">:</span> <span class="n">BondSettings</span> <span class="o">=</span> <span class="n">BondSettings</span><span class="p">(),</span> <span class="n">material</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'satin'</span><span class="p">,</span> <span class="n">element_materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">atom_materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">AtomId</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">element_colors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RGB</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">element_radii</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">vectors</span><span class="p">:</span> <span class="n">VectorSet</span> <span class="o">=</span> <span class="n">VectorSet</span><span class="p">(),</span> <span class="n">vector_style</span><span class="p">:</span> <span class="n">VectorStyle</span> <span class="o">=</span> <span class="n">VectorStyle</span><span class="p">(),</span> <span class="n">legend</span><span class="p">:</span> <span class="n">LegendSettings</span> <span class="o">=</span> <span class="n">LegendSettings</span><span class="p">())</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">SceneSettings</span><span class="p">(</span><span class="n">radius_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">show_cell</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">cell_edge_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.035</span><span class="p">,</span> <span class="n">cell_edge_color</span><span class="p">:</span> <span class="n">RGB</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">),</span> <span class="n">boundary_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">boundary_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">hidden</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">AtomId</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">repetitions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">cell_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'all'</span><span class="p">,</span> <span class="n">bonds</span><span class="p">:</span> <span class="n">BondSettings</span> <span class="o">=</span> <span class="n">BondSettings</span><span class="p">(),</span> <span class="n">material</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'satin'</span><span class="p">,</span> <span class="n">element_materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">atom_materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">AtomId</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">element_colors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RGB</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">element_radii</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">vectors</span><span class="p">:</span> <span class="n">VectorSet</span> <span class="o">=</span> <span class="n">VectorSet</span><span class="p">(),</span> <span class="n">vector_style</span><span class="p">:</span> <span class="n">VectorStyle</span> <span class="o">=</span> <span class="n">VectorStyle</span><span class="p">(),</span> <span class="n">legend</span><span class="p">:</span> <span class="n">LegendSettings</span> <span class="o">=</span> <span class="n">LegendSettings</span><span class="p">(),</span> <span class="n">bond_overrides</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">BondId</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">polyhedron_rules</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PolyhedronRule</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">annotations</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TextAnnotation</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5386,6 +5454,31 @@ the original cell. show_cell can disable all edges.</p>
           –
           <div class="doc-md-description">
             <p>BondSettings controlling candidate distances, enabled pairs, and radius.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.scene.SceneSettings.bond_overrides">bond_overrides</span></code></b>
+              (<code><span title="tuple">tuple</span>[<span title="tuple">tuple</span>[<span title="ycrystal.core.scene.BondId">BondId</span>, <span title="bool">bool</span>], ...]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Per-bond visibility overrides keyed by two displayed atom IDs. They take
+precedence over automatic rules while bonds are enabled.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.scene.SceneSettings.polyhedron_rules">polyhedron_rules</span></code></b>
+              (<code><span title="tuple">tuple</span>[<span title="ycrystal.core.polyhedra.PolyhedronRule">PolyhedronRule</span>, ...]</code>)
+          –
+          <div class="doc-md-description">
+            <p>User-defined coordination shells, one rule per centre/ligand element pair.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.scene.SceneSettings.annotations">annotations</span></code></b>
+              (<code><span title="tuple">tuple</span>[<span title="ycrystal.core.annotation.TextAnnotation">TextAnnotation</span>, ...]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Text over the output frame, in stacking order.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -5737,7 +5830,7 @@ picture is shown as its average colour (the POV-Ray preview shows the picture).<
   </span>
 
 <a href="#ycrystal.core.scene.DisplayGeometry" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">DisplayGeometry</span><span class="p">(</span><span class="n">atom_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">AtomId</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">elements</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">positions</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">radii</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">colors</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">cell_edges</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">cell_edge_radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">cell_edge_color</span><span class="p">:</span> <span class="n">RGB</span><span class="p">,</span> <span class="n">hidden_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bonds</span><span class="p">:</span> <span class="n">ndarray</span> <span class="o">=</span> <span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))(),</span> <span class="n">bond_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span><span class="p">,</span> <span class="n">material</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'satin'</span><span class="p">,</span> <span class="n">materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">arrows</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Arrow</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">arrow_color</span><span class="p">:</span> <span class="n">RGB</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="n">arrow_material</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'satin'</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">DisplayGeometry</span><span class="p">(</span><span class="n">atom_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">AtomId</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">elements</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">positions</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">radii</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">colors</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">cell_edges</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">cell_edge_radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">cell_edge_color</span><span class="p">:</span> <span class="n">RGB</span><span class="p">,</span> <span class="n">hidden_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bonds</span><span class="p">:</span> <span class="n">ndarray</span> <span class="o">=</span> <span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))(),</span> <span class="n">bond_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span><span class="p">,</span> <span class="n">material</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'satin'</span><span class="p">,</span> <span class="n">materials</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">arrows</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Arrow</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">arrow_color</span><span class="p">:</span> <span class="n">RGB</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="n">arrow_material</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'satin'</span><span class="p">,</span> <span class="n">polyhedra</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Polyhedron</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5901,6 +5994,14 @@ atoms, drawn by both renderers.</p>
           –
           <div class="doc-md-description">
             <p>Colour (sRGB) and material id of the arrows.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="ycrystal.core.scene.DisplayGeometry.polyhedra">polyhedra</span></code></b>
+              (<code><span title="tuple">tuple</span>[<span title="ycrystal.core.polyhedra.Polyhedron">Polyhedron</span>, ...]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Coordination shells indexed into the displayed atom positions.</p>
           </div>
         </li>
     </ul>
@@ -9086,7 +9187,7 @@ sorted by i, j, and shift; reverse duplicates are omitted.</p>
   </span>
 
 <a href="#ycrystal.core.bonds.PairSummary" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">PairSummary</span><span class="p">(</span><span class="n">pair</span><span class="p">:</span> <span class="n">Pair</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">min_length</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">PairSummary</span><span class="p">(</span><span class="n">pair</span><span class="p">:</span> <span class="n">Pair</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">min_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -9118,7 +9219,7 @@ sorted by i, j, and shift; reverse duplicates are omitted.</p>
           <b><code><span title="ycrystal.core.bonds.PairSummary.min_length, max_length">min_length, max_length</span></code></b>
           –
           <div class="doc-md-description">
-            <p>Shortest and longest candidate lengths in Å.</p>
+            <p>Shortest and longest candidate lengths in Å, or None if there are no candidates.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">

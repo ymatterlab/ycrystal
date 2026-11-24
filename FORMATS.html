@@ -1633,8 +1633,8 @@ does not need pseudopotential files.</p>
 <li>where it came from (original path and name, format, SHA-256 checksum, data block,
   element mapping, import time, reader version),</li>
 <li>display settings (repetitions, cell edges, boundary atoms, hidden atoms, bond rules,
-  atom size and element radii), materials (default, element, and atom overrides),
-  element colours, and the environment (background, floor, lighting),</li>
+  individual bond visibility, and coordination polyhedra), atom radii, colours,
+  materials, the environment (background, floor, lighting), and figure text,</li>
 <li>the camera of the output image and the output size.</li>
 </ul>
 <p>A project reopens without the original structure file and reproduces the coordinates
@@ -1642,11 +1642,9 @@ exactly. Closing or opening another file with unsaved changes (including a chang
 asks whether to save, discard, or cancel.</p>
 <p>The camera is stored for the explicit output size, so a project reopens with the same
 framing in a window of any shape.</p>
-<p>Current project schema is 8 (schema 6 added background pictures, stored in ZIP
-packages, and custom material definitions; schema 7 added atom-attached vectors; schema
-8 added the element legend, <code>scene.legend</code>). Older projects remain readable with their
-original appearance and no legend (schema-1 projects load with bonds switched off, as they were drawn). Newer
-schemas are rejected with a message to update Ycrystal.</p>
+<p>Schema 9 adds individual bond visibility, coordination polyhedra, and figure text.
+Projects saved in earlier schemas reopen with their existing appearance. Ycrystal
+shows an update message when opening a file saved with a newer schema.</p>
 <h3 id="figure-snapshots-and-provenance-records">Figure snapshots and provenance records<a class="headerlink" href="#figure-snapshots-and-provenance-records" title="Permanent link">&para;</a></h3>
 <p><code>ycrystal FILE … --render OUT.png --save-project FIGURE.ycrystal</code> (and
 <code>"save_projects": true</code> in a batch manifest) saves the rendered figure as an ordinary
@@ -1667,6 +1665,8 @@ legend; older styles load without one). An element mapping chosen when a style
 is applied (<a href="guide/appearance.html#element-mapping-a-style-for-another-composition">element mapping</a>)
 is not stored in the style file, which stays unchanged; a project saved afterwards
 stores the resulting element settings.</p>
+<p>Individual bond overrides, coordination polyhedron rules, and figure text are stored
+in projects.</p>
 
 
 
