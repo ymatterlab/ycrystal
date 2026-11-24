@@ -4,7 +4,9 @@ import numpy as np
 import pytest
 from PySide6.QtCore import Qt
 
+from ycrystal.core.annotation import TextAnnotation
 from ycrystal.core.camera import ViewPolicy
+from ycrystal.core.polyhedra import PolyhedronRule
 from ycrystal.core.samples import perovskite_srtio3, triclinic_marker
 from ycrystal.gui.main_window import SOFT_LIMIT_ATOMS, MainWindow
 
@@ -49,6 +51,25 @@ def test_selected_bond_buttons_change_one_periodic_pair_and_undo(window):
     panel.selected_bond_auto.click()
     assert len(window.geometry.bonds) == count
     assert not window.scene_settings.bond_overrides
+
+
+def test_polyhedra_and_figure_text_are_optional_live_overlays(window):
+    assert not window.viewport.polyhedron_actors
+    assert not window.viewport._annotation_actor.GetVisibility()
+    window.set_polyhedra((PolyhedronRule("Ti", "O"),))
+    assert len(window.geometry.polyhedra) == 1
+    assert len(window.viewport.polyhedron_actors) == 2
+    assert all(not actor.GetPickable() for actor in window.viewport.polyhedron_actors)
+
+    camera = window.current_camera()
+    geometry = window.geometry
+    window.set_annotations((TextAnnotation("SrTiO₃"),))
+    assert window.viewport._annotation_actor.GetVisibility()
+    assert window.geometry is geometry and window.current_camera() == camera
+    window.undo_stack.undo()
+    assert not window.viewport._annotation_actor.GetVisibility()
+    window.undo_stack.undo()
+    assert not window.viewport.polyhedron_actors
 
 
 def test_repetition_spin_boxes_undo_redo_and_refit(window):

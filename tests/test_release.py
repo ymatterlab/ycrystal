@@ -13,7 +13,7 @@ import pytest
 from ycrystal.app import main
 from ycrystal.batch import export_scene, load_input, render_png
 from ycrystal.desktop import desktop_entry, install_desktop, uninstall_desktop
-from ycrystal.io.project import load_project
+from ycrystal.io.project import PACKAGE_DOCUMENT, ProjectError, load_project, read_document
 from ycrystal.io.style import apply_style, load_style
 from ycrystal.render.imagecheck import load_rgba
 
@@ -375,7 +375,8 @@ def test_reinstalling_the_icon_bumps_the_theme_folder_time(tmp_path):
 def test_examples_are_self_contained():
     assert len(EXAMPLES) >= 3
     for path in EXAMPLES:
-        text = path.read_text(encoding="utf-8")
+        document, _ = read_document(path, PACKAGE_DOCUMENT, ProjectError, "project")
+        text = json.dumps(document, ensure_ascii=False)
         assert "/home/" not in text and "\\\\" not in text  # no machine paths
         project = load_project(path)
         assert project.camera is not None and len(project.structure) > 0
@@ -397,7 +398,8 @@ def test_examples_render(path, tmp_path, povray_executable):
     assert rgba.shape == (120, 160, 4)
     assert rgba[0, 0, 3] == (0 if project.environment.transparent else 255)
     pov, _ = export_scene(project, tmp_path / "scene.pov")
-    assert json.loads(path.read_text())["output"]["width"] == project.output.width
+    document, _ = read_document(path, PACKAGE_DOCUMENT, ProjectError, "project")
+    assert document["output"]["width"] == project.output.width
     assert pov.is_file()
 
 

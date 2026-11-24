@@ -3,6 +3,17 @@
 All notable changes to Ycrystal. Versions follow [semantic versioning](https://semver.org/);
 before 1.0 the Python interface may change between minor versions.
 
+## Unreleased
+
+- **Individual bonds.** Select two displayed atoms to show a bond, hide it, or
+  restore automatic bonding. The override follows the selected periodic images.
+- **Coordination polyhedra.** Add centre and ligand rules with a distance cutoff,
+  face colour, opacity, and optional edges. Rules use periodic ligand positions.
+- **Figure text.** Add editable titles and captions to the output frame. The text
+  appears in the live view, preview, image exports, and command-line renders.
+- Project schema 9 stores these optional settings. Existing projects open with
+  their original appearance.
+
 ## 0.5.0 — Element legends and Quantum ESPRESSO lattices (24 November 2026)
 
 ### Added
