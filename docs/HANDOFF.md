@@ -9,28 +9,39 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 
 ## Current project status
 
-- **In review: FR-QE-IBRAV-01, Quantum ESPRESSO input with `ibrav` other than 0**
-  (requested 21 November 2026), branch `feature/qe-ibrav` from `main` at `1aae367`: all
+- **Latest public release: [Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0)**,
+  published on **18 November 2026**. The release page provides the downloadable
+  `Ycrystal-0.4.0-windows-x64-setup.exe` and tagged source archives. It is a published
+  release, not a draft or pre-release. Tag `v0.4.0` points to `34c803d` (PR #41)
+  and includes the feature and maintenance work in PRs #23–#40, including the
+  graphical Windows installer (PR #40). Installer build and checksum details are in
+  [the release checklist](development/release.md#checklist-for-040).
+- **Development on `main`:** the element legend (PR #45) and expanded Quantum
+  ESPRESSO reader (PR #47) were merged after `v0.4.0`. They are available when
+  installing from current `main`, but are not in the `v0.4.0` installer or tagged
+  source archives. Both `main` and the tag still report `0.4.0` in `__version__`;
+  use the tag or commit to identify the actual contents. This website follows
+  development documentation; it is not a frozen manual for `v0.4.0`.
+- **Documentation published (22 November 2026):** the generated `gh-pages` branch
+  serves [ymatterlab.github.io/ycrystal](https://ymatterlab.github.io/ycrystal/).
+  GitHub Pages uses that branch's root, with HTTPS enforced; the first deployment
+  succeeded. Source configuration, website links, and automatic publishing are
+  prepared on `docs/github-pages` for review. The automatic workflow has not run;
+  it becomes active after merging that source branch into `main`. See
+  [the publication record](PROGRESS.md#documentation-publication-22-november-2026).
+- **FR-QE-IBRAV-01, Quantum ESPRESSO input with `ibrav` other than 0:** merged in
+  PR #47 on 21 November 2026 (merge commit `c2fa44a`), after `v0.4.0`. Supports all
   20 lattices of pw.x, checked against pw.x's own output (17 lattices, 295 inputs of QE's
   test suite) and the pw.x documentation (all 20); Fortran numbers (`16.D0`) in cards
   and arithmetic in positions (`1/4`) read as pw.x reads them. User guide page
-  `docs/guide/qe-lattices.md`. Verified on the Linux laptop only; not merged. See
+  `docs/guide/qe-lattices.md`. Verified on the Linux laptop and in CI on Ubuntu,
+  macOS, and Windows; opening these files by hand remains unchecked. See
   [PROGRESS.md](PROGRESS.md#fr-qe-ibrav-01-quantum-espresso-input-with-ibrav-other-than-0-post-040-21-november-2026).
 - **FR-LEGEND-01, element legend** (requested 21 November 2026): merged in PR #45
   (merge commit `6735400`) after CI passed on every system. A *Scene ▸ Legend* tab and
   a legend of the displayed elements painted onto the figure, its previews, renders, and
   exports (project schema 8, style schema 3). Not yet in a release; no hands-on check
   yet. See [PROGRESS.md](PROGRESS.md#fr-legend-01-element-legend-post-040-21-november-2026).
-- **Milestone:** version **0.4.0** (18 November 2026, at the user's request): the
-  source reports `0.4.0`, and `CHANGELOG.md` lists everything since `v0.3.0` (PRs
-  #23–#40) under 0.4.0 (`main` reported `0.4.0.dev0` until then).
-  The tag `v0.4.0` is set on the merge of the version change (see
-  [the 0.4.0 checklist](development/release.md#checklist-for-040)). The GitHub release
-  [Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0) was
-  published on 18 November 2026, at the user's request, with
-  `Ycrystal-0.4.0-windows-x64-setup.exe` (built from the tag on the Windows laptop,
-  SHA-256 `B67AF22B…5ED40FB`). Earlier tags (no GitHub releases): `v0.1.0`, `v0.2.0`,
-  `v0.3.0` (commit `6ed6b03`, PR #22; the source there still reports 0.2.0).
 - **Windows support** (requested by the user on 17 November 2026), branch
   `feature/windows`, PR #35: completed on a Windows 11 laptop on 18 November 2026. All
   automated tests pass there with POV-Ray for Windows, and the user tested Ycrystal by
@@ -46,10 +57,15 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
   Merged before: FR-STYLE-CLI-01 (PR #28), FR-STYLE-MAP-01 (PR #29), FR-CAMERA-01
   (PR #30), FR-BATCH-01 (PR #31), FR-REPRO-01 (PR #32; the user tested it by hand),
   FR-VALIDATION-01 (PR #33), and FR-GALLERY-01 with the next-tests audit (PR #34,
-  merge commit `5b72f92`). Nothing else is open or authorized;
-  see [Next recommended steps](#next-recommended-steps).
+  merge commit `5b72f92`). All of this work is included in `v0.4.0`.
 
-| Version | Feature | Merged |
+The table gives the **first release tag containing each feature**, checked against
+Git ancestry on 22 November 2026. `v0.4.0` also includes every row from earlier
+versions. **Main only (after 0.4.0)** means merged and available from `main`, with
+no tagged release containing it yet. Earlier versions have Git tags; `v0.4.0` is
+the public GitHub release with a downloadable installer.
+
+| First release tag / availability | Feature | Merged |
 | --- | --- | --- |
 | 0.1.0 | Milestones M0–M6: import, projects, navigation, selection, supercells, bonds, materials, environments, previews, rendering, styles, desktop launcher | tag `v0.1.0` |
 | 0.2.0 | FR-COLOR-01 colour dialog and names; FR-RENDER-01 aspect-ratio lock; FR-LIGHT-01 Lighting Setup window and live lighting | PRs #13–#15, tag `v0.2.0` |
@@ -59,21 +75,22 @@ for in the current task (see [the rules at the end](#handoff-and-maintenance-rul
 | 0.3.0 | FR-MATERIAL-01 custom material variants (Customize Material…, personal materials) | PR #18 |
 | 0.3.0 | FR-VECTOR-01 atom-attached direction/magnetic-moment vectors (project schema 7) | PR #19 |
 | 0.3.0 | Maintenance: macOS (Apple silicon) support, Ubuntu + macOS CI | PR #22, tag `v0.3.0` |
-| unreleased | FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi | PR #23 |
-| unreleased | Maintenance: new application icon and logo, logo-rendering script; Linux launcher refreshes the icon cache | PRs #25, #26 |
-| unreleased | FR-STYLE-CLI-01 `--style`/`--style-parts` apply a `.ycstyle` before `--render`/`--export-pov` | PR #28 |
-| unreleased | FR-STYLE-MAP-01 element mapping for styles (`--element-map`, Import Style dialog) | PR #29 |
-| unreleased | FR-CAMERA-01 `--view`, `--camera-policy`, `--fit-margin`, `--view-height` (shared with View along) | PR #30 |
-| unreleased | FR-BATCH-01 `--batch MANIFEST --output-dir DIR` (`--dry-run`, `--overwrite`), report JSON | PR #31 |
-| unreleased | FR-REPRO-01 `--save-project FIGURE.ycrystal`, manifest `save_projects`, provenance records | PR #32 |
-| unreleased | FR-VALIDATION-01 validation tests, `scripts/benchmark_render.py`, `scripts/replay_check.py`, evidence report (no application change) | PR #33 |
-| unreleased | FR-GALLERY-01 publication gallery (`examples/publication/`, `scripts/make_gallery.py`), gallery and manuscript-figure pages (no application change) | PR #34 |
-| unreleased | Maintenance: Windows 11 support with POV-Ray for Windows 3.7 (no FR ID) | PR #35 (`ae01f43`) |
-| unreleased | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 (`8051f04`) |
-| unreleased | Graphical Windows installer (PyInstaller + Inno Setup), coexisting with the developer installation (no FR ID) | branch `feature/windows-installer` |
-| unreleased | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | PR #39 |
-| unreleased | FR-QE-IBRAV-01 QE input with `ibrav` other than 0 (all pw.x lattices) | branch `feature/qe-ibrav` (not merged) |
-| unreleased | FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3 | PR #45 (`6735400`) |
+| 0.4.0 | FR-EXPORT-01 PNG/PDF/JPEG export, publication size presets, custom size and dpi | PR #23 |
+| 0.4.0 | Maintenance: new application icon and logo, logo-rendering script; Linux launcher refreshes the icon cache | PRs #25, #26 |
+| 0.4.0 | FR-STYLE-CLI-01 `--style`/`--style-parts` apply a `.ycstyle` before `--render`/`--export-pov` | PR #28 |
+| 0.4.0 | FR-STYLE-MAP-01 element mapping for styles (`--element-map`, Import Style dialog) | PR #29 |
+| 0.4.0 | FR-CAMERA-01 `--view`, `--camera-policy`, `--fit-margin`, `--view-height` (shared with View along) | PR #30 |
+| 0.4.0 | FR-BATCH-01 `--batch MANIFEST --output-dir DIR` (`--dry-run`, `--overwrite`), report JSON | PR #31 |
+| 0.4.0 | FR-REPRO-01 `--save-project FIGURE.ycrystal`, manifest `save_projects`, provenance records | PR #32 |
+| 0.4.0 | FR-VALIDATION-01 validation tests, `scripts/benchmark_render.py`, `scripts/replay_check.py`, evidence report (no application change) | PR #33 |
+| 0.4.0 | FR-GALLERY-01 publication gallery (`examples/publication/`, `scripts/make_gallery.py`), gallery and manuscript-figure pages (no application change) | PR #34 |
+| 0.4.0 | Maintenance: Windows 11 support with POV-Ray for Windows 3.7 (no FR ID) | PR #35 (`ae01f43`) |
+| 0.4.0 | Maintenance: Windows CI with the real POV-Ray for Windows (`ci-assets` release) | PR #36 (`8051f04`) |
+| 0.4.0 | Graphical Windows installer (PyInstaller + Inno Setup), coexisting with the developer installation (no FR ID) | PR #40 (`2f427ac`) |
+| 0.4.0 | Maintenance: Windows installation script, Start-menu entry and `.ycrystal` file type (`--install-desktop` on Windows), editor question reported (no FR ID) | PR #39 |
+| 0.4.0 | Python 3.12–3.14 support; Python 3.13 verified on macOS and Python 3.13/3.14 on Windows | PRs #38, #39 |
+| Main only (after 0.4.0) | FR-QE-IBRAV-01 QE input with `ibrav` other than 0 (all pw.x lattices) | PR #47 (`c2fa44a`) |
+| Main only (after 0.4.0) | FR-LEGEND-01 element legend: Legend tab, live overlay, legend painted onto previews, renders, and PNG/PDF/JPEG exports; project schema 8, style schema 3 | PR #45 (`6735400`) |
 
 Each has automated checks recorded in [PROGRESS.md](PROGRESS.md). Hands-on checks by a
 person are still open for most of them; the user reports FR-VECTOR-01, FR-EXPORT-01,
@@ -115,8 +132,8 @@ Known limitations and unresolved issues:
   plots of Figure 4 are still to be made (`docs/development/manuscript-figures.md`).
 - JAC submission: referees need anonymous access to the program and a web page with
   documentation (per the journal's instructions; recheck them). The repository is now
-  public, so the program can be cloned without an account; the documentation web page
-  is still to be decided.
+  public, so the program can be cloned without an account; the
+  [documentation website](https://ymatterlab.github.io/ycrystal/) is now published.
 - Found during FR-REPRO-01, not changed: `save_project` (and so every project and
   snapshot) is written through `mkstemp` and ends up readable by the owner only (mode
   0600 on Linux/macOS), which matters for shared folders. The new provenance records
@@ -148,15 +165,15 @@ Known limitations and unresolved issues:
   [PROGRESS.md](PROGRESS.md#fr-qe-ibrav-01-quantum-espresso-input-with-ibrav-other-than-0-post-040-21-november-2026)).
   ASE 3.29 does not read `ibrav` ≠ 0; the `utils/` function is ASE 3.22.1's old
   `ibrav_to_cell` (LGPL), so it served as a cross-check, and Ycrystal has its own
-  implementation from the pw.x documentation (full suite at the end: 1115 passed,
-  10 skipped, Windows-only). An audit of every `ibrav` added a reader
+  implementation from the pw.x documentation. An audit of every `ibrav` added a reader
   test for all 20 lattices in both forms and compared 289 inputs of QE's test suite
   with pw.x's output (all agree); −9, 91, −13 have no pw.x reference in QE. Then, at
   the user's request, Fortran numbers (`16.D0`) in cards and arithmetic in positions
   (`1/4`) are read as pw.x reads them; 295 of 295 QE inputs agree. Full suite
-  1043 passed, 10 skipped
-  (Windows-only). Not done: commit, push, CI (only when the user asks); opening such a
-  file in the window by hand.
+  1115 passed, 10 skipped
+  (Windows-only). Subsequently committed, pushed, and merged in PR #47 (`c2fa44a`)
+  after CI passed on Ubuntu, macOS, and Windows. Not done: opening such a file in
+  the window by hand.
 
 Earlier, on 18 November 2026:
 
@@ -306,8 +323,7 @@ hands-on runs by a person.
 
 ## Next recommended steps
 
-- FR-QE-IBRAV-01 (branch `feature/qe-ibrav`): once the user asks, commit, push, and
-   open a pull request; check CI on macOS and Windows; run `scripts/check_qe_ibrav.py`
+- FR-QE-IBRAV-01 (merged in PR #47; CI passed): run `scripts/check_qe_ibrav.py`
    once on the Mac and on Windows (`docs/development/next-tests.md`, step 1f); open an
    `ibrav` file in the window by hand (for example `tests/fixtures/Si_ibrav2.pw.in`).
 - FR-LEGEND-01 (merged in PR #45): a hands-on check of the Legend tab on Linux, the
@@ -315,19 +331,20 @@ hands-on runs by a person.
    order, render PNG/PDF/JPEG, and compare the image with the frame; run the GUI legend
    tests (`tests/test_gui_legend.py`) on the Mac and on Windows.
 
-1. On the Mac mini, first: `git checkout main && git pull`, then check whether PR #36
-   is merged (`gh pr view 36`); if not, merge it when the user asks (its CI passed).
+1. On the Mac mini, first: `git checkout main && git pull`. PR #36 is already merged
+   and included in `v0.4.0`.
    Reinstall into the existing `.venv` (`.venv/bin/python -m pip install -e ".[dev]" -c
    constraints.txt`; no dependency changed) and run the full suite with real windows
-   (900 passed, 1 skipped expected). The Windows changes keep `povray` on macOS on the
-   same `QProcess` path as before, but nothing of them has run on a real Mac yet.
+   (use current CI results for expected counts). The Windows changes keep `povray`
+   on macOS on the same `QProcess` path as before, but nothing of them has run on a
+   real Mac yet.
 2. Windows, later: a fuller hands-on check on a second Windows computer when one is
    available; decide whether Ycrystal should notice POV-Ray for Windows' About box (see
    [windows-port.md](development/windows-port.md#still-open)).
 3. Run the tests of [docs/development/next-tests.md](development/next-tests.md)
    (audited 17 November 2026, counts updated 18 November), in its order:
-   - on the Mac mini: the full suite with real windows (900 passed and 1 skipped
-     expected, as on Ubuntu CI for PR #36), the memory
+   - on the Mac mini: the full suite with real windows (use current CI results
+     for expected counts), the memory
      check, the benchmark, replays of the Linux reference sets, and the gallery;
    - by hand on the Mac and the laptop;
    - a clean-computer dry run.

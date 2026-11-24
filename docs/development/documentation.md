@@ -37,7 +37,7 @@ Qt/VTK/ASE dependencies are unnecessary. Use the tested documentation lock:
 `uv pip install --python .venv-docs/bin/python -r docs/requirements.txt` are equivalent.
 Zensical statically reads `src/` through Griffe. A build must not create a
 `QApplication`, window, OpenGL context, or renderer process. `site/`, `.cache/`, and
-`.venv-docs/` are ignored. Do not commit generated HTML.
+`.venv-docs/` are ignored. Do not commit generated HTML to source branches.
 
 Strict builds reject warnings, broken local links/anchors, and unresolved reference
 links. Use `--clean` in verification to avoid cached results. A dedicated docs CI
@@ -118,8 +118,35 @@ that script uses the triclinic sample and mouse navigation.
 
 ## Publication
 
-The build is local and CI verification only. No website deployment is configured or
-verified by this increment. To publish later, choose a host and canonical URL,
-configure its base path/`site_url`, arrange upload of `site/` after a strict build,
-and check navigation, API anchors, and assets at the deployed URL. Record that
-verification separately before advertising a hosted site.
+The documentation is hosted at
+[https://ymatterlab.github.io/ycrystal/](https://ymatterlab.github.io/ycrystal/).
+`site_url` in `zensical.toml` includes the repository's `/ycrystal/` base path.
+Source Markdown and configuration stay on `main`; the `gh-pages` branch contains
+only the generated site and a `.nojekyll` file, with its own history.
+
+The publishing setup on `docs/github-pages` adds
+`.github/workflows/documentation.yml`. Once merged into `main`, it runs on pushes
+to `main` and can also be run manually from the Actions tab. It installs the
+documentation lock, builds with
+`zensical build --clean --strict`, and uses the locked `ghp-import` to update
+`gh-pages` without force-pushing. The job has `contents: write` and `pages: write`
+permissions. Because pushes using `GITHUB_TOKEN` do not trigger a Pages build,
+the final step explicitly requests one through the GitHub Pages API. Pull requests
+continue to run the existing read-only strict documentation check in `ci.yml`.
+
+In repository **Settings → Pages**, the source is **Deploy from a branch**,
+branch **gh-pages**, folder **/ (root)**. Generated HTML belongs on that branch
+only; edit the Markdown or source docstrings on `main` and let the workflow rebuild.
+Check navigation, API anchors, search, and assets at the deployed URL after changing
+the publishing configuration.
+
+For a manual update from a clean checkout of `main` with documentation tools
+installed and GitHub write access:
+
+```bash
+git fetch origin gh-pages
+.venv-docs/bin/zensical build --clean --strict
+.venv-docs/bin/ghp-import --no-jekyll --branch gh-pages --push site
+```
+
+These commands update the publication branch without switching the working tree.

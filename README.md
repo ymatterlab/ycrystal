@@ -200,7 +200,8 @@ Current version 0.4.0. See the
 - [Progress and roadmap](docs/PROGRESS.md), [release checklist](docs/development/release.md),
   and [contributing](CONTRIBUTING.md).
 
-Preview and build the source-based reference locally:
+Read the [documentation website](https://ymatterlab.github.io/ycrystal/), or preview
+and build the source-based reference locally:
 
 ```bash
 .venv/bin/python -m pip install -e ".[docs]" -c constraints.txt -c docs/requirements.txt

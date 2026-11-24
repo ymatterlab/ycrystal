@@ -1,6 +1,71 @@
 # Ycrystal progress record
 
-Last updated: 21 November 2026 (FR-QE-IBRAV-01, Quantum ESPRESSO input with `ibrav` other than 0, branch `feature/qe-ibrav`). Before that: FR-LEGEND-01, element legend, merged in PR #45 at `6735400`. Before that: 18 November 2026 (graphical Windows installer, branch `feature/windows-installer`). Before that: Python 3.13 and 3.14 on Windows, verified on the laptop (PR #39). Before that: Python 3.12, 3.13, and 3.14 (PR #39). Before that: Windows installation in one command (PR #39). Before that: Windows CI with the real POV-Ray for Windows (PR #36, merged at `8051f04`). Before that: the Windows port on a Windows computer (PR #35, merged at `ae01f43`). Before that: 17 November 2026 (Windows port started). Before that: FR-GALLERY-01, reproducible publication gallery, and an audit of the next tests on other computers (PR #34). Before that: FR-VALIDATION-01, scientific validation and benchmarks (PR #33). Before that: FR-REPRO-01, figure snapshots and provenance records (PR #32). Before that: FR-BATCH-01, batch manifests (PR #31). Before that: FR-CAMERA-01, view and framing policies (PR #30). Before that: FR-STYLE-MAP-01, element mapping for styles (PR #29). Before that: FR-STYLE-CLI-01, styles from the command line (PR #28). Before that: FR-EXPORT-01, PDF and JPEG export, and macOS support (see "Maintenance: macOS support and cross-platform tests"). M0–M6 complete (version 0.1.0, tag `v0.1.0`). Version 0.2.0 adds the post-0.1.0 features FR-COLOR-01 (PR #13), FR-RENDER-01 (PR #14), and FR-LIGHT-01 (PR #15); see the [0.2.0 checklist](development/release.md#checklist-for-020). Post-0.2.0 work: FR-MEASURE-01 (distance and bond-angle measurements; PR #16), FR-PREVIEW-01 (preview resolution; PR #17), FR-BGIMAGE-01 (background pictures) and FR-MATERIAL-01 (custom material variants; both PR #18), FR-VECTOR-01 (atom-attached vectors; PR #19), and FR-EXPORT-01 (PDF and JPEG export with publication sizes; PR #23); tag `v0.3.0` covers the work up to PR #22. Post-0.3.0: FR-STYLE-CLI-01 (styles from the command line; PR #28) and FR-STYLE-MAP-01 (element mapping for styles; PR #29), FR-CAMERA-01 (view and framing policies; PR #30), FR-BATCH-01 (batch manifests; PR #31), FR-REPRO-01 (figure snapshots and provenance; PR #32), FR-VALIDATION-01 (validation and benchmarks; PR #33), and FR-GALLERY-01 (publication gallery; PR #34). FR-VECTOR-02 (vector tables) is deferred. Repository private.
+Last updated: 22 November 2026 (release-status audit and documentation publication). Latest public release: [Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0), published 18 November 2026. The element legend (PR #45) and expanded Quantum ESPRESSO reader (PR #47) are merged into `main` after that tag and await a subsequent release. The dated sections below preserve their original verification context; the repository is now public.
+
+## Release-status audit (22 November 2026)
+
+Audited the published release through GitHub's API and checked every PR referenced
+in the handoff's feature table against the Git tags using
+`git merge-base --is-ancestor`. The repository is public. Release `v0.4.0` was
+published on 18 November 2026 (`draft: false`, `prerelease: false`) and includes
+`Ycrystal-0.4.0-windows-x64-setup.exe`; its reported SHA-256 matches the checksum
+already recorded in the release checklist.
+
+Findings and corrections:
+
+- Thirteen feature/maintenance rows still said "unreleased" even though their
+  merge commits are ancestors of `v0.4.0` (`34c803d`, PR #41). Relabelled them
+  `0.4.0`, including the graphical installer merged in PR #40 (`2f427ac`). Added
+  the Python-support row from PRs #38 and #39, also included in that tag.
+- The legend (PR #45, `6735400`) and expanded QE reader (PR #47, `c2fa44a`) are
+  merged into `main` but are not ancestors of `v0.4.0`. Labelled both "Main only
+  (after 0.4.0)" and corrected the stale QE "in review/not merged" statements.
+- Made the table's first-release meaning explicit: later tags include earlier
+  versions' rows. Public availability, merge status, and release inclusion are
+  separate facts. `main` still reports version `0.4.0`, so its version string
+  alone does not establish that a feature is in the tag or downloadable installer.
+- Verified all CI and Windows installer checks at the release tag succeeded
+  (runs [44408274074](https://github.com/ymatterlab/ycrystal/actions/runs/44408274074)
+  and [44408273918](https://github.com/ymatterlab/ycrystal/actions/runs/44408273918));
+  filled the release checklist's previously unspecified tag-CI entry. CI at the
+  QE merge also succeeded on Ubuntu, macOS, and Windows.
+- Clarified the release/development distinction on the documentation home page
+  and in the changelog; removed obsolete next steps to commit/merge already
+  merged PRs. Older dated verification records remain historical evidence.
+
+Verification of these source corrections: checked 27 PR references in the table
+against tag ancestry; strict documentation build reported no issues; pre-commit
+hooks and `git diff --check` passed on the changed files. Application code and
+release artifacts were not changed.
+
+## Documentation publication (22 November 2026)
+
+At the user's request, created and pushed `gh-pages` with only the generated
+Zensical site and `.nojekyll`, starting an independent history at `199b419`.
+GitHub Pages reports source `gh-pages`, path `/`, build type `legacy`, HTTPS
+enforced, and status `built`. The documentation is publicly available at
+[ymatterlab.github.io/ycrystal](https://ymatterlab.github.io/ycrystal/).
+
+Prepared source changes on `docs/github-pages`: canonical `site_url`, links from
+the README and home page, publication instructions, and a workflow that strictly
+builds documentation on `main`, updates `gh-pages` without force, and explicitly
+requests a Pages build. It uses the existing documentation lock and the standard
+`GITHUB_TOKEN`; no additional secret is needed. Automatic publishing remains
+unverified until that source branch is merged and its workflow runs.
+
+Verified:
+
+- `.venv-docs/bin/zensical build --clean --strict`: no issues.
+- Checked 36 generated HTML pages and 5,310 local links, anchors, and assets:
+  all targets resolve; sitemap uses the canonical GitHub Pages URL.
+- First GitHub Pages deployment: successful
+  ([Actions run](https://github.com/ymatterlab/ycrystal/actions/runs/45013771249)).
+- Live HTTP 200 responses for the home, installation, first-figure tutorial,
+  camera reference, documentation workflow, logo, rendered example, search index,
+  and sitemap; home-page styles and scripts also load. Confirmed the deployed
+  `Camera.project` anchor.
+- Pre-commit hooks passed on the publishing workflow, site configuration, README,
+  documentation home, and publication instructions; workflow YAML and TOML parsed.
 
 ## Milestones
 
@@ -100,6 +165,9 @@ check whether ASE supports them, and if not, whether the code in the local `util
 folder (external code, ignored by Git) can read them. Branch `feature/qe-ibrav` from
 `main` at `1aae367`. Run on the Linux Mint laptop (Python 3.12.3, ASE 3.29.0).
 
+Subsequently merged in PR #47 (`c2fa44a`) on 21 November 2026 after CI passed on
+Ubuntu, macOS, and Windows. Available from `main`, after the `v0.4.0` tag.
+
 Findings:
 
 - ASE 3.29.0 (the pinned version) does not read or write `ibrav` ≠ 0:
@@ -184,8 +252,9 @@ Audit of every `ibrav` (requested by the user, same day; matrix in
 
 Not verified: `ibrav` −9, 91, and −13 against a pw.x run (they rest on the documented
 vectors, and −9 and −13 on the `utils` cross-check); inputs written for QE 6.4.1 or older
-with `ibrav = -13` and crystal positions open with the current axes (not detected); macOS and Windows (CI will run the tests);
-opening such a file in the window by hand.
+with `ibrav = -13` and crystal positions open with the current axes (not detected);
+running the pw.x comparison script on real macOS and Windows machines; opening such
+a file in the window by hand. CI has passed on Ubuntu, macOS, and Windows.
 
 ## FR-LEGEND-01: element legend (post-0.4.0, 21 November 2026)
 
