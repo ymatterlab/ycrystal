@@ -1,6 +1,20 @@
 # Ycrystal progress record
 
-Last updated: 22 November 2026 (release-status audit and documentation publication). Latest public release: [Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0), published 18 November 2026. The element legend (PR #45) and expanded Quantum ESPRESSO reader (PR #47) are merged into `main` after that tag and await a subsequent release. The dated sections below preserve their original verification context; the repository is now public.
+Last updated: 24 November 2026 (v0.5.0 release preparation). The dated sections
+below preserve their original verification context.
+
+## v0.5.0 release preparation (24 November 2026)
+
+- The documentation source branch merged in PR #48 at `3ad60e0`.
+- v0.5.0 includes the element legend (PR #45) and expanded Quantum ESPRESSO reader
+  (PR #47). The local macOS audit at `c2fa44a` passed 933 headless tests with
+  10 Windows-only skips, pre-commit, strict documentation, and fresh offline
+  installs from source and wheel. The wheel rendered both a project with the
+  legend enabled and a Quantum ESPRESSO `ibrav = 1` input.
+- The maintainer reports the Windows desktop and installer work well.
+- See the [release checklist](development/release.md#checklist-for-050) and
+  [v0.5.0 release record](https://github.com/ymatterlab/ycrystal/releases/tag/v0.5.0)
+  for packaging and release verification.
 
 ## Release-status audit (22 November 2026)
 

@@ -1,16 +1,12 @@
 # Release procedure and checklist
 
-How a Ycrystal release is prepared, and the checklists of versions 0.4.0, 0.3.0,
-0.2.0, and 0.1.0. Publication
-(tag, GitHub release, making the repository public) is the maintainer's decision and
-is not part of this procedure.
+How a Ycrystal release is prepared, and the checklists of released versions.
+The maintainer decides when to publish a Git tag or GitHub release.
 
-The latest public release is
-[Ycrystal 0.4.0](https://github.com/ymatterlab/ycrystal/releases/tag/v0.4.0),
-published on 18 November 2026 with a Windows installer and tagged source archives.
-The checklists below record verification for each release at the time it was
-prepared. Later merges into `main` do not change the contents of those tags or
-downloadable installers; see the [current feature table](../HANDOFF.md#current-project-status).
+The [GitHub release page](https://github.com/ymatterlab/ycrystal/releases) contains
+the Windows installers and tagged source archives. The checklists below record
+verification for each release. See the [current feature table](../HANDOFF.md#current-project-status)
+for the release containing each feature.
 
 ## Procedure
 
@@ -54,6 +50,19 @@ downloadable installers; see the [current feature table](../HANDOFF.md#current-p
    [Windows installer](windows-installer.md#releasing).
 6. Record the results in `docs/PROGRESS.md` and in the checklist below, marking each
    item passed, failed, or unverified.
+
+## Checklist for 0.5.0
+
+v0.5.0 includes the element legend, the expanded Quantum ESPRESSO reader, and
+automatic documentation publishing. Project schema 8 and style schema 3 require
+v0.5.0 or newer. Older projects and styles open with the legend disabled.
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Version | Updated | Application, package and installer metadata derive from `__version__`; README and installation examples report 0.5.0 |
+| Local release audit | Passed | On macOS, 933 passed and 10 Windows-only skips in the headless suite at `c2fa44a`; strict docs, pre-commit, and fresh offline source and wheel installs passed. Real Qt desktop tests could not run in that session |
+| Windows desktop and installer by hand | Maintainer reported working | 24 November 2026 |
+| Release artifacts and CI | See release record | [v0.5.0 release](https://github.com/ymatterlab/ycrystal/releases/tag/v0.5.0) |
 
 ## Checklist for 0.4.0
 

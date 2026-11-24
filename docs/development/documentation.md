@@ -124,8 +124,7 @@ The documentation is hosted at
 Source Markdown and configuration stay on `main`; the `gh-pages` branch contains
 only the generated site and a `.nojekyll` file, with its own history.
 
-The publishing setup on `docs/github-pages` adds
-`.github/workflows/documentation.yml`. Once merged into `main`, it runs on pushes
+The publishing workflow in `.github/workflows/documentation.yml` runs on pushes
 to `main` and can also be run manually from the Actions tab. It installs the
 documentation lock, builds with
 `zensical build --clean --strict`, and uses the locked `ghp-import` to update
