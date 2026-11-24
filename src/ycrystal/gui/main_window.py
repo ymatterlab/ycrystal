@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
-from PySide6.QtCore import QSettings, Qt, QTimer
+from PySide6.QtCore import QSettings, QSignalBlocker, Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap, QUndoStack
 from PySide6.QtWidgets import (
     QApplication,
@@ -38,14 +38,18 @@ from PySide6.QtWidgets import (
 
 from ycrystal import presets as presets_module
 from ycrystal.core import aspect, measure
-from ycrystal.core.bonds import Pair, periodic_bonds, summarize_pairs
+from ycrystal.core.annotation import TextAnnotation
+from ycrystal.core.bond_symmetry import equivalent_displayed_bonds
+from ycrystal.core.bonds import Pair, summarize_element_pairs
 from ycrystal.core.camera import Camera, CameraPolicyError, axis_view, default_camera
 from ycrystal.core.export import ExportOptions, format_label, path_for_format
 from ycrystal.core.legend import LegendSettings, legend_entries
 from ycrystal.core.lighting import resolve_lighting
+from ycrystal.core.polyhedra import PolyhedronRule
 from ycrystal.core.scene import (
     LARGE_DISPLAY_ATOMS,
     AtomId,
+    BondId,
     DisplayGeometry,
     Environment,
     SceneSettings,
@@ -65,10 +69,12 @@ from ycrystal.gui.material_editor import (
     save_personal_material,
 )
 from ycrystal.gui.native import executable_filter, native_keys, personal_thumbnail_directory
+from ycrystal.gui.panels.annotation_panel import AnnotationPanel
 from ycrystal.gui.panels.appearance_panel import AppearancePanel
 from ycrystal.gui.panels.legend_panel import LegendPanel
 from ycrystal.gui.panels.measurement_panel import MeasurementPanel, MeasurementRow
 from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
+from ycrystal.gui.panels.polyhedra_panel import PolyhedraPanel
 from ycrystal.gui.panels.scene_panel import MAX_REPETITIONS, ScenePanel
 from ycrystal.gui.style_dialog import (  # noqa: F401 (labels re-exported)
     STYLE_PART_LABELS,
@@ -388,6 +394,7 @@ class MainWindow(QMainWindow):
         self.last_style_notes: list[str] = []
         self.last_info: tuple[str, str] | None = None
         self.selection: set[AtomId] = set()
+        self.selected_bond: BondId | None = None
         self.measurements = measure.MeasurementSession(self.structure)
         self._measure_revealed = False  # the panel opens by itself only once
         self.undo_stack = QUndoStack(self)
@@ -417,15 +424,25 @@ class MainWindow(QMainWindow):
         self.scene_panel.bond_tolerance_requested.connect(self.set_bond_tolerance)
         self.scene_panel.bond_radius_requested.connect(self.set_bond_radius)
         self.scene_panel.bond_pair_requested.connect(self.set_bond_pair)
+        self.scene_panel.selected_bond_requested.connect(self.set_selected_bond)
+        self.scene_panel.bond_selection_requested.connect(self.set_bond_selection_mode)
+        self.scene_panel.remove_bond_requested.connect(self.remove_selected_bond)
+        self.scene_panel.remove_equivalent_bonds_requested.connect(self.remove_equivalent_bonds)
         self.scene_panel.radius_scale_requested.connect(self.set_radius_scale)
         self.appearance_panel = AppearancePanel(self)
         self.render_panel = RenderPanel(self)
         self.legend_panel = LegendPanel(self)
+        self.polyhedra_panel = PolyhedraPanel(self)
+        self.annotation_panel = AnnotationPanel(self)
+        self.scene_panel.addTab(self.polyhedra_panel, "Polyhedra")
+        self.polyhedra_panel.rules_requested.connect(self.set_polyhedra)
         self.scene_panel.addTab(self.appearance_panel, "Appearance")
         self.scene_panel.addTab(self.legend_panel, "Legend")
+        self.scene_panel.addTab(self.annotation_panel, "Text")
         self.scene_panel.addTab(self.render_panel, "Render")
         self.legend_panel.legend_requested.connect(self.set_legend)
         self.legend_panel.fit_requested.connect(lambda: self.viewport.fit())
+        self.annotation_panel.annotations_requested.connect(self.set_annotations)
         self.width_spin = self.render_panel.width_spin
         self.height_spin = self.render_panel.height_spin
         panel = self.appearance_panel
@@ -497,6 +514,7 @@ class MainWindow(QMainWindow):
         )
         self.viewport.camera_changed.connect(self._on_view_changed)
         self.viewport.atom_clicked.connect(self._on_atom_clicked)
+        self.viewport.bond_clicked.connect(self._on_bond_clicked)
         self.viewport.supercell_drag_changed.connect(self._on_supercell_drag_changed)
         self.viewport.supercell_drag_finished.connect(self._on_supercell_drag_finished)
         self.viewport.set_handles_visible(self.handles_action.isChecked())
@@ -584,13 +602,12 @@ class MainWindow(QMainWindow):
             "Hide Selected Atoms",
             self,
             enabled=False,
-            toolTip="Remove the selected balls from the view and exports (Delete). "
-            "The structure is unchanged.",
+            toolTip="Remove the selected atoms or bond from the figure (Delete).",
         )
         self.hide_action.setShortcuts(
             [QKeySequence(Qt.Key.Key_Delete), QKeySequence(Qt.Key.Key_Backspace)]
         )
-        self.hide_action.triggered.connect(self.hide_selected)
+        self.hide_action.triggered.connect(self._remove_selection)
         self.select_none_action = QAction(
             "Select None", self, shortcut=QKeySequence(Qt.Key.Key_Escape)
         )
@@ -903,6 +920,7 @@ class MainWindow(QMainWindow):
         self.project_path = path
         self.undo_stack.clear()
         self.selection = set()
+        self.selected_bond = None
         self.boundary_action.setChecked(project.scene.boundary_images)
         self.set_rotation_mode(self.rotation_mode())
         self._output_size = (project.output.width, project.output.height)
@@ -1194,6 +1212,7 @@ class MainWindow(QMainWindow):
         self.geometry = geometry
         self.viewport.set_scene(geometry, self.environment)
         self.viewport.set_legend(self.scene_settings.legend)
+        self.viewport.set_annotations(self.scene_settings.annotations)
         self.viewport.set_supercell(
             self.structure.cell if self.structure.has_cell else None,
             self.scene_settings.repetitions,
@@ -1212,7 +1231,13 @@ class MainWindow(QMainWindow):
         self._sync_vector_panel()
         self._sync_panel()
         self._sync_appearance()
+        self.polyhedra_panel.sync(
+            self.scene_settings.polyhedron_rules,
+            tuple(dict.fromkeys(self.structure.symbols)),
+            len(geometry.polyhedra),
+        )
         self._sync_legend_panel()
+        self.annotation_panel.sync(self.scene_settings.annotations)
         self._update_lighting_setup()
         self._scene_changed()
 
@@ -1239,7 +1264,7 @@ class MainWindow(QMainWindow):
 
     def _sync_panel(self) -> None:
         settings = self.scene_settings
-        pairs = summarize_pairs(periodic_bonds(self.structure, settings.bonds))
+        pairs = summarize_element_pairs(self.structure, settings.bonds)
         self.scene_panel.sync(
             settings,
             pairs,
@@ -1277,20 +1302,26 @@ class MainWindow(QMainWindow):
         changed = settings != self.scene_settings or (
             environment is not None and environment != self.environment
         )
-        # The legend is drawn on top of the figure: no new geometry for it alone.
-        legend_only = (
+        overlays_only = (
             changed
             and (environment is None or environment == self.environment)
-            and replace(settings, legend=self.scene_settings.legend) == self.scene_settings
+            and replace(
+                settings,
+                legend=self.scene_settings.legend,
+                annotations=self.scene_settings.annotations,
+            )
+            == self.scene_settings
         )
         if environment is not None:
             self.environment = environment
         self.scene_settings = settings
-        if legend_only:
+        if overlays_only:
             if output_size is not None or aspect_ratio is not None:
                 self._apply_output_size(*(output_size or self._output_size), aspect_ratio)
             self.viewport.set_legend(settings.legend)
+            self.viewport.set_annotations(settings.annotations)
             self._sync_legend_panel()
+            self.annotation_panel.sync(settings.annotations)
             self._scene_changed()
             return
         if output_size is not None or aspect_ratio is not None:
@@ -1329,10 +1360,11 @@ class MainWindow(QMainWindow):
     def select(self, atom_ids: set[AtomId]) -> None:
         """Replace the selection; IDs that are not displayed are ignored."""
         self.selection = {atom_id for atom_id in atom_ids if atom_id in self.geometry}
+        self.selected_bond = None
         self._update_selection()
 
     def clear_selection(self) -> None:
-        """Deselect all atoms (*Edit ▸ Select None*, Esc).
+        """Deselect the current atoms or bond (*Edit ▸ Select None*, Esc).
 
         During a supercell-handle, axis, or light-handle drag, Esc cancels the drag
         instead.
@@ -1346,6 +1378,55 @@ class MainWindow(QMainWindow):
             return
         self.select(set())
 
+    def set_bond_selection_mode(self, enabled: bool) -> None:
+        """Switch between selecting displayed atoms and bonds."""
+        if enabled and self.measurements.mode is not None:
+            self.set_measurement_mode(None)
+        self.viewport.bond_selection_mode = enabled
+        with QSignalBlocker(self.scene_panel.bond_selection_check):
+            self.scene_panel.bond_selection_check.setChecked(enabled)
+        self.select(set())
+
+    def _on_bond_clicked(self, index: int) -> None:
+        if index < 0:
+            self.selected_bond = None
+        else:
+            a, b = self.geometry.bonds[index]
+            self.selected_bond = (self.geometry.atom_ids[a], self.geometry.atom_ids[b])
+        self._update_selection()
+
+    def _selected_bond_row(self) -> int | None:
+        if self.selected_bond is None:
+            return None
+        a, b = (self.geometry.index_of(atom) for atom in self.selected_bond)
+        if a is None or b is None:
+            return None
+        rows = np.flatnonzero(np.all(self.geometry.bonds == sorted((a, b)), axis=1))
+        return int(rows[0]) if len(rows) else None
+
+    def _remove_selection(self) -> None:
+        if self.viewport.bond_selection_mode:
+            self.remove_selected_bond()
+        else:
+            self.hide_selected()
+
+    def remove_selected_bond(self) -> None:
+        """Hide the clicked bond as an undoable project change."""
+        if self.selected_bond is not None:
+            new = self.scene_settings.with_bond_override(*self.selected_bond, False)
+            self._push_settings(new, "Remove Selected Bond")
+
+    def remove_equivalent_bonds(self) -> None:
+        """Hide the selected bond and its shown symmetry orbit in one undoable edit."""
+        if self.selected_bond is None:
+            return
+        bonds = equivalent_displayed_bonds(self.structure, self.geometry, self.selected_bond)
+        overrides = dict(self.scene_settings.bond_overrides)
+        overrides.update((bond, False) for bond in bonds)
+        settings = replace(self.scene_settings, bond_overrides=tuple(overrides.items()))
+        if self._push_settings(settings, "Remove Symmetry-Equivalent Bonds"):
+            self.statusBar().showMessage(f"Removed {_count(len(bonds), 'displayed bond')}", 5000)
+
     # ----- measurements -------------------------------------------------------------
     def measurement_mode(self) -> str | None:
         """Return ``"distance"``, ``"angle"``, or ``None`` (ordinary selection)."""
@@ -1358,6 +1439,8 @@ class MainWindow(QMainWindow):
         navigation is unchanged. Switching modes cancels an incomplete measurement.
         The ordinary selection is kept.
         """
+        if mode is not None and self.viewport.bond_selection_mode:
+            self.set_bond_selection_mode(False)
         self.measurements.set_mode(mode)
         self.measure_distance_action.setChecked(mode == "distance")
         self.measure_angle_action.setChecked(mode == "angle")
@@ -1579,6 +1662,33 @@ class MainWindow(QMainWindow):
         bonds = self.scene_settings.bonds.with_pair((a, b), enabled)
         verb = "Show" if enabled else "Hide"
         self._push_settings(replace(self.scene_settings, bonds=bonds), f"{verb} {a}–{b} Bonds")
+
+    def set_selected_bond(self, visible: bool | None) -> None:
+        """Set or clear a visibility override for the two selected displayed atoms."""
+        if len(self.selection) != 2:
+            return
+        a, b = sorted(self.selection)
+        if visible is True:
+            i, j = self.geometry.index_of(a), self.geometry.index_of(b)
+            if (
+                i is None
+                or j is None
+                or np.linalg.norm(self.geometry.positions[i] - self.geometry.positions[j]) <= 1e-9
+            ):
+                return
+        new = self.scene_settings.with_bond_override(a, b, visible)
+        text = {
+            True: "Show Selected Bond",
+            False: "Hide Selected Bond",
+            None: "Restore Automatic Bond",
+        }
+        self._push_settings(new, text[visible])
+
+    def set_polyhedra(
+        self, rules: tuple[PolyhedronRule, ...], text: str = "Change Polyhedra"
+    ) -> None:
+        """Apply a project’s coordination rules as one undoable change."""
+        self._push_settings(replace(self.scene_settings, polyhedron_rules=rules), text)
 
     # ----- rotation modes -----------------------------------------------------------------
     def rotation_mode(self) -> str:
@@ -1881,8 +1991,27 @@ class MainWindow(QMainWindow):
             self._sync_vector_panel()
         indices = [self.geometry.index_of(atom_id) for atom_id in self.selection]
         self.viewport.set_highlight([i for i in indices if i is not None])
-        self.hide_action.setEnabled(bool(self.selection))
+        bond_row = self._selected_bond_row()
+        if bond_row is None:
+            self.selected_bond = None
+        self.viewport.set_bond_highlight(bond_row)
+        self.scene_panel.remove_bond_button.setEnabled(bond_row is not None)
+        self.scene_panel.remove_equivalent_bonds_button.setEnabled(
+            bond_row is not None and self.structure.has_cell and any(self.structure.pbc)
+        )
+        bond_mode = self.viewport.bond_selection_mode
+        self.hide_action.setText("Remove Selected Bond" if bond_mode else "Hide Selected Atoms")
+        self.hide_action.setEnabled(bond_row is not None if bond_mode else bool(self.selection))
         self.selection_material_action.setEnabled(bool(self.selection))
+        override = None
+        if len(self.selection) == 2:
+            override = dict(self.scene_settings.bond_overrides).get(tuple(sorted(self.selection)))
+        pair_selected = len(self.selection) == 2
+        self.scene_panel.sync_selected_bond(
+            pair_selected and override is not True,
+            pair_selected and override is not False,
+            override is not None,
+        )
         self._sync_appearance()
         self.selection_label.setText(self.selection_text())
 
@@ -1893,6 +2022,15 @@ class MainWindow(QMainWindow):
         and Cartesian (Å) coordinates, and movable flags if the file had any. For
         several atoms: the number per element.
         """
+        if self.selected_bond is not None:
+            a, b = self.selected_bond
+            distance = np.linalg.norm(
+                measure.atom_position(self.structure, a) - measure.atom_position(self.structure, b)
+            )
+            return (
+                f"Selected bond: {self.structure.symbols[a[0]]}–{self.structure.symbols[b[0]]}"
+                f" · {distance:.3f} Å"
+            )
         if not self.selection:
             return ""
         if len(self.selection) == 1:
@@ -2230,6 +2368,12 @@ class MainWindow(QMainWindow):
             return False
         self.undo_stack.push(SceneSettingsCommand(self, new, text, merge_key))
         return True
+
+    def set_annotations(
+        self, annotations: tuple[TextAnnotation, ...], text: str = "Change Figure Text"
+    ) -> None:
+        """Change the text in the output frame as an undoable step."""
+        self._push_settings(replace(self.scene_settings, annotations=annotations), text)
 
     def set_background(self, environment_id: str) -> None:
         """Apply environment preset ``environment_id`` (undoable).
@@ -2843,6 +2987,7 @@ class MainWindow(QMainWindow):
             self.environment,
             settings,
             legend=self.scene_settings.legend,
+            annotations=self.scene_settings.annotations,
             title=f"Ycrystal preview: {self.structure.composition()}",
         )
         self.preview_queue.submit(job, executable, request)
@@ -2976,6 +3121,8 @@ class MainWindow(QMainWindow):
             message += f" (needs POV-Ray include files: {', '.join(includes)})"
         if self.scene_settings.legend.enabled:
             message += "; the element legend is added to rendered images only, not to the scene"
+        if any(label.enabled for label in self.scene_settings.annotations):
+            message += "; figure text is added to rendered images only"
         self.last_export_missing_includes = missing
         if missing:
             self.show_error(
@@ -3119,6 +3266,7 @@ class MainWindow(QMainWindow):
             self.environment,
             settings,
             legend=self.scene_settings.legend,
+            annotations=self.scene_settings.annotations,
             title=f"Ycrystal scene: {self.structure.composition()}",
             renderer_note=f"POV-Ray {version or 'unknown version'} ({executable})",
         )

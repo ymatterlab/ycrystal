@@ -80,8 +80,8 @@ tab and the galleries. There is no atom editor.
 
 ## Supercells, bonds, and directions
 
-The **Scene** dock has **Structure**, **Bonds**, **Appearance**, **Legend** (the
-[element legend](rendering.md#element-legend)), and **Render** tabs. If closed, reopen
+The **Scene** dock has **Structure**, **Bonds**, **Polyhedra**, **Appearance**, **Legend**,
+**[Text](rendering.md#figure-text)**, and **Render** tabs. If closed, reopen
 it from
 **View ▸ Scene**. Under Structure, set repetitions along a, b, c (1 to 20),
 use **+ all** / **− all**, or reset with **1 × 1 × 1**. Typed counts apply on Enter
@@ -109,11 +109,38 @@ never appear in exports or renders.
 
 Under Bonds, **Show bonds** controls visibility. **Max. length** ranges from 0.80
 through 1.50 times the sum of covalent radii; **Radius** ranges from 0.02 through
-0.50 Å. Element-pair checkboxes override the default rule: metal–metal pairs start
-off in compounds containing non-metals. The pair list reports candidates and length
-ranges **per original cell**, not the number drawn in the repeated block. A bond
-appears only when both endpoint atoms are displayed; hiding an atom removes its bonds.
-These are geometric contacts, not calculated chemical bond orders.
+0.50 Å. The list includes every pair of elements in the structure, including
+same-element pairs. A checkbox sets the rule even when a pair has zero candidates
+within **Max. length**. Metal–metal pairs start off in compounds containing
+non-metals. The counts and length ranges are **per original cell**. A bond appears
+only when both endpoint atoms are displayed, and hiding an atom removes its bonds.
+Bond candidates are based on interatomic distances.
+
+To control a specific bond, select two displayed atoms with Ctrl+click. In
+**Bond between selected atoms**, choose **Show**, **Hide**, or **Automatic**.
+**Show** can draw a connection beyond the automatic distance limit. **Automatic**
+restores the distance and element-pair rules. The override applies to the two
+selected periodic images and is saved in the project. **Show bonds** controls
+visibility for the whole scene.
+
+To pick a drawn bond directly, enable **Select bonds in view** in
+**Scene ▸ Bonds** and click a cylinder. Press **Delete** or choose
+**Remove selected bond**. The edit applies to that displayed bond and can be
+undone. Turn the selection mode off to pick atoms again.
+
+For a periodic structure, **Remove symmetry equivalents** removes all currently
+shown bonds related to the selected bond in one undoable edit. For crystals and
+layers Ycrystal matches both endpoints using Spglib with a tolerance of 0.001 Å.
+For wires, or if symmetry cannot be determined, it matches lattice translations
+of that bond. The edit applies to the displayed bonds and is saved in the project.
+
+In **Scene ▸ Polyhedra**, choose **Add…** to select a centre element, ligand
+element, and maximum centre–ligand distance in Å. Set the face colour, opacity,
+and whether to draw the edges. A polyhedron uses the convex hull of its periodic
+ligand positions. It appears when the centre and all of its hull vertices are
+displayed. For cubic SrTiO₃, use **Ti** as the centre, **O** as the ligand, and a
+cutoff of **2.05 Å**. The rule's checkbox controls its visibility independently
+of bonds. Rules are saved with the project and used by the view and POV-Ray.
 
 The **View along** toolbar offers **a, b, c** and **x, y, z**. The selected positive
 axis points toward the viewer; hold **Shift** when clicking to reverse it. Screen up is

@@ -51,10 +51,16 @@ class ScenePanel(QTabWidget):
     bond_tolerance_requested = Signal(float)
     bond_radius_requested = Signal(float)
     bond_pair_requested = Signal(tuple, bool)
+    selected_bond_requested = Signal(object)
+    bond_selection_requested = Signal(bool)
+    remove_bond_requested = Signal()
+    remove_equivalent_bonds_requested = Signal()
     radius_scale_requested = Signal(float)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setUsesScrollButtons(True)
+        self.setElideMode(Qt.TextElideMode.ElideRight)
         self.addTab(self._structure_tab(), "Structure")
         self.addTab(self._bonds_tab(), "Bonds")
 
@@ -156,6 +162,7 @@ class ScenePanel(QTabWidget):
         layout.addLayout(form)
         layout.addWidget(QLabel("Element pairs (bonds per original cell, lengths):"))
         self.pair_list = QListWidget()
+        self.pair_list.setAccessibleName("Element pairs")
         self.pair_list.itemChanged.connect(self._emit_pair)
         layout.addWidget(self.pair_list, 1)
         note = QLabel(
@@ -164,7 +171,54 @@ class ScenePanel(QTabWidget):
         )
         note.setWordWrap(True)
         layout.addWidget(note)
+
+        selected = QGroupBox("Bond between selected atoms")
+        selected_layout = QVBoxLayout(selected)
+        instructions = QLabel("Select two atoms in the view (Ctrl+click).")
+        instructions.setWordWrap(True)
+        selected_layout.addWidget(instructions)
+        buttons = QHBoxLayout()
+        self.selected_bond_show = QPushButton("Show")
+        self.selected_bond_hide = QPushButton("Hide")
+        self.selected_bond_auto = QPushButton("Automatic")
+        self.selected_bond_show.setToolTip("Draw a bond even beyond the automatic distance limit")
+        self.selected_bond_hide.setToolTip("Hide the bond between these two displayed atoms")
+        self.selected_bond_auto.setToolTip("Restore the distance and element-pair rules")
+        for button, visible in (
+            (self.selected_bond_show, True),
+            (self.selected_bond_hide, False),
+            (self.selected_bond_auto, None),
+        ):
+            button.clicked.connect(
+                lambda _checked, value=visible: self.selected_bond_requested.emit(value)
+            )
+            button.setEnabled(False)
+            buttons.addWidget(button)
+        selected_layout.addLayout(buttons)
+        layout.addWidget(selected)
+
+        self.bond_selection_check = QCheckBox("Select bonds in view")
+        self.bond_selection_check.toggled.connect(self.bond_selection_requested)
+        layout.addWidget(self.bond_selection_check)
+        self.remove_bond_button = QPushButton("Remove selected bond")
+        self.remove_bond_button.setToolTip("Remove this displayed bond (Delete)")
+        self.remove_bond_button.setEnabled(False)
+        self.remove_bond_button.clicked.connect(self.remove_bond_requested)
+        layout.addWidget(self.remove_bond_button)
+        self.remove_equivalent_bonds_button = QPushButton("Remove symmetry equivalents")
+        self.remove_equivalent_bonds_button.setToolTip(
+            "Remove the selected bond and its displayed symmetry equivalents in one edit"
+        )
+        self.remove_equivalent_bonds_button.setEnabled(False)
+        self.remove_equivalent_bonds_button.clicked.connect(self.remove_equivalent_bonds_requested)
+        layout.addWidget(self.remove_equivalent_bonds_button)
         return tab
+
+    def sync_selected_bond(self, can_show: bool, can_hide: bool, has_override: bool) -> None:
+        """Update the available actions for the currently selected pair."""
+        self.selected_bond_show.setEnabled(can_show)
+        self.selected_bond_hide.setEnabled(can_hide)
+        self.selected_bond_auto.setEnabled(has_override)
 
     # ----- requests ------------------------------------------------------------------
     def repetitions(self) -> tuple[int, int, int]:
@@ -220,7 +274,7 @@ class ScenePanel(QTabWidget):
             for summary in pairs:
                 self.pair_list.addItem(_pair_item(summary))
             if not pairs:
-                placeholder = QListWidgetItem("No atoms within the bond tolerance")
+                placeholder = QListWidgetItem("No elements in the structure")
                 placeholder.setFlags(Qt.ItemFlag.NoItemFlags)
                 self.pair_list.addItem(placeholder)
         finally:
@@ -235,12 +289,17 @@ class ScenePanel(QTabWidget):
 
 
 def _pair_item(summary: PairSummary) -> QListWidgetItem:
-    a, b = summary.pair
-    if abs(summary.max_length - summary.min_length) < 5e-4:
-        lengths = f"{summary.min_length:.3f} Å"
-    else:
-        lengths = f"{summary.min_length:.3f}–{summary.max_length:.3f} Å"
-    item = QListWidgetItem(f"{a}–{b}   {summary.count} per cell   {lengths}")
+    text = f"{pair_label(summary.pair)}   {summary.count} per cell"
+    minimum, maximum = summary.min_length, summary.max_length
+    if minimum is not None and maximum is not None:
+        lengths = f"{minimum:.3f}" if maximum - minimum < 5e-4 else f"{minimum:.3f}–{maximum:.3f}"
+        text += f"   {lengths} Å"
+    item = QListWidgetItem(text)
+    if summary.count == 0:
+        item.setToolTip(
+            "No candidates within Max. length. The checkbox sets the rule for this pair "
+            "if candidates come within range."
+        )
     item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
     item.setCheckState(Qt.CheckState.Checked if summary.enabled else Qt.CheckState.Unchecked)
     item.setData(Qt.ItemDataRole.UserRole, list(summary.pair))

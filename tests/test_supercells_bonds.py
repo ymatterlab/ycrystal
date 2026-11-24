@@ -22,7 +22,9 @@ from ycrystal.core.scene import (
     count_displayed_atoms,
 )
 from ycrystal.core.structure import Structure
+from ycrystal.io.project import Project, load_project, save_project
 from ycrystal.io.readers import read_structure
+from ycrystal.io.style import Style, style_to_dict
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -33,6 +35,34 @@ def mgb2() -> Structure:
 
 def silicon() -> Structure:
     return read_structure(FIXTURES / "Si_conventional.cif")
+
+
+def test_bond_overrides_draw_long_pairs_and_respect_hidden_atoms_and_master_switch(tmp_path):
+    structure = perovskite_srtio3()
+    automatic_pair = ((1, (0, 0, 0)), (2, (0, 0, 0)))
+    long_pair = ((0, (0, 0, 0)), (0, (2, 1, 1)))
+    scene = SceneSettings(repetitions=(2, 1, 1))
+
+    def pairs(settings):
+        geometry = build_geometry(structure, settings)
+        return {(geometry.atom_ids[a], geometry.atom_ids[b]) for a, b in geometry.bonds}
+
+    automatic = pairs(scene)
+    assert automatic_pair in automatic and long_pair not in automatic
+    scene = scene.with_bond_override(*reversed(long_pair), True)
+    scene = scene.with_bond_override(*automatic_pair, False)
+    expected = automatic - {automatic_pair} | {long_pair}
+    assert pairs(scene) == expected
+    assert long_pair not in pairs(replace(scene, repetitions=(1, 1, 1)))
+    assert long_pair not in pairs(replace(scene, hidden=frozenset({long_pair[1]})))
+    assert not pairs(replace(scene, bonds=replace(scene.bonds, enabled=False)))
+
+    path = save_project(tmp_path / "manually-bonded.ycrystal", Project(structure, scene=scene))
+    replay = load_project(path)
+    assert replay.scene == scene and pairs(replay.scene) == expected
+    assert pairs(scene.with_bond_override(*automatic_pair, None)) == automatic | {long_pair}
+    style = Style.from_state(structure, scene, replay.environment, (800, 600))
+    assert "bond_overrides" not in style_to_dict(style)["scene"]
 
 
 def brute_force_bonds(geometry, structure, bonds: BondSettings) -> set[frozenset]:

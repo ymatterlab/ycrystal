@@ -51,7 +51,7 @@ import numpy as np  # noqa: E402
 import pyvista as pv  # noqa: E402
 import qtpy  # noqa: E402
 from PySide6.QtCore import QEvent, QObject, QPointF, Qt, Signal  # noqa: E402
-from PySide6.QtGui import QKeyEvent, QKeySequence, QMouseEvent  # noqa: E402
+from PySide6.QtGui import QImage, QKeyEvent, QKeySequence, QMouseEvent  # noqa: E402
 from PySide6.QtWidgets import QVBoxLayout, QWidget  # noqa: E402
 from vtkmodules.vtkCommonTransforms import vtkTransform  # noqa: E402
 from vtkmodules.vtkFiltersGeneral import vtkTransformFilter  # noqa: E402
@@ -68,11 +68,14 @@ from vtkmodules.vtkRenderingCore import (  # noqa: E402
     vtkTexturedActor2D,
 )
 
+from ycrystal.core.annotation import TextAnnotation  # noqa: E402
 from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.legend import LegendEntry, LegendSettings, legend_entries  # noqa: E402
 from ycrystal.core.lighting import LightingRig, resolve_lighting_for_bounds  # noqa: E402
-from ycrystal.core.picking import pick_sphere  # noqa: E402
+from ycrystal.core.picking import pick_bond, pick_sphere  # noqa: E402
+from ycrystal.core.polyhedra import EDGE_RADIUS  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry, Environment  # noqa: E402
+from ycrystal.render.annotation import annotation_overlay  # noqa: E402
 from ycrystal.render.legend import legend_fit_region, legend_overlay  # noqa: E402
 from ycrystal.viewport.interactor import SynchronousInteractor  # noqa: E402
 
@@ -238,6 +241,9 @@ class StructureViewport(QWidget):
     """A click without dragging: (index into the displayed atoms or -1 for empty
     space, whether Ctrl was held)."""
 
+    bond_clicked = Signal(int)
+    """Row of the clicked displayed bond, or −1 for empty space."""
+
     #: A key pressed in the 3D view that no window shortcut consumed
     key_pressed = Signal(QKeySequence)
     """A key pressed in the 3D view that no window shortcut consumed."""
@@ -272,7 +278,10 @@ class StructureViewport(QWidget):
         self._rig: LightingRig | None = None
         self.atom_actors: dict[str, vtkActor] = {}
         self.bond_actors: dict[str, vtkActor] = {}
+        self.polyhedron_actors: list[vtkActor] = []
         self._highlight_actor: vtkActor | None = None
+        self._bond_highlight_actor: vtkActor | None = None
+        self.bond_selection_mode = False
         self.arrow_mesh: pv.PolyData | None = None
         """Mesh of the vector arrows drawn in the live view (``None`` without arrows)."""
         self.measurement_actors: list[vtkActor | vtkTextActor] = []
@@ -300,10 +309,11 @@ class StructureViewport(QWidget):
         self.legend_box: tuple[int, int, int, int] | None = None
         """Where the legend is drawn: ``(x, y, width, height)`` in device pixels of the
         view (top-left origin), or ``None`` when no legend is shown."""
-        self._legend_actor = vtkTexturedActor2D()
-        self._legend_actor.SetMapper(vtkPolyDataMapper2D())
-        self._legend_actor.SetPickable(False)
-        self._legend_actor.SetVisibility(False)
+        self._annotations: tuple[TextAnnotation, ...] = ()
+        self._annotation_key: tuple | None = None
+        self._annotation_actor = _figure_overlay_actor()
+        self._plotter.renderer.AddViewProp(self._annotation_actor)
+        self._legend_actor = _figure_overlay_actor()
         self._plotter.renderer.AddViewProp(self._legend_actor)
         # Measurement guide lines are drawn in a second, non-interactive layer with the
         # same camera, so that they stay visible in front of the atoms.
@@ -381,12 +391,20 @@ class StructureViewport(QWidget):
         from ycrystal.presets import get_material
 
         plotter = self._plotter
-        for actor in [*self.atom_actors.values(), *self.bond_actors.values()]:
+        for actor in [
+            *self.atom_actors.values(),
+            *self.bond_actors.values(),
+            *self.polyhedron_actors,
+        ]:
             plotter.remove_actor(actor, render=False)
         self.atom_actors, self.bond_actors = {}, {}
+        self.polyhedron_actors = []
         if self._highlight_actor is not None:
             plotter.remove_actor(self._highlight_actor, render=False)
         self._highlight_actor = None
+        if self._bond_highlight_actor is not None:
+            plotter.remove_actor(self._bond_highlight_actor, render=False)
+            self._bond_highlight_actor = None
         plotter.remove_actor("cell_edges", render=False)
         plotter.remove_actor("vector_arrows", render=False)
         self.arrow_mesh = None
@@ -424,6 +442,7 @@ class StructureViewport(QWidget):
                     bonds_actor.SetPickable(False)
                     plotter.add_actor(bonds_actor, reset_camera=False, render=False)
                     self.bond_actors[material_id] = bonds_actor
+        translucent |= self._draw_polyhedra(geometry)
         if translucent:
             plotter.enable_depth_peeling()
         else:
@@ -471,6 +490,43 @@ class StructureViewport(QWidget):
         self._environment = environment
         self._bounds = geometry.bounding_sphere()
         plotter.render()  # the lights are resolved before the redraw
+
+    def _draw_polyhedra(self, geometry: DisplayGeometry) -> bool:
+        by_rule = {}
+        for shell in geometry.polyhedra:
+            faces, edges = by_rule.setdefault(shell.rule, ([], []))
+            faces.extend(shell.triangles)
+            edges.extend(shell.edges)
+        translucent = False
+        for rule, (faces, edges) in by_rule.items():
+            polygons = np.column_stack((np.full(len(faces), 3), faces))
+            mesh = pv.PolyData(geometry.positions, faces=polygons.ravel())
+            actor = self._plotter.add_mesh(
+                mesh,
+                color=rule.color,
+                opacity=rule.opacity,
+                pickable=False,
+                reset_camera=False,
+                render=False,
+            )
+            self.polyhedron_actors.append(actor)
+            translucent |= rule.opacity < 1.0
+            if edges:
+                lines = np.column_stack((np.full(len(edges), 2), edges))
+                tubes = pv.PolyData(geometry.positions, lines=lines.ravel()).tube(
+                    radius=EDGE_RADIUS, n_sides=8, capping=True
+                )
+                edge_actor = self._plotter.add_mesh(
+                    tubes,
+                    color=rule.edge_color,
+                    opacity=0.76,
+                    pickable=False,
+                    reset_camera=False,
+                    render=False,
+                )
+                self.polyhedron_actors.append(edge_actor)
+                translucent = True
+        return translucent
 
     def set_lighting(self, environment: Environment) -> None:
         """Use the lights of ``environment`` without rebuilding the scene.
@@ -524,6 +580,28 @@ class StructureViewport(QWidget):
             actor.SetPickable(False)
             self._plotter.add_actor(actor, reset_camera=False, render=False, name="selection")
             self._highlight_actor = actor
+        self._plotter.render()
+
+    def set_bond_highlight(self, index: int | None) -> None:
+        """Mark one displayed bond in the live view."""
+        actor = self._bond_highlight_actor
+        if actor is None and index is None:
+            return
+        if actor is not None:
+            self._plotter.remove_actor(actor, render=False)
+            self._bond_highlight_actor = None
+        geometry = self._geometry
+        if geometry is not None and index is not None:
+            a, b = geometry.positions[geometry.bonds[index]]
+            mesh = pv.Line(a, b).tube(radius=geometry.bond_radius * 1.35, n_sides=12)
+            self._bond_highlight_actor = self._plotter.add_mesh(
+                mesh,
+                color=HIGHLIGHT_COLOR,
+                ambient=0.65,
+                pickable=False,
+                reset_camera=False,
+                render=False,
+            )
         self._plotter.render()
 
     def set_measurement(self, points: np.ndarray, radii: np.ndarray, kind: str | None) -> None:
@@ -618,7 +696,7 @@ class StructureViewport(QWidget):
         )
 
     def handle_click(self, position: QPointF, toggle: bool) -> None:
-        """Pick at a click position and emit `atom_clicked`.
+        """Pick at a click position in the current selection mode.
 
         Parameters
         ----------
@@ -628,8 +706,29 @@ class StructureViewport(QWidget):
             Whether Ctrl was held.
         """
         ratio = self._plotter.devicePixelRatioF()
-        index = self.pick((position.x() * ratio, position.y() * ratio))
+        pixel = (position.x() * ratio, position.y() * ratio)
+        if self.bond_selection_mode:
+            index = self.pick_bond(pixel)
+            self.bond_clicked.emit(-1 if index is None else index)
+            return
+        index = self.pick(pixel)
         self.atom_clicked.emit(-1 if index is None else index, toggle)
+
+    def pick_bond(self, pixel: tuple[float, float]) -> int | None:
+        """Return the displayed bond under a device-pixel position."""
+        geometry = self._geometry
+        if geometry is None:
+            return None
+        return pick_bond(
+            self.camera(),
+            *self.render_size(),
+            pixel,
+            geometry.positions,
+            geometry.radii,
+            geometry.bonds,
+            geometry.bond_radius,
+            cushion_pixels=3 * self._plotter.devicePixelRatioF(),
+        )
 
     # ----- camera -----------------------------------------------------------------
     def camera(self) -> Camera:
@@ -699,6 +798,12 @@ class StructureViewport(QWidget):
         if legend != self._legend:
             self._legend = legend
             self._entries = None
+            self._plotter.render()
+
+    def set_annotations(self, annotations: tuple[TextAnnotation, ...]) -> None:
+        """Show project text inside the output frame."""
+        if annotations != self._annotations:
+            self._annotations = annotations
             self._plotter.render()
 
     def legend_entries(self) -> tuple[LegendEntry, ...]:
@@ -1233,6 +1338,7 @@ class StructureViewport(QWidget):
         self._last_factor = factor
         self._update_lights()
         self._update_frame_overlay()
+        self._update_annotation_overlay()
         self._update_legend_overlay()
         self._update_handles()
 
@@ -1286,31 +1392,59 @@ class StructureViewport(QWidget):
         w, h = image.width(), image.height()
         left, top = round(x0) + x, round(y0) + y
         self.legend_box = (left, top, w, h)
-        rows = np.frombuffer(image.constBits(), dtype=np.uint8).reshape(h, image.bytesPerLine())
-        pixels = rows[:, : 4 * w].reshape(h, w, 4)[::-1]  # VTK images start at the bottom
-        texture = vtkTexture()
-        texture.SetInputData(pv.ImageData(dimensions=(w, h, 1)))
-        texture.GetInput().GetPointData().SetScalars(
-            pv.convert_array(np.ascontiguousarray(pixels).reshape(-1, 4))
-        )
-        texture.InterpolateOff()
-        bottom = height - (top + h)
-        quad = pv.PolyData(
-            np.array(
-                [
-                    (left, bottom, 0),
-                    (left + w, bottom, 0),
-                    (left + w, bottom + h, 0),
-                    (left, bottom + h, 0),
-                ],
-                dtype=float,
-            ),
-            faces=[4, 0, 1, 2, 3],
-        )
-        quad.active_texture_coordinates = np.array([(0, 0), (1, 0), (1, 1), (0, 1)], dtype=float)
-        self._legend_actor.GetMapper().SetInputData(quad)
-        self._legend_actor.SetTexture(texture)
-        self._legend_actor.SetVisibility(True)
+        _set_figure_overlay(self._legend_actor, image, left, top, height)
+
+    def _update_annotation_overlay(self) -> None:
+        x0, y0, w, h = (round(value) for value in self.frame_rect())
+        key = (self._annotations, x0, y0, w, h)
+        if key == self._annotation_key:
+            return
+        self._annotation_key = key
+        overlay = annotation_overlay(self._annotations, w, h)
+        if overlay is None:
+            self._annotation_actor.SetVisibility(False)
+            return
+        image, x, y = overlay
+        _set_figure_overlay(self._annotation_actor, image, x0 + x, y0 + y, self.render_size()[1])
+
+
+def _figure_overlay_actor() -> vtkTexturedActor2D:
+    actor = vtkTexturedActor2D()
+    actor.SetMapper(vtkPolyDataMapper2D())
+    actor.SetPickable(False)
+    actor.SetVisibility(False)
+    return actor
+
+
+def _set_figure_overlay(
+    actor: vtkTexturedActor2D, image: QImage, left: int, top: int, height: int
+) -> None:
+    w, h = image.width(), image.height()
+    rows = np.frombuffer(image.constBits(), dtype=np.uint8).reshape(h, image.bytesPerLine())
+    pixels = rows[:, : 4 * w].reshape(h, w, 4)[::-1]  # VTK images start at the bottom
+    texture = vtkTexture()
+    texture.SetInputData(pv.ImageData(dimensions=(w, h, 1)))
+    texture.GetInput().GetPointData().SetScalars(
+        pv.convert_array(np.ascontiguousarray(pixels).reshape(-1, 4))
+    )
+    texture.InterpolateOff()
+    bottom = height - (top + h)
+    quad = pv.PolyData(
+        np.array(
+            [
+                (left, bottom, 0),
+                (left + w, bottom, 0),
+                (left + w, bottom + h, 0),
+                (left, bottom + h, 0),
+            ],
+            dtype=float,
+        ),
+        faces=[4, 0, 1, 2, 3],
+    )
+    quad.active_texture_coordinates = np.array([(0, 0), (1, 0), (1, 1), (0, 1)], dtype=float)
+    actor.GetMapper().SetInputData(quad)
+    actor.SetTexture(texture)
+    actor.SetVisibility(True)
 
 
 def _sphere_actor(

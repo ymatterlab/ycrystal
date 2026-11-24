@@ -2,9 +2,12 @@
 
 import numpy as np
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPointF, Qt
+from PySide6.QtTest import QTest
 
+from ycrystal.core.annotation import TextAnnotation
 from ycrystal.core.camera import ViewPolicy
+from ycrystal.core.polyhedra import PolyhedronRule
 from ycrystal.core.samples import perovskite_srtio3, triclinic_marker
 from ycrystal.gui.main_window import SOFT_LIMIT_ATOMS, MainWindow
 
@@ -30,8 +33,93 @@ def window(qtbot):
 
 def all_visible(win) -> bool:
     width, height = win.viewport.render_size()
-    pixels = win.current_camera().project(win.geometry.positions, width, height)
+    pixels = win.viewport.vtk_project(win.geometry.positions)
     return bool(np.all((pixels > 0) & (pixels < (width, height))))
+
+
+def test_selected_bond_buttons_change_one_periodic_pair_and_undo(window):
+    panel = window.scene_panel
+    assert not panel.selected_bond_hide.isEnabled()
+    pair = ((1, (0, 0, 0)), (2, (0, 0, 0)))
+    window.select(set(pair))
+    count = len(window.geometry.bonds)
+    panel.selected_bond_hide.click()
+    assert window.scene_settings.bond_overrides == ((pair, False),)
+    assert len(window.geometry.bonds) == count - 1
+    window.undo_stack.undo()
+    assert len(window.geometry.bonds) == count
+    window.undo_stack.redo()
+    panel.selected_bond_auto.click()
+    assert len(window.geometry.bonds) == count
+    assert not window.scene_settings.bond_overrides
+
+
+def test_click_a_bond_and_delete_only_that_bond(window):
+    geometry = window.geometry
+    points = geometry.positions[geometry.bonds].mean(axis=1)
+    pixels = window.viewport.vtk_project(points)
+    pixel = next(p for p in pixels if window.viewport.pick_bond(tuple(p)) is not None)
+    index = window.viewport.pick_bond(tuple(pixel))
+    pair = tuple(geometry.atom_ids[row] for row in geometry.bonds[index])
+
+    window.scene_panel.bond_selection_check.setChecked(True)
+    widget = window.viewport.interactor_widget
+    window.viewport.handle_click(QPointF(*(pixel / widget.devicePixelRatioF())), False)
+    assert window.selected_bond == pair
+    assert not window.selection and window.viewport._bond_highlight_actor is not None
+    QTest.keyClick(widget, Qt.Key.Key_Delete)
+    assert window.scene_settings.bond_overrides == ((pair, False),)
+    assert len(window.geometry.bonds) == len(geometry.bonds) - 1
+    assert window.selected_bond is None and window.viewport._bond_highlight_actor is None
+    assert window.undo_stack.count() == 1
+    window.undo_stack.undo()
+    np.testing.assert_array_equal(window.geometry.bonds, geometry.bonds)
+    window.set_measurement_mode("distance")
+    assert not window.scene_panel.bond_selection_check.isChecked()
+
+
+def test_remove_displayed_equivalents_as_one_undo_step(window):
+    window.set_repetitions((2, 2, 1))
+    before = window.geometry
+    titanium = [
+        index
+        for index, (a, b) in enumerate(before.bonds)
+        if {before.elements[a], before.elements[b]} == {"Ti", "O"}
+    ]
+    assert len(titanium) == 24
+    window.set_bond_selection_mode(True)
+    window.viewport.bond_clicked.emit(titanium[0])
+    undo_count = window.undo_stack.count()
+    button = window.scene_panel.remove_equivalent_bonds_button
+    assert button.isEnabled()
+    button.click()
+    assert len(window.geometry.bonds) == len(before.bonds) - 24
+    assert window.undo_stack.count() == undo_count + 1
+    assert all(
+        {window.geometry.elements[a], window.geometry.elements[b]} == {"Sr", "O"}
+        for a, b in window.geometry.bonds
+    )
+    window.undo_stack.undo()
+    np.testing.assert_array_equal(window.geometry.bonds, before.bonds)
+
+
+def test_polyhedra_and_figure_text_are_optional_live_overlays(window):
+    assert not window.viewport.polyhedron_actors
+    assert not window.viewport._annotation_actor.GetVisibility()
+    window.set_polyhedra((PolyhedronRule("Ti", "O"),))
+    assert len(window.geometry.polyhedra) == 1
+    assert len(window.viewport.polyhedron_actors) == 2
+    assert all(not actor.GetPickable() for actor in window.viewport.polyhedron_actors)
+
+    camera = window.current_camera()
+    geometry = window.geometry
+    window.set_annotations((TextAnnotation("SrTiO₃"),))
+    assert window.viewport._annotation_actor.GetVisibility()
+    assert window.geometry is geometry and window.current_camera() == camera
+    window.undo_stack.undo()
+    assert not window.viewport._annotation_actor.GetVisibility()
+    window.undo_stack.undo()
+    assert not window.viewport.polyhedron_actors
 
 
 def test_repetition_spin_boxes_undo_redo_and_refit(window):
@@ -109,6 +197,33 @@ def test_bond_pairs_tolerance_and_visibility(window):
     assert window.geometry.bond_radius == pytest.approx(0.2)
     panel.bonds_check.setChecked(False)
     assert len(window.geometry.bonds) == 0 and not panel.pair_list.isEnabled()
+
+
+def test_bond_pair_list_includes_same_element_pairs_outside_cutoff(window):
+    panel = window.scene_panel
+    window.set_repetitions((2, 1, 1))
+    panel.tolerance_spin.setValue(0.99)
+    rows = [panel.pair_list.item(i) for i in range(panel.pair_list.count())]
+    assert [row.text().split()[0] for row in rows] == [
+        "O–O",
+        "O–Sr",
+        "O–Ti",
+        "Sr–Sr",
+        "Sr–Ti",
+        "Ti–Ti",
+    ]
+
+    assert rows[-1].text() == "Ti–Ti   0 per cell"
+    assert rows[-1].checkState() == Qt.CheckState.Unchecked
+    rows[-1].setCheckState(Qt.CheckState.Checked)
+    assert ("Ti", "Ti", True) in window.scene_settings.bonds.overrides
+
+    panel.tolerance_spin.setValue(1.30)
+    row = panel.pair_list.item(5)
+    assert row.text() == "Ti–Ti   3 per cell   3.905 Å"
+    assert row.checkState() == Qt.CheckState.Checked
+    geometry = window.geometry
+    assert sum(geometry.elements[i] == geometry.elements[j] == "Ti" for i, j in geometry.bonds) == 1
 
 
 def test_cell_edge_modes_from_panel(window):

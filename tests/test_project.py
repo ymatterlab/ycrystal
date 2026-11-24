@@ -258,7 +258,7 @@ def test_overrides_colours_radii_and_environment_round_trip(tmp_path):
     assert again.scene == project.scene  # overrides and colours, exactly
     assert again.environment == project.environment  # background, floor, lighting
     data = json.loads(path.read_text())
-    assert data["schema_version"] == SCHEMA_VERSION == 8  # 6: pictures; 7: vectors; 8: legend
+    assert data["schema_version"] == SCHEMA_VERSION == 9  # 8: legend; 9: figure composition
     assert data["scene"]["element_radii"] == [{"element": "B", "radius": 0.37}]
     assert data["scene"]["element_materials"] == [{"element": "B", "material": "gold"}]
     assert data["environment"]["floor"]["reflection"] == 0.2

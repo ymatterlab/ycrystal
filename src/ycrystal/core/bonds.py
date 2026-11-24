@@ -15,6 +15,7 @@ non-metals (e.g. no Sr–Ti "bonds" in SrTiO3), and on in metals and intermetall
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from itertools import combinations_with_replacement
 
 import numpy as np
 from ase.data import covalent_radii
@@ -145,15 +146,15 @@ class PairSummary:
     count
         Candidate bonds per original cell, including disabled candidates.
     min_length, max_length
-        Shortest and longest candidate lengths in Å.
+        Shortest and longest candidate lengths in Å, or None if there are no candidates.
     enabled
         Whether this pair is enabled by its override or default rule.
     """
 
     pair: Pair
     count: int  # bonds per original cell
-    min_length: float
-    max_length: float
+    min_length: float | None
+    max_length: float | None
     enabled: bool
 
 
@@ -229,3 +230,14 @@ def summarize_pairs(bonds: PeriodicBonds) -> list[PairSummary]:
         PairSummary(pair, len(v), min(v), max(v), enabled[pair])
         for pair, v in sorted(table.items())
     ]
+
+
+def summarize_element_pairs(structure: Structure, settings: BondSettings) -> list[PairSummary]:
+    """List all element pairs in the structure, including those without candidates."""
+    elements = frozenset(structure.symbols)
+    summaries = {s.pair: s for s in summarize_pairs(periodic_bonds(structure, settings))}
+    for pair in combinations_with_replacement(sorted(elements), 2):
+        if pair not in summaries:
+            enabled = settings.pair_enabled(pair, elements)
+            summaries[pair] = PairSummary(pair, 0, None, None, enabled)
+    return [summaries[pair] for pair in sorted(summaries)]

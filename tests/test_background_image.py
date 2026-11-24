@@ -238,7 +238,7 @@ def test_project_package_round_trip_without_the_source(pictures, tmp_path):
     assert not is_package(plain)
     assert json.loads(plain.read_text())["schema_version"] == SCHEMA_VERSION
     for example in Path("examples").glob("*.ycrystal"):
-        assert load_project(example).environment.image is None
+        assert is_package(example) == (load_project(example).environment.image is not None)
 
 
 def broken_package(tmp_path, asset, edit):

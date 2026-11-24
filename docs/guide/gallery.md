@@ -80,6 +80,17 @@ To render one figure again from its snapshot, for example on another computer:
 ycrystal artifacts/gallery/figures/kyanite.ycrystal --render kyanite-again.png
 ```
 
+## SrTiO₃ with coordination polyhedra and figure text
+
+Open `examples/SrTiO3-cover.ycrystal` for a 3 × 3 × 2 cubic perovskite with 18
+corner-sharing TiO₆ octahedra and Ti–O bonds. The project includes the background,
+camera, and text. **Scene ▸ Polyhedra**, **Bonds**, and **Text** control these
+elements of the figure.
+
+```bash
+ycrystal examples/SrTiO3-cover.ycrystal --render SrTiO3-cover.png
+```
+
 ## Figure methods
 
 Written by `scripts/make_gallery.py` from the provenance records and snapshots of the

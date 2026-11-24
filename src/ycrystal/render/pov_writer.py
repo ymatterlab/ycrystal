@@ -31,6 +31,7 @@ from ycrystal.core.lighting import (
     AREA_LIGHT_SAMPLES,
     resolve_lighting_for_bounds,
 )
+from ycrystal.core.polyhedra import EDGE_RADIUS
 from ycrystal.core.scene import RGB, DisplayGeometry, Environment
 
 POV_LANGUAGE_VERSION = "3.7"
@@ -379,7 +380,10 @@ def scene_to_pov(
         add("// No #include files are required.")
     add("")
     add(f"#version {POV_LANGUAGE_VERSION};")
-    add("global_settings { assumed_gamma 1.0 max_trace_level 8 }")
+    if any(shell.rule.opacity < 1.0 for shell in geometry.polyhedra):
+        add("global_settings { assumed_gamma 1.0 max_trace_level 32 adc_bailout 0.002 }")
+    else:
+        add("global_settings { assumed_gamma 1.0 max_trace_level 8 }")
     for include in includes:
         add(f'#include "{include}"')
     add("")
@@ -522,6 +526,8 @@ def scene_to_pov(
                 add(f"cylinder {{ {_v(mid)}, {_v(end)}, {r_bond} {tex_b} }}")
     if arrow_material is not None:
         lines.extend(_arrow_lines(geometry, arrow_material, arrow_ident))
+    if geometry.polyhedra:
+        lines.extend(_polyhedron_lines(geometry))
     if len(geometry.cell_edges):
         add("")
         add("// Cell edges (no_shadow: edges do not darken atoms).")
@@ -538,6 +544,47 @@ def scene_to_pov(
             add(f"sphere {{ {_v(corner)}, {r_edge} texture {{ Ycr_Texture_Cell }} no_shadow }}")
     add("")
     return "\n".join(lines)
+
+
+def _polyhedron_lines(geometry: DisplayGeometry) -> list[str]:
+    lines = ["", f"// Coordination polyhedra ({len(geometry.polyhedra)})."]
+    rules = dict.fromkeys(shell.rule for shell in geometry.polyhedra)
+    textures = {rule: f"Ycr_Polyhedron_{i}" for i, rule in enumerate(rules)}
+    for rule, name in textures.items():
+        colour = _srgb(rule.color)
+        lines.append(
+            f"#declare {name} = texture {{ pigment {{ color {colour} "
+            f"transmit {_f(1.0 - rule.opacity)} }} "
+            "finish { ambient 0.1 diffuse 0.57 specular 0.29 roughness 0.035 } }"
+        )
+        if rule.opacity < 1.0:
+            lines.append(
+                f"#declare {name}_Inside = texture {{ pigment {{ color {colour} "
+                f"transmit {_f(1.0 - 0.32 * rule.opacity)} }} "
+                "finish { ambient 0.1 diffuse 0.52 } }"
+            )
+        if rule.show_edges:
+            lines.append(
+                f"#declare {name}_Edge = texture {{ pigment {{ color {_srgb(rule.edge_color)} "
+                "transmit 0.24 } finish { ambient 0.19 diffuse 0.63 } }"
+            )
+    points = geometry.positions
+    for shell in geometry.polyhedra:
+        name = textures[shell.rule]
+        lines.append("mesh {")
+        for a, b, c in shell.triangles:
+            lines.append(f"  triangle {{ {_v(points[a])}, {_v(points[b])}, {_v(points[c])} }}")
+        lines.append(f"  texture {{ {name} }}")
+        if shell.rule.opacity < 1.0:
+            lines.append(f"  interior_texture {{ {name}_Inside }}")
+        lines.append("  no_shadow")
+        lines.append("}")
+        for a, b in shell.edges:
+            lines.append(
+                f"cylinder {{ {_v(points[a])}, {_v(points[b])}, {_f(EDGE_RADIUS)} "
+                f"texture {{ {name}_Edge }} no_shadow }}"
+            )
+    return lines
 
 
 def _backdrop(

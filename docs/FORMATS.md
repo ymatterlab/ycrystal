@@ -94,8 +94,8 @@ does not need pseudopotential files.
 - where it came from (original path and name, format, SHA-256 checksum, data block,
   element mapping, import time, reader version),
 - display settings (repetitions, cell edges, boundary atoms, hidden atoms, bond rules,
-  atom size and element radii), materials (default, element, and atom overrides),
-  element colours, and the environment (background, floor, lighting),
+  individual bond visibility, and coordination polyhedra), atom radii, colours,
+  materials, the environment (background, floor, lighting), and figure text,
 - the camera of the output image and the output size.
 
 A project reopens without the original structure file and reproduces the coordinates
@@ -105,11 +105,9 @@ asks whether to save, discard, or cancel.
 The camera is stored for the explicit output size, so a project reopens with the same
 framing in a window of any shape.
 
-Current project schema is 8 (schema 6 added background pictures, stored in ZIP
-packages, and custom material definitions; schema 7 added atom-attached vectors; schema
-8 added the element legend, `scene.legend`). Older projects remain readable with their
-original appearance and no legend (schema-1 projects load with bonds switched off, as they were drawn). Newer
-schemas are rejected with a message to update Ycrystal.
+Schema 9 adds individual bond visibility, coordination polyhedra, and figure text.
+Projects saved in earlier schemas reopen with their existing appearance. Ycrystal
+shows an update message when opening a file saved with a newer schema.
 
 ### Figure snapshots and provenance records
 
@@ -134,3 +132,6 @@ legend; older styles load without one). An element mapping chosen when a style
 is applied ([element mapping](guide/appearance.md#element-mapping-a-style-for-another-composition))
 is not stored in the style file, which stays unchanged; a project saved afterwards
 stores the resulting element settings.
+
+Individual bond overrides, coordination polyhedron rules, and figure text are stored
+in projects.

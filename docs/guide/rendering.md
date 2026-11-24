@@ -135,6 +135,18 @@ Resizing the window changes the frame on screen but not the image. Projects stor
 camera of the output image together with its size, so a project reopens with the same
 framing in a window of any shape.
 
+## Figure text
+
+Choose **Scene ▸ Text ▸ Add…** for a title, caption, or other plain text.
+Set **X from left** and **Y from top** as percentages of the output frame.
+Alignment anchors each line at X, and font size is a percentage of the frame
+height. The preview shows the placement as you frame the scene. You can edit,
+hide, or remove each entry and undo these changes.
+
+Text is saved in the project and appears in the live frame, POV-Ray preview,
+PNG/PDF/JPEG exports, and command-line renders. Ycrystal paints it after POV-Ray
+renders the scene, so standalone `.pov` exports contain the geometry and lighting.
+
 ## Element legend
 
 A legend names the elements of the figure: a coloured circle for each element, followed

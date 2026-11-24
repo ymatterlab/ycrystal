@@ -36,11 +36,13 @@ the Windows installer and tagged source. These pages follow `main`. See the
 - See [troubleshooting and limitations](guide/troubleshooting.md) and the
   [progress record and roadmap](PROGRESS.md) for the current scope and evidence.
 
-![POV-Ray rendering of the synthetic cubic SrTiO3 sample, including boundary atoms](assets/perovskite.png)
+[![Three views of the same SrTiO₃ unit cell. The original is on the left, a metallic render with a TiO₆ outline is in the middle, and a render with metallic Sr, glass Ti, and translucent blue TiO₆ faces is on the right.](assets/perovskite-comparison.webp)](assets/perovskite-comparison.webp)
 
-This is an actual 640 × 400 POV-Ray render, generated from Ycrystal's shared scene
-and default camera. The live viewport uses approximate lighting and also shows
-orientation axes. [Regenerate the image](development/documentation.md#visual-assets).
+All three Ycrystal renders share the same camera and show equivalent atoms on the
+cell boundary. The left panel shows the default view. The middle panel uses
+metallic finishes and side lighting, hides Sr–O bonds, and outlines the TiO₆ octahedron.
+The right panel uses glass for Ti and fills the octahedron with translucent blue
+faces. [Regenerate the default view](development/documentation.md#visual-assets).
 
 The Python interfaces are evolving developer functionality. They do not currently
 carry a stable public API guarantee. This site is built from the repository and

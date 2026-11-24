@@ -241,6 +241,8 @@ def _batch(args: argparse.Namespace) -> int:
         note = ""
         if project.scene.legend.enabled:
             note = " (the element legend is added to rendered images only, not to the scene)"
+        if any(label.enabled for label in project.scene.annotations):
+            note += " (figure text is added to rendered images only)"
         print(f"Exported {pov} and {ini}{note}")
     if args.render and args.save_project:
         return _render_snapshot(args, project, notes)

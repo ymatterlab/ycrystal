@@ -33,6 +33,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from ycrystal.core.annotation import TextAnnotation
 from ycrystal.core.camera import Camera
 from ycrystal.core.legend import LegendEntry, LegendSettings
 from ycrystal.core.legend import legend_entries as resolve_legend_entries
@@ -72,6 +73,8 @@ class RenderJob:
         Element legend painted onto the image after the render, or ``None``.
     legend_entries
         The legend's entries, resolved from the rendered geometry.
+    annotations
+        Optional text anchored to the image frame.
     """
 
     directory: Path
@@ -81,6 +84,7 @@ class RenderJob:
     settings: RenderSettings
     legend: LegendSettings | None = None
     legend_entries: tuple[LegendEntry, ...] = ()
+    annotations: tuple[TextAnnotation, ...] = ()
 
     def arguments(self, executable: str | None = None) -> list[str]:
         """Return the POV-Ray command-line arguments, without the executable.
@@ -183,6 +187,7 @@ def prepare_job(
     settings: RenderSettings,
     parent: Path | None = None,
     legend: LegendSettings | None = None,
+    annotations: tuple[TextAnnotation, ...] = (),
     **writer_kwargs: str,
 ) -> RenderJob:
     """Create a job directory and write the scene and settings into it.
@@ -204,6 +209,8 @@ def prepare_job(
         Element legend to paint onto the finished image (``SceneSettings.legend``);
         ``None`` or a disabled legend leaves the image exactly as POV-Ray renders it.
         The scene files do not contain it.
+    annotations
+        Text overlays to paint onto the finished image.
     **writer_kwargs
         Passed to [`scene_to_pov`][ycrystal.render.pov_writer.scene_to_pov].
 
@@ -227,11 +234,9 @@ def prepare_job(
     pov, ini, image = write_scene_files(
         directory, JOB_BASENAME, geometry, camera, environment, settings, **writer_kwargs
     )
-    if legend is not None and legend.enabled:
-        return RenderJob(
-            directory, pov, ini, image, settings, legend, resolve_legend_entries(geometry, legend)
-        )
-    return RenderJob(directory, pov, ini, image, settings)
+    legend = legend if legend is not None and legend.enabled else None
+    entries = resolve_legend_entries(geometry, legend) if legend is not None else ()
+    return RenderJob(directory, pov, ini, image, settings, legend, entries, annotations)
 
 
 def finish_job(job: RenderJob, returncode: int | None, log: str) -> RenderResult:
@@ -256,13 +261,22 @@ def finish_job(job: RenderJob, returncode: int | None, log: str) -> RenderResult
         is a failure that says so.
     """
     if returncode == 0 and job.image_path.is_file() and job.image_path.stat().st_size > 0:
-        if job.legend is not None and job.legend_entries:
-            from ycrystal.render.legend import LegendError, draw_legend_on_file
+        has_legend = job.legend is not None and bool(job.legend_entries)
+        has_text = any(label.enabled for label in job.annotations)
+        if has_legend or has_text:
+            from ycrystal.render.legend import LegendError, draw_figure_overlays_on_file
 
             try:
-                draw_legend_on_file(job.image_path, job.legend_entries, job.legend)
+                draw_figure_overlays_on_file(
+                    job.image_path, job.legend_entries, job.legend, job.annotations
+                )
             except (LegendError, OSError) as exc:
-                message = f"POV-Ray rendered the image, but the element legend failed: {exc}"
+                overlay = (
+                    "figure overlays"
+                    if has_text and has_legend
+                    else ("figure text" if has_text else "element legend")
+                )
+                message = f"POV-Ray rendered the image, but the {overlay} failed: {exc}"
                 return RenderResult(False, returncode, log, None, message)
         return RenderResult(True, returncode, log, job.image_path)
     if returncode == 0:

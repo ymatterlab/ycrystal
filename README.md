@@ -28,6 +28,12 @@ share one scene model and one renderer:
 A look designed in the window can be saved as a style and reused unchanged on the
 command line, so figures made by hand and figures made in bulk match.
 
+[![Three renders of the same SrTiO₃ unit cell showing the default view, a metallic TiO₆ outline, and translucent blue TiO₆ faces with glass Ti.](docs/assets/perovskite-comparison.webp)](docs/assets/perovskite-comparison.webp)
+
+One SrTiO₃ unit cell from the same camera angle. From left to right, the panels
+show the default rendering, metallic finishes with a TiO₆ outline, and glass Ti
+with translucent blue TiO₆ faces.
+
 ## Features
 
 - **Structures and projects:** POSCAR/CONTCAR, CIF, and Quantum ESPRESSO pw.x
