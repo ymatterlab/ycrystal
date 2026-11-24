@@ -122,6 +122,14 @@ restores the distance and element-pair rules. The override applies to the two
 selected periodic images and is saved in the project. **Show bonds** controls
 visibility for the whole scene.
 
+In **Scene ▸ Polyhedra**, choose **Add…** to select a centre element, ligand
+element, and maximum centre–ligand distance in Å. Set the face colour, opacity,
+and whether to draw the edges. A polyhedron uses the convex hull of its periodic
+ligand positions. It appears when the centre and all of its hull vertices are
+displayed. For cubic SrTiO₃, use **Ti** as the centre, **O** as the ligand, and a
+cutoff of **2.05 Å**. The rule's checkbox controls its visibility independently
+of bonds. Rules are saved with the project and used by the view and POV-Ray.
+
 The **View along** toolbar offers **a, b, c** and **x, y, z**. The selected positive
 axis points toward the viewer; hold **Shift** when clicking to reverse it. Screen up is
 the first of c, b, a (for x, y, z: z, y, x) that is not parallel to the chosen axis, so

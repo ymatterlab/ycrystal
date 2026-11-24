@@ -28,6 +28,7 @@ from ase.data.colors import jmol_colors
 from ycrystal.core.background import BackgroundImage
 from ycrystal.core.bonds import BondSettings, periodic_bonds
 from ycrystal.core.legend import LegendSettings
+from ycrystal.core.polyhedra import EDGE_RADIUS, Polyhedron, PolyhedronRule, resolve_polyhedra
 from ycrystal.core.structure import Structure
 from ycrystal.core.vectors import Arrow, VectorSet, VectorStyle, arrow_spheres, resolve_arrows
 
@@ -90,6 +91,8 @@ class SceneSettings:
     bond_overrides
         Per-bond visibility overrides keyed by two displayed atom IDs. They take
         precedence over automatic rules while bonds are enabled.
+    polyhedron_rules
+        User-defined coordination shells, one rule per centre/ligand element pair.
     material
         Id of the default material preset for atoms and bonds (see
         [`ycrystal.presets`][ycrystal.presets]); ``"satin"`` is Ycrystal's original
@@ -149,6 +152,7 @@ class SceneSettings:
     vector_style: VectorStyle = field(default_factory=VectorStyle)
     legend: LegendSettings = field(default_factory=LegendSettings)
     bond_overrides: tuple[tuple[BondId, bool], ...] = ()
+    polyhedron_rules: tuple[PolyhedronRule, ...] = ()
 
     def __post_init__(self) -> None:
         reps = tuple(int(r) for r in self.repetitions)
@@ -181,6 +185,10 @@ class SceneSettings:
                 raise ValueError("a bond override needs two distinct atoms")
             bonds[(a, b) if a < b else (b, a)] = visible
         object.__setattr__(self, "bond_overrides", tuple(sorted(bonds.items())))
+        polyhedra = tuple(self.polyhedron_rules)
+        if len({(rule.centre, rule.ligand) for rule in polyhedra}) != len(polyhedra):
+            raise ValueError("the same centre/ligand pair has more than one polyhedron rule")
+        object.__setattr__(self, "polyhedron_rules", polyhedra)
 
     def with_bond_override(self, a: AtomId, b: AtomId, visible: bool | None) -> SceneSettings:
         """Show, hide, or restore automatic visibility (None) for a displayed pair."""
@@ -452,6 +460,8 @@ class DisplayGeometry:
         atoms, drawn by both renderers.
     arrow_color, arrow_material
         Colour (sRGB) and material id of the arrows.
+    polyhedra
+        Coordination shells indexed into the displayed atom positions.
 
     Raises
     ------
@@ -482,6 +492,7 @@ class DisplayGeometry:
     arrows: tuple[Arrow, ...] = ()
     arrow_color: RGB = (0.80, 0.10, 0.10)
     arrow_material: str = "satin"
+    polyhedra: tuple[Polyhedron, ...] = ()
 
     def __post_init__(self) -> None:
         index = {atom_id: i for i, atom_id in enumerate(self.atom_ids)}
@@ -548,6 +559,13 @@ class DisplayGeometry:
             ends = self.cell_edges.reshape(-1, 3)
             points.append(ends)
             radii.append(np.full(len(ends), self.cell_edge_radius))
+        if self.polyhedra and np.any(self.radii < EDGE_RADIUS):
+            edge_rows = sorted(
+                {i for shell in self.polyhedra for edge in shell.edges for i in edge}
+            )
+            if edge_rows:
+                points.append(self.positions[edge_rows])
+                radii.append(np.full(len(edge_rows), EDGE_RADIUS))
         if include_arrows and self.arrows:
             arrow_points, arrow_radii = arrow_spheres(self.arrows)
             points.append(arrow_points)
@@ -825,6 +843,7 @@ def build_geometry(structure: Structure, settings: SceneSettings | None = None) 
         arrows=arrows,
         arrow_color=settings.vector_style.color,
         arrow_material=settings.vector_style.material,
+        polyhedra=resolve_polyhedra(structure, atom_ids, settings.polyhedron_rules),
     )
 
 

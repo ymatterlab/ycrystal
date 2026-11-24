@@ -43,6 +43,7 @@ from ycrystal.core.camera import Camera, CameraPolicyError, axis_view, default_c
 from ycrystal.core.export import ExportOptions, format_label, path_for_format
 from ycrystal.core.legend import LegendSettings, legend_entries
 from ycrystal.core.lighting import resolve_lighting
+from ycrystal.core.polyhedra import PolyhedronRule
 from ycrystal.core.scene import (
     LARGE_DISPLAY_ATOMS,
     AtomId,
@@ -69,6 +70,7 @@ from ycrystal.gui.panels.appearance_panel import AppearancePanel
 from ycrystal.gui.panels.legend_panel import LegendPanel
 from ycrystal.gui.panels.measurement_panel import MeasurementPanel, MeasurementRow
 from ycrystal.gui.panels.output_panel import PreviewPanel, RenderPanel
+from ycrystal.gui.panels.polyhedra_panel import PolyhedraPanel
 from ycrystal.gui.panels.scene_panel import MAX_REPETITIONS, ScenePanel
 from ycrystal.gui.style_dialog import (  # noqa: F401 (labels re-exported)
     STYLE_PART_LABELS,
@@ -422,6 +424,9 @@ class MainWindow(QMainWindow):
         self.appearance_panel = AppearancePanel(self)
         self.render_panel = RenderPanel(self)
         self.legend_panel = LegendPanel(self)
+        self.polyhedra_panel = PolyhedraPanel(self)
+        self.scene_panel.addTab(self.polyhedra_panel, "Polyhedra")
+        self.polyhedra_panel.rules_requested.connect(self.set_polyhedra)
         self.scene_panel.addTab(self.appearance_panel, "Appearance")
         self.scene_panel.addTab(self.legend_panel, "Legend")
         self.scene_panel.addTab(self.render_panel, "Render")
@@ -1213,6 +1218,11 @@ class MainWindow(QMainWindow):
         self._sync_vector_panel()
         self._sync_panel()
         self._sync_appearance()
+        self.polyhedra_panel.sync(
+            self.scene_settings.polyhedron_rules,
+            tuple(dict.fromkeys(self.structure.symbols)),
+            len(geometry.polyhedra),
+        )
         self._sync_legend_panel()
         self._update_lighting_setup()
         self._scene_changed()
@@ -1601,6 +1611,12 @@ class MainWindow(QMainWindow):
             None: "Restore Automatic Bond",
         }
         self._push_settings(new, text[visible])
+
+    def set_polyhedra(
+        self, rules: tuple[PolyhedronRule, ...], text: str = "Change Polyhedra"
+    ) -> None:
+        """Apply a project’s coordination rules as one undoable change."""
+        self._push_settings(replace(self.scene_settings, polyhedron_rules=rules), text)
 
     # ----- rotation modes -----------------------------------------------------------------
     def rotation_mode(self) -> str:

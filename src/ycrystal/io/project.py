@@ -59,6 +59,7 @@ from ycrystal.core.background import BackgroundImage
 from ycrystal.core.bonds import BondSettings
 from ycrystal.core.camera import Camera
 from ycrystal.core.legend import LegendSettings
+from ycrystal.core.polyhedra import PolyhedronRule
 from ycrystal.core.scene import AtomId, BondId, Environment, SceneSettings
 from ycrystal.core.structure import Structure
 from ycrystal.core.vectors import VectorRecord, VectorSet, VectorStyle
@@ -192,6 +193,18 @@ def project_to_dict(project: Project) -> dict[str, Any]:
                     "visible": visible,
                 }
                 for pair, visible in scene.bond_overrides
+            ],
+            "polyhedra": [
+                {
+                    "centre": rule.centre,
+                    "ligand": rule.ligand,
+                    "cutoff": rule.cutoff,
+                    "color": list(rule.color),
+                    "opacity": rule.opacity,
+                    "show_edges": rule.show_edges,
+                    "enabled": rule.enabled,
+                }
+                for rule in scene.polyhedron_rules
             ],
             "bonds": {
                 "enabled": scene.bonds.enabled,
@@ -567,6 +580,18 @@ def _scene_from(d: dict[str, Any], version: int = SCHEMA_VERSION) -> SceneSettin
         cell_mode=str(d.get("cell_mode", defaults.cell_mode)),
         bonds=_bonds_from(d.get("bonds"), version),
         bond_overrides=_bond_overrides_from(d.get("bond_overrides", [])),
+        polyhedron_rules=tuple(
+            PolyhedronRule(
+                centre=str(entry["centre"]),
+                ligand=str(entry["ligand"]),
+                cutoff=float(entry["cutoff"]),
+                color=_rgb(entry["color"]),
+                opacity=float(entry["opacity"]),
+                show_edges=bool(entry.get("show_edges", True)),
+                enabled=bool(entry.get("enabled", True)),
+            )
+            for entry in d.get("polyhedra", [])
+        ),
         material=_known_material(str(d.get("material", defaults.material))),
         element_materials=tuple(
             (str(entry["element"]), _known_material(str(entry["material"])))

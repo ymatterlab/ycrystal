@@ -72,6 +72,7 @@ from ycrystal.core.camera import Camera  # noqa: E402
 from ycrystal.core.legend import LegendEntry, LegendSettings, legend_entries  # noqa: E402
 from ycrystal.core.lighting import LightingRig, resolve_lighting_for_bounds  # noqa: E402
 from ycrystal.core.picking import pick_sphere  # noqa: E402
+from ycrystal.core.polyhedra import EDGE_RADIUS  # noqa: E402
 from ycrystal.core.scene import DisplayGeometry, Environment  # noqa: E402
 from ycrystal.render.legend import legend_fit_region, legend_overlay  # noqa: E402
 from ycrystal.viewport.interactor import SynchronousInteractor  # noqa: E402
@@ -272,6 +273,7 @@ class StructureViewport(QWidget):
         self._rig: LightingRig | None = None
         self.atom_actors: dict[str, vtkActor] = {}
         self.bond_actors: dict[str, vtkActor] = {}
+        self.polyhedron_actors: list[vtkActor] = []
         self._highlight_actor: vtkActor | None = None
         self.arrow_mesh: pv.PolyData | None = None
         """Mesh of the vector arrows drawn in the live view (``None`` without arrows)."""
@@ -381,9 +383,14 @@ class StructureViewport(QWidget):
         from ycrystal.presets import get_material
 
         plotter = self._plotter
-        for actor in [*self.atom_actors.values(), *self.bond_actors.values()]:
+        for actor in [
+            *self.atom_actors.values(),
+            *self.bond_actors.values(),
+            *self.polyhedron_actors,
+        ]:
             plotter.remove_actor(actor, render=False)
         self.atom_actors, self.bond_actors = {}, {}
+        self.polyhedron_actors = []
         if self._highlight_actor is not None:
             plotter.remove_actor(self._highlight_actor, render=False)
         self._highlight_actor = None
@@ -424,6 +431,7 @@ class StructureViewport(QWidget):
                     bonds_actor.SetPickable(False)
                     plotter.add_actor(bonds_actor, reset_camera=False, render=False)
                     self.bond_actors[material_id] = bonds_actor
+        translucent |= self._draw_polyhedra(geometry)
         if translucent:
             plotter.enable_depth_peeling()
         else:
@@ -471,6 +479,43 @@ class StructureViewport(QWidget):
         self._environment = environment
         self._bounds = geometry.bounding_sphere()
         plotter.render()  # the lights are resolved before the redraw
+
+    def _draw_polyhedra(self, geometry: DisplayGeometry) -> bool:
+        by_rule = {}
+        for shell in geometry.polyhedra:
+            faces, edges = by_rule.setdefault(shell.rule, ([], []))
+            faces.extend(shell.triangles)
+            edges.extend(shell.edges)
+        translucent = False
+        for rule, (faces, edges) in by_rule.items():
+            polygons = np.column_stack((np.full(len(faces), 3), faces))
+            mesh = pv.PolyData(geometry.positions, faces=polygons.ravel())
+            actor = self._plotter.add_mesh(
+                mesh,
+                color=rule.color,
+                opacity=rule.opacity,
+                pickable=False,
+                reset_camera=False,
+                render=False,
+            )
+            self.polyhedron_actors.append(actor)
+            translucent |= rule.opacity < 1.0
+            if edges:
+                lines = np.column_stack((np.full(len(edges), 2), edges))
+                tubes = pv.PolyData(geometry.positions, lines=lines.ravel()).tube(
+                    radius=EDGE_RADIUS, n_sides=8, capping=True
+                )
+                edge_actor = self._plotter.add_mesh(
+                    tubes,
+                    color=rule.edge_color,
+                    opacity=0.76,
+                    pickable=False,
+                    reset_camera=False,
+                    render=False,
+                )
+                self.polyhedron_actors.append(edge_actor)
+                translucent = True
+        return translucent
 
     def set_lighting(self, environment: Environment) -> None:
         """Use the lights of ``environment`` without rebuilding the scene.
